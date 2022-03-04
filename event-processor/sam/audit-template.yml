@@ -1,0 +1,115 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: "A template to create all the Audit infrastructure."
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+      - build
+      - staging
+      - production
+    Default: build
+    Description: "The current environment for deployment (e.g. build, stage, prod, etc.)"
+  EventProcessorStackName:
+    Type: String
+    Default: "di-txma-ep-build"
+    Description: "The ARN for the event processor accounts SNS service"
+
+Resources:
+  MessageBatchBucket:
+    Type: AWS::S3::Bucket
+
+  AuditDeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    DependsOn:
+      - DeliveryStreamPolicy
+    Properties:
+      DeliveryStreamName: !Sub
+        - "AuditFireHose-${EnvironmentName}"
+        - EnvironmentName: !Ref Environment
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        Prefix: "firehose/"
+        BucketARN: !GetAtt MessageBatchBucket.Arn
+        BufferingHints:
+          #Not sure if we want to set this? Does it default? If so we need to set it to the max 900
+          #IntervalInSeconds: 900
+          SizeInMBs: 128
+        CompressionFormat: "GZIP"
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+
+  DeliveryStreamSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn:
+        Fn::ImportValue:
+          !Sub "${EventProcessorStackName}-SnsArn"
+      Endpoint: !GetAtt AuditDeliveryStream.Arn
+      Protocol: firehose
+      SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
+
+  DeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+              - firehose.amazonaws.com
+            Action: 'sts:AssumeRole'
+
+  DeliveryStreamPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref DeliveryStreamRole
+      PolicyName: firehose_delivery_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref MessageBatchBucket
+                  - '*'
+
+  SNSTopicSubscriptionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SNSKinesisFirehoseAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - firehose:DescribeDeliveryStream
+                  - firehose:ListDeliveryStreams
+                  - firehose:ListTagsForDeliveryStream
+                  - firehose:PutRecord
+                  - firehose:PutRecordBatch
+                Effect: Allow
+                Resource:
+                  - !GetAtt AuditDeliveryStream.Arn
