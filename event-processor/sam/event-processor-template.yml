@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: "A template to create all the Event Processing infrastructure. Currently just a single SNS topic"
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+      - build
+      - staging
+      - production
+    Default: build
+    Description: "The current environment for deployment (e.g. build, stage, prod, etc.)"
+
+Resources:
+  epSNSTopic:
+    Properties:
+      TopicName: !Sub
+        - "EventProcessorSNSTopic-${EnvironmentName}"
+        - EnvironmentName: !Ref Environment
+    Type: "AWS::SNS::Topic"
+
+  # No subscriptions yet
+
+  # No policies yet
+
+Outputs:
+  epSNSTopicARN:
+    Description: ARN of SNS Topic
+    Value: !Ref epSNSTopic
+    Export:
+      Name: !Sub
+        - "${StackName}-SnsArn"
+        - StackName: !Ref "AWS::StackName"
