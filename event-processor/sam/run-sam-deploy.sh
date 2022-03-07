@@ -2,7 +2,6 @@
 
 #Parameters
 environment=${environment:-build}
-profile=${school:-di-dev-admin}
 
 while [ $# -gt 0 ]; do
 
@@ -12,14 +11,14 @@ while [ $# -gt 0 ]; do
         if [[ ${param} == "environment" ]]; then
           case "$2" in
 
-            build | staging | production)
+            build | staging | production | integration)
                 echo "Environment is valid"
               ;;
 
             *)
                 echo "unexpected environment name."
                 echo "Please provide one of the following: "
-                echo "build, staging, production"
+                echo "build, staging, production, integration"
 
                 exit 1
               ;;
@@ -35,12 +34,14 @@ while [ $# -gt 0 ]; do
 done
 
 echo "Environment: $environment";
-echo "profile: $profile";
 
 alias sam='sam.cmd'
 
-sam deploy -t event-processor-template.yml --parameter-overrides Environment="$environment" --profile "$profile" --stack-name "di-txma-ep-${environment}" --region "eu-west-2"
+##Currently we need to run these individually and manually take the AccountNumber of the Audit account and ARN for the SNS queue and use it in the respective toml files.
+##Currently we are looking into using secrets manager to provide a means of sharing values between stacks in different accounts.
 
-sam deploy -t audit-template.yml --parameter-overrides Environment="$environment" EventProcessorStackName="di-txma-ep-${environment}" --profile "$profile" --stack-name "di-txma-audit-${environment}" --region "eu-west-2" --capabilities CAPABILITY_IAM
+#sam deploy --template-file event-processor-template.yml --config-file config/samconfig-ep.toml --config-env "$environment"
+
+#sam deploy --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env "$environment"
 
 $SHELL

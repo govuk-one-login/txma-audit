@@ -9,8 +9,9 @@ Parameters:
       - build
       - staging
       - production
+      - integration
     Default: build
-    Description: "The current environment for deployment (e.g. build, stage, prod, etc.)"
+    Description: "The current environment for deployment (e.g. build, staging, production, etc.)"
 
 Resources:
   epSNSTopic:
@@ -20,9 +21,23 @@ Resources:
         - EnvironmentName: !Ref Environment
     Type: "AWS::SNS::Topic"
 
-  # No subscriptions yet
-
-  # No policies yet
+  SNSSubscribePolicy:
+    Type: "AWS::SNS::TopicPolicy"
+    Properties:
+      PolicyDocument:
+        Id: SNSSubscribePolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: SNSSubscribePolicy-1
+            Effect: Allow
+            Action:
+              - 'sns:Subscribe'
+            Principal:
+                AWS:
+                  - "arn:aws:iam::725018305812:root"
+            Resource: !Ref epSNSTopic
+      Topics:
+      - !Ref epSNSTopic
 
 Outputs:
   epSNSTopicARN:
