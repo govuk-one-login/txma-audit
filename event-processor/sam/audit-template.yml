@@ -9,11 +9,16 @@ Parameters:
       - build
       - staging
       - production
+      - integration
     Default: build
-    Description: "The current environment for deployment (e.g. build, stage, prod, etc.)"
+    Description: "The current environment for deployment (e.g. build, staging, production, etc.)"
   EventProcessorStackName:
     Type: String
     Default: "di-txma-ep-build"
+    Description: "Event Processor Stack Name"
+  EventProcessorSNSTopicARN:
+    Type: String
+    Default: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-build"
     Description: "The ARN for the event processor accounts SNS service"
 
 Resources:
@@ -42,9 +47,7 @@ Resources:
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn:
-        Fn::ImportValue:
-          !Sub "${EventProcessorStackName}-SnsArn"
+      TopicArn: !Ref EventProcessorSNSTopicARN
       Endpoint: !GetAtt AuditDeliveryStream.Arn
       Protocol: firehose
       SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
