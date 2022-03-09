@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../AppData/Local/Temp/tmpiy3t5zn1/index.ts"],
+  "sourcesContent": ["import { SQSEvent } from 'aws-lambda';\r\n\r\nexport const handler = async (event: SQSEvent): Promise<string> => {\r\n    //Some validation\r\n\r\n    return JSON.stringify(event.Records)\r\n};\r\n"],
+  "mappings": "8gBAAA,8BAEO,GAAM,GAAU,KAAO,IAGnB,KAAK,UAAU,EAAM,OAAO",
+  "names": []
+}
