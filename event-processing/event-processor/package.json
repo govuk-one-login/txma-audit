@@ -2,7 +2,7 @@
   "name": "event_processor",
   "version": "1.0.0",
   "description": "Event Processor for DI TxMA Audit",
-  "main": "index.js",
+  "main": "app.js",
   "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
   "author": "SAM CLI",
   "license": "MIT",

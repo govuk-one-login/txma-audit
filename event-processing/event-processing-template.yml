@@ -37,7 +37,7 @@ Resources:
                 - "arn:aws:iam::725018305812:root"
             Resource: !Ref epSNSTopic
       Topics:
-        - !Ref epSNSTopic
+      - !Ref epSNSTopic
 
   EventProcessorFunction:
     Type: "AWS::Serverless::Function"
@@ -45,23 +45,13 @@ Resources:
       FunctionName: "EventProcessorFunction"
       CodeUri: ../event-processing/event-processor
       PackageType: Zip
-      Handler: index.handler
+      Handler: app.handler
       Runtime: nodejs14.x
       Architectures:
         - x86_64
       Policies:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt epSNSTopic.TopicName
-#    Environment:
-#      Variables:
-#        AUDIT_TOPIC_ARN: !Ref epSNSTopic
-#    EventInvokeConfig:
-#      MaximumEventAgeInSeconds: 60
-#      MaximumRetryAttempts: 3
-#      DestinationConfig:
-#        OnSuccess:
-#          Type: SNS
-#          Destination: !Ref epSNSTopic
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -69,7 +59,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-        - index.ts
+        - app.ts
 
   EventInvokeConfig:
     Type: AWS::Lambda::EventInvokeConfig

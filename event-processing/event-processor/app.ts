@@ -1,7 +1,7 @@
 import { SQSEvent } from 'aws-lambda';
 
 export const handler = async (event: SQSEvent): Promise<string> => {
-    //Some validation
+    //Perform Validation here
 
-    return JSON.stringify(event.Records)
+    return JSON.stringify(event.Records);
 };

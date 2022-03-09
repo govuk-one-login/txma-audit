@@ -47,8 +47,8 @@ Resources:
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn: !Ref EventProcessorSNSTopicARN
-      Endpoint: !GetAtt AuditDeliveryStream.Arn
+      TopicArn: !Ref EventProcessorSNSTopicARN #SNS TOPIC
+      Endpoint: !GetAtt AuditDeliveryStream.Arn #FireHose
       Protocol: firehose
       SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
 
