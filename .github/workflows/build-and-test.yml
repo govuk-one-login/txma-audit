@@ -28,7 +28,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.EVENT_PROCESSING_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.EVENT_PROCESSING_AWS_SECRET_ACCESS_KEY }}
-          aws-region: $awsRegion
+          aws-region: ${{ awsRegion }}
       - name: Use Node.js 14
         uses: actions/setup-node@v2
         with:
@@ -61,7 +61,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AUDIT_DEV_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AUDIT_DEV_AWS_SECRET_ACCESS_KEY }}
-          aws-region: $awsRegion
+          aws-region: ${{ awsRegion }}
       - name: SAM Validate
         run: |
           sam validate --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env $environment
