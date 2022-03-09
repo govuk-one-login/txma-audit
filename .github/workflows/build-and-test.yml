@@ -31,15 +31,15 @@ jobs:
           aws-region: ${{ env.awsRegion }}
       - name: SAM Validate
         run: |
-          sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.$environment }}
+          sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }}
       - name: SAM Build
         run: |
-          sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.$environment }} --use-container
+          sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --use-container
       - name: Test
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: npm test
       - run: |
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-audit.toml --config-env ${{ env.$environment }} --resolve-s3
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --resolve-s3
         if: github.event_name != 'pull_request'
 
   validate_and_build_audit:
@@ -59,11 +59,11 @@ jobs:
           aws-region: ${{ env.awsRegion }}
       - name: SAM Validate
         run: |
-          sam validate --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.$environment }}
+          sam validate --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }}
       - name: SAM Build
         run: |
-          sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.$environment }} --use-container
+          sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container
       - run: |
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-audit.toml --config-env ${{ env.$environment }}
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-audit.toml --config-env ${{ env.environment }}
         if: github.event_name != 'pull_request'
           
