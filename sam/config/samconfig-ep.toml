@@ -1,9 +1,16 @@
 version=0.1
+[default.build.parameters]
+beta_features = true
+
+[default.sync.parameters]
+beta_features = true
+
 [default.deploy.parameters]
 stack_name = "di-txma-ep-build"
 profile="di-dev-event-processing-admin"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"build\""
+capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
     "Environment=build"
 ]
@@ -13,6 +20,7 @@ stack_name = "di-txma-ep-build"
 profile="di-dev-event-processing-admin"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"build\""
+capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
     "Environment=build"
 ]
@@ -22,6 +30,7 @@ stack_name = "di-txma-ep-staging"
 profile="di-dev-event-processing-admin"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"staging\""
+capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
     "Environment=staging"
 ]
@@ -31,6 +40,7 @@ stack_name = "di-txma-ep-production"
 profile="di-dev-event-processing-admin"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"production\""
+capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
     "Environment=production"
 ]
@@ -40,6 +50,7 @@ stack_name = "di-txma-ep-integration"
 profile="di-dev-event-processing-admin"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"integration\""
+capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
     "Environment=integration"
 ]

@@ -1,4 +1,10 @@
 version=0.1
+[default.build.parameters]
+beta_features = true
+
+[default.sync.parameters]
+beta_features = true
+
 [default.deploy.parameters]
 stack_name = "di-txma-audit-build"
 profile="di-dev-audit-admin"

@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "A template to create all the Event Processing infrastructure. Currently just a single SNS topic"
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+      - build
+      - staging
+      - production
+      - integration
+    Default: build
+    Description: "The current environment for deployment (e.g. build, staging, production, etc.)"
+
+Resources:
+  epSNSTopic:
+    Properties:
+      TopicName: !Sub
+        - "EventProcessorSNSTopic-${EnvironmentName}"
+        - EnvironmentName: !Ref Environment
+    Type: "AWS::SNS::Topic"
+
+  SNSSubscribePolicy:
+    Type: "AWS::SNS::TopicPolicy"
+    Properties:
+      PolicyDocument:
+        Id: SNSSubscribePolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: SNSSubscribePolicy-1
+            Effect: Allow
+            Action:
+              - 'sns:Subscribe'
+            Principal:
+              AWS:
+                - "arn:aws:iam::725018305812:root"
+            Resource: !Ref epSNSTopic
+      Topics:
+        - !Ref epSNSTopic
+
+  EventProcessorFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction"
+      CodeUri: ../event-processing/event-processor
+      PackageType: Zip
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt epSNSTopic.TopicName
+#    Environment:
+#      Variables:
+#        AUDIT_TOPIC_ARN: !Ref epSNSTopic
+#    EventInvokeConfig:
+#      MaximumEventAgeInSeconds: 60
+#      MaximumRetryAttempts: 3
+#      DestinationConfig:
+#        OnSuccess:
+#          Type: SNS
+#          Destination: !Ref epSNSTopic
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+        - index.ts
+
+  EventInvokeConfig:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref EventProcessorFunction
+      Qualifier: "$LATEST"
+      MaximumEventAgeInSeconds: 600
+      MaximumRetryAttempts: 2
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Ref epSNSTopic
+
+Outputs:
+  epSNSTopicARN:
+    Description: ARN of SNS Topic
+    Value: !Ref epSNSTopic
+    Export:
+      Name: !Sub
+        - "${StackName}-SnsArn"
+        - StackName: !Ref "AWS::StackName"
