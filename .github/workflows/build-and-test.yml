@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 env:
+  environment: "develop"
   awsRegion: "eu-west-2"
   eventProcessorDirectory: "event-processing"
   auditDirectory: "audit"
