@@ -6,15 +6,15 @@ beta_features = true
 beta_features = true
 
 [default.deploy.parameters]
-stack_name = "di-txma-audit-build"
+stack_name = "di-txma-audit-develop"
 profile="di-dev-audit-admin"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-tags = "project=\"di-txma-audit\" stage=\"build\""
+tags = "project=\"di-txma-audit\" stage=\"develop\""
 parameter_overrides=[
-    "Environment=build",
-    "EventProcessorStackName=di-txma-ep-build",
-    "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-build"
+    "Environment=develop",
+    "EventProcessorStackName=di-txma-ep-develop",
+    "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
 ]
 
 [build.deploy.parameters]

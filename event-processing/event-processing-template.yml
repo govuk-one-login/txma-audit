@@ -6,12 +6,13 @@ Parameters:
   Environment:
     Type: String
     AllowedValues:
+      - develop
       - build
       - staging
       - production
       - integration
     Default: build
-    Description: "The current environment for deployment (e.g. build, staging, production, etc.)"
+    Description: "The current environment for deployment (e.g. develop, build, staging, production, etc.)"
 
 Resources:
   epSNSTopic:
