@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: $eventProcessorDirectory
+        working-directory: ${{ env.eventProcessorDirectory }}
     steps:
       - uses: actions/checkout@v2
       - uses: aws-actions/setup-sam@v1
@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: '14.x'
       - name: Install dependencies
-        working-directory: $eventProcessorDirectory/event-processor
+        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: npm ci
       - name: SAM Validate
         run: |
@@ -42,7 +42,7 @@ jobs:
         run: |
           sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env $environment
       - name: Test
-        working-directory: $eventProcessorDirectory/event-processor
+        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: npm test
       - run: |
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-audit.toml --config-env $environment --resolve-s3
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: $auditDirectory
+        working-directory: ${{ env.auditDirectory }}
     steps:
       - uses: actions/checkout@v2
       - uses: aws-actions/setup-sam@v1
