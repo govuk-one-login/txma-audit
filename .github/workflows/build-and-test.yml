@@ -36,7 +36,7 @@ jobs:
           node-version: '14.x'
       - name: Install Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: npm install
+        run: npm install --no-optional
       - name: SAM Validate
         run: |
           sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }}
