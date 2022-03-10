@@ -13,13 +13,9 @@ Parameters:
       - integration
     Default: build
     Description: "The current environment for deployment (e.g. develop, build, staging, production, etc.)"
-  EventProcessorStackName:
-    Type: String
-    Default: "di-txma-ep-build"
-    Description: "Event Processor Stack Name"
   EventProcessorSNSTopicARN:
     Type: String
-    Default: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-build"
+    Default: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
     Description: "The ARN for the event processor accounts SNS service"
 
 Resources:
@@ -63,7 +59,7 @@ Resources:
             Effect: Allow
             Principal:
               Service:
-              - firehose.amazonaws.com
+                - firehose.amazonaws.com
             Action: 'sts:AssumeRole'
 
   DeliveryStreamPolicy:

@@ -74,4 +74,3 @@ jobs:
       - run: |
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-audit.toml --config-env ${{ env.environment }}
         if: github.event_name != 'pull_request'
-          
