@@ -34,15 +34,15 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '14.x'
-      - name: Install esbuild
+      - name: Install Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: npm install esbuild-linux-64
+        run: npm install
       - name: SAM Validate
         run: |
           sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }}
       - name: SAM Build
         run: |
-          sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --beta-features
+          sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --use-container --beta-features
       - name: Test
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: npm test
