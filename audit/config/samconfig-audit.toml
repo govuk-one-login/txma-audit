@@ -1,0 +1,63 @@
+version=0.1
+[default.build.parameters]
+beta_features = true
+
+[default.sync.parameters]
+beta_features = true
+
+[default.deploy.parameters]
+stack_name = "di-txma-audit-develop"
+profile="di-dev-audit-admin"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+tags = "project=\"di-txma-audit\" stage=\"develop\""
+parameter_overrides=[
+    "Environment=develop",
+    "EventProcessorStackName=di-txma-ep-develop",
+    "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
+]
+
+[build.deploy.parameters]
+stack_name = "di-txma-audit-build"
+profile="di-dev-audit-admin"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+tags = "project=\"di-txma-audit\" stage=\"build\""
+parameter_overrides=[
+    "Environment=build",
+    "EventProcessorStackName=di-txma-ep-build",
+    "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-build"
+]
+
+[staging.deploy.parameters]
+stack_name = "di-txma-audit-staging"
+profile="di-dev-audit-admin"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+tags = "project=\"di-txma-audit\" stage=\"staging\""
+parameter_overrides=[
+    "Environment=staging",
+    "EventProcessorStackName=di-txma-ep-staging"
+]
+
+[production.deploy.parameters]
+stack_name = "di-txma-audit-production"
+profile="di-dev-audit-admin"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+tags = "project=\"di-txma-audit\" stage=\"production\""
+parameter_overrides=[
+    "Environment=production",
+    "EventProcessorStackName=di-txma-ep-production"
+]
+
+[integration.deploy.parameters]
+stack_name = "di-txma-audit-integration"
+profile="di-dev-audit-admin"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+tags = "project=\"di-txma-audit\" stage=\"integration\""
+parameter_overrides=[
+    "Environment=integration",
+    "EventProcessorStackName=di-txma-ep-integration"
+]
