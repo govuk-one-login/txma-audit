@@ -36,7 +36,7 @@ jobs:
           node-version: '14.x'
       - name: Install esbuild
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: npm install esbuild-linux-64
+        run: npm install esbuild-android-64
       - name: SAM Validate
         run: |
           sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }}
