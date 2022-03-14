@@ -1,4 +1,4 @@
-name: Run Unit Tests
+name: Build, Test and Deploy
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: npm test
       - run: |
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --resolve-s3
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --resolve-s3
         if: github.event_name != 'pull_request'
 
   validate_and_build_audit:
@@ -74,4 +74,3 @@ jobs:
       - run: |
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-audit.toml --config-env ${{ env.environment }}
         if: github.event_name != 'pull_request'
-          
