@@ -5,39 +5,42 @@ import { IValidationResponse } from '../models/validation-response.interface';
 export class validationService {
     static async validateSNSEventRecord(record: SNSEventRecord): Promise<IValidationResponse> {
         const message = record.Sns.Message;
-        const eventMessage = EventMessage.fromJSON(message);
 
-        return await this.isValidEventMessage(eventMessage);
+        return await this.isValidEventMessage(message);
     }
 
     static async validateSQSRecord(record: SQSRecord): Promise<IValidationResponse> {
         const message = record.body;
-        const eventMessage = EventMessage.fromJSON(message);
 
-        return await this.isValidEventMessage(eventMessage);
+        return await this.isValidEventMessage(message);
     }
 
     static isInstanceOfSNSRecord(record: SNSEventRecord | SQSRecord): record is SNSEventRecord {
         return 'Sns' in record;
     }
 
-    private static async isValidEventMessage(eventMessage: EventMessage): Promise<IValidationResponse> {
-        if (!eventMessage.eventName) {
+    private static async isValidEventMessage(message: string): Promise<IValidationResponse> {
+        const eventMessage = EventMessage.fromJSON(JSON.parse(message));
+
+        if (!eventMessage.event_name) {
             return {
                 isValid: false,
-                message: 'eventName is a required field.',
+                error: 'eventName is a required field.',
+                message: EventMessage.toJSON(eventMessage) as string,
             };
         }
 
         if (!eventMessage.timestamp) {
             return {
                 isValid: false,
-                message: 'timestamp is a required field.',
+                error: 'timestamp is a required field.',
+                message: EventMessage.toJSON(eventMessage) as string,
             };
         }
 
         return {
             isValid: true,
+            message: EventMessage.toJSON(eventMessage) as string,
         };
     }
 }

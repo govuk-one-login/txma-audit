@@ -22,5 +22,5 @@ message EventMessage {
   }
   message extensions {
   }
-  string persistentSessionId = 8;
+  string persistent_session_id = 8;
 }

@@ -1,4 +1,5 @@
 export interface IValidationResponse {
     isValid: boolean;
-    message?: string;
+    error?: string;
+    message: string;
 }

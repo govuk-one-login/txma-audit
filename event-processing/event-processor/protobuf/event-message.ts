@@ -6,21 +6,21 @@ import { Timestamp } from '../google/protobuf/timestamp';
 export const protobufPackage = '';
 
 export interface EventMessage {
-    eventId: string;
-    requestId: string;
-    sessionId: string;
-    clientId: string;
-    timestamp: Date | undefined;
-    timestampFormatted: string;
-    eventName: string;
-    persistentSessionId: string;
+    event_id: string;
+    request_id: string;
+    session_id: string;
+    client_id: string;
+    timestamp?: Date;
+    timestamp_formatted: string;
+    event_name: string;
+    persistent_session_id: string;
 }
 
 export interface EventMessage_user {
     id: string;
     email: string;
     phone: string;
-    ipAddress: string;
+    ip_address: string;
 }
 
 export interface EventMessage_platform {}
@@ -31,42 +31,55 @@ export interface EventMessage_extensions {}
 
 function createBaseEventMessage(): EventMessage {
     return {
-        eventId: '',
-        requestId: '',
-        sessionId: '',
-        clientId: '',
+        event_id: '',
+        request_id: '',
+        session_id: '',
+        client_id: '',
         timestamp: undefined,
-        timestampFormatted: '',
-        eventName: '',
-        persistentSessionId: '',
+        timestamp_formatted: '',
+        event_name: '',
+        persistent_session_id: '',
     };
 }
 
 export const EventMessage = {
     encode(message: EventMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.eventId !== '') {
-            writer.uint32(10).string(message.eventId);
+        if (message.event_id !== '') {
+            writer.uint32(10).string(message.event_id);
         }
-        if (message.requestId !== '') {
-            writer.uint32(18).string(message.requestId);
+        if (message.request_id !== '') {
+            writer.uint32(18).string(message.request_id);
         }
-        if (message.sessionId !== '') {
-            writer.uint32(26).string(message.sessionId);
+        if (message.session_id !== '') {
+            writer.uint32(26).string(message.session_id);
         }
-        if (message.clientId !== '') {
-            writer.uint32(34).string(message.clientId);
+        if (message.client_id !== '') {
+            writer.uint32(34).string(message.client_id);
         }
         if (message.timestamp !== undefined) {
             Timestamp.encode(toTimestamp(message.timestamp), writer.uint32(42).fork()).ldelim();
         }
-        if (message.timestampFormatted !== '') {
-            writer.uint32(50).string(message.timestampFormatted);
+        if (message.timestamp_formatted !== '') {
+            writer.uint32(50).string(message.timestamp_formatted);
         }
-        if (message.eventName !== '') {
-            writer.uint32(58).string(message.eventName);
+        if (message.event_name !== '') {
+            writer.uint32(58).string(message.event_name);
         }
-        if (message.persistentSessionId !== '') {
-            writer.uint32(66).string(message.persistentSessionId);
+        if (message.persistent_session_id !== '') {
+            writer.uint32(66).string(message.persistent_session_id);
+        }
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
         }
         return writer;
     },
@@ -75,35 +88,41 @@ export const EventMessage = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseEventMessage();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
-                    message.eventId = reader.string();
+                    message.event_id = reader.string();
                     break;
                 case 2:
-                    message.requestId = reader.string();
+                    message.request_id = reader.string();
                     break;
                 case 3:
-                    message.sessionId = reader.string();
+                    message.session_id = reader.string();
                     break;
                 case 4:
-                    message.clientId = reader.string();
+                    message.client_id = reader.string();
                     break;
                 case 5:
                     message.timestamp = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
                     break;
                 case 6:
-                    message.timestampFormatted = reader.string();
+                    message.timestamp_formatted = reader.string();
                     break;
                 case 7:
-                    message.eventName = reader.string();
+                    message.event_name = reader.string();
                     break;
                 case 8:
-                    message.persistentSessionId = reader.string();
+                    message.persistent_session_id = reader.string();
                     break;
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -112,46 +131,46 @@ export const EventMessage = {
 
     fromJSON(object: any): EventMessage {
         return {
-            eventId: isSet(object.eventId) ? String(object.eventId) : '',
-            requestId: isSet(object.requestId) ? String(object.requestId) : '',
-            sessionId: isSet(object.sessionId) ? String(object.sessionId) : '',
-            clientId: isSet(object.clientId) ? String(object.clientId) : '',
+            event_id: isSet(object.event_id) ? String(object.event_id) : '',
+            request_id: isSet(object.request_id) ? String(object.request_id) : '',
+            session_id: isSet(object.session_id) ? String(object.session_id) : '',
+            client_id: isSet(object.client_id) ? String(object.client_id) : '',
             timestamp: isSet(object.timestamp) ? fromJsonTimestamp(object.timestamp) : undefined,
-            timestampFormatted: isSet(object.timestampFormatted) ? String(object.timestampFormatted) : '',
-            eventName: isSet(object.eventName) ? String(object.eventName) : '',
-            persistentSessionId: isSet(object.persistentSessionId) ? String(object.persistentSessionId) : '',
+            timestamp_formatted: isSet(object.timestamp_formatted) ? String(object.timestamp_formatted) : '',
+            event_name: isSet(object.event_name) ? String(object.event_name) : '',
+            persistent_session_id: isSet(object.persistent_session_id) ? String(object.persistent_session_id) : '',
         };
     },
 
     toJSON(message: EventMessage): unknown {
         const obj: any = {};
-        message.eventId !== undefined && (obj.eventId = message.eventId);
-        message.requestId !== undefined && (obj.requestId = message.requestId);
-        message.sessionId !== undefined && (obj.sessionId = message.sessionId);
-        message.clientId !== undefined && (obj.clientId = message.clientId);
+        message.event_id !== undefined && (obj.event_id = message.event_id);
+        message.request_id !== undefined && (obj.request_id = message.request_id);
+        message.session_id !== undefined && (obj.session_id = message.session_id);
+        message.client_id !== undefined && (obj.client_id = message.client_id);
         message.timestamp !== undefined && (obj.timestamp = message.timestamp.toISOString());
-        message.timestampFormatted !== undefined && (obj.timestampFormatted = message.timestampFormatted);
-        message.eventName !== undefined && (obj.eventName = message.eventName);
-        message.persistentSessionId !== undefined && (obj.persistentSessionId = message.persistentSessionId);
+        message.timestamp_formatted !== undefined && (obj.timestamp_formatted = message.timestamp_formatted);
+        message.event_name !== undefined && (obj.event_name = message.event_name);
+        message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
         return obj;
     },
 
     fromPartial<I extends Exact<DeepPartial<EventMessage>, I>>(object: I): EventMessage {
         const message = createBaseEventMessage();
-        message.eventId = object.eventId ?? '';
-        message.requestId = object.requestId ?? '';
-        message.sessionId = object.sessionId ?? '';
-        message.clientId = object.clientId ?? '';
+        message.event_id = object.event_id ?? '';
+        message.request_id = object.request_id ?? '';
+        message.session_id = object.session_id ?? '';
+        message.client_id = object.client_id ?? '';
         message.timestamp = object.timestamp ?? undefined;
-        message.timestampFormatted = object.timestampFormatted ?? '';
-        message.eventName = object.eventName ?? '';
-        message.persistentSessionId = object.persistentSessionId ?? '';
+        message.timestamp_formatted = object.timestamp_formatted ?? '';
+        message.event_name = object.event_name ?? '';
+        message.persistent_session_id = object.persistent_session_id ?? '';
         return message;
     },
 };
 
 function createBaseEventMessage_user(): EventMessage_user {
-    return { id: '', email: '', phone: '', ipAddress: '' };
+    return { id: '', email: '', phone: '', ip_address: '' };
 }
 
 export const EventMessage_user = {
@@ -165,8 +184,21 @@ export const EventMessage_user = {
         if (message.phone !== '') {
             writer.uint32(26).string(message.phone);
         }
-        if (message.ipAddress !== '') {
-            writer.uint32(34).string(message.ipAddress);
+        if (message.ip_address !== '') {
+            writer.uint32(34).string(message.ip_address);
+        }
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
         }
         return writer;
     },
@@ -175,6 +207,7 @@ export const EventMessage_user = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseEventMessage_user();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -188,10 +221,15 @@ export const EventMessage_user = {
                     message.phone = reader.string();
                     break;
                 case 4:
-                    message.ipAddress = reader.string();
+                    message.ip_address = reader.string();
                     break;
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -203,7 +241,7 @@ export const EventMessage_user = {
             id: isSet(object.id) ? String(object.id) : '',
             email: isSet(object.email) ? String(object.email) : '',
             phone: isSet(object.phone) ? String(object.phone) : '',
-            ipAddress: isSet(object.ipAddress) ? String(object.ipAddress) : '',
+            ip_address: isSet(object.ip_address) ? String(object.ip_address) : '',
         };
     },
 
@@ -212,7 +250,7 @@ export const EventMessage_user = {
         message.id !== undefined && (obj.id = message.id);
         message.email !== undefined && (obj.email = message.email);
         message.phone !== undefined && (obj.phone = message.phone);
-        message.ipAddress !== undefined && (obj.ipAddress = message.ipAddress);
+        message.ip_address !== undefined && (obj.ip_address = message.ip_address);
         return obj;
     },
 
@@ -221,7 +259,7 @@ export const EventMessage_user = {
         message.id = object.id ?? '';
         message.email = object.email ?? '';
         message.phone = object.phone ?? '';
-        message.ipAddress = object.ipAddress ?? '';
+        message.ip_address = object.ip_address ?? '';
         return message;
     },
 };
@@ -231,7 +269,20 @@ function createBaseEventMessage_platform(): EventMessage_platform {
 }
 
 export const EventMessage_platform = {
-    encode(_: EventMessage_platform, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    encode(message: EventMessage_platform, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
+        }
         return writer;
     },
 
@@ -239,11 +290,17 @@ export const EventMessage_platform = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseEventMessage_platform();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -270,7 +327,20 @@ function createBaseEventMessage_restricted(): EventMessage_restricted {
 }
 
 export const EventMessage_restricted = {
-    encode(_: EventMessage_restricted, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    encode(message: EventMessage_restricted, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
+        }
         return writer;
     },
 
@@ -278,11 +348,17 @@ export const EventMessage_restricted = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseEventMessage_restricted();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -309,7 +385,20 @@ function createBaseEventMessage_extensions(): EventMessage_extensions {
 }
 
 export const EventMessage_extensions = {
-    encode(_: EventMessage_extensions, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    encode(message: EventMessage_extensions, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
+        }
         return writer;
     },
 
@@ -317,11 +406,17 @@ export const EventMessage_extensions = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseEventMessage_extensions();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
