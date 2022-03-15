@@ -125,19 +125,6 @@ export const Timestamp = {
         if (message.nanos !== 0) {
             writer.uint32(16).int32(message.nanos);
         }
-        if ('_unknownFields' in message) {
-            for (const key of Object.keys(message['_unknownFields'])) {
-                const values = message['_unknownFields'][key] as Uint8Array[];
-                for (const value of values) {
-                    writer.uint32(parseInt(key, 10));
-                    (writer as any)['_push'](
-                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
-                        value.length,
-                        value,
-                    );
-                }
-            }
-        }
         return writer;
     },
 
@@ -145,7 +132,6 @@ export const Timestamp = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseTimestamp();
-        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -156,12 +142,7 @@ export const Timestamp = {
                     message.nanos = reader.int32();
                     break;
                 default:
-                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
-                    (message as any)._unknownFields[tag] = [
-                        ...((message as any)._unknownFields[tag] || []),
-                        reader.buf.slice(startPos, reader.pos),
-                    ];
                     break;
             }
         }

@@ -1,5 +1,5 @@
 import { SNSEventRecord, SQSRecord } from 'aws-lambda';
-import { EventMessage } from '../protobuf/event-message';
+import { AuditEvent } from '../protobuf/audit-event';
 import { IValidationResponse } from '../models/validation-response.interface';
 
 export class validationService {
@@ -20,13 +20,13 @@ export class validationService {
     }
 
     private static async isValidEventMessage(message: string): Promise<IValidationResponse> {
-        const eventMessage = EventMessage.fromJSON(JSON.parse(message));
+        const eventMessage = AuditEvent.decode(JSON.parse(message) as Uint8Array);
 
         if (!eventMessage.event_name) {
             return {
                 isValid: false,
                 error: 'eventName is a required field.',
-                message: EventMessage.toJSON(eventMessage) as string,
+                message: AuditEvent.toJSON(eventMessage) as string,
             };
         }
 
@@ -34,13 +34,13 @@ export class validationService {
             return {
                 isValid: false,
                 error: 'timestamp is a required field.',
-                message: EventMessage.toJSON(eventMessage) as string,
+                message: AuditEvent.toJSON(eventMessage) as string,
             };
         }
 
         return {
             isValid: true,
-            message: EventMessage.toJSON(eventMessage) as string,
+            message: AuditEvent.toJSON(eventMessage) as string,
         };
     }
 }
