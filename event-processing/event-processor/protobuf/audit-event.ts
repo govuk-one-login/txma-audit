@@ -99,6 +99,19 @@ export const AuditEvent = {
         if (message.persistent_session_id !== '') {
             writer.uint32(98).string(message.persistent_session_id);
         }
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
+        }
         return writer;
     },
 
@@ -106,6 +119,7 @@ export const AuditEvent = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseAuditEvent();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -146,7 +160,12 @@ export const AuditEvent = {
                     message.persistent_session_id = reader.string();
                     break;
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -191,7 +210,7 @@ export const AuditEvent = {
         return obj;
     },
 
-    fromPartial<I extends Exact<DeepPartial<AuditEvent>, I>>(object: I): AuditEvent {
+    fromPartial(object: DeepPartial<AuditEvent>): AuditEvent {
         const message = createBaseAuditEvent();
         message.event_id = object.event_id ?? '';
         message.request_id = object.request_id ?? '';
@@ -239,6 +258,19 @@ export const AuditEvent_userMessage = {
         if (message.ip_address !== '') {
             writer.uint32(34).string(message.ip_address);
         }
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
+        }
         return writer;
     },
 
@@ -246,6 +278,7 @@ export const AuditEvent_userMessage = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseAuditEvent_userMessage();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -262,7 +295,12 @@ export const AuditEvent_userMessage = {
                     message.ip_address = reader.string();
                     break;
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -287,7 +325,7 @@ export const AuditEvent_userMessage = {
         return obj;
     },
 
-    fromPartial<I extends Exact<DeepPartial<AuditEvent_userMessage>, I>>(object: I): AuditEvent_userMessage {
+    fromPartial(object: DeepPartial<AuditEvent_userMessage>): AuditEvent_userMessage {
         const message = createBaseAuditEvent_userMessage();
         message.id = object.id ?? '';
         message.email = object.email ?? '';
@@ -309,6 +347,19 @@ export const AuditEvent_keyValuePairMessage = {
         if (message.value !== '') {
             writer.uint32(18).string(message.value);
         }
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
+        }
         return writer;
     },
 
@@ -316,6 +367,7 @@ export const AuditEvent_keyValuePairMessage = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseAuditEvent_keyValuePairMessage();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -326,7 +378,12 @@ export const AuditEvent_keyValuePairMessage = {
                     message.value = reader.string();
                     break;
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -347,9 +404,7 @@ export const AuditEvent_keyValuePairMessage = {
         return obj;
     },
 
-    fromPartial<I extends Exact<DeepPartial<AuditEvent_keyValuePairMessage>, I>>(
-        object: I,
-    ): AuditEvent_keyValuePairMessage {
+    fromPartial(object: DeepPartial<AuditEvent_keyValuePairMessage>): AuditEvent_keyValuePairMessage {
         const message = createBaseAuditEvent_keyValuePairMessage();
         message.key = object.key ?? '';
         message.value = object.value ?? '';
@@ -366,6 +421,19 @@ export const AuditEvent_platformMessage = {
         for (const v of message.keyValuePair) {
             AuditEvent_keyValuePairMessage.encode(v!, writer.uint32(10).fork()).ldelim();
         }
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
+        }
         return writer;
     },
 
@@ -373,6 +441,7 @@ export const AuditEvent_platformMessage = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseAuditEvent_platformMessage();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -380,7 +449,12 @@ export const AuditEvent_platformMessage = {
                     message.keyValuePair.push(AuditEvent_keyValuePairMessage.decode(reader, reader.uint32()));
                     break;
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -407,7 +481,7 @@ export const AuditEvent_platformMessage = {
         return obj;
     },
 
-    fromPartial<I extends Exact<DeepPartial<AuditEvent_platformMessage>, I>>(object: I): AuditEvent_platformMessage {
+    fromPartial(object: DeepPartial<AuditEvent_platformMessage>): AuditEvent_platformMessage {
         const message = createBaseAuditEvent_platformMessage();
         message.keyValuePair = object.keyValuePair?.map((e) => AuditEvent_keyValuePairMessage.fromPartial(e)) || [];
         return message;
@@ -423,6 +497,19 @@ export const AuditEvent_restrictedMessage = {
         for (const v of message.keyValuePair) {
             AuditEvent_keyValuePairMessage.encode(v!, writer.uint32(10).fork()).ldelim();
         }
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
+        }
         return writer;
     },
 
@@ -430,6 +517,7 @@ export const AuditEvent_restrictedMessage = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseAuditEvent_restrictedMessage();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -437,7 +525,12 @@ export const AuditEvent_restrictedMessage = {
                     message.keyValuePair.push(AuditEvent_keyValuePairMessage.decode(reader, reader.uint32()));
                     break;
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -464,9 +557,7 @@ export const AuditEvent_restrictedMessage = {
         return obj;
     },
 
-    fromPartial<I extends Exact<DeepPartial<AuditEvent_restrictedMessage>, I>>(
-        object: I,
-    ): AuditEvent_restrictedMessage {
+    fromPartial(object: DeepPartial<AuditEvent_restrictedMessage>): AuditEvent_restrictedMessage {
         const message = createBaseAuditEvent_restrictedMessage();
         message.keyValuePair = object.keyValuePair?.map((e) => AuditEvent_keyValuePairMessage.fromPartial(e)) || [];
         return message;
@@ -482,6 +573,19 @@ export const AuditEvent_extensionsMessage = {
         for (const v of message.keyValuePair) {
             AuditEvent_keyValuePairMessage.encode(v!, writer.uint32(10).fork()).ldelim();
         }
+        if ('_unknownFields' in message) {
+            for (const key of Object.keys(message['_unknownFields'])) {
+                const values = message['_unknownFields'][key] as Uint8Array[];
+                for (const value of values) {
+                    writer.uint32(parseInt(key, 10));
+                    (writer as any)['_push'](
+                        (val: Uint8Array, buf: Buffer, pos: number) => buf.set(val, pos),
+                        value.length,
+                        value,
+                    );
+                }
+            }
+        }
         return writer;
     },
 
@@ -489,6 +593,7 @@ export const AuditEvent_extensionsMessage = {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
         const message = createBaseAuditEvent_extensionsMessage();
+        (message as any)._unknownFields = {};
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -496,7 +601,12 @@ export const AuditEvent_extensionsMessage = {
                     message.keyValuePair.push(AuditEvent_keyValuePairMessage.decode(reader, reader.uint32()));
                     break;
                 default:
+                    const startPos = reader.pos;
                     reader.skipType(tag & 7);
+                    (message as any)._unknownFields[tag] = [
+                        ...((message as any)._unknownFields[tag] || []),
+                        reader.buf.slice(startPos, reader.pos),
+                    ];
                     break;
             }
         }
@@ -523,9 +633,7 @@ export const AuditEvent_extensionsMessage = {
         return obj;
     },
 
-    fromPartial<I extends Exact<DeepPartial<AuditEvent_extensionsMessage>, I>>(
-        object: I,
-    ): AuditEvent_extensionsMessage {
+    fromPartial(object: DeepPartial<AuditEvent_extensionsMessage>): AuditEvent_extensionsMessage {
         const message = createBaseAuditEvent_extensionsMessage();
         message.keyValuePair = object.keyValuePair?.map((e) => AuditEvent_keyValuePairMessage.fromPartial(e)) || [];
         return message;
@@ -543,11 +651,6 @@ export type DeepPartial<T> = T extends Builtin
     : T extends {}
     ? { [K in keyof T]?: DeepPartial<T[K]> }
     : Partial<T>;
-
-type KeysOfUnion<T> = T extends T ? keyof T : never;
-export type Exact<P, I extends P> = P extends Builtin
-    ? P
-    : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
 
 function toTimestamp(date: Date): Timestamp {
     const seconds = date.getTime() / 1_000;

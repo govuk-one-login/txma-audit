@@ -15,8 +15,6 @@ export const handler = async (event: Event): Promise<string> => {
         }
     }
 
-    //find any unrecognised elements, remove them and log to cloudwatch
-
     if (validationResponses.some((response: IValidationResponse) => !response.isValid)) {
         throw new ValidationException('One or more event messages failed validation.', validationResponses);
     }
