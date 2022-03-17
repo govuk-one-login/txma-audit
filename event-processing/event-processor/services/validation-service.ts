@@ -37,9 +37,9 @@ export class validationService {
         message: string,
         eventDetails: IEventSourceDetails,
     ): Promise<IValidationResponse> {
-        const eventMessage = AuditEvent.decode(JSON.parse(message) as Uint8Array);
+        const eventMessage = AuditEvent.decode(JSON.parse(message) as Uint8Array) as IAuditEventUnknownFields;
 
-        if ('_unknownFields' in eventMessage) {
+        if ('_unknownFields' in eventMessage && Object.keys(eventMessage._unknownFields).length) {
             const unknownFieldsWarning: IUnknownFieldsWarning = {
                 sourceName: eventDetails.sourceName,
                 sourceType: eventDetails.sourceType,
@@ -49,10 +49,8 @@ export class validationService {
                 unknownFields: [],
             };
 
-            const auditEventWithUnknownFields = eventMessage as IAuditEventUnknownFields;
-
-            for (const key of Object.keys(auditEventWithUnknownFields._unknownFields)) {
-                const values = auditEventWithUnknownFields._unknownFields[key][0] as Uint8Array;
+            for (const key of Object.keys(eventMessage._unknownFields)) {
+                const values = eventMessage._unknownFields[key][0] as Uint8Array;
                 const reader = new _m0.Reader(values);
 
                 const unknownField: IUnknownFieldDetails = {
