@@ -70,7 +70,7 @@ When deploying the event processor also include the `--resolve-s3` argument in o
 Build your application with the `sam build` command.
 
 ```bash
-event-processing$ sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "build"
+event-processing$ sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "develop"
 ```
 
 The SAM CLI installs dependencies defined in `event-processor/package.json`, compiles TypeScript with esbuild, creates a deployment package, and saves it in the `.aws-sam/build` folder.
