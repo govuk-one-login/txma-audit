@@ -8,8 +8,8 @@ export class ValidationException extends Error implements IValidationException {
         // Set the prototype explicitly.
         Object.setPrototypeOf(this, ValidationException.prototype);
 
-        this.ValidationResponses = validationResponses;
+        this.validationResponses = validationResponses;
     }
 
-    ValidationResponses: IValidationResponse[];
+    validationResponses: IValidationResponse[];
 }

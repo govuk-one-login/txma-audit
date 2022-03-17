@@ -1,7 +1,8 @@
 /* eslint-disable */
+/* istanbul ignore file */
 import Long from 'long';
 import _m0 from 'protobufjs/minimal';
-import { Timestamp } from '../google/protobuf/timestamp';
+import { Timestamp } from '../../google/protobuf/timestamp';
 
 export const protobufPackage = 'di';
 
@@ -18,6 +19,7 @@ export interface AuditEvent {
     restricted: AuditEvent_restrictedMessage | undefined;
     extensions: AuditEvent_extensionsMessage | undefined;
     persistent_session_id: string;
+    new_unknown_field: string;
 }
 
 export interface AuditEvent_userMessage {
@@ -58,6 +60,7 @@ function createBaseAuditEvent(): AuditEvent {
         restricted: undefined,
         extensions: undefined,
         persistent_session_id: '',
+        new_unknown_field: '',
     };
 }
 
@@ -98,6 +101,9 @@ export const AuditEvent = {
         }
         if (message.persistent_session_id !== '') {
             writer.uint32(98).string(message.persistent_session_id);
+        }
+        if (message.new_unknown_field !== '') {
+            writer.uint32(106).string(message.new_unknown_field);
         }
         if ('_unknownFields' in message) {
             // @ts-ignore
@@ -161,6 +167,9 @@ export const AuditEvent = {
                 case 12:
                     message.persistent_session_id = reader.string();
                     break;
+                case 13:
+                    message.new_unknown_field = reader.string();
+                    break;
                 default:
                     const startPos = reader.pos;
                     reader.skipType(tag & 7);
@@ -188,6 +197,7 @@ export const AuditEvent = {
             restricted: isSet(object.restricted) ? AuditEvent_restrictedMessage.fromJSON(object.restricted) : undefined,
             extensions: isSet(object.extensions) ? AuditEvent_extensionsMessage.fromJSON(object.extensions) : undefined,
             persistent_session_id: isSet(object.persistent_session_id) ? String(object.persistent_session_id) : '',
+            new_unknown_field: isSet(object.new_unknown_field) ? String(object.new_unknown_field) : '',
         };
     },
 
@@ -209,6 +219,7 @@ export const AuditEvent = {
         message.extensions !== undefined &&
             (obj.extensions = message.extensions ? AuditEvent_extensionsMessage.toJSON(message.extensions) : undefined);
         message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
+        message.new_unknown_field !== undefined && (obj.new_unknown_field = message.new_unknown_field);
         return obj;
     },
 
@@ -238,6 +249,7 @@ export const AuditEvent = {
                 ? AuditEvent_extensionsMessage.fromPartial(object.extensions)
                 : undefined;
         message.persistent_session_id = object.persistent_session_id ?? '';
+        message.new_unknown_field = object.new_unknown_field ?? '';
         return message;
     },
 };

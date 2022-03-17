@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 import { SNSEvent, SQSEvent, SQSRecord, SNSEventRecord } from 'aws-lambda';
 import { AuditEvent } from '../../protobuf/audit-event';
+import { AuditEvent as UnknownAuditEvent } from '../../tests/test-protobuf/unknown-audit-event';
 
 export class TestHelper {
     private static sqsRecord: SQSRecord = {
@@ -63,16 +64,14 @@ export class TestHelper {
         },
     };
 
-    static createSNSEventWithEncodedMessage(message: object, numberOfRecords = 1): SNSEvent {
-        const encoded = AuditEvent.encode(AuditEvent.fromJSON(message)).finish();
-
+    static createSNSEventWithEncodedMessage(message: Uint8Array, numberOfRecords = 1): SNSEvent {
         const snsEvent = {
             Records: Array<SNSEventRecord>(),
         };
 
         for (let i = 0; i < numberOfRecords; i++) {
             const snsEventRecord: SNSEventRecord = JSON.parse(JSON.stringify(this.snsEventRecord));
-            snsEventRecord.Sns.Message = JSON.stringify(JSON.parse(JSON.stringify(encoded)).data);
+            snsEventRecord.Sns.Message = JSON.stringify(JSON.parse(JSON.stringify(message)).data);
 
             snsEvent.Records.push(snsEventRecord);
         }
@@ -80,20 +79,26 @@ export class TestHelper {
         return snsEvent;
     }
 
-    static createSQSEventWithEncodedMessage(message: object, numberOfRecords = 1): SQSEvent {
-        const encoded = AuditEvent.encode(AuditEvent.fromJSON(message)).finish();
-
+    static createSQSEventWithEncodedMessage(message: Uint8Array, numberOfRecords = 1): SQSEvent {
         const sqsEvent = {
             Records: Array<SQSRecord>(),
         };
 
         for (let i = 0; i < numberOfRecords; i++) {
             const sqsRecord: SQSRecord = JSON.parse(JSON.stringify(this.sqsRecord));
-            sqsRecord.body = JSON.stringify(JSON.parse(JSON.stringify(encoded)).data);
+            sqsRecord.body = JSON.stringify(JSON.parse(JSON.stringify(message)).data);
 
             sqsEvent.Records.push(sqsRecord);
         }
 
         return sqsEvent;
+    }
+
+    static encodeAuditEvent(message: AuditEvent): Uint8Array {
+        return AuditEvent.encode(message).finish();
+    }
+
+    static encodeAuditEventWithUnknownField(message: UnknownAuditEvent): Uint8Array {
+        return UnknownAuditEvent.encode(message).finish();
     }
 }

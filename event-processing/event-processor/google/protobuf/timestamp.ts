@@ -1,4 +1,5 @@
 /* eslint-disable */
+/* istanbul ignore file */
 import Long from 'long';
 import _m0 from 'protobufjs/minimal';
 
@@ -126,7 +127,9 @@ export const Timestamp = {
             writer.uint32(16).int32(message.nanos);
         }
         if ('_unknownFields' in message) {
+            // @ts-ignore
             for (const key of Object.keys(message['_unknownFields'])) {
+                // @ts-ignore
                 const values = message['_unknownFields'][key] as Uint8Array[];
                 for (const value of values) {
                     writer.uint32(parseInt(key, 10));
