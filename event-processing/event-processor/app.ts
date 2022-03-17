@@ -19,8 +19,6 @@ export const handler = async (event: Event): Promise<string> => {
         throw new ValidationException('One or more event messages failed validation.', validationResponses);
     }
 
-    //Populate missing formatted dates
-
     //Are we returning the records here or just the messages??? I assume just the messages
     return JSON.stringify(
         validationResponses.map((validationResponse: IValidationResponse) => {

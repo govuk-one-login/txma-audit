@@ -80,6 +80,10 @@ export class validationService {
             };
         }
 
+        if (!eventMessage.timestamp_formatted) {
+            eventMessage.timestamp_formatted = eventMessage.timestamp.toISOString();
+        }
+
         return {
             isValid: true,
             message: AuditEvent.toJSON(eventMessage) as string,
