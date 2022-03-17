@@ -73,6 +73,28 @@ Resources:
         OnSuccess:
           Destination: !Ref epSNSTopic
 
+  EventProcessorUnknownFielsErrorMetric:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "[WARN] UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields"
+
+  EventProcessorUnkownFieldsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Event Processor Unknown Fields Alarm
+      AlarmName: UnknownFieldsAlarm
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Threshold: 1
+      MetricName: !GetAtt EventProcessorUnknownFielsErrorMetric.MetricName
+      Namespace: !GetAtt EventProcessorUnknownFielsErrorMetric.MetricNamespace
+
 Outputs:
   epSNSTopicARN:
     Description: ARN of SNS Topic
