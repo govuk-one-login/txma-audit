@@ -28,15 +28,15 @@ In order to generate the typescript needed to serialize messages to the protobuf
 
 ###Linux/Mac:
 ```bash
-protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto -ts_proto_opt=useDate=true --ts_proto_opt=esModuleInterop=true --ts_proto_out=. ./protobuf/event-message.proto
+protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto -ts_proto_opt=useDate=true,esModuleInterop=true,snakeToCamel=false,useExactTypes=false,unknownFields=true --ts_proto_out=. ./protobuf/audit-event.proto
 ```
 
 ###Windows:
 ```bash
-protoc --plugin=protoc-gen-ts_proto=.\node_modules\.bin\protoc-gen-ts_proto.cmd --ts_proto_opt=useDate=true --ts_proto_opt=esModuleInterop=true --ts_proto_out=. ./protobuf/event-message.proto
+ protoc --plugin=protoc-gen-ts_proto=.\node_modules\.bin\protoc-gen-ts_proto.cmd --ts_proto_opt=useDate=true,esModuleInterop=true,snakeToCamel=false,useExactTypes=false,unknownFields=true --ts_proto_out=. ./protobuf/audit-event.proto
 ```
 
-This will generate a number of typescript classes and interfaces that can be used.
+This will generate a number of typescript classes and interfaces that can be used to encode and decode buffer arrays and methods to help with JSON conversion.
 
 ## Deploy the sample application
 
