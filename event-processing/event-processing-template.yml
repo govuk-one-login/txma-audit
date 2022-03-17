@@ -11,7 +11,7 @@ Parameters:
       - staging
       - production
       - integration
-    Default: build
+    Default: develop
     Description: "The current environment for deployment (e.g. develop, build, staging, production, etc.)"
   AuditAccountARN:
     Type: String
@@ -44,7 +44,14 @@ Resources:
       Topics:
       - !Ref epSNSTopic
 
+  EventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/aws/lambda/EventProcessorFunction"
+
   EventProcessorFunction:
+    DependsOn:
+      - EventProcessorLogGroup
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction"
@@ -77,10 +84,12 @@ Resources:
         OnSuccess:
           Destination: !Ref epSNSTopic
 
-  EventProcessorUnknownFielsErrorMetric:
+  EventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - EventProcessorFunction
     Type: AWS::Logs::MetricFilter
     Properties:
-      FilterPattern: "[WARN] UNKNOWN FIELDS"
+      FilterPattern: "WARN UNKNOWN FIELDS"
       LogGroupName: "/aws/lambda/EventProcessorFunction"
       MetricTransformations:
         - MetricValue: "1"
@@ -88,6 +97,8 @@ Resources:
           MetricName: "Unknown Fields"
 
   EventProcessorUnkownFieldsAlarm:
+    DependsOn:
+      - EventProcessorUnknownFieldsErrorMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: Event Processor Unknown Fields Alarm
@@ -95,6 +106,7 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       Statistic: Sum
+      Period: 60
       Threshold: 1
-      MetricName: !GetAtt EventProcessorUnknownFielsErrorMetric.MetricName
-      Namespace: !GetAtt EventProcessorUnknownFielsErrorMetric.MetricNamespace
+      MetricName: "Unknown Fields"
+      Namespace: "lambda/di/txma/errors"

@@ -34,8 +34,7 @@ capabilities = "CAPABILITY_IAM"
 tags = "project=\"di-txma-audit\" stage=\"build\""
 parameter_overrides=[
     "Environment=build",
-    "EventProcessorStackName=di-txma-ep-build",
-    "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-build"
+    "EventProcessorStackName=di-txma-ep-build"
 ]
 
 [staging.deploy.parameters]

@@ -62,6 +62,12 @@ When deploying the event processor also include the `--resolve-s3` argument in o
 sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --profile di-dev-event-processing-admin
 ```
 
+You can also provide overrides directly when calling sam deploy if you need to provide different parameters to the stacks:
+
+```bash
+sam deploy --config-file config/samconfig-event-processing.toml --config-env "develop" --profile di-dev-admin --resolve-s3 --parameter-overrides ParameterKey=AuditAccountARN,ParameterValue=<ARN of account IAM root> ParameterKey=Environment,ParameterValue=<Environment>
+```
+
 *Note*: When calling SAM deploy against a template containing a Lambda function make sure to omit the template name argument. If this is not done, the source files will be deployed instead of the compiled files located in .aws-sam.
 
 ####Available Environments
