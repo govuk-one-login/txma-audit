@@ -5,12 +5,12 @@
 
 export default {
     transform: {
-        '^.+\\.ts?$': 'esbuild-jest',
+        '^.+\\.(ts|tsx)$': 'ts-jest',
     },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
     clearMocks: true,
     collectCoverage: true,
     coverageDirectory: 'coverage',
-    coverageProvider: 'v8',
+    coverageProvider: 'babel',
     testMatch: ['**/tests/unit/*.test.ts'],
 };
