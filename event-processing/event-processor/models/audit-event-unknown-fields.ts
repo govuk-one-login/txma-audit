@@ -2,7 +2,6 @@ import {
     AuditEvent_extensionsMessage,
     AuditEvent_platformMessage,
     AuditEvent_restrictedMessage,
-    AuditEvent_userMessage,
 } from '../protobuf/audit-event';
 import { IUnknownFields } from './unknown-fields.interface';
 
@@ -14,7 +13,7 @@ export interface IAuditEventUnknownFields {
     timestamp: Date | undefined;
     timestamp_formatted: string;
     event_name: string;
-    user: AuditEvent_userMessage | undefined;
+    user: IAuditEventUnknownFields | undefined;
     platform: AuditEvent_platformMessage | undefined;
     restricted: AuditEvent_restrictedMessage | undefined;
     extensions: AuditEvent_extensionsMessage | undefined;

@@ -7,6 +7,7 @@ import { SourceTypeEnum } from '../enums/source-type.enum';
 import { IEventSourceDetails } from '../models/event-source-details.interface';
 import { IUnknownFieldDetails } from '../models/unknown-field-details.interface';
 import { IAuditEventUnknownFields } from '../models/audit-event-unknown-fields';
+import { IUserUnknownFields } from '../models/user-unknown-fields.interface';
 
 export class validationService {
     static async validateSNSEventRecord(record: SNSEventRecord): Promise<IValidationResponse> {
@@ -39,7 +40,10 @@ export class validationService {
     ): Promise<IValidationResponse> {
         const eventMessage = AuditEvent.decode(JSON.parse(message) as Uint8Array) as IAuditEventUnknownFields;
 
-        if ('_unknownFields' in eventMessage && Object.keys(eventMessage._unknownFields).length) {
+        if (
+            (eventMessage._unknownFields && Object.keys(eventMessage._unknownFields).length) ||
+            (eventMessage.user?._unknownFields && Object.keys(eventMessage._unknownFields).length)
+        ) {
             const unknownFieldsWarning: IUnknownFieldsWarning = {
                 sourceName: eventDetails.sourceName,
                 sourceType: eventDetails.sourceType,
@@ -49,16 +53,10 @@ export class validationService {
                 unknownFields: [],
             };
 
-            for (const key of Object.keys(eventMessage._unknownFields)) {
-                const values = eventMessage._unknownFields[key][0] as Uint8Array;
-                const reader = new _m0.Reader(values);
+            unknownFieldsWarning.unknownFields.push(...(await this.getUnknownFields(eventMessage, 'AuditEvent')));
 
-                const unknownField: IUnknownFieldDetails = {
-                    key: key,
-                    value: reader.string(),
-                };
-
-                unknownFieldsWarning.unknownFields.push(unknownField);
+            if (eventMessage.user) {
+                unknownFieldsWarning.unknownFields.push(...(await this.getUnknownFields(eventMessage.user, 'User')));
             }
 
             console.warn('[WARN] UNKNOWN FIELDS\n' + JSON.stringify(unknownFieldsWarning));
@@ -68,7 +66,7 @@ export class validationService {
             return {
                 isValid: false,
                 error: 'eventName is a required field.',
-                message: AuditEvent.toJSON(eventMessage) as string,
+                message: AuditEvent.toJSON(eventMessage as AuditEvent) as string,
             };
         }
 
@@ -76,7 +74,7 @@ export class validationService {
             return {
                 isValid: false,
                 error: 'timestamp is a required field.',
-                message: AuditEvent.toJSON(eventMessage) as string,
+                message: AuditEvent.toJSON(eventMessage as AuditEvent) as string,
             };
         }
 
@@ -86,7 +84,29 @@ export class validationService {
 
         return {
             isValid: true,
-            message: AuditEvent.toJSON(eventMessage) as string,
+            message: AuditEvent.toJSON(eventMessage as AuditEvent) as string,
         };
+    }
+
+    private static async getUnknownFields(
+        model: IAuditEventUnknownFields | IUserUnknownFields,
+        fieldName: string,
+    ): Promise<IUnknownFieldDetails[]> {
+        const unknownFields = Array<IUnknownFieldDetails>();
+
+        for (const key of Object.keys(model._unknownFields)) {
+            const values = model._unknownFields[key][0] as Uint8Array;
+            const reader = new _m0.Reader(values);
+
+            const unknownField: IUnknownFieldDetails = {
+                key: key,
+                value: reader.string(),
+                fieldName: fieldName,
+            };
+
+            unknownFields.push(unknownField);
+        }
+
+        return unknownFields;
     }
 }

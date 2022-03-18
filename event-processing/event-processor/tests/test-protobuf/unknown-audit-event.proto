@@ -15,6 +15,7 @@ message AuditEvent {
     string email = 2;
     string phone = 3;
     string ip_address = 4;
+    string unknown_user_field = 5;
   }
   userMessage user = 8;
   message keyValuePairMessage {

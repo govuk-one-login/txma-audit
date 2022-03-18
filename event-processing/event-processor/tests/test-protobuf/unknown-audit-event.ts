@@ -1,5 +1,4 @@
 /* eslint-disable */
-/* istanbul ignore file */
 import Long from 'long';
 import _m0 from 'protobufjs/minimal';
 import { Timestamp } from '../../google/protobuf/timestamp';
@@ -27,6 +26,7 @@ export interface AuditEvent_userMessage {
     email: string;
     phone: string;
     ip_address: string;
+    unknown_user_field: string;
 }
 
 export interface AuditEvent_keyValuePairMessage {
@@ -255,7 +255,7 @@ export const AuditEvent = {
 };
 
 function createBaseAuditEvent_userMessage(): AuditEvent_userMessage {
-    return { id: '', email: '', phone: '', ip_address: '' };
+    return { id: '', email: '', phone: '', ip_address: '', unknown_user_field: '' };
 }
 
 export const AuditEvent_userMessage = {
@@ -271,6 +271,9 @@ export const AuditEvent_userMessage = {
         }
         if (message.ip_address !== '') {
             writer.uint32(34).string(message.ip_address);
+        }
+        if (message.unknown_user_field !== '') {
+            writer.uint32(42).string(message.unknown_user_field);
         }
         if ('_unknownFields' in message) {
             // @ts-ignore
@@ -310,6 +313,9 @@ export const AuditEvent_userMessage = {
                 case 4:
                     message.ip_address = reader.string();
                     break;
+                case 5:
+                    message.unknown_user_field = reader.string();
+                    break;
                 default:
                     const startPos = reader.pos;
                     reader.skipType(tag & 7);
@@ -329,6 +335,7 @@ export const AuditEvent_userMessage = {
             email: isSet(object.email) ? String(object.email) : '',
             phone: isSet(object.phone) ? String(object.phone) : '',
             ip_address: isSet(object.ip_address) ? String(object.ip_address) : '',
+            unknown_user_field: isSet(object.unknown_user_field) ? String(object.unknown_user_field) : '',
         };
     },
 
@@ -338,6 +345,7 @@ export const AuditEvent_userMessage = {
         message.email !== undefined && (obj.email = message.email);
         message.phone !== undefined && (obj.phone = message.phone);
         message.ip_address !== undefined && (obj.ip_address = message.ip_address);
+        message.unknown_user_field !== undefined && (obj.unknown_user_field = message.unknown_user_field);
         return obj;
     },
 
@@ -347,6 +355,7 @@ export const AuditEvent_userMessage = {
         message.email = object.email ?? '';
         message.phone = object.phone ?? '';
         message.ip_address = object.ip_address ?? '';
+        message.unknown_user_field = object.unknown_user_field ?? '';
         return message;
     },
 };
