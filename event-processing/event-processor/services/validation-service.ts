@@ -1,4 +1,4 @@
-import { SNSEventRecord, SQSRecord } from 'aws-lambda';
+import { SQSRecord } from 'aws-lambda';
 import { AuditEvent } from '../protobuf/audit-event';
 import { IValidationResponse } from '../models/validation-response.interface';
 import _m0 from 'protobufjs/minimal';
@@ -10,16 +10,6 @@ import { IAuditEventUnknownFields } from '../models/audit-event-unknown-fields';
 import { IUserUnknownFields } from '../models/user-unknown-fields.interface';
 
 export class validationService {
-    static async validateSNSEventRecord(record: SNSEventRecord): Promise<IValidationResponse> {
-        const message: string = record.Sns.Message;
-        const eventDetails: IEventSourceDetails = {
-            sourceName: record.EventSubscriptionArn,
-            sourceType: SourceTypeEnum.sns,
-        };
-
-        return await this.isValidEventMessage(message, eventDetails);
-    }
-
     static async validateSQSRecord(record: SQSRecord): Promise<IValidationResponse> {
         const message = record.body;
         const eventDetails: IEventSourceDetails = {
@@ -28,10 +18,6 @@ export class validationService {
         };
 
         return await this.isValidEventMessage(message, eventDetails);
-    }
-
-    static isInstanceOfSNSRecord(record: SNSEventRecord | SQSRecord): record is SNSEventRecord {
-        return 'Sns' in record;
     }
 
     private static async isValidEventMessage(

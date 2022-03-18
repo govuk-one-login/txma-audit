@@ -1,18 +1,13 @@
-import { SNSEventRecord, SQSRecord } from 'aws-lambda';
-import { Event } from './types/type-declarations';
+import { SQSEvent, SQSRecord } from 'aws-lambda';
 import { validationService } from './services/validation-service';
 import { IValidationResponse } from './models/validation-response.interface';
 import { ValidationException } from './exceptions/validation-exception';
 
-export const handler = async (event: Event): Promise<string> => {
+export const handler = async (event: SQSEvent): Promise<string> => {
     const validationResponses: IValidationResponse[] = [];
 
     for (const record of event.Records) {
-        if (validationService.isInstanceOfSNSRecord(record)) {
-            validationResponses.push(await validationService.validateSNSEventRecord(record as SNSEventRecord));
-        } else {
-            validationResponses.push(await validationService.validateSQSRecord(record as SQSRecord));
-        }
+        validationResponses.push(await validationService.validateSQSRecord(record as SQSRecord));
     }
 
     if (validationResponses.some((response: IValidationResponse) => !response.isValid)) {

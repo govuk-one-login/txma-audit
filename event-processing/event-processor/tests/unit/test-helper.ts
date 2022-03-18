@@ -1,5 +1,5 @@
 /* istanbul ignore file */
-import { SNSEvent, SQSEvent, SQSRecord, SNSEventRecord } from 'aws-lambda';
+import { SQSEvent, SQSRecord } from 'aws-lambda';
 import { AuditEvent } from '../../protobuf/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-protobuf/unknown-audit-event';
 
@@ -39,45 +39,6 @@ export class TestHelper {
             },
         },
     };
-
-    private static snsEventRecord: SNSEventRecord = {
-        EventVersion: '1',
-        EventSubscriptionArn: 'SubscriptionArn',
-        EventSource: 'Source',
-        Sns: {
-            SignatureVersion: '1',
-            Signature: 'SignatureValue',
-            Timestamp: '1609462861',
-            SigningCertUrl: 'some/Url',
-            Message: '',
-            MessageId: 'MessageID_1',
-            MessageAttributes: {
-                Attribute1: {
-                    Type: 'Attribute1',
-                    Value: 'Value1',
-                },
-            },
-            Type: 'SomeType',
-            UnsubscribeUrl: 'UnsubscribeUrl',
-            TopicArn: 'TopicArn',
-            Subject: 'Sport',
-        },
-    };
-
-    static createSNSEventWithEncodedMessage(message: Uint8Array, numberOfRecords = 1): SNSEvent {
-        const snsEvent = {
-            Records: Array<SNSEventRecord>(),
-        };
-
-        for (let i = 0; i < numberOfRecords; i++) {
-            const snsEventRecord: SNSEventRecord = JSON.parse(JSON.stringify(this.snsEventRecord));
-            snsEventRecord.Sns.Message = JSON.stringify(JSON.parse(JSON.stringify(message)).data);
-
-            snsEvent.Records.push(snsEventRecord);
-        }
-
-        return snsEvent;
-    }
 
     static createSQSEventWithEncodedMessage(message: Uint8Array, numberOfRecords = 1): SQSEvent {
         const sqsEvent = {

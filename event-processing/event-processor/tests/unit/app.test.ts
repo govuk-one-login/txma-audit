@@ -68,58 +68,6 @@ describe('Unit test for app handler', function () {
         expect(result).toEqual(expectedResult);
     });
 
-    it('successfully stringifies an SNS event', async () => {
-        const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":"2021-01-01T01:01:01.000Z","timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}]';
-
-        const exampleMessage: AuditEvent = {
-            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-            request_id: '43143-233Ds-2823-283-dj299j1',
-            session_id: 'c222c1ec',
-            client_id: 'some-client',
-            timestamp: new Date('2021-01-01T01:01:01.000Z'),
-            timestamp_formatted: '2021-01-23T15:43:21.842',
-            event_name: 'AUTHENTICATION_ATTEMPT',
-            user: {
-                id: 'a52f6f87',
-                email: 'foo@bar.com',
-                phone: '07711223344',
-                ip_address: '100.100.100.100',
-            },
-            platform: {
-                keyValuePair: [
-                    {
-                        key: 'xray_trace_id',
-                        value: '24727sda4192',
-                    },
-                ],
-            },
-            restricted: {
-                keyValuePair: [
-                    {
-                        key: 'experian_ref',
-                        value: 'DSJJSEE29392',
-                    },
-                ],
-            },
-            extensions: {
-                keyValuePair: [
-                    {
-                        key: 'response',
-                        value: 'Authentication successful',
-                    },
-                ],
-            },
-            persistent_session_id: 'some session id',
-        };
-
-        const snsEvent = TestHelper.createSNSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
-
-        const result = await handler(snsEvent);
-
-        expect(result).toEqual(expectedResult);
-    });
-
     it('successfully stringifies multiple events', async () => {
         const expectedResult =
             '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":"2021-01-01T01:01:01.000Z","timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"},' +
@@ -166,7 +114,7 @@ describe('Unit test for app handler', function () {
             persistent_session_id: 'some session id',
         };
 
-        const snsEvent = TestHelper.createSNSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
+        const snsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
 
         const result = await handler(snsEvent);
 
@@ -283,7 +231,7 @@ describe('Unit test for app handler', function () {
 
 
     it('throws error when validation fails on event name', async () => {
-        await expect(handler(TestHelper.createSNSEventWithEncodedMessage(TestHelper.encodeAuditEvent({
+        await expect(handler(TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent({
             client_id: "value",
             event_id: "value",
             event_name: "",
@@ -302,7 +250,7 @@ describe('Unit test for app handler', function () {
     });
 
     it('throws error when validation fails on timestamp', async () => {
-        await expect(handler(TestHelper.createSNSEventWithEncodedMessage(TestHelper.encodeAuditEvent({
+        await expect(handler(TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent({
             client_id: "value",
             event_id: "value",
             event_name: "value",
