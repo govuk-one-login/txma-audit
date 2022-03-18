@@ -1,4 +1,5 @@
 /* eslint-disable */
+/* istanbul ignore file */
 import Long from 'long';
 import _m0 from 'protobufjs/minimal';
 import { Timestamp } from '../../google/protobuf/timestamp';

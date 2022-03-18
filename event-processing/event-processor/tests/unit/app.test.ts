@@ -282,19 +282,38 @@ describe('Unit test for app handler', function () {
     });
 
 
-    it('throws error when validation fails', async () => {
+    it('throws error when validation fails on event name', async () => {
         await expect(handler(TestHelper.createSNSEventWithEncodedMessage(TestHelper.encodeAuditEvent({
-            client_id: "",
-            event_id: "",
+            client_id: "value",
+            event_id: "value",
             event_name: "",
             extensions: undefined,
-            persistent_session_id: "",
+            persistent_session_id: "value",
             platform: undefined,
-            request_id: "",
+            request_id: "value",
             restricted: undefined,
-            session_id: "",
+            session_id: "value",
+            timestamp: new Date(),
+            timestamp_formatted: "value",
+            user: undefined
+        })))).rejects.toThrowError(
+            ValidationException,
+        );
+    });
+
+    it('throws error when validation fails on timestamp', async () => {
+        await expect(handler(TestHelper.createSNSEventWithEncodedMessage(TestHelper.encodeAuditEvent({
+            client_id: "value",
+            event_id: "value",
+            event_name: "value",
+            extensions: undefined,
+            persistent_session_id: "value",
+            platform: undefined,
+            request_id: "value",
+            restricted: undefined,
+            session_id: "value",
             timestamp: undefined,
-            timestamp_formatted: "",
+            timestamp_formatted: "value",
             user: undefined
         })))).rejects.toThrowError(
             ValidationException,
