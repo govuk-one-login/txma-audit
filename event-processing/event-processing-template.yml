@@ -110,3 +110,30 @@ Resources:
       Threshold: 1
       MetricName: "Unknown Fields"
       Namespace: "lambda/di/txma/errors"
+
+  EventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - EventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors"
+
+  EventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - EventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Event Processor Required Fields Alarm
+      AlarmName: RequiredFieldsAlarm
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors"
+      Namespace: "lambda/di/txma/errors"
