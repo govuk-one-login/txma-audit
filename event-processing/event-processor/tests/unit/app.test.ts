@@ -1,7 +1,6 @@
 /* eslint-disable */
 import { handler } from '../../app';
 import { TestHelper } from './test-helper';
-import { ValidationException } from '../../exceptions/validation-exception';
 import { AuditEvent } from '../../protobuf/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-protobuf/unknown-audit-event';
 
@@ -9,7 +8,7 @@ describe('Unit test for app handler', function () {
     let consoleWarningMock: jest.SpyInstance;
 
     beforeEach(() => {
-        consoleWarningMock = jest.spyOn(global.console, 'warn');
+        consoleWarningMock = jest.spyOn(global.console, 'log');
     });
 
     afterEach(() => {
@@ -114,9 +113,9 @@ describe('Unit test for app handler', function () {
             persistent_session_id: 'some session id',
         };
 
-        const snsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
+        const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
 
-        const result = await handler(snsEvent);
+        const result = await handler(sqsEvent);
 
         expect(result).toEqual(expectedResult);
     });
@@ -230,41 +229,201 @@ describe('Unit test for app handler', function () {
     });
 
 
-    it('throws error when validation fails on event name', async () => {
-        await expect(handler(TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent({
-            client_id: "value",
-            event_id: "value",
-            event_name: "",
-            extensions: undefined,
-            persistent_session_id: "value",
-            platform: undefined,
-            request_id: "value",
-            restricted: undefined,
-            session_id: "value",
-            timestamp: new Date(),
-            timestamp_formatted: "value",
-            user: undefined
-        })))).rejects.toThrowError(
-            ValidationException,
-        );
+    it('logs an error when validation fails on event name', async () => {
+        const expectedResult =
+            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":"2021-01-01T01:01:01.000Z","timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"},' +
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":"2021-01-01T01:01:01.000Z","timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}]';
+
+        const exampleMessage: AuditEvent = {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            request_id: '43143-233Ds-2823-283-dj299j1',
+            session_id: 'c222c1ec',
+            client_id: 'some-client',
+            timestamp: new Date('2021-01-01T01:01:01.000Z'),
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+            user: {
+                id: 'a52f6f87',
+                email: 'foo@bar.com',
+                phone: '07711223344',
+                ip_address: '100.100.100.100',
+            },
+            platform: {
+                keyValuePair: [
+                    {
+                        key: 'xray_trace_id',
+                        value: '24727sda4192',
+                    },
+                ],
+            },
+            restricted: {
+                keyValuePair: [
+                    {
+                        key: 'experian_ref',
+                        value: 'DSJJSEE29392',
+                    },
+                ],
+            },
+            extensions: {
+                keyValuePair: [
+                    {
+                        key: 'response',
+                        value: 'Authentication successful',
+                    },
+                ],
+            },
+            persistent_session_id: 'some session id',
+        };
+
+        const exampleInvalidMessage: AuditEvent = {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            request_id: '43143-233Ds-2823-283-dj299j1',
+            session_id: 'c222c1ec',
+            client_id: 'some-client',
+            timestamp: new Date('2021-01-01T01:01:01.000Z'),
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: '',
+            user: {
+                id: 'a52f6f87',
+                email: 'foo@bar.com',
+                phone: '07711223344',
+                ip_address: '100.100.100.100',
+            },
+            platform: {
+                keyValuePair: [
+                    {
+                        key: 'xray_trace_id',
+                        value: '24727sda4192',
+                    },
+                ],
+            },
+            restricted: {
+                keyValuePair: [
+                    {
+                        key: 'experian_ref',
+                        value: 'DSJJSEE29392',
+                    },
+                ],
+            },
+            extensions: {
+                keyValuePair: [
+                    {
+                        key: 'response',
+                        value: 'Authentication successful',
+                    },
+                ],
+            },
+            persistent_session_id: 'some session id',
+        };
+
+        const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
+        const sqsEventWithInvalidMessage = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleInvalidMessage));
+
+        sqsEvent.Records.push(...sqsEventWithInvalidMessage.Records)
+
+        const result = await handler(sqsEvent);
+
+        expect(consoleWarningMock).toHaveBeenCalledTimes(1);
+        expect(consoleWarningMock).toHaveBeenCalledWith('[ERROR] VALIDATION ERROR\n{"validationResponses":[{"isValid":false,"error":"eventName is a required field.","message":{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":"2021-01-01T01:01:01.000Z","timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}}]}')
+        expect(result).toEqual(expectedResult);
     });
 
-    it('throws error when validation fails on timestamp', async () => {
-        await expect(handler(TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent({
-            client_id: "value",
-            event_id: "value",
-            event_name: "value",
-            extensions: undefined,
-            persistent_session_id: "value",
-            platform: undefined,
-            request_id: "value",
-            restricted: undefined,
-            session_id: "value",
+    it('logs an error when validation fails on timestamp', async () => {
+        const expectedResult =
+            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":"2021-01-01T01:01:01.000Z","timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"},' +
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":"2021-01-01T01:01:01.000Z","timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}]';
+
+        const exampleMessage: AuditEvent = {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            request_id: '43143-233Ds-2823-283-dj299j1',
+            session_id: 'c222c1ec',
+            client_id: 'some-client',
+            timestamp: new Date('2021-01-01T01:01:01.000Z'),
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+            user: {
+                id: 'a52f6f87',
+                email: 'foo@bar.com',
+                phone: '07711223344',
+                ip_address: '100.100.100.100',
+            },
+            platform: {
+                keyValuePair: [
+                    {
+                        key: 'xray_trace_id',
+                        value: '24727sda4192',
+                    },
+                ],
+            },
+            restricted: {
+                keyValuePair: [
+                    {
+                        key: 'experian_ref',
+                        value: 'DSJJSEE29392',
+                    },
+                ],
+            },
+            extensions: {
+                keyValuePair: [
+                    {
+                        key: 'response',
+                        value: 'Authentication successful',
+                    },
+                ],
+            },
+            persistent_session_id: 'some session id',
+        };
+
+        const exampleInvalidMessage: AuditEvent = {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            request_id: '43143-233Ds-2823-283-dj299j1',
+            session_id: 'c222c1ec',
+            client_id: 'some-client',
             timestamp: undefined,
-            timestamp_formatted: "value",
-            user: undefined
-        })))).rejects.toThrowError(
-            ValidationException,
-        );
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+            user: {
+                id: 'a52f6f87',
+                email: 'foo@bar.com',
+                phone: '07711223344',
+                ip_address: '100.100.100.100',
+            },
+            platform: {
+                keyValuePair: [
+                    {
+                        key: 'xray_trace_id',
+                        value: '24727sda4192',
+                    },
+                ],
+            },
+            restricted: {
+                keyValuePair: [
+                    {
+                        key: 'experian_ref',
+                        value: 'DSJJSEE29392',
+                    },
+                ],
+            },
+            extensions: {
+                keyValuePair: [
+                    {
+                        key: 'response',
+                        value: 'Authentication successful',
+                    },
+                ],
+            },
+            persistent_session_id: 'some session id',
+        };
+
+        const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
+        const sqsEventWithInvalidMessage = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleInvalidMessage));
+
+        sqsEvent.Records.push(...sqsEventWithInvalidMessage.Records)
+
+        const result = await handler(sqsEvent);
+
+        expect(consoleWarningMock).toHaveBeenCalledTimes(1);
+        expect(consoleWarningMock).toHaveBeenCalledWith('[ERROR] VALIDATION ERROR\n{"validationResponses":[{"isValid":false,"error":"timestamp is a required field.","message":{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}}]}')
+        expect(result).toEqual(expectedResult);
     });
 });

@@ -42,7 +42,7 @@ export class validationService {
                 unknownFieldsWarning.unknownFields.push(...(await this.getUnknownFields(eventMessage.user, 'User')));
             }
 
-            console.warn('[WARN] UNKNOWN FIELDS\n' + JSON.stringify(unknownFieldsWarning));
+            console.log('[WARN] UNKNOWN FIELDS\n' + JSON.stringify(unknownFieldsWarning));
         }
 
         if (!eventMessage.event_name) {

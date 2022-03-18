@@ -11,12 +11,26 @@ export const handler = async (event: SQSEvent): Promise<string> => {
     }
 
     if (validationResponses.some((response: IValidationResponse) => !response.isValid)) {
-        throw new ValidationException('One or more event messages failed validation.', validationResponses);
+        console.log(
+            '[ERROR] VALIDATION ERROR\n' +
+                JSON.stringify(
+                    new ValidationException(
+                        'One or more event messages failed validation.',
+                        validationResponses.filter((response: IValidationResponse) => {
+                            return !response.isValid;
+                        }),
+                    ),
+                ),
+        );
     }
 
     return JSON.stringify(
-        validationResponses.map((validationResponse: IValidationResponse) => {
-            return validationResponse.message;
-        }),
+        validationResponses
+            .filter((response: IValidationResponse) => {
+                return response.isValid;
+            })
+            .map((validationResponse: IValidationResponse) => {
+                return validationResponse.message;
+            }),
     );
 };
