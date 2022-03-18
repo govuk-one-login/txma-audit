@@ -1,15 +1,15 @@
-import { IValidationException } from '../models/validation-exception.interface';
-import { IValidationResponse } from '../models/validation-response.interface';
+import { IRequiredFieldsException } from '../models/required-fields-exception.interface';
+import { IRequiredFieldError } from '../models/required-field-error.interface';
 
-export class ValidationException extends Error implements IValidationException {
-    constructor(message: string, validationResponses: IValidationResponse[] = []) {
+export class ValidationException extends Error implements IRequiredFieldsException {
+    constructor(message: string, requiredFieldErrors: IRequiredFieldError[] = []) {
         super(message);
 
         // Set the prototype explicitly.
         Object.setPrototypeOf(this, ValidationException.prototype);
 
-        this.validationResponses = validationResponses;
+        this.requireFieldErrors = requiredFieldErrors;
     }
 
-    validationResponses: IValidationResponse[];
+    requireFieldErrors: IRequiredFieldError[];
 }

@@ -1,5 +1,7 @@
+import { IRequiredFieldError } from './required-field-error.interface';
+
 export interface IValidationResponse {
     isValid: boolean;
-    error?: string;
     message: string;
+    error?: IRequiredFieldError;
 }

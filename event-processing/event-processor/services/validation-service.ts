@@ -2,62 +2,71 @@ import { SQSRecord } from 'aws-lambda';
 import { AuditEvent } from '../protobuf/audit-event';
 import { IValidationResponse } from '../models/validation-response.interface';
 import _m0 from 'protobufjs/minimal';
-import { IUnknownFieldsWarning } from '../models/unknown-fields-warning.interface';
-import { IEventSourceDetails } from '../models/event-source-details.interface';
+import { IUnknownFieldsError } from '../models/unknown-fields-error.interface';
 import { IUnknownFieldDetails } from '../models/unknown-field-details.interface';
 import { IAuditEventUnknownFields } from '../models/audit-event-unknown-fields';
 import { IUserUnknownFields } from '../models/user-unknown-fields.interface';
+import { RequiredFieldsEnum } from '../../enums/required-fields.enum';
 
 export class validationService {
     static async validateSQSRecord(record: SQSRecord): Promise<IValidationResponse> {
         const message = record.body;
-        const eventDetails: IEventSourceDetails = {
-            sourceName: record.eventSourceARN,
-        };
 
-        return await this.isValidEventMessage(message, eventDetails);
+        return await this.isValidEventMessage(message, record.eventSourceARN);
     }
 
-    private static async isValidEventMessage(
-        message: string,
-        eventDetails: IEventSourceDetails,
-    ): Promise<IValidationResponse> {
+    private static async isValidEventMessage(message: string, eventSource: string): Promise<IValidationResponse> {
         const eventMessage = AuditEvent.decode(JSON.parse(message) as Uint8Array) as IAuditEventUnknownFields;
 
         if (
             (eventMessage._unknownFields && Object.keys(eventMessage._unknownFields).length) ||
             (eventMessage.user?._unknownFields && Object.keys(eventMessage._unknownFields).length)
         ) {
-            const unknownFieldsWarning: IUnknownFieldsWarning = {
-                sourceName: eventDetails.sourceName,
+            const unknownFieldsError: IUnknownFieldsError = {
+                sqsResourceName: eventSource,
                 eventId: eventMessage.event_id,
                 eventName: eventMessage.event_name,
-                timeStamp: eventMessage.timestamp?.toISOString(),
+                timestamp: eventMessage.timestamp?.toISOString(),
+                message: 'Unknown fields in message.',
                 unknownFields: [],
             };
 
-            unknownFieldsWarning.unknownFields.push(...(await this.getUnknownFields(eventMessage, 'AuditEvent')));
+            unknownFieldsError.unknownFields.push(...(await this.getUnknownFields(eventMessage, 'AuditEvent')));
 
             if (eventMessage.user) {
-                unknownFieldsWarning.unknownFields.push(...(await this.getUnknownFields(eventMessage.user, 'User')));
+                unknownFieldsError.unknownFields.push(...(await this.getUnknownFields(eventMessage.user, 'User')));
             }
 
-            console.log('[WARN] UNKNOWN FIELDS\n' + JSON.stringify(unknownFieldsWarning));
+            console.log('[WARN] UNKNOWN FIELDS\n' + JSON.stringify(unknownFieldsError));
         }
 
         if (!eventMessage.event_name) {
             return {
                 isValid: false,
-                error: 'eventName is a required field.',
                 message: AuditEvent.toJSON(eventMessage as AuditEvent) as string,
+                error: {
+                    sqsResourceName: eventSource,
+                    eventId: eventMessage.event_id,
+                    eventName: eventMessage.event_name,
+                    timestamp: eventMessage.timestamp?.toISOString(),
+                    requiredField: RequiredFieldsEnum.eventName,
+                    message: 'event_name is a required field.',
+                },
             };
         }
 
         if (!eventMessage.timestamp) {
             return {
                 isValid: false,
-                error: 'timestamp is a required field.',
                 message: AuditEvent.toJSON(eventMessage as AuditEvent) as string,
+                error: {
+                    sqsResourceName: eventSource,
+                    eventId: eventMessage.event_id,
+                    eventName: eventMessage.event_name,
+                    timestamp: undefined,
+                    requiredField: RequiredFieldsEnum.timestamp,
+                    message: 'timestamp is a required field.',
+                },
             };
         }
 
