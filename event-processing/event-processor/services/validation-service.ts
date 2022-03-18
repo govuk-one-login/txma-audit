@@ -6,7 +6,7 @@ import { IUnknownFieldsError } from '../models/unknown-fields-error.interface';
 import { IUnknownFieldDetails } from '../models/unknown-field-details.interface';
 import { IAuditEventUnknownFields } from '../models/audit-event-unknown-fields';
 import { IUserUnknownFields } from '../models/user-unknown-fields.interface';
-import { RequiredFieldsEnum } from '../../enums/required-fields.enum';
+import { RequiredFieldsEnum } from '../enums/required-fields.enum';
 
 export class validationService {
     static async validateSQSRecord(record: SQSRecord): Promise<IValidationResponse> {
