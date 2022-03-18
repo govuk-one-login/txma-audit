@@ -3,7 +3,6 @@ import { AuditEvent } from '../protobuf/audit-event';
 import { IValidationResponse } from '../models/validation-response.interface';
 import _m0 from 'protobufjs/minimal';
 import { IUnknownFieldsWarning } from '../models/unknown-fields-warning.interface';
-import { SourceTypeEnum } from '../enums/source-type.enum';
 import { IEventSourceDetails } from '../models/event-source-details.interface';
 import { IUnknownFieldDetails } from '../models/unknown-field-details.interface';
 import { IAuditEventUnknownFields } from '../models/audit-event-unknown-fields';
@@ -14,7 +13,6 @@ export class validationService {
         const message = record.body;
         const eventDetails: IEventSourceDetails = {
             sourceName: record.eventSourceARN,
-            sourceType: SourceTypeEnum.sqs,
         };
 
         return await this.isValidEventMessage(message, eventDetails);
@@ -32,7 +30,6 @@ export class validationService {
         ) {
             const unknownFieldsWarning: IUnknownFieldsWarning = {
                 sourceName: eventDetails.sourceName,
-                sourceType: eventDetails.sourceType,
                 eventId: eventMessage.event_id,
                 eventName: eventMessage.event_name,
                 timeStamp: eventMessage.timestamp?.toISOString(),
