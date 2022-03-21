@@ -173,7 +173,7 @@ describe('Unit test for app handler', function () {
 
         expect(result).toEqual(expectedResult);
         expect(consoleWarningMock).toHaveBeenCalledTimes(1);
-        expect(consoleWarningMock).toHaveBeenCalledWith('[WARN] UNKNOWN FIELDS\n{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"2021-01-01T01:01:01.000Z","message":"Unknown fields in message.","unknownFields":[{"key":"106","value":"an unknown field","fieldName":"AuditEvent"},{"key":"42","value":"some unknown user field","fieldName":"User"}]}')
+        expect(consoleWarningMock).toHaveBeenCalledWith('[WARN] UNKNOWN FIELDS\n{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"2021-01-01T01:01:01.000Z","message":"Unknown fields in message.","unknownFields":[{"key":"106","fieldName":"AuditEvent"},{"key":"42","fieldName":"User"}]}')
     });
 
     it('successfully populates missing formatted timestamp fields', async () => {

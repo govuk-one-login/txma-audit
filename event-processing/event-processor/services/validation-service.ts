@@ -1,7 +1,6 @@
 import { SQSRecord } from 'aws-lambda';
 import { AuditEvent } from '../protobuf/audit-event';
 import { IValidationResponse } from '../models/validation-response.interface';
-import _m0 from 'protobufjs/minimal';
 import { IUnknownFieldsError } from '../models/unknown-fields-error.interface';
 import { IUnknownFieldDetails } from '../models/unknown-field-details.interface';
 import { IAuditEventUnknownFields } from '../models/audit-event-unknown-fields';
@@ -19,8 +18,8 @@ export class validationService {
         const eventMessage = AuditEvent.decode(JSON.parse(message) as Uint8Array) as IAuditEventUnknownFields;
 
         if (
-            (eventMessage._unknownFields && Object.keys(eventMessage._unknownFields).length) ||
-            (eventMessage.user?._unknownFields && Object.keys(eventMessage._unknownFields).length)
+            (eventMessage._unknownFields && Object.keys(eventMessage._unknownFields).length > 0) ||
+            (eventMessage.user?._unknownFields && Object.keys(eventMessage.user._unknownFields).length > 0)
         ) {
             const unknownFieldsError: IUnknownFieldsError = {
                 sqsResourceName: eventSource,
@@ -87,12 +86,8 @@ export class validationService {
         const unknownFields = Array<IUnknownFieldDetails>();
 
         for (const key of Object.keys(model._unknownFields)) {
-            const values = model._unknownFields[key][0] as Uint8Array;
-            const reader = new _m0.Reader(values);
-
             const unknownField: IUnknownFieldDetails = {
                 key: key,
-                value: reader.string(),
                 fieldName: fieldName,
             };
 
