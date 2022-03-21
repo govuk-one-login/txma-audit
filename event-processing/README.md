@@ -13,6 +13,31 @@ This project contains source code and supporting files for creating the Event Pr
 
 The application uses several AWS resources, including Lambda functions, SNS, Kinesis FireHose and S3. These resources are defined in the template files located in the event-processing and audit sub-folders. You can update the template to add AWS resources through the same deployment process that updates your application code.
 
+##Protocol Buffers
+
+To use protocol buffers in typescript we are using the following package:
+
+[ts-proto](https://github.com/stephenh/ts-proto)
+
+Make sure you also have protoc installed:
+
+- [Linux/Mac Install Protoc](https://formulae.brew.sh/formula/protobuf)
+- [Windows Install Protoc](https://community.chocolatey.org/packages/protoc)
+
+In order to generate the typescript needed to serialize messages to the protobuf message we need to run the following command in the event-processor directory:
+
+###Linux/Mac:
+```bash
+protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto -ts_proto_opt=useDate=true,esModuleInterop=true,snakeToCamel=false,useExactTypes=false,unknownFields=true --ts_proto_out=. ./protobuf/audit-event.proto
+```
+
+###Windows:
+```bash
+ protoc --plugin=protoc-gen-ts_proto=.\node_modules\.bin\protoc-gen-ts_proto.cmd --ts_proto_opt=useDate=true,esModuleInterop=true,snakeToCamel=false,useExactTypes=false,unknownFields=true --ts_proto_out=. ./protobuf/audit-event.proto
+```
+
+This will generate a number of typescript classes and interfaces that can be used to encode and decode buffer arrays and methods to help with JSON conversion.
+
 ## Deploy the sample application
 
 The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
@@ -31,6 +56,18 @@ sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<env
 ```
 When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket of the lambda zip.
 
+*Deploying Locally*: When deploying locally you can specify the profile to be used for deployment by adding the profile argument e.g.
+
+```bash
+sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --profile di-dev-event-processing-admin
+```
+
+You can also provide overrides directly when calling sam deploy if you need to provide different parameters to the stacks:
+
+```bash
+sam deploy --config-file config/samconfig-event-processing.toml --config-env "develop" --profile di-dev-admin --resolve-s3 --parameter-overrides ParameterKey=AuditAccountARN,ParameterValue=<ARN of account IAM root> ParameterKey=Environment,ParameterValue=<Environment>
+```
+
 *Note*: When calling SAM deploy against a template containing a Lambda function make sure to omit the template name argument. If this is not done, the source files will be deployed instead of the compiled files located in .aws-sam.
 
 ####Available Environments
@@ -45,7 +82,7 @@ When deploying the event processor also include the `--resolve-s3` argument in o
 Build your application with the `sam build` command.
 
 ```bash
-event-processing$ sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "build"
+event-processing$ sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "develop"
 ```
 
 The SAM CLI installs dependencies defined in `event-processor/package.json`, compiles TypeScript with esbuild, creates a deployment package, and saves it in the `.aws-sam/build` folder.
