@@ -21,13 +21,14 @@ Parameters:
 Resources:
   MessageBatchBucket:
     Type: AWS::S3::Bucket
-    LifecycleConfiguration:
-      Rules:
-        - Id: AuditGlacierRule
-          Status: Enabled
-          Transitions:
-            - TransitionInDays: 90
-              StorageClass: GLACIER
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Id: AuditGlacierRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: GLACIER
 
   AuditDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
