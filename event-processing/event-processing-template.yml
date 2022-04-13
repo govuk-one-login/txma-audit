@@ -3,20 +3,56 @@ Transform: AWS::Serverless-2016-10-31
 Description: "A template to create all the Event Processing infrastructure."
 
 Parameters:
+  CodeSigningConfigArn:
+    Type: String
+    Default: "none"
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
   Environment:
-    Type: String
+    Description: "The environment type"
+    Type: "String"
     AllowedValues:
-      - develop
-      - build
-      - staging
-      - production
-      - integration
-    Default: develop
-    Description: "The current environment for deployment (e.g. develop, build, staging, production, etc.)"
+      - "dev"
+      - "build"
+      - "staging"
+      - "integration"
+      - "production"
+    ConstraintDescription: must be dev, build, staging, integration or production
+
+Conditions:
+  SetPermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+
+Mappings:
   AuditAccountARN:
-    Type: String
-    Default: "arn:aws:iam::725018305812:root"
-    Description: "The Audit account ARN for creating the permission to subscribe to the event processing SNS topic"
+    Environment:
+      build: "arn:aws:iam::725018305812:root"
+      dev: "arn:aws:iam::725018305812:root"
+
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - SetPermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    Architectures:
+      - x86_64
 
 Resources:
   epSNSTopic:
@@ -39,7 +75,7 @@ Resources:
               - 'sns:Subscribe'
             Principal:
               AWS:
-                - !Ref AuditAccountARN
+                - !FindInMap [AuditAccountARN, Environment, !Ref Environment]
             Resource: !Ref epSNSTopic
       Topics:
       - !Ref epSNSTopic
@@ -59,8 +95,6 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Architectures:
-        - x86_64
       Policies:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt epSNSTopic.TopicName
