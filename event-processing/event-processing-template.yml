@@ -3,20 +3,26 @@ Transform: AWS::Serverless-2016-10-31
 Description: "A template to create all the Event Processing infrastructure."
 
 Parameters:
+  CodeSigningConfigArn:
+    Type: String
+    Default: "none"
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
   Environment:
-    Type: String
+    Description: "The environment type"
+    Type: "String"
     AllowedValues:
-      - develop
-      - build
-      - staging
-      - production
-      - integration
-    Default: develop
-    Description: "The current environment for deployment (e.g. develop, build, staging, production, etc.)"
+      - "dev"
+      - "build"
+      - "staging"
+      - "integration"
+      - "production"
+    ConstraintDescription: must be dev, build, staging, integration or production
+
+Mappings:
   AuditAccountARN:
-    Type: String
-    Default: "arn:aws:iam::725018305812:root"
-    Description: "The Audit account ARN for creating the permission to subscribe to the event processing SNS topic"
+    Environment:
+      dev: "arn:aws:iam::725018305812:root"
 
 Resources:
   epSNSTopic:
@@ -39,7 +45,7 @@ Resources:
               - 'sns:Subscribe'
             Principal:
               AWS:
-                - !Ref AuditAccountARN
+                - !FindInMap [AuditAccountARN, Environment, !Ref Environment]
             Resource: !Ref epSNSTopic
       Topics:
       - !Ref epSNSTopic
