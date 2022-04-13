@@ -46,10 +46,7 @@ jobs:
       - name: Test
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: npm test
-      - run: |
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --resolve-s3
-        if: github.event_name != 'pull_request'
-
+        
   validate_and_build_audit:
     needs: validate_and_build_event_processor
     runs-on: ubuntu-latest
@@ -71,6 +68,3 @@ jobs:
       - name: SAM Build
         run: |
           sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
-      - run: |
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file config/samconfig-audit.toml --config-env ${{ env.environment }}
-        if: github.event_name != 'pull_request'

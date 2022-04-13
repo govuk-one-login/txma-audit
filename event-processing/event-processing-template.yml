@@ -8,6 +8,11 @@ Parameters:
     Default: "none"
     Description: >
       The ARN of the Code Signing Config to use, provided by the deployment pipeline
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
+
   Environment:
     Description: "The environment type"
     Type: "String"
@@ -19,10 +24,36 @@ Parameters:
       - "production"
     ConstraintDescription: must be dev, build, staging, integration or production
 
+Conditions:
+  SetPermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+
 Mappings:
   AuditAccountARN:
     Environment:
+      build: "arn:aws:iam::725018305812:root"
       dev: "arn:aws:iam::725018305812:root"
+
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - SetPermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    Architectures:
+      - x86_64
 
 Resources:
   epSNSTopic:
@@ -65,8 +96,6 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Architectures:
-        - x86_64
       Policies:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt epSNSTopic.TopicName
