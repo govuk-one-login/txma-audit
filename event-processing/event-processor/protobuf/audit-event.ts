@@ -1,7 +1,7 @@
 /* eslint-disable */
+/* istanbul ignore file */
 import Long from 'long';
 import _m0 from 'protobufjs/minimal';
-import { Timestamp } from '../google/protobuf/timestamp';
 
 export const protobufPackage = 'di';
 
@@ -10,7 +10,7 @@ export interface AuditEvent {
     request_id: string;
     session_id: string;
     client_id: string;
-    timestamp: Date | undefined;
+    timestamp: number;
     timestamp_formatted: string;
     event_name: string;
     user: AuditEvent_userMessage | undefined;
@@ -50,7 +50,7 @@ function createBaseAuditEvent(): AuditEvent {
         request_id: '',
         session_id: '',
         client_id: '',
-        timestamp: undefined,
+        timestamp: 0,
         timestamp_formatted: '',
         event_name: '',
         user: undefined,
@@ -75,8 +75,8 @@ export const AuditEvent = {
         if (message.client_id !== '') {
             writer.uint32(34).string(message.client_id);
         }
-        if (message.timestamp !== undefined) {
-            Timestamp.encode(toTimestamp(message.timestamp), writer.uint32(42).fork()).ldelim();
+        if (message.timestamp !== 0) {
+            writer.uint32(40).int32(message.timestamp);
         }
         if (message.timestamp_formatted !== '') {
             writer.uint32(50).string(message.timestamp_formatted);
@@ -138,7 +138,7 @@ export const AuditEvent = {
                     message.client_id = reader.string();
                     break;
                 case 5:
-                    message.timestamp = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+                    message.timestamp = reader.int32();
                     break;
                 case 6:
                     message.timestamp_formatted = reader.string();
@@ -180,7 +180,7 @@ export const AuditEvent = {
             request_id: isSet(object.request_id) ? String(object.request_id) : '',
             session_id: isSet(object.session_id) ? String(object.session_id) : '',
             client_id: isSet(object.client_id) ? String(object.client_id) : '',
-            timestamp: isSet(object.timestamp) ? fromJsonTimestamp(object.timestamp) : undefined,
+            timestamp: isSet(object.timestamp) ? Number(object.timestamp) : 0,
             timestamp_formatted: isSet(object.timestamp_formatted) ? String(object.timestamp_formatted) : '',
             event_name: isSet(object.event_name) ? String(object.event_name) : '',
             user: isSet(object.user) ? AuditEvent_userMessage.fromJSON(object.user) : undefined,
@@ -197,7 +197,7 @@ export const AuditEvent = {
         message.request_id !== undefined && (obj.request_id = message.request_id);
         message.session_id !== undefined && (obj.session_id = message.session_id);
         message.client_id !== undefined && (obj.client_id = message.client_id);
-        message.timestamp !== undefined && (obj.timestamp = message.timestamp.toISOString());
+        message.timestamp !== undefined && (obj.timestamp = Math.round(message.timestamp));
         message.timestamp_formatted !== undefined && (obj.timestamp_formatted = message.timestamp_formatted);
         message.event_name !== undefined && (obj.event_name = message.event_name);
         message.user !== undefined &&
@@ -218,7 +218,7 @@ export const AuditEvent = {
         message.request_id = object.request_id ?? '';
         message.session_id = object.session_id ?? '';
         message.client_id = object.client_id ?? '';
-        message.timestamp = object.timestamp ?? undefined;
+        message.timestamp = object.timestamp ?? 0;
         message.timestamp_formatted = object.timestamp_formatted ?? '';
         message.event_name = object.event_name ?? '';
         message.user =
@@ -663,28 +663,6 @@ export type DeepPartial<T> = T extends Builtin
     : T extends {}
     ? { [K in keyof T]?: DeepPartial<T[K]> }
     : Partial<T>;
-
-function toTimestamp(date: Date): Timestamp {
-    const seconds = date.getTime() / 1_000;
-    const nanos = (date.getTime() % 1_000) * 1_000_000;
-    return { seconds, nanos };
-}
-
-function fromTimestamp(t: Timestamp): Date {
-    let millis = t.seconds * 1_000;
-    millis += t.nanos / 1_000_000;
-    return new Date(millis);
-}
-
-function fromJsonTimestamp(o: any): Date {
-    if (o instanceof Date) {
-        return o;
-    } else if (typeof o === 'string') {
-        return new Date(o);
-    } else {
-        return fromTimestamp(Timestamp.fromJSON(o));
-    }
-}
 
 if (_m0.util.Long !== Long) {
     _m0.util.Long = Long as any;

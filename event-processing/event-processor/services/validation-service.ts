@@ -25,7 +25,7 @@ export class validationService {
                 sqsResourceName: eventSource,
                 eventId: eventMessage.event_id,
                 eventName: eventMessage.event_name,
-                timestamp: eventMessage.timestamp?.toISOString(),
+                timestamp: eventMessage.timestamp.toString(),
                 message: 'Unknown fields in message.',
                 unknownFields: [],
             };
@@ -47,7 +47,7 @@ export class validationService {
                     sqsResourceName: eventSource,
                     eventId: eventMessage.event_id,
                     eventName: eventMessage.event_name,
-                    timestamp: eventMessage.timestamp?.toISOString(),
+                    timestamp: eventMessage.timestamp.toString(),
                     requiredField: RequiredFieldsEnum.eventName,
                     message: 'event_name is a required field.',
                 },
@@ -70,7 +70,7 @@ export class validationService {
         }
 
         if (!eventMessage.timestamp_formatted) {
-            eventMessage.timestamp_formatted = eventMessage.timestamp.toISOString();
+            eventMessage.timestamp_formatted = new Date(eventMessage.timestamp * 1000).toISOString();
         }
 
         return {
