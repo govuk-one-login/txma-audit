@@ -1,9 +1,7 @@
-name: Build, Test and Deploy
+name: Post Merge Build, Test and Deploy
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
   workflow_dispatch:
 
@@ -33,7 +31,7 @@ jobs:
       - name: Assume AWS role
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_EVENT_PROCESSING }}
           aws-region:  ${{ env.awsRegion }}
       - name: Use Node.js 14
         uses: actions/setup-node@v3.0.0
@@ -53,22 +51,19 @@ jobs:
         run: npm test
       - name: Package SAM application
         env:
-         ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
-         SIGNING_PROFILE_NAME: ${{ secrets.SIGNING_PROFILE_NAME }}
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
+          SIGNING_PROFILE_NAME: ${{ secrets.SIGNING_PROFILE_NAME_EVENT_PROCESSING }}
         run: |
-         sam package \
-           --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME" \
-           --output-template-file=cf-template.yaml \
-           --signing-profiles EventProcessorFunction="$SIGNING_PROFILE_NAME"
-        if: github.event_name != 'pull_request'
+          sam package \
+            --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING" \
+            --output-template-file=cf-template.yaml \
+            --signing-profiles EventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING"
       - name: Zip the CloudFormation template
         run: zip template.zip cf-template.yaml config/samconfig-event-processing.toml
-        if: github.event_name != 'pull_request'
       - name: Upload zipped CloudFormation artifact to S3
         env:
-          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
-        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME/template.zip"
-        if: github.event_name != 'pull_request'
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
+        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING/template.zip"
 
   validate_and_build_audit:
     needs: validate_and_build_event_processor
@@ -88,7 +83,7 @@ jobs:
       - name: Assume AWS role
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_AUDIT }}
           aws-region:  ${{ env.awsRegion }}
       - name: SAM Validate
         run: |
@@ -98,18 +93,15 @@ jobs:
           sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
       - name: Package SAM application
         env:
-          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
-          SIGNING_PROFILE_NAME: ${{ secrets.SIGNING_PROFILE_NAME }}
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
+          SIGNING_PROFILE_NAME: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
         run: |
           sam package \
-            --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME" \
+            --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME_AUDIT" \
             --output-template-file=cf-template.yaml
-        if: github.event_name != 'pull_request'
       - name: Zip the CloudFormation template
         run: zip template.zip cf-template.yaml config/samconfig-audit.toml
-        if: github.event_name != 'pull_request'
       - name: Upload zipped CloudFormation artifact to S3
         env:
-          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
-        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME/template.zip"
-        if: github.event_name != 'pull_request'
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
+        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME_AUDIT/template.zip"

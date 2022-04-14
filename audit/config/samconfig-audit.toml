@@ -16,7 +16,7 @@ parameter_overrides=[
     "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
 ]
 
-[develop.deploy.parameters]
+[dev.deploy.parameters]
 stack_name = "di-txma-audit-develop"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
