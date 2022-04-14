@@ -29,31 +29,6 @@ jobs:
       - name: Install Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: npm ci
-      - name: SAM Validate
-        run: |
-          sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }}
-      - name: SAM Build
-        run: |
-          sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --use-container --beta-features
       - name: Test
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: npm test
-
-  validate_and_build_audit:
-    needs: validate_and_build_event_processor
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ env.auditDirectory }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v2
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v1
-      - name: SAM Validate
-        run: |
-          sam validate --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }}
-      - name: SAM Build
-        run: |
-          sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
