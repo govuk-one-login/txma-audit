@@ -11,7 +11,7 @@ env:
   auditDirectory: "audit"
 
 jobs:
-  validate_and_build_event_processor:
+  run_event_processor_tests:
     runs-on: ubuntu-latest
     defaults:
       run:
