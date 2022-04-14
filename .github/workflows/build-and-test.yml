@@ -18,6 +18,9 @@ env:
 jobs:
   validate_and_build_event_processor:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     defaults:
       run:
         working-directory: ${{ env.eventProcessorDirectory }}
@@ -57,16 +60,22 @@ jobs:
            --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME" \
            --output-template-file=cf-template.yaml \
            --signing-profiles EventProcessorFunction="$SIGNING_PROFILE_NAME"
+        if: github.event_name != 'pull_request'
       - name: Zip the CloudFormation template
         run: zip template.zip cf-template.yaml config/samconfig-event-processing.toml
+        if: github.event_name != 'pull_request'
       - name: Upload zipped CloudFormation artifact to S3
         env:
           ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
         run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME/template.zip"
+        if: github.event_name != 'pull_request'
 
   validate_and_build_audit:
     needs: validate_and_build_event_processor
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     defaults:
       run:
         working-directory: ${{ env.auditDirectory }}
@@ -95,9 +104,12 @@ jobs:
           sam package \
             --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME" \
             --output-template-file=cf-template.yaml
+        if: github.event_name != 'pull_request'
       - name: Zip the CloudFormation template
         run: zip template.zip cf-template.yaml config/samconfig-audit.toml
+        if: github.event_name != 'pull_request'
       - name: Upload zipped CloudFormation artifact to S3
         env:
           ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
         run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME/template.zip"
+        if: github.event_name != 'pull_request'
