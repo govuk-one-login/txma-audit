@@ -12,7 +12,6 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles"
     Type: String
     Default: "none"
-
   Environment:
     Description: "The environment type"
     Type: "String"
@@ -23,6 +22,9 @@ Parameters:
       - "integration"
       - "production"
     ConstraintDescription: must be dev, build, staging, integration or production
+  AuditAccountARN:
+    Description: "The root IAM for Audit"
+    Type: "String"
 
 Conditions:
   SetPermissionsBoundary:
@@ -35,12 +37,6 @@ Conditions:
       - Fn::Equals:
           - !Ref CodeSigningConfigArn
           - "none"
-
-Mappings:
-  AuditAccountARN:
-    Environment:
-      build: "arn:aws:iam::725018305812:root"
-      dev: "arn:aws:iam::725018305812:root"
 
 Globals:
   Function:
@@ -76,7 +72,7 @@ Resources:
               - 'sns:Subscribe'
             Principal:
               AWS:
-                - !FindInMap [AuditAccountARN, Environment, !Ref Environment]
+                - !Ref AuditAccountARN
             Resource: !Ref epSNSTopic
       Topics:
       - !Ref epSNSTopic

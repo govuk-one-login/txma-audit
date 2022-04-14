@@ -3,20 +3,53 @@ Transform: AWS::Serverless-2016-10-31
 Description: "A template to create all the Audit infrastructure."
 
 Parameters:
-  Environment:
+  CodeSigningConfigArn:
     Type: String
+    Default: "none"
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
+  Environment:
+    Description: "The environment type"
+    Type: "String"
     AllowedValues:
-      - develop
-      - build
-      - staging
-      - production
-      - integration
-    Default: build
-    Description: "The current environment for deployment (e.g. develop, build, staging, production, etc.)"
+      - "dev"
+      - "build"
+      - "staging"
+      - "integration"
+      - "production"
+    ConstraintDescription: must be dev, build, staging, integration or production
   EventProcessorSNSTopicARN:
     Type: String
-    Default: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
     Description: "The ARN for the event processor accounts SNS service"
+
+Conditions:
+  SetPermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - SetPermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    Architectures:
+      - x86_64
 
 Resources:
   MessageBatchBucket:
@@ -59,6 +92,10 @@ Resources:
   DeliveryStreamRole:
     Type: AWS::IAM::Role
     Properties:
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -97,6 +134,10 @@ Resources:
   SNSTopicSubscriptionRole:
     Type: AWS::IAM::Role
     Properties:
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:

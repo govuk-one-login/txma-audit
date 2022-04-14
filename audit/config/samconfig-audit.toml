@@ -11,8 +11,7 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 tags = "project=\"di-txma-audit\" stage=\"develop\""
 parameter_overrides=[
-    "Environment=develop",
-    "EventProcessorStackName=di-txma-ep-develop",
+    "Environment=dev",
     "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
 ]
 
@@ -22,8 +21,7 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 tags = "project=\"di-txma-audit\" stage=\"develop\""
 parameter_overrides=[
-    "Environment=develop",
-    "EventProcessorStackName=di-txma-ep-develop",
+    "Environment=dev",
     "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
 ]
 
@@ -34,7 +32,7 @@ capabilities = "CAPABILITY_IAM"
 tags = "project=\"di-txma-audit\" stage=\"build\""
 parameter_overrides=[
     "Environment=build",
-    "EventProcessorStackName=di-txma-ep-build"
+    "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:750703655225:EventProcessorSNSTopic-build"
 ]
 
 [staging.deploy.parameters]
@@ -43,8 +41,7 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 tags = "project=\"di-txma-audit\" stage=\"staging\""
 parameter_overrides=[
-    "Environment=staging",
-    "EventProcessorStackName=di-txma-ep-staging"
+    "Environment=staging"
 ]
 
 [production.deploy.parameters]
@@ -53,8 +50,7 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 tags = "project=\"di-txma-audit\" stage=\"production\""
 parameter_overrides=[
-    "Environment=production",
-    "EventProcessorStackName=di-txma-ep-production"
+    "Environment=production"
 ]
 
 [integration.deploy.parameters]
@@ -63,6 +59,5 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 tags = "project=\"di-txma-audit\" stage=\"integration\""
 parameter_overrides=[
-    "Environment=integration",
-    "EventProcessorStackName=di-txma-ep-integration"
+    "Environment=integration"
 ]
