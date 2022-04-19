@@ -11,8 +11,7 @@ region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"develop\""
 capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
-    "Environment=develop",
-    "AuditAccountARN=arn:aws:iam::725018305812:root"
+    "Environment=develop"
 ]
 
 [dev.deploy.parameters]
@@ -21,8 +20,7 @@ region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"develop\""
 capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
-    "Environment=develop",
-    "AuditAccountARN=arn:aws:iam::725018305812:root"
+    "Environment=develop"
 ]
 
 [build.deploy.parameters]
@@ -31,8 +29,7 @@ region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"build\""
 capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
-    "Environment=build",
-    "AuditAccountARN=arn:aws:iam::761029721660:root"
+    "Environment=build"
 ]
 
 [staging.deploy.parameters]
