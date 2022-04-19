@@ -51,8 +51,8 @@ Globals:
 Mappings:
   EventProcessorSNSTopicARN:
     Environment:
-      build: "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:750703655225:EventProcessorSNSTopic-build"
-      dev: "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
+      build: "arn:aws:sns:eu-west-2:750703655225:EventProcessorSNSTopic-build"
+      dev: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
 
 Resources:
   MessageBatchBucket:
