@@ -15,7 +15,7 @@ parameter_overrides=[
     "AuditAccountARN=arn:aws:iam::725018305812:root"
 ]
 
-[develop.deploy.parameters]
+[dev.deploy.parameters]
 stack_name = "di-txma-event-processing-develop"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"develop\""
@@ -31,7 +31,8 @@ region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"build\""
 capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
-    "Environment=build"
+    "Environment=build",
+    "AuditAccountARN=arn:aws:iam::761029721660:root"
 ]
 
 [staging.deploy.parameters]

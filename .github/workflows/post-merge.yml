@@ -1,0 +1,107 @@
+name: Post Merge Build, Test and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  environment: "build"
+  awsRegion: "eu-west-2"
+  eventProcessorDirectory: "event-processing"
+  auditDirectory: "audit"
+
+# A workflow to build the event processor and audit infrastructure and deploy to the development (CI) environment
+# This may be subject to change if we can make re-usable actions to reference (This will need to be in concert with other GDS DI teams)
+jobs:
+  validate_and_build_event_processor:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: ${{ env.eventProcessorDirectory }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v1
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_EVENT_PROCESSING }}
+          aws-region:  ${{ env.awsRegion }}
+      - name: Use Node.js 14
+        uses: actions/setup-node@v3.0.0
+        with:
+          node-version: '14.x'
+      - name: Install Dependencies
+        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
+        run: npm ci
+      - name: SAM Validate
+        run: |
+          sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }}
+      - name: SAM Build
+        run: |
+          sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --use-container --beta-features
+      - name: Test
+        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
+        run: npm test
+      - name: Package SAM application
+        env:
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
+          SIGNING_PROFILE_NAME: ${{ secrets.SIGNING_PROFILE_NAME_EVENT_PROCESSING }}
+        run: |
+          sam package \
+            --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING" \
+            --output-template-file=cf-template.yaml \
+            --signing-profiles EventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING"
+      - name: Zip the CloudFormation template
+        run: zip template.zip cf-template.yaml config/samconfig-event-processing.toml
+      - name: Upload zipped CloudFormation artifact to S3
+        env:
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
+        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING/template.zip"
+
+  validate_and_build_audit:
+    needs: validate_and_build_event_processor
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: ${{ env.auditDirectory }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v1
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_AUDIT }}
+          aws-region:  ${{ env.awsRegion }}
+      - name: SAM Validate
+        run: |
+          sam validate --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }}
+      - name: SAM Build
+        run: |
+          sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
+      - name: Package SAM application
+        env:
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
+          SIGNING_PROFILE_NAME: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
+        run: |
+          sam package \
+            --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME_AUDIT" \
+            --output-template-file=cf-template.yaml
+      - name: Zip the CloudFormation template
+        run: zip template.zip cf-template.yaml config/samconfig-audit.toml
+      - name: Upload zipped CloudFormation artifact to S3
+        env:
+          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
+        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME_AUDIT/template.zip"
