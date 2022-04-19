@@ -22,9 +22,6 @@ Parameters:
       - "integration"
       - "production"
     ConstraintDescription: must be dev, build, staging, integration or production
-  AuditAccountARN:
-    Description: "The root IAM for Audit"
-    Type: "String"
 
 Conditions:
   SetPermissionsBoundary:
@@ -51,6 +48,12 @@ Globals:
     Architectures:
       - x86_64
 
+Mappings:
+  AuditAccountARN:
+    Environment:
+      build: "arn:aws:iam::761029721660:root"
+      dev: "arn:aws:iam::725018305812:root"
+
 Resources:
   epSNSTopic:
     Properties:
@@ -72,7 +75,7 @@ Resources:
               - 'sns:Subscribe'
             Principal:
               AWS:
-                - !Ref AuditAccountARN
+                - !FindInMap [AuditAccountARN, Environment, !Ref Environment]
             Resource: !Ref epSNSTopic
       Topics:
       - !Ref epSNSTopic

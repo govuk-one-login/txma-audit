@@ -22,9 +22,6 @@ Parameters:
       - "integration"
       - "production"
     ConstraintDescription: must be dev, build, staging, integration or production
-  EventProcessorSNSTopicARN:
-    Type: String
-    Description: "The ARN for the event processor accounts SNS service"
 
 Conditions:
   SetPermissionsBoundary:
@@ -50,6 +47,12 @@ Globals:
       - !Ref AWS::NoValue
     Architectures:
       - x86_64
+
+Mappings:
+  EventProcessorSNSTopicARN:
+    Environment:
+      build: "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:750703655225:EventProcessorSNSTopic-build"
+      dev: "EventProcessorSNSTopicARN=arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
 
 Resources:
   MessageBatchBucket:
@@ -84,7 +87,7 @@ Resources:
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn: !Ref EventProcessorSNSTopicARN #SNS TOPIC
+      TopicArn: !FindInMap [EventProcessorSNSTopicARN, Environment, !Ref Environment]
       Endpoint: !GetAtt AuditDeliveryStream.Arn #FireHose
       Protocol: firehose
       SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
