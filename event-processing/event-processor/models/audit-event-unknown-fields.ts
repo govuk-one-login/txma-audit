@@ -10,7 +10,7 @@ export interface IAuditEventUnknownFields {
     request_id: string;
     session_id: string;
     client_id: string;
-    timestamp: Date | undefined;
+    timestamp: number;
     timestamp_formatted: string;
     event_name: string;
     user: IAuditEventUnknownFields | undefined;
