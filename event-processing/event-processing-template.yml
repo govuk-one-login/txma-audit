@@ -127,7 +127,7 @@ Resources:
           MetricNamespace: "lambda/di/txma/errors"
           MetricName: "Unknown Fields"
 
-  EventProcessorUnkownFieldsAlarm:
+  EventProcessorUnknownFieldsAlarm:
     DependsOn:
       - EventProcessorUnknownFieldsErrorMetric
     Type: AWS::CloudWatch::Alarm

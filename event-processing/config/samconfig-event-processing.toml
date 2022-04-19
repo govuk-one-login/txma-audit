@@ -32,7 +32,7 @@ tags = "project=\"di-txma-event_processor\" stage=\"build\""
 capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
     "Environment=build",
-    "AuditAccountARN=arn:aws:iam::725018305812:root"
+    "AuditAccountARN=arn:aws:iam::761029721660:root"
 ]
 
 [staging.deploy.parameters]
