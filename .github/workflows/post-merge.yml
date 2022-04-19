@@ -51,8 +51,8 @@ jobs:
         run: npm test
       - name: Package SAM application
         env:
-          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
-          SIGNING_PROFILE_NAME: ${{ secrets.SIGNING_PROFILE_NAME_EVENT_PROCESSING }}
+          ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
+          SIGNING_PROFILE_NAME_EVENT_PROCESSING: ${{ secrets.SIGNING_PROFILE_NAME_EVENT_PROCESSING }}
         run: |
           sam package \
             --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING" \
@@ -62,7 +62,7 @@ jobs:
         run: zip template.zip cf-template.yaml config/samconfig-event-processing.toml
       - name: Upload zipped CloudFormation artifact to S3
         env:
-          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
+          ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
         run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING/template.zip"
 
   validate_and_build_audit:
@@ -93,8 +93,8 @@ jobs:
           sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
       - name: Package SAM application
         env:
-          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
-          SIGNING_PROFILE_NAME: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
+          ARTIFACT_SOURCE_BUCKET_NAME_AUDIT: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
+          SIGNING_PROFILE_NAME_AUDIT: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
         run: |
           sam package \
             --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME_AUDIT" \
@@ -103,5 +103,5 @@ jobs:
         run: zip template.zip cf-template.yaml config/samconfig-audit.toml
       - name: Upload zipped CloudFormation artifact to S3
         env:
-          ARTIFACT_SOURCE_BUCKET_NAME: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
+          ARTIFACT_SOURCE_BUCKET_NAME_AUDIT: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
         run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME_AUDIT/template.zip"
