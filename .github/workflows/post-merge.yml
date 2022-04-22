@@ -58,10 +58,13 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_EVENT_PROCESSING }}
+          ECR_REPOSITORY_STAGING: ${{ secrets.ECR_REPOSITORY_EVENT_PROCESSING_STAGING }}
           IMAGE_TAG: latest
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./event-processing-tests/
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/ECR_REPOSITORY_STAGING:$IMAGE_TAG
+          docker push $ECR_REGISTRY/ECR_REPOSITORY_STAGING:$IMAGE_TAG
       - name: Package SAM application
         env:
           ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
@@ -112,10 +115,13 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_AUDIT }}
+          ECR_REPOSITORY_STAGING: ${{ secrets.ECR_REPOSITORY_AUDIT_STAGING }}
           IMAGE_TAG: latest
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./audit-tests/
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/ECR_REPOSITORY_STAGING:$IMAGE_TAG
+          docker push $ECR_REGISTRY/ECR_REPOSITORY_STAGING:$IMAGE_TAG
       - name: Package SAM application
         env:
           ARTIFACT_SOURCE_BUCKET_NAME_AUDIT: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
