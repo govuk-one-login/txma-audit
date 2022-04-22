@@ -1,34 +1,34 @@
-name: Pre-merge Build and Test
-
-on:
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
-env:
-  environment: "dev"
-  eventProcessorDirectory: "event-processing"
-  auditDirectory: "audit"
-
-jobs:
-  run_event_processor_tests:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ env.eventProcessorDirectory }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v2
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v1
-      - name: Use Node.js 14
-        uses: actions/setup-node@v3.0.0
-        with:
-          node-version: '14.x'
-      - name: Install Dependencies
-        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: npm ci
-      - name: Test
-        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: npm test
+#name: Pre-merge Build and Test
+#
+#on:
+#  pull_request:
+#    branches: [ main ]
+#  workflow_dispatch:
+#
+#env:
+#  environment: "dev"
+#  eventProcessorDirectory: "event-processing"
+#  auditDirectory: "audit"
+#
+#jobs:
+#  run_event_processor_tests:
+#    runs-on: ubuntu-latest
+#    defaults:
+#      run:
+#        working-directory: ${{ env.eventProcessorDirectory }}
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Setup Python
+#        uses: actions/setup-python@v2
+#      - name: Setup SAM CLI
+#        uses: aws-actions/setup-sam@v1
+#      - name: Use Node.js 14
+#        uses: actions/setup-node@v3.0.0
+#        with:
+#          node-version: '14.x'
+#      - name: Install Dependencies
+#        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
+#        run: npm ci
+#      - name: Test
+#        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
+#        run: npm test
