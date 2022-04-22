@@ -49,6 +49,17 @@ jobs:
       - name: Test
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: npm test
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build, tag, and push testing image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_EVENT_PROCESSING }}
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./tests/event-processing-tests/
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - name: Package SAM application
         env:
           ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
@@ -91,6 +102,17 @@ jobs:
       - name: SAM Build
         run: |
           sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
+#      - name: Login to Amazon ECR
+#        id: login-ecr
+#        uses: aws-actions/amazon-ecr-login@v1
+#      - name: Build, tag, and push testing image to Amazon ECR
+#        env:
+#          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_EVENT_PROCESSING }}
+#          IMAGE_TAG: latest
+#        run: |
+#          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./tests/audit-tests/
+#          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - name: Package SAM application
         env:
           ARTIFACT_SOURCE_BUCKET_NAME_AUDIT: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
