@@ -51,6 +51,7 @@ Globals:
 Mappings:
   EventProcessorSNSTopicARN:
     Environment:
+      staging: "arn:aws:sns:eu-west-2:178023842775:EventProcessorSNSTopic-staging"
       build: "arn:aws:sns:eu-west-2:750703655225:EventProcessorSNSTopic-build"
       dev: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
 
