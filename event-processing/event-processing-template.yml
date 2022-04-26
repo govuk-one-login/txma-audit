@@ -64,14 +64,14 @@ Mappings:
       dev: ""
   IPVQueueARN:
     Environment:
-      staging: "arn:aws:sqs:eu-west-2:<AccountId>:root"
+      staging: "arn:aws:sqs:eu-west-2:335257547869:audit-sqs-staging-AuditEventQueue-5nVPAk6J1Lsf"
       build: ""
       dev: ""
-  SPOTQueueARN:
-    Environment:
-      staging: "arn:aws:sqs:eu-west-2:<AccountId>:root"
-      build: ""
-      dev: ""
+#  SPOTQueueARN:
+#    Environment:
+#      staging: "arn:aws:sqs:eu-west-2:<AccountId>:root"
+#      build: ""
+#      dev: ""
 
 Outputs:
   KBVAccessRoleARN:
@@ -495,12 +495,12 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-  SPOTLambdaEventSourceMapping:
-    DependsOn:
-      - SPOTEventProcessorFunction
-    Type: AWS::Lambda::EventSourceMapping
-    Condition: IsProductionOrStaging
-    Properties:
-      EventSourceArn:
-        - !FindInMap [SPOTQueueARN, Environment, !Ref Environment]
-      FunctionName: !Ref SPOTEventProcessorFunction
+#  SPOTLambdaEventSourceMapping:
+#    DependsOn:
+#      - SPOTEventProcessorFunction
+#    Type: AWS::Lambda::EventSourceMapping
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      EventSourceArn:
+#        - !FindInMap [SPOTQueueARN, Environment, !Ref Environment]
+#      FunctionName: !Ref SPOTEventProcessorFunction
