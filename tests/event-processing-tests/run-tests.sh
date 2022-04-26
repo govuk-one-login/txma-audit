@@ -2,6 +2,8 @@
 
 set -eu
 
+gradle test
+
 cat <<EOF > "$TEST_REPORT_DIR/result.json"
 [
   {
