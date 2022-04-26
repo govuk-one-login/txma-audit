@@ -73,6 +73,17 @@ Mappings:
       build: ""
       dev: ""
 
+Outputs:
+  KBVAccessRoleARN:
+    Description: The ARN for the KBV role used to read SQS and Write to SNS
+    Value: !GetAtt KBVLambdaAccessRole.Arn
+  IPVAccessRoleARN:
+    Description: The ARN for the IPV role used to read SQS and Write to SNS
+    Value: !GetAtt IPVLambdaAccessRole.Arn
+  SPOTAccessRoleARN:
+    Description: The ARN for the SPOT role used to read SQS and Write to SNS
+    Value: !GetAtt SPOTLambdaAccessRole.Arn
+
 Resources:
   epSNSTopic:
     Properties:
