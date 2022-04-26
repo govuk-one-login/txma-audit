@@ -34,7 +34,9 @@ Conditions:
       - Fn::Equals:
           - !Ref CodeSigningConfigArn
           - "none"
-  isProductionOrStaging: !Or [!Equals [ !Ref environment, production], !Equals [ !Ref environment, staging], !Equals [ !Ref environment, integration]]
+  IsProductionOrStaging: !And
+    - !Not [!Equals [ !Ref Environment, dev]]
+    - !Not [!Equals [ !Ref Environment, build]]
 
 Globals:
   Function:
@@ -97,14 +99,19 @@ Resources:
       Topics:
       - !Ref epSNSTopic
 
-  SQSPublishPolicy:
+  SNSPublishPolicy:
+    DependsOn:
+      - epSNSTopic
+      - KBVLambdaAccessRole
+      - IPVLambdaAccessRole
+      - SPOTLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
-        - !Ref KBVLambdaSQSAccessRole
-        - !Ref IPVLambdaSQSAccessRole
-        - !Ref SPOTLambdaSQSAccessRole
-      PolicyName: sqs_publish_policy
+        - !Ref KBVLambdaAccessRole
+        - !Ref IPVLambdaAccessRole
+        - !Ref SPOTLambdaAccessRole
+      PolicyName: sns_publish_policy
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -112,7 +119,7 @@ Resources:
             Action:
               - 'sns:Publish'
             Resource: !Sub
-              - 'arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:{topicName}'
+              - 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${topicName}'
               - topicName: !GetAtt epSNSTopic.TopicName
 
   KBVEventProcessorLogGroup:
@@ -142,6 +149,9 @@ Resources:
         - app.ts
 
   KBVEventInvokeConfig:
+    DependsOn:
+      - SNSPublishPolicy
+      - KBVEventProcessorFunction
     Type: AWS::Lambda::EventInvokeConfig
     Properties:
       FunctionName: !Ref KBVEventProcessorFunction
@@ -193,7 +203,7 @@ Resources:
 
   KBVEventProcessorRequiredFieldsAlarm:
     DependsOn:
-      - EventProcessorRequiredFieldsErrorMetric
+      - KBVEventProcessorRequiredFieldsErrorMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: "KBV Event Processor Required Fields Alarm"
@@ -227,11 +237,14 @@ Resources:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
   KBVLambdaEventSourceMapping:
+    DependsOn:
+      - KBVEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: isProductionOrStaging
+    Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: !Ref KBVQueueARN
-      FunctionName: !GetAtt KBVEventProcessorFunction.Arn
+      EventSourceArn:
+        - !FindInMap [KBVQueueARN, Environment, !Ref Environment]
+      FunctionName: !Ref KBVEventProcessorFunction
 
   IPVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -260,6 +273,9 @@ Resources:
           - app.ts
 
   IPVEventInvokeConfig:
+    DependsOn:
+      - SNSPublishPolicy
+      - IPVEventProcessorFunction
     Type: AWS::Lambda::EventInvokeConfig
     Properties:
       FunctionName: !Ref IPVEventProcessorFunction
@@ -311,7 +327,7 @@ Resources:
 
   IPVEventProcessorRequiredFieldsAlarm:
     DependsOn:
-      - EventProcessorRequiredFieldsErrorMetric
+      - IPVEventProcessorRequiredFieldsErrorMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: "IPV Event Processor Required Fields Alarm"
@@ -345,11 +361,14 @@ Resources:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
   IPVLambdaEventSourceMapping:
+    DependsOn:
+      - IPVEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: isProductionOrStaging
+    Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: !Ref IPVQueueARN
-      FunctionName: !GetAtt IPVEventProcessorFunction.Arn
+      EventSourceArn:
+        - !FindInMap [IPVQueueARN, Environment, !Ref Environment]
+      FunctionName: !Ref IPVEventProcessorFunction
 
   SPOTEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -378,6 +397,9 @@ Resources:
           - app.ts
 
   SPOTEventInvokeConfig:
+    DependsOn:
+      - SNSPublishPolicy
+      - SPOTEventProcessorFunction
     Type: AWS::Lambda::EventInvokeConfig
     Properties:
       FunctionName: !Ref SPOTEventProcessorFunction
@@ -429,7 +451,7 @@ Resources:
 
   SPOTEventProcessorRequiredFieldsAlarm:
     DependsOn:
-      - EventProcessorRequiredFieldsErrorMetric
+      - SPOTEventProcessorRequiredFieldsErrorMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: "SPOT Event Processor Required Fields Alarm"
@@ -463,8 +485,11 @@ Resources:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
   SPOTLambdaEventSourceMapping:
+    DependsOn:
+      - SPOTEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: isProductionOrStaging
+    Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: !Ref SPOTQueueARN
-      FunctionName: !GetAtt SPOTEventProcessorFunction.Arn
+      EventSourceArn:
+        - !FindInMap [SPOTQueueARN, Environment, !Ref Environment]
+      FunctionName: !Ref SPOTEventProcessorFunction
