@@ -172,3 +172,259 @@ Resources:
       Threshold: 1
       MetricName: "Validation Errors"
       Namespace: "lambda/di/txma/errors"
+
+  FraudSplunkDeliveryFailureBucket:
+    Type: AWS::S3::Bucket
+
+  CyberSplunkDeliveryFailureBucket:
+    Type: AWS::S3::Bucket
+
+  FirehoseLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/aws/firehose"
+
+  FraudFirehoseLogStream:
+    DependsOn:
+      - FirehoseLogGroup
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: "fraud"
+
+  CyberFirehoseLogStream:
+    DependsOn:
+      - FirehoseLogGroup
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: "cyber"
+
+  FraudDeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action: 'sts:AssumeRole'
+
+  FraudDeliveryStreamPolicy:
+    DependsOn:
+      - FraudDeliveryStreamRole
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref FraudDeliveryStreamRole
+      PolicyName: firehose_fraud_delivery_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref FraudSplunkDeliveryFailureBucket
+                  - '*'
+
+  FraudDeliveryStream:
+    DependsOn:
+      - FraudFirehoseLogStream
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Sub
+        - "FraudFireHose-${EnvironmentName}"
+        - EnvironmentName: !Ref Environment
+      DeliveryStreamType: DirectPut
+      SplunkDestinationConfiguration:
+        HECAcknowledgmentTimeoutInSeconds: 300
+        HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
+        HECEndpointType: Raw
+        HECToken: "The HTTP Event Collector (HEC) endpoint token"
+        RetryOptions:
+          DurationInSeconds: 7200
+        S3BackupMode: "FailedEventsOnly"
+        S3Configuration:
+          BucketARN: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
+          BufferingHints:
+            IntervalInSeconds: 900
+            SizeInMBs: 128
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref FraudFirehoseLogStream
+            CompressionFormat: GZIP
+            ErrorOutputPrefix: "FraudDeliveryErrors"
+            RoleArn: !GetAtt FraudDeliveryStreamRole.Arn
+
+  CyberDeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action: 'sts:AssumeRole'
+
+  CyberDeliveryStreamPolicy:
+    DependsOn:
+      - CyberDeliveryStreamRole
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref CyberDeliveryStreamRole
+      PolicyName: firehose_cyber_delivery_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt CyberSplunkDeliveryFailureBucket.Arn
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref CyberSplunkDeliveryFailureBucket
+                  - '*'
+
+  CyberDeliveryStream:
+    DependsOn:
+      - CyberFirehoseLogStream
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Sub
+        - "CyberFireHose-${EnvironmentName}"
+        - EnvironmentName: !Ref Environment
+      DeliveryStreamType: DirectPut
+      SplunkDestinationConfiguration:
+        HECAcknowledgmentTimeoutInSeconds: 300
+        HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
+        HECEndpointType: Raw
+        HECToken: "The HTTP Event Collector (HEC) endpoint token"
+        RetryOptions:
+          DurationInSeconds: 7200
+        S3BackupMode: "FailedEventsOnly"
+        S3Configuration:
+          BucketARN: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
+          BufferingHints:
+            IntervalInSeconds: 900
+            SizeInMBs: 128
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref CyberFirehoseLogStream
+            CompressionFormat: GZIP
+            ErrorOutputPrefix: "CyberDeliveryErrors"
+            RoleArn: !GetAtt CyberDeliveryStreamRole.Arn
+      ProcessingConfiguration:
+        Enabled: true
+        Processors:
+          - Type: Lambda
+            Parameters:
+              - ParameterName: LambdaArn
+                ParameterValue: !Ref ObfuscationFunction
+
+  ObfuscationFunction:
+    DependsOn:
+      - EventProcessorLogGroup
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "ObfuscationFunction"
+      CodeUri: ../event-processing/obfuscation
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
+
+  AllowFraudBucketToCallLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref ReIngestFunction
+      Principal: 's3.amazonaws.com'
+      SourceArn: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
+
+  AllowCyberBucketToCallLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref ReIngestFunction
+      Principal: 's3.amazonaws.com'
+      SourceArn: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
+
+  ReIngestFunction:
+    DependsOn:
+      - EventProcessorLogGroup
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "Re-IngestFunction"
+      CodeUri: ../event-processing/re-ingest
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Events:
+        FraudBucket:
+          Type: S3
+          Properties:
+            Bucket: !Ref FraudSplunkDeliveryFailureBucket
+            Events: 's3:ObjectCreated:*'
+        CyberBucket:
+          Type: S3
+          Properties:
+            Bucket: !Ref CyberSplunkDeliveryFailureBucket
+            Events: 's3:ObjectCreated:*'
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref FraudSplunkDeliveryFailureBucket
+        - S3ReadPolicy:
+            BucketName: !Ref CyberSplunkDeliveryFailureBucket
+        - FirehoseWritePolicy:
+            DeliveryStreamName: !Ref FraudDeliveryStream
+        - FirehoseWritePolicy:
+            DeliveryStreamName: !Ref CyberDeliveryStream
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts

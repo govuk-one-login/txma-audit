@@ -1,19 +1,17 @@
 {
-  "name": "event_processor",
+  "name": "re-ingest",
   "version": "1.0.0",
-  "description": "Event Processor for DI TxMA Audit",
+  "description": "Re-ingest Lambda for DI TxMA Audit",
   "main": "app.js",
   "repository": "https://github.com/alphagov/di-txma-audit",
   "author": "GDS",
   "license": "MIT",
-  "dependencies": {
-    "ts-proto": "^1.108.0"
-  },
+  "dependencies": {},
   "scripts": {
     "unit": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
     "compile": "tsc",
-    "test": "npm run compile && npm run unit"
+    "test": "yarn run compile && yarn run unit"
   },
   "babel": {
     "presets": [
@@ -35,7 +33,6 @@
     "prettier": "^2.5.1",
     "ts-jest": "^27.1.3",
     "ts-node": "^10.4.0",
-    "typescript": "^4.5.5",
-    "protobufjs": "^6.11.2"
+    "typescript": "^4.5.5"
   }
 }
