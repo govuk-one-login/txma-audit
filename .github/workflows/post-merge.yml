@@ -40,7 +40,7 @@ jobs:
           node-version: '14.x'
       - name: Install Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: yarn --frozen-lockfile
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: SAM Validate
         run: |
           sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }}
