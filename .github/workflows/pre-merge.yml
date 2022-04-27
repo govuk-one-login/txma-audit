@@ -28,7 +28,7 @@ jobs:
           node-version: '14.x'
       - name: Install Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: Test
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: yarn install --frozen-lockfile
+        run: yarn test
