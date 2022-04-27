@@ -1,9 +1,9 @@
-package step_definitions;
+package uk.gov.di.txma.eventprocessor.bdd;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-public class step_definitions {
+public class StepDefinitions {
         @Given("^I am on database$")
                 public void i_m_on_database(){
             System.out.println("This is given");

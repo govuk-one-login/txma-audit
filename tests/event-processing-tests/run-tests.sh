@@ -2,7 +2,7 @@
 
 set -eu
 
-gradle test
+gradle clean cucumber
 
 cat <<EOF > "$TEST_REPORT_DIR/result.json"
 [
