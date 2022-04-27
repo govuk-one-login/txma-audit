@@ -40,7 +40,7 @@ jobs:
           node-version: '14.x'
       - name: Install Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: npm ci
+        run: yarn --frozen-lockfile
       - name: SAM Validate
         run: |
           sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }}
@@ -49,7 +49,7 @@ jobs:
           sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --use-container --beta-features
       - name: Test
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: npm test
+        run: yarn test
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
