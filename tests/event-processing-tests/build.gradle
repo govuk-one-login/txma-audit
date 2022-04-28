@@ -11,6 +11,8 @@ repositories {
 
 dependencies {
     implementation 'io.cucumber:cucumber-java:7.2.3'
+    implementation platform('software.amazon.awssdk:bom:2.17.179')
+    implementation 'software.amazon.awssdk:lambda'
 }
 
 configurations {
