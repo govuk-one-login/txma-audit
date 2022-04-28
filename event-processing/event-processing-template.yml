@@ -59,19 +59,54 @@ Mappings:
       dev: "arn:aws:iam::725018305812:root"
   KBVQueueARN:
     Environment:
-      staging: "arn:aws:sqs:eu-west-2:<AccountId>:root"
+      staging: ""
       build: ""
       dev: ""
-  IPVQueueARN:
+  KBVAddressQueueARN:
+    Environment:
+      staging: ""
+      build: ""
+      dev: ""
+  KBVFraudQueueARN:
+    Environment:
+      staging: ""
+      build: ""
+      dev: ""
+  KbvKmsArn:
+    Environment:
+      staging: ""
+      build: ""
+      dev: ""
+  KbvAddressKmsArn:
+    Environment:
+      staging: ""
+      build: ""
+      dev: ""
+  KbvFraudKmsArn:
+    Environment:
+      staging: ""
+      build: ""
+      dev: ""
+  IPVCoreQueueARN:
     Environment:
       staging: "arn:aws:sqs:eu-west-2:335257547869:audit-sqs-staging-AuditEventQueue-5nVPAk6J1Lsf"
       build: ""
       dev: ""
-#  SPOTQueueARN:
-#    Environment:
-#      staging: "arn:aws:sqs:eu-west-2:<AccountId>:root"
-#      build: ""
-#      dev: ""
+  IPVPassportQueueARN:
+    Environment:
+      staging: "arn:aws:sqs:eu-west-2:620946502648:audit-sqs-staging-AuditEventQueue-YcGpuqFeWWbf"
+      build: ""
+      dev: ""
+  IPVCoreKmsArn:
+    Environment:
+      staging: "arn:aws:kms:eu-west-2:335257547869:key/410be880-43da-48e1-9917-6b712096ea61"
+      build: ""
+      dev: ""
+  IPVPassportKmsArn:
+    Environment:
+      staging: "arn:aws:kms:eu-west-2:620946502648:key/31059c62-6d09-4e88-9750-1721009e2d93"
+      build: ""
+      dev: ""
 
 Outputs:
   KBVAccessRoleARN:
@@ -247,15 +282,58 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-  KBVLambdaEventSourceMapping:
-    DependsOn:
-      - KBVEventProcessorFunction
-    Type: AWS::Lambda::EventSourceMapping
-    Condition: IsProductionOrStaging
-    Properties:
-      EventSourceArn:
-        - !FindInMap [KBVQueueARN, Environment, !Ref Environment]
-      FunctionName: !Ref KBVEventProcessorFunction
+#  KBVLambdaEventSourceMapping:
+#    DependsOn:
+#      - KBVEventProcessorFunction
+#    Type: AWS::Lambda::EventSourceMapping
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      EventSourceArn:
+#        - !FindInMap [KBVQueueARN, Environment, !Ref Environment]
+#      FunctionName: !Ref KBVEventProcessorFunction
+
+#  KBVAddressLambdaEventSourceMapping:
+#    DependsOn:
+#      - KBVEventProcessorFunction
+#    Type: AWS::Lambda::EventSourceMapping
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      EventSourceArn:
+#        - !FindInMap [KBVAddressQueueARN, Environment, !Ref Environment]
+#      FunctionName: !Ref KBVEventProcessorFunction
+
+#  KBVFraudLambdaEventSourceMapping:
+#    DependsOn:
+#      - KBVEventProcessorFunction
+#    Type: AWS::Lambda::EventSourceMapping
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      EventSourceArn:
+#        - !FindInMap [KBVFraudQueueARN, Environment, !Ref Environment]
+#      FunctionName: !Ref KBVEventProcessorFunction
+
+#  KBVKMSPolicy:
+#    DependsOn:
+#      - KBVLambdaAccessRole
+#    Type: AWS::IAM::Policy
+#    Properties:
+#      Roles:
+#        - !Ref KBVLambdaAccessRole
+#      PolicyName: kbv_kms_policy
+#      PolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#          - Effect: Allow
+#            Action:
+#              - 'kms:Encrypt'
+#              - 'kms:Decrypt'
+#              - 'kms:ReEncrypt*'
+#              - 'kms:GenerateDataKey*'
+#              - 'kms:DescribeKey'
+#            Resource:
+#              - !Ref KbvKmsArn
+#              - !Ref KbvAddressKmsArn
+#              - !Ref KbvFraudKmsArn
 
   IPVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -371,15 +449,48 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-  IPVLambdaEventSourceMapping:
+  IPVCoreLambdaEventSourceMapping:
     DependsOn:
       - IPVEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
       EventSourceArn:
-        - !FindInMap [IPVQueueARN, Environment, !Ref Environment]
+        - !FindInMap [IPVCoreQueueARN, Environment, !Ref Environment]
       FunctionName: !Ref IPVEventProcessorFunction
+
+  IPVPassportLambdaEventSourceMapping:
+    DependsOn:
+      - IPVEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn:
+        - !FindInMap [IPVPassportQueueARN, Environment, !Ref Environment]
+      FunctionName: !Ref IPVEventProcessorFunction
+
+  IPVKMSPolicy:
+    DependsOn:
+      - IPVLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref IPVLambdaAccessRole
+      PolicyName: ipv_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+              - 'kms:ReEncrypt*'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource:
+              - IPVCoreKmsArn
+              - IPVPassportKmsArn
 
   SPOTEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -504,3 +615,23 @@ Resources:
 #      EventSourceArn:
 #        - !FindInMap [SPOTQueueARN, Environment, !Ref Environment]
 #      FunctionName: !Ref SPOTEventProcessorFunction
+
+#  SPOTKMSPolicy:
+#    DependsOn:
+#      - SPOTLambdaAccessRole
+#    Type: AWS::IAM::Policy
+#    Properties:
+#      Roles:
+#        - !Ref SPOTLambdaAccessRole
+#      PolicyName: spot_kms_policy
+#      PolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#          - Effect: Allow
+#            Action:
+#              - 'kms:Encrypt'
+#              - 'kms:Decrypt'
+#              - 'kms:ReEncrypt*'
+#              - 'kms:GenerateDataKey*'
+#              - 'kms:DescribeKey'
+#            Resource: !Ref SpotKmsArn
