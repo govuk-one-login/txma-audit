@@ -48,13 +48,6 @@ Globals:
     Architectures:
       - x86_64
 
-Mappings:
-  AuditAccountARN:
-    Environment:
-      staging: "arn:aws:iam::778587367904:root"
-      build: "arn:aws:iam::761029721660:root"
-      dev: "arn:aws:iam::725018305812:root"
-
 Resources:
   epSNSTopic:
     Properties:
@@ -76,7 +69,7 @@ Resources:
               - 'sns:Subscribe'
             Principal:
               AWS:
-                - !FindInMap [AuditAccountARN, Environment, !Ref Environment]
+                - '{{resolve:ssm:AuditAccountARN}}'
             Resource: !Ref epSNSTopic
       Topics:
       - !Ref epSNSTopic

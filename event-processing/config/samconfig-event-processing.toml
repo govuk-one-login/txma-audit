@@ -11,7 +11,9 @@ region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"develop\""
 capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
-    "Environment=develop"
+    "Environment=dev",
+    "CodeSigningConfigArn=none",
+    "PermissionsBoundary=none"
 ]
 
 [dev.deploy.parameters]
@@ -20,7 +22,9 @@ region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"develop\""
 capabilities = "CAPABILITY_IAM"
 parameter_overrides=[
-    "Environment=develop"
+    "Environment=dev",
+    "CodeSigningConfigArn=none",
+    "PermissionsBoundary=none"
 ]
 
 [build.deploy.parameters]
