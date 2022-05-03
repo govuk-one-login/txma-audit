@@ -51,74 +51,6 @@ Globals:
     Architectures:
       - x86_64
 
-Mappings:
-  AuditAccountARN:
-    Environment:
-      staging: "arn:aws:iam::778587367904:root"
-      build: "arn:aws:iam::761029721660:root"
-      dev: "arn:aws:iam::725018305812:root"
-  KBVQueueARN:
-    Environment:
-      staging: ""
-      build: ""
-      dev: ""
-  KBVAddressQueueARN:
-    Environment:
-      staging: ""
-      build: ""
-      dev: ""
-  KBVFraudQueueARN:
-    Environment:
-      staging: ""
-      build: ""
-      dev: ""
-  KbvKmsArn:
-    Environment:
-      staging: ""
-      build: ""
-      dev: ""
-  KbvAddressKmsArn:
-    Environment:
-      staging: ""
-      build: ""
-      dev: ""
-  KbvFraudKmsArn:
-    Environment:
-      staging: ""
-      build: ""
-      dev: ""
-  IPVCoreQueueARN:
-    Environment:
-      staging: "arn:aws:sqs:eu-west-2:335257547869:audit-sqs-staging-AuditEventQueue-5nVPAk6J1Lsf"
-      build: ""
-      dev: ""
-  IPVPassportQueueARN:
-    Environment:
-      staging: "arn:aws:sqs:eu-west-2:620946502648:audit-sqs-staging-AuditEventQueue-YcGpuqFeWWbf"
-      build: ""
-      dev: ""
-  IPVCoreKmsArn:
-    Environment:
-      staging: "arn:aws:kms:eu-west-2:335257547869:key/410be880-43da-48e1-9917-6b712096ea61"
-      build: ""
-      dev: ""
-  IPVPassportKmsArn:
-    Environment:
-      staging: "arn:aws:kms:eu-west-2:620946502648:key/31059c62-6d09-4e88-9750-1721009e2d93"
-      build: ""
-      dev: ""
-
-Outputs:
-  KBVAccessRoleARN:
-    Description: The ARN for the KBV role used to read SQS and Write to SNS
-    Value: !GetAtt KBVLambdaAccessRole.Arn
-  IPVAccessRoleARN:
-    Description: The ARN for the IPV role used to read SQS and Write to SNS
-    Value: !GetAtt IPVLambdaAccessRole.Arn
-  SPOTAccessRoleARN:
-    Description: The ARN for the SPOT role used to read SQS and Write to SNS
-    Value: !GetAtt SPOTLambdaAccessRole.Arn
-
 Resources:
   epSNSTopic:
     Properties:
@@ -140,7 +72,7 @@ Resources:
               - 'sns:Subscribe'
             Principal:
               AWS:
-                - !FindInMap [AuditAccountARN, Environment, !Ref Environment]
+                - '{{resolve:ssm:AuditAccountARN}}'
             Resource: !Ref epSNSTopic
       Topics:
       - !Ref epSNSTopic

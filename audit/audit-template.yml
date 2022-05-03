@@ -48,13 +48,6 @@ Globals:
     Architectures:
       - x86_64
 
-Mappings:
-  EventProcessorSNSTopicARN:
-    Environment:
-      staging: "arn:aws:sns:eu-west-2:178023842775:EventProcessorSNSTopic-staging"
-      build: "arn:aws:sns:eu-west-2:750703655225:EventProcessorSNSTopic-build"
-      dev: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
-
 Resources:
   MessageBatchBucket:
     Type: AWS::S3::Bucket
@@ -88,7 +81,8 @@ Resources:
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn: !FindInMap [EventProcessorSNSTopicARN, Environment, !Ref Environment]
+      TopicArn:
+        - '{{resolve:ssm:EventProcessorSNSTopicARN}}'
       Endpoint: !GetAtt AuditDeliveryStream.Arn #FireHose
       Protocol: firehose
       SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
