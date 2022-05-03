@@ -221,7 +221,7 @@ Resources:
 #    Condition: IsProductionOrStaging
 #    Properties:
 #      EventSourceArn:
-#        - !FindInMap [KBVQueueARN, Environment, !Ref Environment]
+#        - '{{resolve:ssm:KBVQueueARN}}'
 #      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVAddressLambdaEventSourceMapping:
@@ -231,7 +231,7 @@ Resources:
 #    Condition: IsProductionOrStaging
 #    Properties:
 #      EventSourceArn:
-#        - !FindInMap [KBVAddressQueueARN, Environment, !Ref Environment]
+#        - '{{resolve:ssm:KBVAddressQueueARN}}'
 #      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVFraudLambdaEventSourceMapping:
@@ -241,7 +241,7 @@ Resources:
 #    Condition: IsProductionOrStaging
 #    Properties:
 #      EventSourceArn:
-#        - !FindInMap [KBVFraudQueueARN, Environment, !Ref Environment]
+#        - '{{resolve:ssm:KBVFraudQueueARN}}'
 #      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVKMSPolicy:
@@ -263,9 +263,9 @@ Resources:
 #              - 'kms:GenerateDataKey*'
 #              - 'kms:DescribeKey'
 #            Resource:
-#              - !Ref KbvKmsArn
-#              - !Ref KbvAddressKmsArn
-#              - !Ref KbvFraudKmsArn
+#              - '{{resolve:ssm:KbvKmsArn}}'
+#              - '{{resolve:ssm:KbvAddressKmsArn}}'
+#              - '{{resolve:ssm:KbvFraudKmsArn}}'
 
   IPVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -388,7 +388,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       EventSourceArn:
-        - !FindInMap [IPVCoreQueueARN, Environment, !Ref Environment]
+        - '{{resolve:ssm:IPVCoreQueueARN}}'
       FunctionName: !Ref IPVEventProcessorFunction
 
   IPVPassportLambdaEventSourceMapping:
@@ -398,7 +398,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       EventSourceArn:
-        - !FindInMap [IPVPassportQueueARN, Environment, !Ref Environment]
+        - '{{resolve:ssm:IPVPassportQueueARN}}'
       FunctionName: !Ref IPVEventProcessorFunction
 
   IPVKMSPolicy:
@@ -545,7 +545,7 @@ Resources:
 #    Condition: IsProductionOrStaging
 #    Properties:
 #      EventSourceArn:
-#        - !FindInMap [SPOTQueueARN, Environment, !Ref Environment]
+#        - '{{resolve:ssm:SPOTQueueARN}}'
 #      FunctionName: !Ref SPOTEventProcessorFunction
 
 #  SPOTKMSPolicy:
@@ -566,4 +566,4 @@ Resources:
 #              - 'kms:ReEncrypt*'
 #              - 'kms:GenerateDataKey*'
 #              - 'kms:DescribeKey'
-#            Resource: !Ref SpotKmsArn
+#            Resource: '{{resolve:ssm:SpotKmsArn}}'
