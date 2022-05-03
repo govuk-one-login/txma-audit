@@ -6,13 +6,16 @@ on:
   workflow_dispatch:
 
 env:
-  environment: "dev"
+  environment: "build"
   eventProcessorDirectory: "event-processing"
   auditDirectory: "audit"
 
 jobs:
-  run_event_processor_tests:
+  run_event_processor_tests_and_validation:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     defaults:
       run:
         working-directory: ${{ env.eventProcessorDirectory }}
@@ -22,6 +25,11 @@ jobs:
         uses: actions/setup-python@v2
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v1
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_EVENT_PROCESSING }}
+          aws-region: ${{ env.awsRegion }}
       - name: Use Node.js 14
         uses: actions/setup-node@v3.0.0
         with:
@@ -32,3 +40,29 @@ jobs:
       - name: Test
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: yarn test
+      - name: SAM Validate
+        run: |
+          sam validate --template-file event-processing-template.yml --config-env ${{ env.environment }}
+
+  run_audit_validation:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: ${{ env.auditDirectory }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v1
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_AUDIT }}
+          aws-region: ${{ env.awsRegion }}
+      - name: SAM Validate
+        run: |
+          sam validate --template-file audit-template.yml --config-env ${{ env.environment }}
