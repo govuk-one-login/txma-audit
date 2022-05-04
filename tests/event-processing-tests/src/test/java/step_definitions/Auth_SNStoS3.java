@@ -6,6 +6,7 @@ import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -34,11 +35,21 @@ public class Auth_SNStoS3 {
     SdkBytes input;
     String json;
 
-    @Given("^the datafile {string} is available")
-    public void loaddatafile(String fileName) throws Exception {
-        String path = new File("src/test/resources/Test Data/" + fileName).getAbsolutePath();
-        Path filePath = Path.of(new File("src/test/resources/Test Data/" + fileName).getAbsolutePath());
-        String json = Files.readString(filePath);
+    @Given("the datafile {string} is available")
+    public void the_datafile_tx_ma_ts_is_available(String filename) {
+//        String path = new File("src/test/resources/Test Data/TxMA_TS_001.json").getAbsolutePath();
+        Path filePath = Path.of(new File("src/test/resources/Test Data/" +filename).getAbsolutePath());
+        try {
+            json = Files.readString(filePath);
+        }
+        catch (IOException ignored) {
+
+        }
+
+//    public void loaddatafile(String fileName) throws Exception {
+//        String path = new File("src/test/resources/Test Data/" + fileName).getAbsolutePath();
+//        Path filePath = Path.of(new File("src/test/resources/Test Data/" + fileName).getAbsolutePath());
+//        String json = Files.readString(filePath);
     }
 
     @When("^the lambda is invoked")
