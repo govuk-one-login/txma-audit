@@ -51,20 +51,21 @@ Globals:
 Resources:
   MessageBucketLogsBucket:
     Type: AWS::S3::Bucket
-    VersioningConfiguration:
-      Status: "Enabled"
-    BucketEncryption:
-      ServerSideEncryptionConfiguration:
-        - ServerSideEncryptionByDefault:
-            SSEAlgorithm: AES256
-    PublicAccessBlockConfiguration:
-      BlockPublicAcls: true
-      BlockPublicPolicy: true
-      IgnorePublicAcls: true
-      RestrictPublicBuckets: true
-    Tags:
-      - Key: CheckovRulesToSkip
-        Value: CKV_AWS_18
+    Properties:
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
 
   S3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy

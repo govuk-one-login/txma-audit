@@ -52,6 +52,35 @@ Globals:
       - x86_64
 
 Resources:
+  LogsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource:
+              - "*"
+            Condition:
+              ArnLike:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+
   epSNSTopic:
     Properties:
       TopicName: !Sub
@@ -103,6 +132,7 @@ Resources:
   KBVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
       LogGroupName: "/aws/lambda/EventProcessorFunction-KBV"
       RetentionInDays: 7
 
@@ -249,6 +279,7 @@ Resources:
   KBVAddressEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
       LogGroupName: "/aws/lambda/EventProcessorFunction-KBVAddress"
       RetentionInDays: 7
 
@@ -395,6 +426,7 @@ Resources:
   KBVFraudEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
       LogGroupName: "/aws/lambda/EventProcessorFunction-KBVFraud"
       RetentionInDays: 7
 
@@ -541,6 +573,7 @@ Resources:
   IPVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
       LogGroupName: "/aws/lambda/EventProcessorFunction-IPV"
       RetentionInDays: 7
 
@@ -688,6 +721,7 @@ Resources:
   IPVPassEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
       LogGroupName: "/aws/lambda/EventProcessorFunction-IPVPass"
       RetentionInDays: 7
 
@@ -835,6 +869,7 @@ Resources:
   SPOTEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
       LogGroupName: "/aws/lambda/EventProcessorFunction-SPOT"
       RetentionInDays: 7
 
