@@ -105,12 +105,6 @@ Resources:
               - 'kms:DescribeKey'
             Resource: '*'
 
-  SNSKMSKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub "alias/${AWS::StackName}-SNSEncryptionKey"
-      TargetKeyId: !Ref SNSKMSKey
-
   epSNSTopic:
     Properties:
       TopicName: !Sub
