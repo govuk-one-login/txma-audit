@@ -54,12 +54,12 @@ To build and deploy your application for the first time, run the following in yo
 sam build --template-file <account-name>-template.yml --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
 sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
 ```
-When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket of the lambda zip.
+*Note*: When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket of the lambda zip.
 
 *Deploying Locally*: When deploying locally you can specify the profile to be used for deployment by adding the profile argument e.g.
 
 ```bash
-sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --profile di-dev-event-processing-admin
+sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --profile <aws profile name>
 ```
 
 You can also provide overrides directly when calling sam deploy if you need to provide different parameters to the stacks:
