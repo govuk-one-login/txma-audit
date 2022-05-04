@@ -81,11 +81,42 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
+  SNSKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
+
+  SNSKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}-SNSEncryptionKey"
+      TargetKeyId: !Ref SNSKMSKey
+
   epSNSTopic:
     Properties:
       TopicName: !Sub
         - "EventProcessorSNSTopic-${EnvironmentName}"
         - EnvironmentName: !Ref Environment
+      KmsMasterKeyId: !Ref SNSKMSKey
     Type: "AWS::SNS::Topic"
 
   SNSSubscribePolicy:
@@ -228,7 +259,7 @@ Resources:
   KBVLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "event-processing-LambdaAccessRole-KBV"
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-KBV"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -375,7 +406,7 @@ Resources:
   KBVAddressLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "event-processing-LambdaAccessRole-KBVAddress"
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-KBVAddress"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -522,7 +553,7 @@ Resources:
   KBVFraudLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "event-processing-LambdaAccessRole-KBVFraud"
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-KBVFraud"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -669,7 +700,7 @@ Resources:
   IPVLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "event-processing-LambdaAccessRole-IPV"
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-IPV"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -817,7 +848,7 @@ Resources:
   IPVPassLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "event-processing-LambdaAccessRole-IPVPass"
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-IPVPass"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -965,7 +996,7 @@ Resources:
   SPOTLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "event-processing-LambdaAccessRole-SPOT"
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-SPOT"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
