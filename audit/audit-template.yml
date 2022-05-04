@@ -101,7 +101,7 @@ Resources:
       VersioningConfiguration:
         Status: "Enabled"
       Logging:
-        DestinationBucketName: !Ref MessageBucketLogs
+        DestinationBucketName: !Ref MessageBucketLogsBucket
         LogFilePrefix: "audit/message-batch-bucket/"
       LifecycleConfiguration:
         Rules:
