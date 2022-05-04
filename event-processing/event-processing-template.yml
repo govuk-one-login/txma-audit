@@ -75,7 +75,7 @@ Resources:
                 - '{{resolve:ssm:AuditAccountARN}}'
             Resource: !Ref epSNSTopic
       Topics:
-      - !Ref epSNSTopic
+        - !Ref epSNSTopic
 
   SNSPublishPolicy:
     DependsOn:
@@ -104,6 +104,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: "/aws/lambda/EventProcessorFunction-KBV"
+      RetentionInDays: 7
 
   KBVEventProcessorFunction:
     DependsOn:
@@ -124,7 +125,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-        - app.ts
+          - app.ts
 
   KBVEventInvokeConfig:
     DependsOn:
@@ -197,7 +198,7 @@ Resources:
   KBVLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "LambdaAccessRole-KBV"
+      RoleName: "event-processing-LambdaAccessRole-KBV"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -249,6 +250,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: "/aws/lambda/EventProcessorFunction-KBVAddress"
+      RetentionInDays: 7
 
   KBVAddressEventProcessorFunction:
     DependsOn:
@@ -342,7 +344,7 @@ Resources:
   KBVAddressLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "LambdaAccessRole-KBVAddress"
+      RoleName: "event-processing-LambdaAccessRole-KBVAddress"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -394,6 +396,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: "/aws/lambda/EventProcessorFunction-KBVFraud"
+      RetentionInDays: 7
 
   KBVFraudEventProcessorFunction:
     DependsOn:
@@ -487,7 +490,7 @@ Resources:
   KBVFraudLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "LambdaAccessRole-KBVFraud"
+      RoleName: "event-processing-LambdaAccessRole-KBVFraud"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -539,6 +542,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: "/aws/lambda/EventProcessorFunction-IPV"
+      RetentionInDays: 7
 
   IPVEventProcessorFunction:
     DependsOn:
@@ -632,7 +636,7 @@ Resources:
   IPVLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "LambdaAccessRole-IPV"
+      RoleName: "event-processing-LambdaAccessRole-IPV"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -685,6 +689,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: "/aws/lambda/EventProcessorFunction-IPVPass"
+      RetentionInDays: 7
 
   IPVPassEventProcessorFunction:
     DependsOn:
@@ -778,7 +783,7 @@ Resources:
   IPVPassLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "LambdaAccessRole-IPVPass"
+      RoleName: "event-processing-LambdaAccessRole-IPVPass"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
@@ -831,6 +836,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: "/aws/lambda/EventProcessorFunction-SPOT"
+      RetentionInDays: 7
 
   SPOTEventProcessorFunction:
     DependsOn:
@@ -924,7 +930,7 @@ Resources:
   SPOTLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "LambdaAccessRole-SPOT"
+      RoleName: "event-processing-LambdaAccessRole-SPOT"
       PermissionsBoundary: !If
         - SetPermissionsBoundary
         - !Ref PermissionsBoundary
