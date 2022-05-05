@@ -1,7 +1,7 @@
 name: Pre-merge Build and Test
 
 on:
-  pull_request:
+  push:
     branches: [ main ]
   workflow_dispatch:
 
