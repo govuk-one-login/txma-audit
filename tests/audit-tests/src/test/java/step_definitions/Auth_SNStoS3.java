@@ -28,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class Auth_SNStoS3 {
     private static final String key = "testKey";
-    private static final String firehoseName = "arn:aws:firehose:eu-west-2:761029721660:deliverystream/AuditFireHose-build"; //Need to check firehose name and full arn
-    private static final String bucketName = "arn:aws:s3:eu-west-2:761029721660:audit-resources-build-messagebatchbucket-1vpvbe3ndfd6s"; //Need to check bucket name and full arn
+    private static final String firehoseName = "AuditFireHose-build";
+    private static final String bucketName = "audit-resources-build-messagebatchbucket-1vpvbe3ndfd6s";
     private static S3Client s3;
     SdkBytes output;
     SdkBytes input;

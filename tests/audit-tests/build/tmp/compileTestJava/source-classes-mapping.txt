@@ -1,7 +1,7 @@
 step_definitions/AuthtoSNS.java
  step_definitions.AuthtoSNS
-step_definitions/Auth_SNStoS3.java
- step_definitions.Auth_SNStoS3
+step_definitions/IPVtoSNS.java
+ step_definitions.IPVtoSNS
 step_definitions/KBV_SNStoS3.java
  step_definitions.KBV_SNStoS3
 uk/gov/di/txma/eventprocessor/bdd/StepDefinitions.java
@@ -14,5 +14,5 @@ step_definitions/SPOT_SNStoS3.java
  step_definitions.SPOT_SNStoS3
 step_definitions/KBVtoSNS.java
  step_definitions.KBVtoSNS
-step_definitions/IPVtoSNS.java
- step_definitions.IPVtoSNS
+step_definitions/Auth_SNStoS3.java
+ step_definitions.Auth_SNStoS3
