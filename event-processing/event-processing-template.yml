@@ -135,13 +135,19 @@ Resources:
     DependsOn:
       - epSNSTopic
       - KBVLambdaAccessRole
+      - KBVAddressLambdaAccessRole
+      - KBVFraudLambdaAccessRole
       - IPVLambdaAccessRole
+      - IPVPassLambdaAccessRole
       - SPOTLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
         - !Ref KBVLambdaAccessRole
+        - !Ref KBVAddressLambdaAccessRole
+        - !Ref KBVFraudLambdaAccessRole
         - !Ref IPVLambdaAccessRole
+        - !Ref IPVPassLambdaAccessRole
         - !Ref SPOTLambdaAccessRole
       PolicyName: sns_publish_policy
       PolicyDocument:
