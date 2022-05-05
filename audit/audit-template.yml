@@ -100,7 +100,7 @@ Resources:
         RestrictPublicBuckets: true
       VersioningConfiguration:
         Status: "Enabled"
-      Logging:
+      LoggingConfiguration:
         DestinationBucketName: !Ref MessageBucketLogsBucket
         LogFilePrefix: "audit/message-batch-bucket/"
       LifecycleConfiguration:
