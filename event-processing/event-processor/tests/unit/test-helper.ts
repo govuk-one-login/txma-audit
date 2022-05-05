@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 import { SQSEvent, SQSRecord } from 'aws-lambda';
-import { AuditEvent } from '../../protobuf/audit-event';
+import { AuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-protobuf/unknown-audit-event';
 
 export class TestHelper {
@@ -40,14 +40,14 @@ export class TestHelper {
         },
     };
 
-    static createSQSEventWithEncodedMessage(message: Uint8Array, numberOfRecords = 1): SQSEvent {
+    static createSQSEventWithEncodedMessage(message: string, numberOfRecords = 1): SQSEvent {
         const sqsEvent = {
             Records: Array<SQSRecord>(),
         };
-
+        
         for (let i = 0; i < numberOfRecords; i++) {
             const sqsRecord: SQSRecord = JSON.parse(JSON.stringify(this.sqsRecord));
-            sqsRecord.body = JSON.stringify(JSON.parse(JSON.stringify(message)).data);
+            sqsRecord.body = message;
 
             sqsEvent.Records.push(sqsRecord);
         }
@@ -55,11 +55,11 @@ export class TestHelper {
         return sqsEvent;
     }
 
-    static encodeAuditEvent(message: AuditEvent): Uint8Array {
-        return AuditEvent.encode(message).finish();
+    static encodeAuditEvent(message: AuditEvent): string {
+        return JSON.stringify(message);
     }
 
-    static encodeAuditEventWithUnknownField(message: UnknownAuditEvent): Uint8Array {
-        return UnknownAuditEvent.encode(message).finish();
+    static encodeAuditEventWithUnknownField(message: UnknownAuditEvent): string {
+        return JSON.stringify(message);
     }
 }
