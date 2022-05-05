@@ -284,7 +284,7 @@ Resources:
 #    Properties:
 #      EventSourceArn:
 #        - '{{resolve:ssm:KBVQueueARN}}'
-#      FunctionName: !Ref KBVEventProcessorFunction
+#      FunctionName: "EventProcessorFunction-KBV"
 
 #  KBVKMSPolicy:
 #    DependsOn:
@@ -431,7 +431,7 @@ Resources:
 #    Properties:
 #      EventSourceArn:
 #        - '{{resolve:ssm:KBVAddressQueueARN}}'
-#      FunctionName: !Ref KBVAddressEventProcessorFunction
+#      FunctionName: "EventProcessorFunction-KBVAddress"
 
 #  KBVAddressKMSPolicy:
 #    DependsOn:
@@ -578,7 +578,7 @@ Resources:
 #    Properties:
 #      EventSourceArn:
 #        - '{{resolve:ssm:KBVFraudQueueARN}}'
-#      FunctionName: !Ref KBVEventProcessorFunction
+#      FunctionName: "EventProcessorFunction-KBVFraud"
 
 #  KBVFraudKMSPolicy:
 #    DependsOn:
@@ -635,7 +635,7 @@ Resources:
       - IPVEventProcessorFunction
     Type: AWS::Lambda::EventInvokeConfig
     Properties:
-      FunctionName: !Ref IPVEventProcessorFunction
+      FunctionName: "EventProcessorFunction-IPV"
       Qualifier: "$LATEST"
       MaximumEventAgeInSeconds: 600
       MaximumRetryAttempts: 2
@@ -783,7 +783,7 @@ Resources:
       - IPVPassEventProcessorFunction
     Type: AWS::Lambda::EventInvokeConfig
     Properties:
-      FunctionName: !Ref IPVPassEventProcessorFunction
+      FunctionName: "EventProcessorFunction-IPVPass"
       Qualifier: "$LATEST"
       MaximumEventAgeInSeconds: 600
       MaximumRetryAttempts: 2
@@ -1021,7 +1021,7 @@ Resources:
 #    Properties:
 #      EventSourceArn:
 #        - '{{resolve:ssm:SPOTQueueARN}}'
-#      FunctionName: !Ref SPOTEventProcessorFunction
+#      FunctionName: "EventProcessorFunction-SPOT"
 
 #  SPOTKMSPolicy:
 #    DependsOn:
