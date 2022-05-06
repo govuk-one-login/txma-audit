@@ -2,9 +2,10 @@ Feature: Auth event data journey from SNS to Firehose
 
   Scenario: Verify the data journey from SNS to S3
     Given the datafile "TxMA_TS_001.json" is available
-#    When the lambda is invoked
+    #And we can read all current S3 keys
+    #When the message is sent to firehose
     Then the s3 should have a new event data
-    And the event data should match with the expected data file <>
+    And the event data should match with the expected data file "TxMA_TS_001.json"
 
 
 

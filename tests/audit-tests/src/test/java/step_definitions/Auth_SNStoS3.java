@@ -22,8 +22,7 @@ import software.amazon.awssdk.services.firehose.model.Record;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class Auth_SNStoS3 {
     private static final String key = "firehose/2022/05/05/15/AuditFireHose-build-2-2022-05-05-15-04-43-fd62a4e6-2fe0-4c52-b683-583baecbf03d.gz";
@@ -107,8 +106,13 @@ public class Auth_SNStoS3 {
         //We need to decide if we want to delete the object after the test, or just leave the test in the S3 bucket
     }
 
-    @And("^the event data should match with the expected data file <>")
-    public void theEventDataShouldMatchWithTheExpectedDataFile() {
-        assertEquals(readed.contains(json), true);
+    @And("the event data should match with the expected data file {string}")
+    public void theEventDataShouldMatchWithTheExpectedDataFile(String filename) throws IOException {
+        Path filePath = Path.of(new File("src/test/resources/Test Data/" +filename).getAbsolutePath());
+
+            json = Files.readString(filePath);
+
+        assertTrue(readed.contains(json));
     }
+
 }
