@@ -282,9 +282,8 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn:
-#        - '{{resolve:ssm:KBVQueueARN}}'
-#      FunctionName: "EventProcessorFunction-KBV"
+#      EventSourceArn: '{{resolve:ssm:KBVQueueARN}}'
+#      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVKMSPolicy:
 #    DependsOn:
@@ -429,9 +428,8 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn:
-#        - '{{resolve:ssm:KBVAddressQueueARN}}'
-#      FunctionName: "EventProcessorFunction-KBVAddress"
+#      EventSourceArn: '{{resolve:ssm:KBVAddressQueueARN}}'
+#      FunctionName: !Ref KBVAddressEventProcessorFunction
 
 #  KBVAddressKMSPolicy:
 #    DependsOn:
@@ -576,9 +574,8 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn:
-#        - '{{resolve:ssm:KBVFraudQueueARN}}'
-#      FunctionName: "EventProcessorFunction-KBVFraud"
+#      EventSourceArn: '{{resolve:ssm:KBVFraudQueueARN}}'
+#      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVFraudKMSPolicy:
 #    DependsOn:
@@ -635,7 +632,7 @@ Resources:
       - IPVEventProcessorFunction
     Type: AWS::Lambda::EventInvokeConfig
     Properties:
-      FunctionName: "EventProcessorFunction-IPV"
+      FunctionName: !Ref IPVEventProcessorFunction
       Qualifier: "$LATEST"
       MaximumEventAgeInSeconds: 600
       MaximumRetryAttempts: 2
@@ -723,8 +720,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn:
-        - '{{resolve:ssm:IPVCoreQueueARN}}'
+      EventSourceArn: '{{resolve:ssm:IPVCoreQueueARN}}'
       FunctionName: !Ref IPVEventProcessorFunction
 
   IPVKMSPolicy:
@@ -783,7 +779,7 @@ Resources:
       - IPVPassEventProcessorFunction
     Type: AWS::Lambda::EventInvokeConfig
     Properties:
-      FunctionName: "EventProcessorFunction-IPVPass"
+      FunctionName: !Ref IPVPassEventProcessorFunction
       Qualifier: "$LATEST"
       MaximumEventAgeInSeconds: 600
       MaximumRetryAttempts: 2
@@ -871,8 +867,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn:
-        - '{{resolve:ssm:IPVPassportQueueARN}}'
+      EventSourceArn: '{{resolve:ssm:IPVPassportQueueARN}}'
       FunctionName: !Ref IPVPassEventProcessorFunction
 
   IPVPassKMSPolicy:
@@ -1019,9 +1014,8 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn:
-#        - '{{resolve:ssm:SPOTQueueARN}}'
-#      FunctionName: "EventProcessorFunction-SPOT"
+#      EventSourceArn: '{{resolve:ssm:SPOTQueueARN}}'
+#      FunctionName: !Ref SPOTEventProcessorFunction
 
 #  SPOTKMSPolicy:
 #    DependsOn:
