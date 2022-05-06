@@ -282,8 +282,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn:
-#        - '{{resolve:ssm:KBVQueueARN}}'
+#      EventSourceArn: '{{resolve:ssm:KBVQueueARN}}'
 #      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVKMSPolicy:
@@ -429,8 +428,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn:
-#        - '{{resolve:ssm:KBVAddressQueueARN}}'
+#      EventSourceArn: '{{resolve:ssm:KBVAddressQueueARN}}'
 #      FunctionName: !Ref KBVAddressEventProcessorFunction
 
 #  KBVAddressKMSPolicy:
@@ -576,8 +574,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn:
-#        - '{{resolve:ssm:KBVFraudQueueARN}}'
+#      EventSourceArn: '{{resolve:ssm:KBVFraudQueueARN}}'
 #      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVFraudKMSPolicy:
@@ -723,8 +720,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn:
-        - '{{resolve:ssm:IPVCoreQueueARN}}'
+      EventSourceArn: '{{resolve:ssm:IPVCoreQueueARN}}'
       FunctionName: !Ref IPVEventProcessorFunction
 
   IPVKMSPolicy:
@@ -871,8 +867,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn:
-        - '{{resolve:ssm:IPVPassportQueueARN}}'
+      EventSourceArn: '{{resolve:ssm:IPVPassportQueueARN}}'
       FunctionName: !Ref IPVPassEventProcessorFunction
 
   IPVPassKMSPolicy:
@@ -1019,8 +1014,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn:
-#        - '{{resolve:ssm:SPOTQueueARN}}'
+#      EventSourceArn: '{{resolve:ssm:SPOTQueueARN}}'
 #      FunctionName: !Ref SPOTEventProcessorFunction
 
 #  SPOTKMSPolicy:
