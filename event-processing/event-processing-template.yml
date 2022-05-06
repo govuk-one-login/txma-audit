@@ -34,6 +34,9 @@ Conditions:
       - Fn::Equals:
           - !Ref CodeSigningConfigArn
           - "none"
+  IsProductionOrStaging: !And
+    - !Not [!Equals [ !Ref Environment, dev]]
+    - !Not [!Equals [ !Ref Environment, build]]
 
 Globals:
   Function:
@@ -48,19 +51,66 @@ Globals:
     Architectures:
       - x86_64
 
-Mappings:
-  AuditAccountARN:
-    Environment:
-      staging: "arn:aws:iam::778587367904:root"
-      build: "arn:aws:iam::761029721660:root"
-      dev: "arn:aws:iam::725018305812:root"
-
 Resources:
+  LogsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource:
+              - "*"
+            Condition:
+              ArnLike:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+
+  SNSKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
+
   epSNSTopic:
     Properties:
       TopicName: !Sub
         - "EventProcessorSNSTopic-${EnvironmentName}"
         - EnvironmentName: !Ref Environment
+      KmsMasterKeyId: !Ref SNSKMSKey
     Type: "AWS::SNS::Topic"
 
   SNSSubscribePolicy:
@@ -76,29 +126,59 @@ Resources:
               - 'sns:Subscribe'
             Principal:
               AWS:
-                - !FindInMap [AuditAccountARN, Environment, !Ref Environment]
+                - '{{resolve:ssm:AuditAccountARN}}'
             Resource: !Ref epSNSTopic
       Topics:
-      - !Ref epSNSTopic
+        - !Ref epSNSTopic
 
-  EventProcessorLogGroup:
+  SNSPublishPolicy:
+    DependsOn:
+      - epSNSTopic
+      - KBVLambdaAccessRole
+      - KBVAddressLambdaAccessRole
+      - KBVFraudLambdaAccessRole
+      - IPVLambdaAccessRole
+      - IPVPassLambdaAccessRole
+      - SPOTLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref KBVLambdaAccessRole
+        - !Ref KBVAddressLambdaAccessRole
+        - !Ref KBVFraudLambdaAccessRole
+        - !Ref IPVLambdaAccessRole
+        - !Ref IPVPassLambdaAccessRole
+        - !Ref SPOTLambdaAccessRole
+      PolicyName: sns_publish_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'sns:Publish'
+            Resource: !Sub
+              - 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${topicName}'
+              - topicName: !GetAtt epSNSTopic.TopicName
+
+  KBVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: "/aws/lambda/EventProcessorFunction"
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-KBV"
+      RetentionInDays: 7
 
-  EventProcessorFunction:
+  KBVEventProcessorFunction:
     DependsOn:
-      - EventProcessorLogGroup
+      - KBVEventProcessorLogGroup
+      - KBVLambdaAccessRole
     Type: "AWS::Serverless::Function"
     Properties:
-      FunctionName: "EventProcessorFunction"
+      FunctionName: "EventProcessorFunction-KBV"
       CodeUri: ../event-processing/event-processor
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Policies:
-        - SNSPublishMessagePolicy:
-            TopicName: !GetAtt epSNSTopic.TopicName
+      Role: !GetAtt KBVLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -106,12 +186,15 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-        - app.ts
+          - app.ts
 
-  EventInvokeConfig:
+  KBVEventInvokeConfig:
+    DependsOn:
+      - SNSPublishPolicy
+      - KBVEventProcessorFunction
     Type: AWS::Lambda::EventInvokeConfig
     Properties:
-      FunctionName: !Ref EventProcessorFunction
+      FunctionName: !Ref KBVEventProcessorFunction
       Qualifier: "$LATEST"
       MaximumEventAgeInSeconds: 600
       MaximumRetryAttempts: 2
@@ -119,56 +202,837 @@ Resources:
         OnSuccess:
           Destination: !Ref epSNSTopic
 
-  EventProcessorUnknownFieldsErrorMetric:
+  KBVEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
-      - EventProcessorFunction
+      - KBVEventProcessorFunction
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterPattern: "WARN UNKNOWN FIELDS"
-      LogGroupName: "/aws/lambda/EventProcessorFunction"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-KBV"
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: "lambda/di/txma/errors"
-          MetricName: "Unknown Fields"
+          MetricName: "Unknown Fields KBV"
 
-  EventProcessorUnknownFieldsAlarm:
+  KBVEventProcessorUnknownFieldsAlarm:
     DependsOn:
-      - EventProcessorUnknownFieldsErrorMetric
+      - KBVEventProcessorUnknownFieldsErrorMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Event Processor Unknown Fields Alarm
-      AlarmName: UnknownFieldsAlarm
+      AlarmDescription: "KBV Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-KBV"
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       Statistic: Sum
       Period: 86400
       Threshold: 1
-      MetricName: "Unknown Fields"
+      MetricName: "Unknown Fields KBV"
       Namespace: "lambda/di/txma/errors"
 
-  EventProcessorRequiredFieldsErrorMetric:
+  KBVEventProcessorRequiredFieldsErrorMetric:
     DependsOn:
-      - EventProcessorFunction
+      - KBVEventProcessorFunction
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterPattern: "ERROR VALIDATION ERROR"
-      LogGroupName: "/aws/lambda/EventProcessorFunction"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-KBV"
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: "lambda/di/txma/errors"
-          MetricName: "Validation Errors"
+          MetricName: "Validation Errors KBV"
 
-  EventProcessorRequiredFieldsAlarm:
+  KBVEventProcessorRequiredFieldsAlarm:
     DependsOn:
-      - EventProcessorRequiredFieldsErrorMetric
+      - KBVEventProcessorRequiredFieldsErrorMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Event Processor Required Fields Alarm
-      AlarmName: RequiredFieldsAlarm
+      AlarmDescription: "KBV Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-KBV"
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       Statistic: Sum
       Period: 86400
       Threshold: 1
-      MetricName: "Validation Errors"
+      MetricName: "Validation Errors KBV"
       Namespace: "lambda/di/txma/errors"
+
+  KBVLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-KBV"
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+#  KBVLambdaEventSourceMapping:
+#    DependsOn:
+#      - KBVEventProcessorFunction
+#    Type: AWS::Lambda::EventSourceMapping
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      EventSourceArn: '{{resolve:ssm:KBVQueueARN}}'
+#      FunctionName: !Ref KBVEventProcessorFunction
+
+#  KBVKMSPolicy:
+#    DependsOn:
+#      - KBVLambdaAccessRole
+#    Type: AWS::IAM::Policy
+#    Properties:
+#      Roles:
+#        - !Ref KBVLambdaAccessRole
+#      PolicyName: kbv_kms_policy
+#      PolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#          - Effect: Allow
+#            Action:
+#              - 'kms:Encrypt'
+#              - 'kms:Decrypt'
+#              - 'kms:ReEncrypt*'
+#              - 'kms:GenerateDataKey*'
+#              - 'kms:DescribeKey'
+#            Resource:
+#              - '{{resolve:ssm:KbvKmsArn}}'
+
+  KBVAddressEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-KBVAddress"
+      RetentionInDays: 7
+
+  KBVAddressEventProcessorFunction:
+    DependsOn:
+      - KBVAddressEventProcessorLogGroup
+      - KBVAddressLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-KBVAddress"
+      CodeUri: ../event-processing/event-processor
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt KBVAddressLambdaAccessRole.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
+
+  KBVAddressEventInvokeConfig:
+    DependsOn:
+      - SNSPublishPolicy
+      - KBVAddressEventProcessorFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref KBVAddressEventProcessorFunction
+      Qualifier: "$LATEST"
+      MaximumEventAgeInSeconds: 600
+      MaximumRetryAttempts: 2
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Ref epSNSTopic
+
+  KBVAddressEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - KBVAddressEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-KBVAddress"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields KBV Address"
+
+  KBVAddressEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - KBVAddressEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "KBV Address Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-KBVAddress"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields KBV Address"
+      Namespace: "lambda/di/txma/errors"
+
+  KBVAddressEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - KBVAddressEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-KBVAddress"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors KBV Address"
+
+  KBVAddressEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - KBVAddressEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "KBV Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-KBVAddress"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors KBV Address"
+      Namespace: "lambda/di/txma/errors"
+
+  KBVAddressLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-KBVAddress"
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+#  KBVAddressLambdaEventSourceMapping:
+#    DependsOn:
+#      - KBVAddressEventProcessorFunction
+#    Type: AWS::Lambda::EventSourceMapping
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      EventSourceArn: '{{resolve:ssm:KBVAddressQueueARN}}'
+#      FunctionName: !Ref KBVAddressEventProcessorFunction
+
+#  KBVAddressKMSPolicy:
+#    DependsOn:
+#      - KBVAddressLambdaAccessRole
+#    Type: AWS::IAM::Policy
+#    Properties:
+#      Roles:
+#        - !Ref KBVAddressLambdaAccessRole
+#      PolicyName: kbv_kms_policy
+#      PolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#          - Effect: Allow
+#            Action:
+#              - 'kms:Encrypt'
+#              - 'kms:Decrypt'
+#              - 'kms:ReEncrypt*'
+#              - 'kms:GenerateDataKey*'
+#              - 'kms:DescribeKey'
+#            Resource:
+#              - '{{resolve:ssm:KbvAddressKmsArn}}'
+
+  KBVFraudEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-KBVFraud"
+      RetentionInDays: 7
+
+  KBVFraudEventProcessorFunction:
+    DependsOn:
+      - KBVFraudEventProcessorLogGroup
+      - KBVFraudLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-KBVFraud"
+      CodeUri: ../event-processing/event-processor
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt KBVFraudLambdaAccessRole.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
+
+  KBVFraudEventInvokeConfig:
+    DependsOn:
+      - SNSPublishPolicy
+      - KBVFraudEventProcessorFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref KBVFraudEventProcessorFunction
+      Qualifier: "$LATEST"
+      MaximumEventAgeInSeconds: 600
+      MaximumRetryAttempts: 2
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Ref epSNSTopic
+
+  KBVFraudEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - KBVFraudEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-KBVFraud"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields KBV Fraud"
+
+  KBVFraudEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - KBVFraudEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "KBV Fraud Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-KBVFraud"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields KBV Fraud"
+      Namespace: "lambda/di/txma/errors"
+
+  KBVFraudEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - KBVFraudEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-KBVFraud"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors KBV Fraud"
+
+  KBVFraudEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - KBVFraudEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "KBV Fraud Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-KBVFraud"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors KBV Fraud"
+      Namespace: "lambda/di/txma/errors"
+
+  KBVFraudLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-KBVFraud"
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+#  KBVFraudLambdaEventSourceMapping:
+#    DependsOn:
+#      - KBVEventProcessorFunction
+#    Type: AWS::Lambda::EventSourceMapping
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      EventSourceArn: '{{resolve:ssm:KBVFraudQueueARN}}'
+#      FunctionName: !Ref KBVEventProcessorFunction
+
+#  KBVFraudKMSPolicy:
+#    DependsOn:
+#      - KBVFraudLambdaAccessRole
+#    Type: AWS::IAM::Policy
+#    Properties:
+#      Roles:
+#        - !Ref KBVFraudLambdaAccessRole
+#      PolicyName: kbv_kms_policy
+#      PolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#          - Effect: Allow
+#            Action:
+#              - 'kms:Encrypt'
+#              - 'kms:Decrypt'
+#              - 'kms:ReEncrypt*'
+#              - 'kms:GenerateDataKey*'
+#              - 'kms:DescribeKey'
+#            Resource:
+#              - '{{resolve:ssm:KbvFraudKmsArn}}'
+
+  IPVEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-IPV"
+      RetentionInDays: 7
+
+  IPVEventProcessorFunction:
+    DependsOn:
+      - IPVEventProcessorLogGroup
+      - IPVLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-IPV"
+      CodeUri: ../event-processing/event-processor
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt IPVLambdaAccessRole.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
+
+  IPVEventInvokeConfig:
+    DependsOn:
+      - SNSPublishPolicy
+      - IPVEventProcessorFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref IPVEventProcessorFunction
+      Qualifier: "$LATEST"
+      MaximumEventAgeInSeconds: 600
+      MaximumRetryAttempts: 2
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Ref epSNSTopic
+
+  IPVEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - IPVEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-IPV"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields IPV"
+
+  IPVEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - IPVEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "IPV Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-IPV"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields IPV"
+      Namespace: "lambda/di/txma/errors"
+
+  IPVEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - IPVEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-IPV"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors IPV"
+
+  IPVEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - IPVEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "IPV Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-IPV"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors IPV"
+      Namespace: "lambda/di/txma/errors"
+
+  IPVLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-IPV"
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  IPVCoreLambdaEventSourceMapping:
+    DependsOn:
+      - IPVEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: '{{resolve:ssm:IPVCoreQueueARN}}'
+      FunctionName: !Ref IPVEventProcessorFunction
+
+  IPVKMSPolicy:
+    DependsOn:
+      - IPVLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref IPVLambdaAccessRole
+      PolicyName: ipv_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+              - 'kms:ReEncrypt*'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource:
+              - '{{resolve:ssm:IPVCoreKmsArn}}'
+
+  IPVPassEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-IPVPass"
+      RetentionInDays: 7
+
+  IPVPassEventProcessorFunction:
+    DependsOn:
+      - IPVPassEventProcessorLogGroup
+      - IPVPassLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-IPVPass"
+      CodeUri: ../event-processing/event-processor
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt IPVPassLambdaAccessRole.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
+
+  IPVPassEventInvokeConfig:
+    DependsOn:
+      - SNSPublishPolicy
+      - IPVPassEventProcessorFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref IPVPassEventProcessorFunction
+      Qualifier: "$LATEST"
+      MaximumEventAgeInSeconds: 600
+      MaximumRetryAttempts: 2
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Ref epSNSTopic
+
+  IPVPassEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - IPVPassEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-IPVPass"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields IPV Pass"
+
+  IPVPassEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - IPVEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "IPV Passport Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-IPVPass"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields IPV Pass"
+      Namespace: "lambda/di/txma/errors"
+
+  IPVPassEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - IPVPassEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-IPVPass"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors IPV Pass"
+
+  IPVPassEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - IPVPassEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "IPV Passport Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-IPVPass"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors IPV Pass"
+      Namespace: "lambda/di/txma/errors"
+
+  IPVPassLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-IPVPass"
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  IPVPassLambdaEventSourceMapping:
+    DependsOn:
+      - IPVPassEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: '{{resolve:ssm:IPVPassportQueueARN}}'
+      FunctionName: !Ref IPVPassEventProcessorFunction
+
+  IPVPassKMSPolicy:
+    DependsOn:
+      - IPVPassLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref IPVPassLambdaAccessRole
+      PolicyName: ipv_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+              - 'kms:ReEncrypt*'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource:
+              - '{{resolve:ssm:IPVPassportKmsArn}}'
+
+  SPOTEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-SPOT"
+      RetentionInDays: 7
+
+  SPOTEventProcessorFunction:
+    DependsOn:
+      - SPOTEventProcessorLogGroup
+      - SPOTLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-SPOT"
+      CodeUri: ../event-processing/event-processor
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt SPOTLambdaAccessRole.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
+
+  SPOTEventInvokeConfig:
+    DependsOn:
+      - SNSPublishPolicy
+      - SPOTEventProcessorFunction
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      FunctionName: !Ref SPOTEventProcessorFunction
+      Qualifier: "$LATEST"
+      MaximumEventAgeInSeconds: 600
+      MaximumRetryAttempts: 2
+      DestinationConfig:
+        OnSuccess:
+          Destination: !Ref epSNSTopic
+
+  SPOTEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - SPOTEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-SPOT"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields SPOT"
+
+  SPOTEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - SPOTEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "SPOT Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-SPOT"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields SPOT"
+      Namespace: "lambda/di/txma/errors"
+
+  SPOTEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - SPOTEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-SPOT"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors SPOT"
+
+  SPOTEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - SPOTEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "SPOT Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-SPOT"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors SPOT"
+      Namespace: "lambda/di/txma/errors"
+
+  SPOTLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-SPOT"
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+#  SPOTLambdaEventSourceMapping:
+#    DependsOn:
+#      - SPOTEventProcessorFunction
+#    Type: AWS::Lambda::EventSourceMapping
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      EventSourceArn: '{{resolve:ssm:SPOTQueueARN}}'
+#      FunctionName: !Ref SPOTEventProcessorFunction
+
+#  SPOTKMSPolicy:
+#    DependsOn:
+#      - SPOTLambdaAccessRole
+#    Type: AWS::IAM::Policy
+#    Properties:
+#      Roles:
+#        - !Ref SPOTLambdaAccessRole
+#      PolicyName: spot_kms_policy
+#      PolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#          - Effect: Allow
+#            Action:
+#              - 'kms:Encrypt'
+#              - 'kms:Decrypt'
+#              - 'kms:ReEncrypt*'
+#              - 'kms:GenerateDataKey*'
+#              - 'kms:DescribeKey'
+#            Resource: '{{resolve:ssm:SpotKmsArn}}'

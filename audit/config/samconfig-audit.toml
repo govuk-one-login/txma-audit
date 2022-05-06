@@ -11,7 +11,9 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 tags = "project=\"di-txma-audit\" stage=\"develop\""
 parameter_overrides=[
-    "Environment=dev"
+    "Environment=dev",
+    "CodeSigningConfigArn=none",
+    "PermissionsBoundary=none"
 ]
 
 [dev.deploy.parameters]
@@ -20,7 +22,9 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 tags = "project=\"di-txma-audit\" stage=\"develop\""
 parameter_overrides=[
-    "Environment=dev"
+    "Environment=dev",
+    "CodeSigningConfigArn=none",
+    "PermissionsBoundary=none"
 ]
 
 [build.deploy.parameters]
