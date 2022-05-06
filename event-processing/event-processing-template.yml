@@ -1037,20 +1037,106 @@ Resources:
 #              - 'kms:DescribeKey'
 #            Resource: '{{resolve:ssm:SpotKmsArn}}'
 
+  SplunkDeliveryBucketLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
+
+  FraudS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryFailureBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${FraudSplunkDeliveryFailureBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
   FraudSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: "fraud-splunk-delivery-failure-bucket"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
+        LogFilePrefix: "event-processing/fraud-splunk-delivery-failure-bucket/"
+
+  CyberS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CyberSplunkDeliveryFailureBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${CyberSplunkDeliveryFailureBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
 
   CyberSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: "cyber-splunk-delivery-failure-bucket"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
+        LogFilePrefix: "event-processing/cyber-splunk-delivery-failure-bucket/"
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
       LogGroupName: "/aws/firehose"
+      RetentionInDays: 7
 
   FraudFirehoseLogStream:
     DependsOn:
