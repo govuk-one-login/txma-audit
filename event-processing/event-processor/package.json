@@ -13,7 +13,7 @@
     "unit": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
     "compile": "tsc",
-    "test": "npm run compile && npm run unit"
+    "test": "yarn run compile && yarn run unit"
   },
   "babel": {
     "presets": [

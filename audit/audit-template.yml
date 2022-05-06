@@ -48,17 +48,61 @@ Globals:
     Architectures:
       - x86_64
 
-Mappings:
-  EventProcessorSNSTopicARN:
-    Environment:
-      staging: "arn:aws:sns:eu-west-2:178023842775:EventProcessorSNSTopic-staging"
-      build: "arn:aws:sns:eu-west-2:750703655225:EventProcessorSNSTopic-build"
-      dev: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-develop"
-
 Resources:
+  MessageBucketLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
+
+  S3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref MessageBucketLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${MessageBucketLogsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
   MessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: "Enabled"
+      LoggingConfiguration:
+        DestinationBucketName: !Ref MessageBucketLogsBucket
+        LogFilePrefix: "audit/message-batch-bucket/"
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
@@ -88,7 +132,7 @@ Resources:
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn: !FindInMap [EventProcessorSNSTopicARN, Environment, !Ref Environment]
+      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
       Endpoint: !GetAtt AuditDeliveryStream.Arn #FireHose
       Protocol: firehose
       SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
