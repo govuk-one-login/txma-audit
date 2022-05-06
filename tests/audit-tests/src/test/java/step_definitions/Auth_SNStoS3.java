@@ -1,16 +1,17 @@
 package step_definitions;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.zip.GZIPInputStream;
 
-import software.amazon.awssdk.core.ResponseBytes;
+import io.cucumber.messages.JSON;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.firehose.FirehoseClient;
@@ -20,24 +21,23 @@ import software.amazon.awssdk.services.firehose.model.PutRecordResponse;
 import software.amazon.awssdk.services.firehose.model.Record;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class Auth_SNStoS3 {
-    private static final String key = "testKey";
+    private static final String key = "firehose/2022/05/05/15/AuditFireHose-build-2-2022-05-05-15-04-43-fd62a4e6-2fe0-4c52-b683-583baecbf03d.gz";
     private static final String firehoseName = "AuditFireHose-build";
     private static final String bucketName = "audit-resources-build-messagebatchbucket-1vpvbe3ndfd6s";
     private static S3Client s3;
+
+    String readed;
     SdkBytes output;
     SdkBytes input;
     String json;
 
     @Given("the datafile {string} is available")
     public void the_datafile_tx_ma_ts_is_available(String filename) {
-//        String path = new File("src/test/resources/Test Data/TxMA_TS_001.json").getAbsolutePath();
         Path filePath = Path.of(new File("src/test/resources/Test Data/" +filename).getAbsolutePath());
         try {
             json = Files.readString(filePath);
@@ -45,11 +45,6 @@ public class Auth_SNStoS3 {
         catch (IOException ignored) {
 
         }
-
-//    public void loaddatafile(String fileName) throws Exception {
-//        String path = new File("src/test/resources/Test Data/" + fileName).getAbsolutePath();
-//        Path filePath = Path.of(new File("src/test/resources/Test Data/" + fileName).getAbsolutePath());
-//        String json = Files.readString(filePath);
     }
 
     @When("^the lambda is invoked")
@@ -73,6 +68,10 @@ public class Auth_SNStoS3 {
 
             PutRecordResponse recordResponse = firehoseClient.putRecord(recordRequest) ;
             assertNotNull(recordResponse.recordId());
+            System.out.println("recordID: " + recordResponse.recordId());
+            System.out.println("input: " + input);
+            System.out.println("json: " + json);
+            System.out.println("input string: " + input.toString());
         } catch (FirehoseException e) {
             System.out.println(e.getLocalizedMessage());
             System.exit(1);
@@ -88,11 +87,6 @@ public class Auth_SNStoS3 {
                 .region(region)
                 .build();
 
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder() //I feel like you don't need the above code, but region should be below?
-            .bucket(bucketName)
-            .key(key)
-            .build();
-
         try {
             GetObjectRequest objectRequest = GetObjectRequest
                     .builder()
@@ -100,19 +94,21 @@ public class Auth_SNStoS3 {
                     .bucket(bucketName)
                     .build();
 
-            ResponseBytes<GetObjectResponse> objectBytes = s3.getObjectAsBytes(objectRequest);
-            byte[] data = objectBytes.asByteArray();
-            output = SdkBytes.fromByteArray(data);
-            assertNotNull(output);
-        } catch (S3Exception e) {
-          System.err.println(e.awsErrorDetails().errorMessage());
-           System.exit(1);
+            GZIPInputStream gzis = new GZIPInputStream(s3.getObject(objectRequest));
+            InputStreamReader reader = new InputStreamReader(gzis);
+            BufferedReader in = new BufferedReader(reader);
+            readed = in.readLine();
+
+
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         //We need to decide if we want to delete the object after the test, or just leave the test in the S3 bucket
     }
 
     @And("^the event data should match with the expected data file <>")
     public void theEventDataShouldMatchWithTheExpectedDataFile() {
-        assertEquals(input, output);
+        assertEquals(readed.contains(json), true);
     }
 }
