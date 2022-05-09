@@ -1,5 +1,6 @@
-/* eslint-disable */
-/* istanbul ignore file */ 
+import { IAuditEventUnknownFields } from './audit-event-unknown-fields';
+import { IUserUnknownFields } from './user-unknown-fields.interface';
+
 export interface AuditEvent {
     event_id: string;
     request_id: string;
@@ -8,12 +9,11 @@ export interface AuditEvent {
     timestamp: number;
     timestamp_formatted: string;
     event_name: string;
-    user: AuditEvent_userMessage | undefined;
+    user: AuditEvent_userMessage | IUserUnknownFields | undefined;
     platform: AuditEvent_platformMessage | undefined;
     restricted: AuditEvent_restrictedMessage | undefined;
     extensions: AuditEvent_extensionsMessage | undefined;
     persistent_session_id: string;
-    new_unknown_field: string;
 }
 
 export interface AuditEvent_userMessage {
@@ -21,7 +21,6 @@ export interface AuditEvent_userMessage {
     email: string;
     phone: string;
     ip_address: string;
-    unknown_user_field: string;
 }
 
 export interface AuditEvent_keyValuePairMessage {
@@ -55,27 +54,61 @@ function createBaseAuditEvent(): AuditEvent {
         restricted: undefined,
         extensions: undefined,
         persistent_session_id: '',
-        new_unknown_field: '',
     };
 }
 
 export const AuditEvent = {
-    fromJSON(object: any): AuditEvent {
-        return {
-            event_id: isSet(object.event_id) ? String(object.event_id) : '',
-            request_id: isSet(object.request_id) ? String(object.request_id) : '',
-            session_id: isSet(object.session_id) ? String(object.session_id) : '',
-            client_id: isSet(object.client_id) ? String(object.client_id) : '',
-            timestamp: isSet(object.timestamp) ? Number(object.timestamp) : 0,
-            timestamp_formatted: isSet(object.timestamp_formatted) ? String(object.timestamp_formatted) : '',
-            event_name: isSet(object.event_name) ? String(object.event_name) : '',
-            user: isSet(object.user) ? AuditEvent_userMessage.fromJSON(object.user) : undefined,
-            platform: isSet(object.platform) ? AuditEvent_platformMessage.fromJSON(object.platform) : undefined,
-            restricted: isSet(object.restricted) ? AuditEvent_restrictedMessage.fromJSON(object.restricted) : undefined,
-            extensions: isSet(object.extensions) ? AuditEvent_extensionsMessage.fromJSON(object.extensions) : undefined,
-            persistent_session_id: isSet(object.persistent_session_id) ? String(object.persistent_session_id) : '',
-            new_unknown_field: isSet(object.new_unknown_field) ? String(object.new_unknown_field) : '',
-        };
+    fromJSONString(object: string) {
+        let event = createBaseAuditEvent();
+        let jsonObject = JSON.parse(object);
+        let unknown_fields = new Map<string, unknown>();
+        for (var value in jsonObject) {  
+            switch(value) {
+                case "event_id":
+                    event.event_id = jsonObject[value];
+                    break;
+                case "request_id":
+                    event.request_id = jsonObject[value];
+                    break;
+                case "session_id":
+                    event.session_id = jsonObject[value];
+                    break;
+                case "client_id":
+                    event.client_id = jsonObject[value];
+                    break;
+                case "timestamp":
+                    event.timestamp = jsonObject[value];
+                    break;
+                case "timestamp_formatted":
+                    event.timestamp_formatted = jsonObject[value];
+                    break;
+                case "event_name":
+                    event.event_name = jsonObject[value];
+                    break;
+                case "user":
+                    event.user = AuditEvent_userMessage.fromObject(jsonObject[value]);
+                    break;
+                case "platform":
+                    event.platform = jsonObject[value];
+                    break;
+                case "restricted":
+                    event.restricted = jsonObject[value];
+                    break;
+                case "extensions":
+                    event.extensions = jsonObject[value];
+                    break;
+                case "persistent_session_id":
+                    event.persistent_session_id = jsonObject[value];
+                    break;
+                default:
+                    unknown_fields.set(value, jsonObject[value]);
+                    break;
+            }
+        }
+
+        if (unknown_fields.size > 0) 
+            return IAuditEventUnknownFields.fromAuditMessage(event, unknown_fields)
+        return event
     },
 
     toJSON(message: AuditEvent): unknown {
@@ -96,74 +129,50 @@ export const AuditEvent = {
         message.extensions !== undefined &&
             (obj.extensions = message.extensions ? AuditEvent_extensionsMessage.toJSON(message.extensions) : undefined);
         message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
-        message.new_unknown_field !== undefined && (obj.new_unknown_field = message.new_unknown_field);
         return obj;
-    },
-
-    fromPartial(object: DeepPartial<AuditEvent>): AuditEvent {
-        const message = createBaseAuditEvent();
-        message.event_id = object.event_id ?? '';
-        message.request_id = object.request_id ?? '';
-        message.session_id = object.session_id ?? '';
-        message.client_id = object.client_id ?? '';
-        message.timestamp = object.timestamp ?? 0;
-        message.timestamp_formatted = object.timestamp_formatted ?? '';
-        message.event_name = object.event_name ?? '';
-        message.user =
-            object.user !== undefined && object.user !== null
-                ? AuditEvent_userMessage.fromPartial(object.user)
-                : undefined;
-        message.platform =
-            object.platform !== undefined && object.platform !== null
-                ? AuditEvent_platformMessage.fromPartial(object.platform)
-                : undefined;
-        message.restricted =
-            object.restricted !== undefined && object.restricted !== null
-                ? AuditEvent_restrictedMessage.fromPartial(object.restricted)
-                : undefined;
-        message.extensions =
-            object.extensions !== undefined && object.extensions !== null
-                ? AuditEvent_extensionsMessage.fromPartial(object.extensions)
-                : undefined;
-        message.persistent_session_id = object.persistent_session_id ?? '';
-        message.new_unknown_field = object.new_unknown_field ?? '';
-        return message;
     },
 };
 
 function createBaseAuditEvent_userMessage(): AuditEvent_userMessage {
-    return { id: '', email: '', phone: '', ip_address: '', unknown_user_field: '' };
+    return { id: '', email: '', phone: '', ip_address: '' };
 }
 
 export const AuditEvent_userMessage = {
-    fromJSON(object: any): AuditEvent_userMessage {
-        return {
-            id: isSet(object.id) ? String(object.id) : '',
-            email: isSet(object.email) ? String(object.email) : '',
-            phone: isSet(object.phone) ? String(object.phone) : '',
-            ip_address: isSet(object.ip_address) ? String(object.ip_address) : '',
-            unknown_user_field: isSet(object.unknown_user_field) ? String(object.unknown_user_field) : '',
-        };
+    fromObject(object: any): AuditEvent_userMessage {
+        let unknown_fields = new Map<string, any>();
+        let user = createBaseAuditEvent_userMessage();
+        for (var value in object) {
+            switch(value) {
+                case "id":
+                    user.id = object.id;
+                    break;
+                case "email":
+                    user.email = object.email;
+                    break;
+                case "phone":
+                    user.phone = object.phone;
+                    break;
+                case "ip_address":
+                    user.ip_address = object.ip_address;
+                    break;
+                default:
+                    unknown_fields.set(value, object[value]);
+                    break;
+            }
+        }
+        if(unknown_fields.size > 0){
+            return IUserUnknownFields.fromAuditEvent(user, unknown_fields)
+        }
+        return user;
     },
-
+    
     toJSON(message: AuditEvent_userMessage): unknown {
         const obj: any = {};
         message.id !== undefined && (obj.id = message.id);
         message.email !== undefined && (obj.email = message.email);
         message.phone !== undefined && (obj.phone = message.phone);
         message.ip_address !== undefined && (obj.ip_address = message.ip_address);
-        message.unknown_user_field !== undefined && (obj.unknown_user_field = message.unknown_user_field);
         return obj;
-    },
-
-    fromPartial(object: DeepPartial<AuditEvent_userMessage>): AuditEvent_userMessage {
-        const message = createBaseAuditEvent_userMessage();
-        message.id = object.id ?? '';
-        message.email = object.email ?? '';
-        message.phone = object.phone ?? '';
-        message.ip_address = object.ip_address ?? '';
-        message.unknown_user_field = object.unknown_user_field ?? '';
-        return message;
     },
 };
 
@@ -184,13 +193,6 @@ export const AuditEvent_keyValuePairMessage = {
         message.key !== undefined && (obj.key = message.key);
         message.value !== undefined && (obj.value = message.value);
         return obj;
-    },
-
-    fromPartial(object: DeepPartial<AuditEvent_keyValuePairMessage>): AuditEvent_keyValuePairMessage {
-        const message = createBaseAuditEvent_keyValuePairMessage();
-        message.key = object.key ?? '';
-        message.value = object.value ?? '';
-        return message;
     },
 };
 
@@ -218,12 +220,6 @@ export const AuditEvent_platformMessage = {
         }
         return obj;
     },
-
-    fromPartial(object: DeepPartial<AuditEvent_platformMessage>): AuditEvent_platformMessage {
-        const message = createBaseAuditEvent_platformMessage();
-        message.keyValuePair = object.keyValuePair?.map((e) => AuditEvent_keyValuePairMessage.fromPartial(e)) || [];
-        return message;
-    },
 };
 
 function createBaseAuditEvent_restrictedMessage(): AuditEvent_restrictedMessage {
@@ -249,12 +245,6 @@ export const AuditEvent_restrictedMessage = {
             obj.keyValuePair = [];
         }
         return obj;
-    },
-
-    fromPartial(object: DeepPartial<AuditEvent_restrictedMessage>): AuditEvent_restrictedMessage {
-        const message = createBaseAuditEvent_restrictedMessage();
-        message.keyValuePair = object.keyValuePair?.map((e) => AuditEvent_keyValuePairMessage.fromPartial(e)) || [];
-        return message;
     },
 };
 
@@ -282,25 +272,7 @@ export const AuditEvent_extensionsMessage = {
         }
         return obj;
     },
-
-    fromPartial(object: DeepPartial<AuditEvent_extensionsMessage>): AuditEvent_extensionsMessage {
-        const message = createBaseAuditEvent_extensionsMessage();
-        message.keyValuePair = object.keyValuePair?.map((e) => AuditEvent_keyValuePairMessage.fromPartial(e)) || [];
-        return message;
-    },
 };
-
-type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
-
-export type DeepPartial<T> = T extends Builtin
-    ? T
-    : T extends Array<infer U>
-    ? Array<DeepPartial<U>>
-    : T extends ReadonlyArray<infer U>
-    ? ReadonlyArray<DeepPartial<U>>
-    : T extends {}
-    ? { [K in keyof T]?: DeepPartial<T[K]> }
-    : Partial<T>;
 
 function isSet(value: any): boolean {
     return value !== null && value !== undefined;

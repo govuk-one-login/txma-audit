@@ -1,11 +1,11 @@
 import { SQSRecord } from 'aws-lambda';
-import { AuditEvent } from '../protobuf/audit-event';
+import { AuditEvent } from '../models/audit-event';
 import { IValidationResponse } from '../models/validation-response.interface';
 import { IUnknownFieldsError } from '../models/unknown-fields-error.interface';
-import { IUnknownFieldDetails } from '../models/unknown-field-details.interface';
 import { IAuditEventUnknownFields } from '../models/audit-event-unknown-fields';
 import { IUserUnknownFields } from '../models/user-unknown-fields.interface';
 import { RequiredFieldsEnum } from '../enums/required-fields.enum';
+import { IUnknownFieldDetails } from '../models/unknown-field-details.interface';
 
 export class validationService {
     static async validateSQSRecord(record: SQSRecord): Promise<IValidationResponse> {
@@ -15,11 +15,11 @@ export class validationService {
     }
 
     private static async isValidEventMessage(message: string, eventSource: string): Promise<IValidationResponse> {
-        const eventMessage = AuditEvent.decode(JSON.parse(message) as Uint8Array) as IAuditEventUnknownFields;
-
+        const eventMessage = AuditEvent.fromJSONString(message) as IAuditEventUnknownFields;
+        const eventMessageUser = eventMessage.user as IUserUnknownFields
         if (
-            (eventMessage._unknownFields && Object.keys(eventMessage._unknownFields).length > 0) ||
-            (eventMessage.user?._unknownFields && Object.keys(eventMessage.user._unknownFields).length > 0)
+            (eventMessage._unknownFields && eventMessage._unknownFields.size > 0) ||
+            (eventMessageUser._unknownFields && eventMessageUser._unknownFields.size > 0)
         ) {
             const unknownFieldsError: IUnknownFieldsError = {
                 sqsResourceName: eventSource,
@@ -85,14 +85,14 @@ export class validationService {
     ): Promise<IUnknownFieldDetails[]> {
         const unknownFields = Array<IUnknownFieldDetails>();
 
-        for (const key of Object.keys(model._unknownFields)) {
+        model._unknownFields.forEach((value, key) => {
             const unknownField: IUnknownFieldDetails = {
                 key: key,
                 fieldName: fieldName,
             };
 
             unknownFields.push(unknownField);
-        }
+        });
 
         return unknownFields;
     }
