@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { handler } from '../../app';
 import { TestHelper } from './test-helper';
-import { AuditEvent } from '../../protobuf/audit-event';
+import { AuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-protobuf/unknown-audit-event';
 
 describe('Unit test for app handler', function () {
@@ -170,10 +170,10 @@ describe('Unit test for app handler', function () {
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEventWithUnknownField(exampleMessage));
 
         const result = await handler(sqsEvent);
-
+        
         expect(result).toEqual(expectedResult);
         expect(consoleWarningMock).toHaveBeenCalledTimes(1);
-        expect(consoleWarningMock).toHaveBeenCalledWith('[WARN] UNKNOWN FIELDS\n{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"1609462861","message":"Unknown fields in message.","unknownFields":[{"key":"106","fieldName":"AuditEvent"},{"key":"42","fieldName":"User"}]}')
+        expect(consoleWarningMock).toHaveBeenCalledWith('[WARN] UNKNOWN FIELDS\n{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"1609462861","message":"Unknown fields in message.","unknownFields":[{"key":"new_unknown_field","fieldName":"AuditEvent"},{"key":"unknown_user_field","fieldName":"User"}]}');
     });
 
     it('successfully populates missing formatted timestamp fields', async () => {
