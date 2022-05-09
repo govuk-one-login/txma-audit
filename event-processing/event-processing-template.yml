@@ -1312,6 +1312,28 @@ Resources:
 #              - ParameterName: LambdaArn
 #                ParameterValue: !Ref ObfuscationFunction
 
+  FraudDeliveryStreamSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
+      Endpoint: !GetAtt FraudDeliveryStream.Arn #FireHose
+      Protocol: firehose
+      SubscriptionRoleArn: !GetAtt FraudDeliveryStreamRole.Arn
+#      FilterPolicy:
+#        event_name:
+#          - somevalue
+
+  CyberDeliveryStreamSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
+      Endpoint: !GetAtt CyberDeliveryStream.Arn #FireHose
+      Protocol: firehose
+      SubscriptionRoleArn: !GetAtt CyberDeliveryStreamRole.Arn
+#      FilterPolicy:
+#        event_name:
+#          - somevalue
+
   ObfuscationFunction:
     Type: "AWS::Serverless::Function"
     Properties:
