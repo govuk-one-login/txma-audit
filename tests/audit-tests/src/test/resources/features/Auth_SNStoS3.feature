@@ -1,0 +1,29 @@
+Feature: Auth event data journey from SNS to Firehose
+
+  Scenario: Verify the data journey from SNS to S3
+    Given the input file "AUTH_SNS_001.json" is available
+    And the expected file "AUTH_S3_001.json" is available
+    And we can read all current S3 keys
+    When the message is sent to firehose
+    Then the s3 should have a new event data
+    And the event data should match with the S3 file
+
+#  Scenario: Verify the PII data is removed if the event name is anything other than 'auth_create_account' or 'auth_log_in_success'
+#    Given the event data <auth data file with event name not equals 'auth_create_account' or 'auth_log_in_success'> is available in the SNS
+#    When firehose pulls the event data
+#    And compare against file <>
+#    Then both data file should match
+#
+#  Scenario: Verify the PII data is NOT removed if the event name is 'auth_create_account'
+#    Given the event data <auth data file with event name equals 'auth_create_account'> is available in the SNS
+#    When firehose pulls the event data
+#    And compare against file <>
+#    Then both data file should match
+#
+#  Scenario: Verify the PII data is NOT removed if the event name is 'auth_log_in_success'
+#    Given the event data <auth data file with event name equals 'auth_log_in_success'> is available in the SNS
+#    When firehose pulls the event data
+#    And compare against file <>
+#    Then both data file should match
+
+
