@@ -1,4 +1,4 @@
-package step_definitions;
+package uk.gov.di.txma.audit.bdd;
 
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -36,14 +36,14 @@ public class SNStoS3 {
     String SNSInput;
     String expectedS3;
 
-    @Given("the SNS file {string} is available")
-    public void the_SNS_file_is_available(String filename) throws IOException{
+    @Given("the input file {string} is available")
+    public void the_input_file_is_available(String filename) throws IOException{
         Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
         SNSInput = Files.readString(filePath);
     }
 
-    @And("the S3 file {string} is available")
-    public void the_S3_file_is_available(String filename) throws IOException{
+    @And("the expected file {string} is available")
+    public void the_expected_file_is_available(String filename) throws IOException{
         Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
         expectedS3 = Files.readString(filePath);
     }
@@ -63,8 +63,8 @@ public class SNStoS3 {
             ListObjectsResponse res = s3.listObjects(listObjects);
             List<S3Object> objects = res.contents();
 
-            for (S3Object myValue : objects) {
-                keys.add(myValue.key());
+            for (S3Object s3object : objects) {
+                keys.add(s3object.key());
             }
         } catch (S3Exception e) {
             System.err.println(e.awsErrorDetails().errorMessage());
@@ -102,12 +102,11 @@ public class SNStoS3 {
     @Then("the s3 should have a new event data")
     public void the_S3_should_have_a_new_event_data() throws InterruptedException {
         String newkey = null;
-        newkey = "firehose/2022/05/09/11/AuditFireHose-build-3-2022-05-09-11-25-56-dea01374-d435-4003-ac9e-d9659e21f9f9.gz";
-        int count = 0;
+        int timer = 0;
 
-        while (count < 15 && newkey == null){
+        while (timer < 20 && newkey == null){
             Thread.sleep(60000);
-            count ++;
+            timer ++;
             try {
                 ListObjectsRequest listObjects = ListObjectsRequest
                         .builder()
@@ -132,11 +131,6 @@ public class SNStoS3 {
         assertNotNull(newkey);
 
         try {
-            Region region = Region.EU_WEST_2;
-            s3 = S3Client.builder()
-                    .region(region)
-                    .build();
-
             GetObjectRequest objectRequest = GetObjectRequest
                     .builder()
                     .key(newkey)
@@ -154,7 +148,7 @@ public class SNStoS3 {
     }
 
     @And("the event data should match with the S3 file")
-    public void the_event_data_should_match_with_the_S3_file() throws IOException {
+    public void the_event_data_should_match_with_the_S3_file() {
         assertTrue(output.contains(expectedS3));
     }
 
