@@ -2,7 +2,7 @@
 import { handler } from '../../app';
 import { TestHelper } from './test-helper';
 import { AuditEvent } from '../../models/audit-event';
-import { AuditEvent as UnknownAuditEvent } from '../../tests/test-protobuf/unknown-audit-event';
+import { AuditEvent as UnknownAuditEvent } from '../../tests/test-events/unknown-audit-event';
 
 describe('Unit test for app handler', function () {
     let consoleWarningMock: jest.SpyInstance;

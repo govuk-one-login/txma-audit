@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 import { SQSEvent, SQSRecord } from 'aws-lambda';
 import { AuditEvent } from '../../models/audit-event';
-import { AuditEvent as UnknownAuditEvent } from '../../tests/test-protobuf/unknown-audit-event';
+import { AuditEvent as UnknownAuditEvent } from '../../tests/test-events/unknown-audit-event';
 
 export class TestHelper {
     private static sqsRecord: SQSRecord = {
