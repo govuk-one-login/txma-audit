@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 
-public class Auth_SNStoS3 {
+public class SNStoS3 {
     private static final String firehoseName = "AuditFireHose-build";
     private static final String bucketName = "audit-resources-build-messagebatchbucket-1vpvbe3ndfd6s";
     private static S3Client s3;
@@ -33,16 +33,23 @@ public class Auth_SNStoS3 {
     String output;
     SdkBytes input;
     ArrayList<String> keys = new ArrayList<>();
-    String json;
+    String SNSInput;
+    String expectedS3;
 
-    @Given("the datafile {string} is available")
-    public void the_datafile_tx_ma_ts_is_available(String filename) throws IOException{
+    @Given("the SNS file {string} is available")
+    public void the_SNS_file_is_available(String filename) throws IOException{
         Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
-        json = Files.readString(filePath);
+        SNSInput = Files.readString(filePath);
+    }
+
+    @And("the S3 file {string} is available")
+    public void the_S3_file_is_available(String filename) throws IOException{
+        Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
+        expectedS3 = Files.readString(filePath);
     }
 
     @And("we can read all current S3 keys")
-    public void weCanReadAllCurrentS3Keys() {
+    public void we_can_read_all_current_S3_keys() {
         Region region = Region.EU_WEST_2;
         s3 = S3Client.builder()
                 .region(region)
@@ -66,14 +73,14 @@ public class Auth_SNStoS3 {
     }
 
     @When("the message is sent to firehose")
-    public void theMessageIsSentToFirehose() {
+    public void the_message_is_sent_to_firehose() {
         Region region = Region.EU_WEST_2;
 
         try (FirehoseClient firehoseClient = FirehoseClient.builder()
                 .region(region)
                 .build()) {
 
-            input = SdkBytes.fromUtf8String(json);
+            input = SdkBytes.fromUtf8String(SNSInput);
 
             Record record = Record.builder()
                     .data(input)
@@ -93,9 +100,9 @@ public class Auth_SNStoS3 {
     }
 
     @Then("the s3 should have a new event data")
-    public void theS3ShouldHaveANewEventData() throws InterruptedException {
+    public void the_S3_should_have_a_new_event_data() throws InterruptedException {
         String newkey = null;
-
+        newkey = "firehose/2022/05/09/11/AuditFireHose-build-3-2022-05-09-11-25-56-dea01374-d435-4003-ac9e-d9659e21f9f9.gz";
         int count = 0;
 
         while (count < 15 && newkey == null){
@@ -122,7 +129,14 @@ public class Auth_SNStoS3 {
             }
         }
 
+        assertNotNull(newkey);
+
         try {
+            Region region = Region.EU_WEST_2;
+            s3 = S3Client.builder()
+                    .region(region)
+                    .build();
+
             GetObjectRequest objectRequest = GetObjectRequest
                     .builder()
                     .key(newkey)
@@ -139,11 +153,9 @@ public class Auth_SNStoS3 {
         }
     }
 
-    @And("the event data should match with the expected data file {string}")
-    public void theEventDataShouldMatchWithTheExpectedDataFile(String filename) throws IOException {
-        Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
-        json = Files.readString(filePath);
-        assertTrue(output.contains(json));
+    @And("the event data should match with the S3 file")
+    public void the_event_data_should_match_with_the_S3_file() throws IOException {
+        assertTrue(output.contains(expectedS3));
     }
 
 }
