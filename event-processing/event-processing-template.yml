@@ -1040,6 +1040,7 @@ Resources:
   SplunkDeliveryBucketLogsBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketName: "splunk-delivery-logs-bucket"
       VersioningConfiguration:
         Status: "Enabled"
       BucketEncryption:
@@ -1328,59 +1329,39 @@ Resources:
         EntryPoints:
           - app.ts
 
-#  AllowFraudBucketToCallLambdaPermission:
-#    DependsOn:
-#      - ReIngestFunction
-#    Type: AWS::Lambda::Permission
+#  ReIngestFunction:
+#    Type: "AWS::Serverless::Function"
 #    Properties:
-#      Action: 'lambda:InvokeFunction'
-#      FunctionName: !Ref ReIngestFunction
-#      Principal: 's3.amazonaws.com'
-#      SourceArn: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
-#
-#  AllowCyberBucketToCallLambdaPermission:
-#    DependsOn:
-#      - ReIngestFunction
-#    Type: AWS::Lambda::Permission
-#    Properties:
-#      Action: 'lambda:InvokeFunction'
-#      FunctionName: !Ref ReIngestFunction
-#      Principal: 's3.amazonaws.com'
-#      SourceArn: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
-
-  ReIngestFunction:
-    Type: "AWS::Serverless::Function"
-    Properties:
-      FunctionName: "Re-IngestFunction"
-      CodeUri: ../event-processing/re-ingest
-      PackageType: Zip
-      Handler: app.handler
-      Runtime: nodejs14.x
-      Events:
-        FraudBucket:
-          Type: S3
-          Properties:
-            Bucket: !Ref FraudSplunkDeliveryFailureBucket
-            Events: 's3:ObjectCreated:*'
-        CyberBucket:
-          Type: S3
-          Properties:
-            Bucket: !Ref CyberSplunkDeliveryFailureBucket
-            Events: 's3:ObjectCreated:*'
-      Policies:
-        - S3ReadPolicy:
-            BucketName: "fraud-splunk-delivery-failure-bucket"
-        - S3ReadPolicy:
-            BucketName: "cyber-splunk-delivery-failure-bucket"
-#        - FirehoseWritePolicy:
-#            DeliveryStreamName: !Ref FraudDeliveryStream
-#        - FirehoseWritePolicy:
-#            DeliveryStreamName: !Ref FraudDeliveryStream
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: "es2020"
-        Sourcemap: true
-        EntryPoints:
-          - app.ts
+#      FunctionName: "Re-IngestFunction"
+#      CodeUri: ../event-processing/re-ingest
+#      PackageType: Zip
+#      Handler: app.handler
+#      Runtime: nodejs14.x
+#      Events:
+#        FraudBucket:
+#          Type: S3
+#          Properties:
+#            Bucket: !Ref FraudSplunkDeliveryFailureBucket
+#            Events: 's3:ObjectCreated:*'
+#        CyberBucket:
+#          Type: S3
+#          Properties:
+#            Bucket: !Ref CyberSplunkDeliveryFailureBucket
+#            Events: 's3:ObjectCreated:*'
+#      Policies:
+#        - S3ReadPolicy:
+#            BucketName: "fraud-splunk-delivery-failure-bucket"
+#        - S3ReadPolicy:
+#            BucketName: "cyber-splunk-delivery-failure-bucket"
+##        - FirehoseWritePolicy:
+##            DeliveryStreamName: !Ref FraudDeliveryStream
+##        - FirehoseWritePolicy:
+##            DeliveryStreamName: !Ref FraudDeliveryStream
+#    Metadata: # Manage esbuild properties
+#      BuildMethod: esbuild
+#      BuildProperties:
+#        Minify: true
+#        Target: "es2020"
+#        Sourcemap: true
+#        EntryPoints:
+#          - app.ts
