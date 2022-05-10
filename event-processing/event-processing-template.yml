@@ -105,16 +105,40 @@ Resources:
               - 'kms:DescribeKey'
             Resource: '*'
 
+  FireHoseKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service: "firehose.amazonaws.com"
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
+
   epSNSTopic:
+    Type: AWS::SNS::Topic
     Properties:
       TopicName: !Sub
         - "EventProcessorSNSTopic-${EnvironmentName}"
         - EnvironmentName: !Ref Environment
       KmsMasterKeyId: !Ref SNSKMSKey
-    Type: "AWS::SNS::Topic"
 
   SNSSubscribePolicy:
-    Type: "AWS::SNS::TopicPolicy"
+    Type: AWS::SNS::TopicPolicy
     Properties:
       PolicyDocument:
         Id: SNSSubscribePolicy
@@ -171,7 +195,7 @@ Resources:
     DependsOn:
       - KBVEventProcessorLogGroup
       - KBVLambdaAccessRole
-    Type: "AWS::Serverless::Function"
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: "EventProcessorFunction-KBV"
       CodeUri: ../event-processing/event-processor
@@ -1172,14 +1196,14 @@ Resources:
                 - firehose.amazonaws.com
             Action: 'sts:AssumeRole'
 
-  FraudDeliveryStreamPolicy:
+  FraudDeliveryStreamS3Policy:
     DependsOn:
       - FraudDeliveryStreamRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
         - !Ref FraudDeliveryStreamRole
-      PolicyName: firehose_fraud_delivery_policy
+      PolicyName: fraud_firehose_s3_delivery_policy
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -1199,6 +1223,27 @@ Resources:
                   - !Ref FraudSplunkDeliveryFailureBucket
                   - '*'
 
+#  FraudDeliveryStreamFireHosePolicy:
+#    DependsOn:
+#      - FraudDeliveryStreamRole
+#    Type: AWS::IAM::Policy
+#    Properties:
+#      Roles:
+#        - !Ref FraudDeliveryStreamRole
+#      PolicyName: fraud_sns_firehose_access_policy
+#      PolicyDocument:
+#        Version: '2012-10-17'
+#        Statement:
+#          - Action:
+#              - 'firehose:DescribeDeliveryStream'
+#              - 'firehose:ListDeliveryStreams'
+#              - 'firehose:ListTagsForDeliveryStream'
+#              - 'firehose:PutRecord'
+#              - 'firehose:PutRecordBatch'
+#            Effect: Allow
+#            Resource:
+#              - !GetAtt FraudDeliveryStream.Arn
+
   CyberDeliveryStreamRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1213,7 +1258,7 @@ Resources:
             Effect: Allow
             Principal:
               Service:
-                - firehose.amazonaws.com
+                - 'firehose.amazonaws.com'
             Action: 'sts:AssumeRole'
 
   CyberDeliveryStreamPolicy:
@@ -1223,7 +1268,7 @@ Resources:
     Properties:
       Roles:
         - !Ref CyberDeliveryStreamRole
-      PolicyName: firehose_cyber_delivery_policy
+      PolicyName: cyber_firehose_s3_delivery_policy
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -1243,6 +1288,27 @@ Resources:
                   - !Ref CyberSplunkDeliveryFailureBucket
                   - '*'
 
+#  CyberDeliveryStreamFireHosePolicy:
+#    DependsOn:
+#      - CyberDeliveryStreamRole
+#    Type: AWS::IAM::Policy
+#    Properties:
+#      Roles:
+#        - !Ref CyberDeliveryStreamRole
+#      PolicyName: cyber_sns_firehose_access_policy
+#      PolicyDocument:
+#        Version: '2012-10-17'
+#        Statement:
+#          - Action:
+#              - 'firehose:DescribeDeliveryStream'
+#              - 'firehose:ListDeliveryStreams'
+#              - 'firehose:ListTagsForDeliveryStream'
+#              - 'firehose:PutRecord'
+#              - 'firehose:PutRecordBatch'
+#            Effect: Allow
+#            Resource:
+#              - !GetAtt CyberDeliveryStream.Arn
+
 #  FraudDeliveryStream:
 #    DependsOn:
 #      - FraudDeliveryStreamRole
@@ -1253,6 +1319,9 @@ Resources:
 #        - "FraudFireHose-${EnvironmentName}"
 #        - EnvironmentName: !Ref Environment
 #      DeliveryStreamType: DirectPut
+#      DeliveryStreamEncryptionConfigurationInput:
+#        KeyARN: !GetAtt FireHoseKMSKey.Arn
+#        KeyType: "CUSTOMER_MANAGED_CMK"
 #      SplunkDestinationConfiguration:
 #        HECAcknowledgmentTimeoutInSeconds: 300
 #        HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
@@ -1284,6 +1353,9 @@ Resources:
 #        - "CyberFireHose-${EnvironmentName}"
 #        - EnvironmentName: !Ref Environment
 #      DeliveryStreamType: DirectPut
+#      DeliveryStreamEncryptionConfigurationInput:
+#        KeyARN: !GetAtt FireHoseKMSKey.Arn
+#        KeyType: "CUSTOMER_MANAGED_CMK"
 #      SplunkDestinationConfiguration:
 #        HECAcknowledgmentTimeoutInSeconds: 300
 #        HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
@@ -1335,7 +1407,7 @@ Resources:
 #          - somevalue
 
   ObfuscationFunction:
-    Type: "AWS::Serverless::Function"
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: "ObfuscationFunction"
       CodeUri: ../event-processing/obfuscation
@@ -1352,7 +1424,7 @@ Resources:
           - app.ts
 
 #  ReIngestFunction:
-#    Type: "AWS::Serverless::Function"
+#    Type: AWS::Serverless::Function
 #    Properties:
 #      FunctionName: "Re-IngestFunction"
 #      CodeUri: ../event-processing/re-ingest
