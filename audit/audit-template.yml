@@ -196,16 +196,16 @@ Resources:
             Action:
               - sts:AssumeRole
       Policies:
-        - PolicyName: SNSKinesisFirehoseAccessPolicy
+        - PolicyName: sns_kinesis_firehose_access_policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Action:
-                  - firehose:DescribeDeliveryStream
-                  - firehose:ListDeliveryStreams
-                  - firehose:ListTagsForDeliveryStream
-                  - firehose:PutRecord
-                  - firehose:PutRecordBatch
+                  - 'firehose:DescribeDeliveryStream'
+                  - 'firehose:ListDeliveryStreams'
+                  - 'firehose:ListTagsForDeliveryStream'
+                  - 'firehose:PutRecord'
+                  - 'firehose:PutRecordBatch'
                 Effect: Allow
                 Resource:
                   - !GetAtt AuditDeliveryStream.Arn
