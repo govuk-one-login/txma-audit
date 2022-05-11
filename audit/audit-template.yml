@@ -58,7 +58,7 @@ Resources:
     Properties:
       VersioningConfiguration:
         Status: "Enabled"
-      BucketName: !Sub "${AWS::StackName}-${Environment}-message-bucket-logs-bucket"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-bucket-logs"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -94,7 +94,7 @@ Resources:
   MessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-message-batch-bucket"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-message-batch"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
