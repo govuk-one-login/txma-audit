@@ -34,6 +34,10 @@ Conditions:
       - Fn::Equals:
           - !Ref CodeSigningConfigArn
           - "none"
+  IsBuild:
+    Fn::Equals:
+      - !Ref Environment
+      - "build"
 
 Globals:
   Function:
@@ -126,7 +130,10 @@ Resources:
         Prefix: "firehose/"
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
-          IntervalInSeconds: 900
+          IntervalInSeconds: !If
+            - IsBuild
+            - 60
+            - 900
           SizeInMBs: 128
         CompressionFormat: "GZIP"
         RoleARN: !GetAtt DeliveryStreamRole.Arn

@@ -37,6 +37,10 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
+  IsBuild:
+    Fn::Equals:
+      - !Ref Environment
+      - "build"
 
 Globals:
   Function:
@@ -1427,7 +1431,10 @@ Resources:
 #        S3Configuration:
 #          BucketARN: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
 #          BufferingHints:
-#            IntervalInSeconds: 900
+#            IntervalInSeconds: !If
+#              - IsBuild
+#              - 60
+#              - 900
 #            SizeInMBs: 128
 #            CloudWatchLoggingOptions:
 #              Enabled: true
@@ -1461,7 +1468,10 @@ Resources:
 #        S3Configuration:
 #          BucketARN: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
 #          BufferingHints:
-#            IntervalInSeconds: 900
+#            IntervalInSeconds: !If
+#              - IsBuild
+#              - 60
+#              - 900
 #            SizeInMBs: 128
 #            CloudWatchLoggingOptions:
 #              Enabled: true
@@ -1502,7 +1512,10 @@ Resources:
 #        S3Configuration:
 #          BucketARN: !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
 #          BufferingHints:
-#            IntervalInSeconds: 900
+#            IntervalInSeconds: !If
+#              - IsBuild
+#              - 60
+#              - 900
 #            SizeInMBs: 128
 #            CloudWatchLoggingOptions:
 #              Enabled: true
