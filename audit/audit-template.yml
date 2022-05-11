@@ -54,6 +54,7 @@ Resources:
     Properties:
       VersioningConfiguration:
         Status: "Enabled"
+      BucketName: !Sub "${AWS::StackName}-message-bucket-logs-bucket"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -89,6 +90,7 @@ Resources:
   MessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketName: !Sub "${AWS::StackName}-message-batch-bucket"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -196,16 +198,16 @@ Resources:
             Action:
               - sts:AssumeRole
       Policies:
-        - PolicyName: SNSKinesisFirehoseAccessPolicy
+        - PolicyName: sns_kinesis_firehose_access_policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Action:
-                  - firehose:DescribeDeliveryStream
-                  - firehose:ListDeliveryStreams
-                  - firehose:ListTagsForDeliveryStream
-                  - firehose:PutRecord
-                  - firehose:PutRecordBatch
+                  - 'firehose:DescribeDeliveryStream'
+                  - 'firehose:ListDeliveryStreams'
+                  - 'firehose:ListTagsForDeliveryStream'
+                  - 'firehose:PutRecord'
+                  - 'firehose:PutRecordBatch'
                 Effect: Allow
                 Resource:
                   - !GetAtt AuditDeliveryStream.Arn
