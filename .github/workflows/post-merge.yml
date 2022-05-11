@@ -75,7 +75,8 @@ jobs:
             --output-template-file=cf-template.yaml \
             --signing-profiles KBVEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" KBVAddressEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" \
             KBVFraudEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" IPVEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" \
-            IPVPassEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" SPOTEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING"
+            IPVPassEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" SPOTEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" \
+            ObfuscationFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING"
       - name: Zip the CloudFormation template
         run: zip template.zip cf-template.yaml config/samconfig-event-processing.toml
       - name: Upload zipped CloudFormation artifact to S3
