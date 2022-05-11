@@ -151,20 +151,20 @@ Resources:
               ArnEquals:
                 "aws:PrincipalArn": !Ref epSNSTopic
           - Effect: "Allow"
-              Principal:
-                Service: "lambda.amazonaws.com"
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:Encrypt'
-                - 'kms:GenerateDataKey*'
-                - 'kms:DescribeKey'
-              Resource:
-                - "*"
-              Condition:
-                ForAnyValue:ArnEquals:
-                  "aws:PrincipalArn":
-                    - !GetAtt ObfuscationFunction.Arn
-                    - !GetAtt ReIngestFunction.Arn
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource:
+              - "*"
+            Condition:
+              ForAnyValue:ArnEquals:
+                "aws:PrincipalArn":
+                  - !GetAtt ObfuscationFunction.Arn
+                  - !GetAtt ReIngestFunction.Arn
 
   FireHoseKMSKeyAlias:
     Type: AWS::KMS::Alias
