@@ -1083,7 +1083,7 @@ Resources:
   SplunkDeliveryBucketLogsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: "splunk-delivery-logs-bucket"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-splunk-delivery-logs-bucket"
       VersioningConfiguration:
         Status: "Enabled"
       BucketEncryption:
@@ -1121,7 +1121,7 @@ Resources:
   FraudSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: "fraud-splunk-delivery-failure-bucket"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-delivery-failure-bucket"
       VersioningConfiguration:
         Status: "Enabled"
       BucketEncryption:
@@ -1159,7 +1159,7 @@ Resources:
   CyberSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: "cyber-splunk-delivery-failure-bucket"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-cyber-splunk-delivery-failure-bucket"
       VersioningConfiguration:
         Status: "Enabled"
       BucketEncryption:
@@ -1197,7 +1197,7 @@ Resources:
   PerformanceSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: "performance-splunk-delivery-failure-bucket"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-performance-splunk-delivery-failure-bucket"
       VersioningConfiguration:
         Status: "Enabled"
       BucketEncryption:
