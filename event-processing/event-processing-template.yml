@@ -81,6 +81,12 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
+  LogKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/LogKmsKey"
+      TargetKeyId: !Ref LogsKmsKey
+
   SNSKMSKey:
     Type: AWS::KMS::Key
     Properties:
@@ -104,6 +110,12 @@ Resources:
               - 'kms:GenerateDataKey*'
               - 'kms:DescribeKey'
             Resource: '*'
+
+  SNSKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SNSKMSKey"
+      TargetKeyId: !Ref SNSKMSKey
 
   FireHoseKMSKey:
     Type: AWS::KMS::Key
@@ -153,6 +165,12 @@ Resources:
                   "aws:PrincipalArn":
                     - !GetAtt ObfuscationFunction.Arn
                     - !GetAtt ReIngestFunction.Arn
+
+  FireHoseKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/FireHoseKMSKey"
+      TargetKeyId: !Ref FireHoseKMSKey
 
   epSNSTopic:
     Type: AWS::SNS::Topic
