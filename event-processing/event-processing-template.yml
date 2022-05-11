@@ -141,15 +141,15 @@ Resources:
               - 'kms:DescribeKey'
             Resource: '*'
           - Effect: "Allow"
-              Principal:
-                Service: "sns.amazonaws.com"
-              Action:
-                - 'kms:GenerateDataKey*'
-              Resource:
-                - "*"
-              Condition:
-                ArnEquals:
-                  "aws:PrincipalArn": !Ref epSNSTopic
+            Principal:
+              Service: "sns.amazonaws.com"
+            Action:
+              - 'kms:GenerateDataKey*'
+            Resource:
+              - "*"
+            Condition:
+              ArnEquals:
+                "aws:PrincipalArn": !Ref epSNSTopic
           - Effect: "Allow"
               Principal:
                 Service: "lambda.amazonaws.com"
