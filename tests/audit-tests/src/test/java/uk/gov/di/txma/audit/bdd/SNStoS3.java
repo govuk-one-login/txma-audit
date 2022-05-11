@@ -27,7 +27,7 @@ import java.util.ArrayList;
 
 public class SNStoS3 {
     private static final String firehoseName = "AuditFireHose-build";
-    private static final String bucketName = "audit-message-batch-bucket";
+    private static final String bucketName = "audit-build-message-batch-bucket";
     private static S3Client s3;
 
     String output;
