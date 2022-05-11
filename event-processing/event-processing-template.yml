@@ -126,7 +126,7 @@ Resources:
         Statement:
           - Effect: "Allow"
             Principal:
-              Service: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
             Action:
               - "kms:*"
             Resource:
@@ -164,7 +164,7 @@ Resources:
               ForAnyValue:ArnEquals:
                 "aws:PrincipalArn":
                   - !GetAtt ObfuscationFunction.Arn
-                  - !GetAtt ReIngestFunction.Arn
+#                  - !GetAtt ReIngestFunction.Arn
 
   FireHoseKMSKeyAlias:
     Type: AWS::KMS::Alias
