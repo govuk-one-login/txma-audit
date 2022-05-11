@@ -347,11 +347,7 @@ Resources:
 #        Statement:
 #          - Effect: Allow
 #            Action:
-#              - 'kms:Encrypt'
 #              - 'kms:Decrypt'
-#              - 'kms:ReEncrypt*'
-#              - 'kms:GenerateDataKey*'
-#              - 'kms:DescribeKey'
 #            Resource:
 #              - '{{resolve:ssm:KbvKmsArn}}'
 
@@ -493,11 +489,7 @@ Resources:
 #        Statement:
 #          - Effect: Allow
 #            Action:
-#              - 'kms:Encrypt'
 #              - 'kms:Decrypt'
-#              - 'kms:ReEncrypt*'
-#              - 'kms:GenerateDataKey*'
-#              - 'kms:DescribeKey'
 #            Resource:
 #              - '{{resolve:ssm:KbvAddressKmsArn}}'
 
@@ -639,11 +631,7 @@ Resources:
 #        Statement:
 #          - Effect: Allow
 #            Action:
-#              - 'kms:Encrypt'
 #              - 'kms:Decrypt'
-#              - 'kms:ReEncrypt*'
-#              - 'kms:GenerateDataKey*'
-#              - 'kms:DescribeKey'
 #            Resource:
 #              - '{{resolve:ssm:KbvFraudKmsArn}}'
 
@@ -786,11 +774,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Encrypt'
               - 'kms:Decrypt'
-              - 'kms:ReEncrypt*'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
             Resource:
               - '{{resolve:ssm:IPVCoreKmsArn}}'
 
@@ -933,11 +917,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Encrypt'
               - 'kms:Decrypt'
-              - 'kms:ReEncrypt*'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
             Resource:
               - '{{resolve:ssm:IPVPassportKmsArn}}'
 
@@ -1079,11 +1059,7 @@ Resources:
 #        Statement:
 #          - Effect: Allow
 #            Action:
-#              - 'kms:Encrypt'
 #              - 'kms:Decrypt'
-#              - 'kms:ReEncrypt*'
-#              - 'kms:GenerateDataKey*'
-#              - 'kms:DescribeKey'
 #            Resource: '{{resolve:ssm:SpotKmsArn}}'
 
   SplunkDeliveryBucketLogsBucket:
