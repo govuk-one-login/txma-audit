@@ -1595,11 +1595,11 @@ Resources:
 #            Events: 's3:ObjectCreated:*'
 #      Policies:
 #        - S3ReadPolicy:
-#            BucketName: "fraud-splunk-delivery-failure-bucket"
+#            BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
 #        - S3ReadPolicy:
-#            BucketName: "cyber-splunk-delivery-failure-bucket"
+#            BucketName: !Sub "${AWS::StackName}-${Environment}-cyber-splunk-fail"
 #        - S3ReadPolicy:
-#            BucketName: "performance-splunk-delivery-failure-bucket"
+#            BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
 ##        - FirehoseWritePolicy:
 ##            DeliveryStreamName: !Ref FraudDeliveryStream
 ##        - FirehoseWritePolicy:
