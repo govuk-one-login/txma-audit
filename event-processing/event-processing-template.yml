@@ -1561,9 +1561,9 @@ Resources:
 #      Endpoint: !GetAtt PerformanceDeliveryStream.Arn #FireHose
 #      Protocol: firehose
 #      SubscriptionRoleArn: !GetAtt PerformanceDeliveryStreamRole.Arn
-#  #      FilterPolicy:
-#  #        event_name:
-#  #          - somevalue
+##      FilterPolicy:
+##        event_name:
+##          - somevalue
 
   ObfuscationFunction:
     Type: AWS::Serverless::Function
