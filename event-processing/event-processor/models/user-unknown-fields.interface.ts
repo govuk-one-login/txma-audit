@@ -6,8 +6,8 @@ export interface IUserUnknownFields {
     _unknownFields: Map<string, unknown>;
 }
 
-export const IUserUnknownFields = {
-    fromAuditEvent(object: any, unknown_fields: Map<string, unknown>): IUserUnknownFields {
+export class UserUnknownFields {
+    static fromAuditEvent(object: any, unknown_fields: Map<string, unknown>): IUserUnknownFields {
         return {
             id: isSet(object.id) ? String(object.id) : '',
             email: isSet(object.email) ? String(object.email) : '',
@@ -15,8 +15,8 @@ export const IUserUnknownFields = {
             ip_address: isSet(object.ip_address) ? String(object.ip_address) : '',
             _unknownFields: unknown_fields,
         };
-    },
-};
+    }
+}
 
 function isSet(value: any): boolean {
     return value !== null && value !== undefined;
