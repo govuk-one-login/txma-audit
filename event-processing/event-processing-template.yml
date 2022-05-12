@@ -1140,6 +1140,46 @@ Resources:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/fraud-splunk-delivery-failure-bucket/"
 
+  FraudTestS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsBuild
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${FraudSplunkDeliveryTestBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
+  FraudSplunkDeliveryTestBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsBuild
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-test"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
+        LogFilePrefix: "event-processing/fraud-splunk-delivery-test-bucket/"
+
   CyberS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -1178,6 +1218,46 @@ Resources:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/cyber-splunk-delivery-failure-bucket/"
 
+  CyberTestS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsBuild
+    Properties:
+      Bucket: !Ref CyberSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${CyberSplunkDeliveryTestBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
+  CyberSplunkDeliveryTestBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsBuild
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-cyber-splunk-test"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
+        LogFilePrefix: "event-processing/cyber-splunk-delivery-test-bucket/"
+
   PerformanceS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -1215,6 +1295,46 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/performance-splunk-delivery-failure-bucket/"
+
+  PerformanceTestS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsBuild
+    Properties:
+      Bucket: !Ref PerformanceSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${PerformanceSplunkDeliveryTestBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
+  PerformanceSplunkDeliveryTestBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsBuild
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-test"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
+        LogFilePrefix: "event-processing/performance-splunk-delivery-test-bucket/"
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1489,7 +1609,7 @@ Resources:
           - IsBuild
           -
             Prefix: "firehose/"
-            BucketARN: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
+            BucketARN: !GetAtt FraudSplunkDeliveryTestBucket.Arn
             BufferingHints:
               IntervalInSeconds: !If
                 - IsBuild
@@ -1550,7 +1670,7 @@ Resources:
           - IsBuild
           -
             Prefix: "firehose/"
-            BucketARN: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
+            BucketARN: !GetAtt CyberSplunkDeliveryTestBucket.Arn
             BufferingHints:
               IntervalInSeconds: !If
                 - IsBuild
@@ -1611,7 +1731,7 @@ Resources:
           - IsBuild
           -
             Prefix: "firehose/"
-            BucketARN: !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
+            BucketARN: !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
             BufferingHints:
               IntervalInSeconds: !If
                 - IsBuild
