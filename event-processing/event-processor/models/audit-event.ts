@@ -10,34 +10,17 @@ export interface IAuditEvent {
     timestamp_formatted?: string;
     event_name: string;
     user?: IAuditEventUserMessage | undefined;
-    platform?: IAuditEventPlatformMessage | undefined;
-    restricted?: IAuditEventRestrictedMessage | undefined;
-    extensions?: IAuditEventExtensionsMessage | undefined;
+    platform?: unknown | undefined;
+    restricted?: unknown | undefined;
+    extensions?: unknown | undefined;
     persistent_session_id?: string;
 }
 
 export interface IAuditEventUserMessage {
-    id: string;
-    email: string;
-    phone: string;
+    transaction_id?: string;
+    email?: string;
+    phone?: string;
     ip_address: string;
-}
-
-export interface IAuditEventKeyValuePairMessage {
-    key: string;
-    value: string;
-}
-
-export interface IAuditEventPlatformMessage {
-    keyValuePair: IAuditEventKeyValuePairMessage[];
-}
-
-export interface IAuditEventRestrictedMessage {
-    keyValuePair: IAuditEventKeyValuePairMessage[];
-}
-
-export interface IAuditEventExtensionsMessage {
-    keyValuePair: IAuditEventKeyValuePairMessage[];
 }
 
 function createBaseAuditEvent(): IAuditEvent {
@@ -122,19 +105,16 @@ export class AuditEvent {
         message.event_name !== undefined && (obj.event_name = message.event_name);
         message.user !== undefined &&
             (obj.user = message.user ? AuditEventUserMessage.toJSON(message.user) : undefined);
-        message.platform !== undefined &&
-            (obj.platform = message.platform ? AuditEventPlatformMessage.toJSON(message.platform) : undefined);
-        message.restricted !== undefined &&
-            (obj.restricted = message.restricted ? AuditEventRestrictedMessage.toJSON(message.restricted) : undefined);
-        message.extensions !== undefined &&
-            (obj.extensions = message.extensions ? AuditEventExtensionsMessage.toJSON(message.extensions) : undefined);
+        message.platform !== undefined && (obj.platform = message.platform ? message.platform : undefined);
+        message.restricted !== undefined && (obj.restricted = message.restricted ? message.restricted : undefined);
+        message.extensions !== undefined && (obj.extensions = message.extensions ? message.extensions : undefined);
         message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
         return obj;
     }
 }
 
 function createBaseAuditEventUserMessage(): IAuditEventUserMessage {
-    return { id: '', email: '', phone: '', ip_address: '' };
+    return { transaction_id: '', email: '', phone: '', ip_address: '' };
 }
 
 export class AuditEventUserMessage {
@@ -143,8 +123,8 @@ export class AuditEventUserMessage {
         const user = createBaseAuditEventUserMessage();
         for (const value in object) {
             switch (value) {
-                case 'id':
-                    user.id = object.id;
+                case 'transaction_id':
+                    user.transaction_id = object.transaction_id;
                     break;
                 case 'email':
                     user.email = object.email;
@@ -168,96 +148,10 @@ export class AuditEventUserMessage {
 
     static toJSON(message: IAuditEventUserMessage): unknown {
         const obj: any = {};
-        message.id !== undefined && (obj.id = message.id);
+        message.transaction_id !== undefined && (obj.transaction_id = message.transaction_id);
         message.email !== undefined && (obj.email = message.email);
         message.phone !== undefined && (obj.phone = message.phone);
         message.ip_address !== undefined && (obj.ip_address = message.ip_address);
         return obj;
     }
-}
-
-export const AuditEventKeyValuePairMessage = {
-    fromJSON(object: any): IAuditEventKeyValuePairMessage {
-        return {
-            key: isSet(object.key) ? String(object.key) : '',
-            value: isSet(object.value) ? String(object.value) : '',
-        };
-    },
-
-    toJSON(message: IAuditEventKeyValuePairMessage): unknown {
-        const obj: any = {};
-        message.key !== undefined && (obj.key = message.key);
-        message.value !== undefined && (obj.value = message.value);
-        return obj;
-    },
-};
-
-export class AuditEventPlatformMessage {
-    static fromJSON(object: any): IAuditEventPlatformMessage {
-        return {
-            keyValuePair: Array.isArray(object?.keyValuePair)
-                ? object.keyValuePair.map((e: any) => AuditEventKeyValuePairMessage.fromJSON(e))
-                : [],
-        };
-    }
-
-    static toJSON(message: IAuditEventPlatformMessage): unknown {
-        const obj: any = {};
-        if (message.keyValuePair) {
-            obj.keyValuePair = message.keyValuePair.map((e) =>
-                e ? AuditEventKeyValuePairMessage.toJSON(e) : undefined,
-            );
-        } else {
-            obj.keyValuePair = [];
-        }
-        return obj;
-    }
-}
-
-export class AuditEventRestrictedMessage {
-    static fromJSON(object: any): IAuditEventRestrictedMessage {
-        return {
-            keyValuePair: Array.isArray(object?.keyValuePair)
-                ? object.keyValuePair.map((e: any) => AuditEventKeyValuePairMessage.fromJSON(e))
-                : [],
-        };
-    }
-
-    static toJSON(message: IAuditEventRestrictedMessage): unknown {
-        const obj: any = {};
-        if (message.keyValuePair) {
-            obj.keyValuePair = message.keyValuePair.map((e) =>
-                e ? AuditEventKeyValuePairMessage.toJSON(e) : undefined,
-            );
-        } else {
-            obj.keyValuePair = [];
-        }
-        return obj;
-    }
-}
-
-export class AuditEventExtensionsMessage {
-    static fromJSON(object: any): IAuditEventExtensionsMessage {
-        return {
-            keyValuePair: Array.isArray(object?.keyValuePair)
-                ? object.keyValuePair.map((e: any) => AuditEventKeyValuePairMessage.fromJSON(e))
-                : [],
-        };
-    }
-
-    static toJSON(message: IAuditEventExtensionsMessage): unknown {
-        const obj: any = {};
-        if (message.keyValuePair) {
-            obj.keyValuePair = message.keyValuePair.map((e) =>
-                e ? AuditEventKeyValuePairMessage.toJSON(e) : undefined,
-            );
-        } else {
-            obj.keyValuePair = [];
-        }
-        return obj;
-    }
-}
-
-function isSet(value: any): boolean {
-    return value !== null && value !== undefined;
 }

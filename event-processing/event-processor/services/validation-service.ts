@@ -30,11 +30,11 @@ export class validationService {
                 unknownFields: [],
             };
 
-            unknownFieldsError.unknownFields.push(...(await this.getUnknownFields(eventMessage, 'AuditEvent')));
+            if (eventMessage._unknownFields && eventMessage._unknownFields.size > 0)
+                unknownFieldsError.unknownFields.push(...(await this.getUnknownFields(eventMessage, 'AuditEvent')));
 
-            if (eventMessage.user) {
+            if (eventMessageUser && eventMessageUser?._unknownFields && eventMessageUser?._unknownFields.size > 0)
                 unknownFieldsError.unknownFields.push(...(await this.getUnknownFields(eventMessageUser, 'User')));
-            }
 
             console.log('[WARN] UNKNOWN FIELDS\n' + JSON.stringify(unknownFieldsError));
         }
