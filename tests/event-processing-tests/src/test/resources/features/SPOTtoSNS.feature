@@ -1,8 +1,10 @@
 Feature: Raw event data journey from SPOT to SNS
 
-  Scenario: Verify the event data is successfully processed from SQS to SNS
-    Given a raw data event file <valid data from SPOT> is available in SQS queue
-    When lambda pulls the raw event data
-    Then the raw event data is available in the SNS
-    Then the raw event data is removed from the SQS queue
-
+  Scenario: Check messages pass through lambda to SNS
+    Given the Message Service is running
+    And the SQS file "SPOT_LAMBDA_001.json" is available
+    And the output file "SNS_001.json" is available
+    And I have a subscription to the EP SNS
+    When the "SPOT" lambda is invoked
+    Then the event is available from my subscription
+    And this event is equal to the output file
