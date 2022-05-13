@@ -141,7 +141,7 @@ Resources:
               - 'sns:Subscribe'
             Principal:
               AWS:
-                - '{{resolve:ssm:AuditAccountARN}}'
+                - "{{resolve:ssm:AuditAccountARN}}"
             Resource: !Ref epSNSTopic
       Topics:
         - !Ref epSNSTopic
@@ -297,7 +297,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn: '{{resolve:ssm:KBVQueueARN}}'
+#      EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
 #      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVKMSPolicy:
@@ -315,7 +315,7 @@ Resources:
 #            Action:
 #              - 'kms:Decrypt'
 #            Resource:
-#              - '{{resolve:ssm:KbvKmsArn}}'
+#              - "{{resolve:ssm:KbvKmsArn}}"
 
   KBVAddressEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -439,7 +439,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn: '{{resolve:ssm:KBVAddressQueueARN}}'
+#      EventSourceArn: "{{resolve:ssm:KBVAddressQueueARN}}"
 #      FunctionName: !Ref KBVAddressEventProcessorFunction
 
 #  KBVAddressKMSPolicy:
@@ -457,7 +457,7 @@ Resources:
 #            Action:
 #              - 'kms:Decrypt'
 #            Resource:
-#              - '{{resolve:ssm:KbvAddressKmsArn}}'
+#              - "{{resolve:ssm:KbvAddressKmsArn}}"
 
   KBVFraudEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -581,7 +581,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn: '{{resolve:ssm:KBVFraudQueueARN}}'
+#      EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
 #      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVFraudKMSPolicy:
@@ -599,7 +599,7 @@ Resources:
 #            Action:
 #              - 'kms:Decrypt'
 #            Resource:
-#              - '{{resolve:ssm:KbvFraudKmsArn}}'
+#              - "{{resolve:ssm:KbvFraudKmsArn}}"
 
   IPVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -723,7 +723,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: '{{resolve:ssm:IPVCoreQueueARN}}'
+      EventSourceArn: "{{resolve:ssm:IPVCoreQueueARN}}"
       FunctionName: !Ref IPVEventProcessorFunction
 
   IPVKMSPolicy:
@@ -742,7 +742,7 @@ Resources:
             Action:
               - 'kms:Decrypt'
             Resource:
-              - '{{resolve:ssm:IPVCoreKmsArn}}'
+              - "{{resolve:ssm:IPVCoreKmsArn}}"
 
   IPVPassEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -866,7 +866,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: '{{resolve:ssm:IPVPassportQueueARN}}'
+      EventSourceArn: "{{resolve:ssm:IPVPassportQueueARN}}"
       FunctionName: !Ref IPVPassEventProcessorFunction
 
   IPVPassKMSPolicy:
@@ -885,7 +885,7 @@ Resources:
             Action:
               - 'kms:Decrypt'
             Resource:
-              - '{{resolve:ssm:IPVPassportKmsArn}}'
+              - "{{resolve:ssm:IPVPassportKmsArn}}"
 
   SPOTEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1009,7 +1009,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn: '{{resolve:ssm:SPOTQueueARN}}'
+#      EventSourceArn: "{{resolve:ssm:SPOTQueueARN}}"
 #      FunctionName: !Ref SPOTEventProcessorFunction
 
 #  SPOTKMSPolicy:
@@ -1026,7 +1026,7 @@ Resources:
 #          - Effect: Allow
 #            Action:
 #              - 'kms:Decrypt'
-#            Resource: '{{resolve:ssm:SpotKmsArn}}'
+#            Resource: "{{resolve:ssm:SpotKmsArn}}"
 
   FireHoseKMSKey:
     Type: AWS::KMS::Key
@@ -1575,9 +1575,9 @@ Resources:
           - IsProductionOrStaging
           -
             HECAcknowledgmentTimeoutInSeconds: 300
-            HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
-            HECEndpointType: Raw
-            HECToken: "The HTTP Event Collector (HEC) endpoint token"
+            HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
+            HECEndpointType: Event
+            HECToken: "{{resolve:ssm:HECToken}}"
             RetryOptions:
               DurationInSeconds: 7200
             S3BackupMode: "FailedEventsOnly"
@@ -1636,9 +1636,9 @@ Resources:
           - IsProductionOrStaging
           -
             HECAcknowledgmentTimeoutInSeconds: 300
-            HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
-            HECEndpointType: Raw
-            HECToken: "The HTTP Event Collector (HEC) endpoint token"
+            HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
+            HECEndpointType: Event
+            HECToken: "{{resolve:ssm:HECToken}}"
             RetryOptions:
               DurationInSeconds: 7200
             S3BackupMode: "FailedEventsOnly"
@@ -1697,9 +1697,9 @@ Resources:
           - IsProductionOrStaging
           -
             HECAcknowledgmentTimeoutInSeconds: 300
-            HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
-            HECEndpointType: Raw
-            HECToken: "The HTTP Event Collector (HEC) endpoint token"
+            HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
+            HECEndpointType: Event
+            HECToken: "{{resolve:ssm:HECToken}}"
             RetryOptions:
               DurationInSeconds: 7200
             S3BackupMode: "FailedEventsOnly"
