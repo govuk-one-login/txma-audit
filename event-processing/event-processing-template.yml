@@ -304,31 +304,31 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-#  KBVLambdaEventSourceMapping:
-#    DependsOn:
-#      - KBVEventProcessorFunction
-#    Type: AWS::Lambda::EventSourceMapping
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
-#      FunctionName: !Ref KBVEventProcessorFunction
+  KBVLambdaEventSourceMapping:
+    DependsOn:
+      - KBVEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
+      FunctionName: !Ref KBVEventProcessorFunction
 
-#  KBVKMSPolicy:
-#    DependsOn:
-#      - KBVLambdaAccessRole
-#    Type: AWS::IAM::Policy
-#    Properties:
-#      Roles:
-#        - !Ref KBVLambdaAccessRole
-#      PolicyName: kbv_kms_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'kms:Decrypt'
-#            Resource:
-#              - "{{resolve:ssm:KbvKmsArn}}"
+  KBVKMSPolicy:
+    DependsOn:
+      - KBVLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref KBVLambdaAccessRole
+      PolicyName: kbv_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:KbvKmsArn}}"
 
   KBVAddressEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -447,31 +447,31 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-#  KBVAddressLambdaEventSourceMapping:
-#    DependsOn:
-#      - KBVAddressEventProcessorFunction
-#    Type: AWS::Lambda::EventSourceMapping
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      EventSourceArn: "{{resolve:ssm:KBVAddressQueueARN}}"
-#      FunctionName: !Ref KBVAddressEventProcessorFunction
+  KBVAddressLambdaEventSourceMapping:
+    DependsOn:
+      - KBVAddressEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:KBVAddressQueueARN}}"
+      FunctionName: !Ref KBVAddressEventProcessorFunction
 
-#  KBVAddressKMSPolicy:
-#    DependsOn:
-#      - KBVAddressLambdaAccessRole
-#    Type: AWS::IAM::Policy
-#    Properties:
-#      Roles:
-#        - !Ref KBVAddressLambdaAccessRole
-#      PolicyName: kbv_kms_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'kms:Decrypt'
-#            Resource:
-#              - "{{resolve:ssm:KbvAddressKmsArn}}"
+  KBVAddressKMSPolicy:
+    DependsOn:
+      - KBVAddressLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref KBVAddressLambdaAccessRole
+      PolicyName: kbv_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:KbvAddressKmsArn}}"
 
   KBVFraudEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -590,31 +590,31 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-#  KBVFraudLambdaEventSourceMapping:
-#    DependsOn:
-#      - KBVEventProcessorFunction
-#    Type: AWS::Lambda::EventSourceMapping
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
-#      FunctionName: !Ref KBVEventProcessorFunction
+  KBVFraudLambdaEventSourceMapping:
+    DependsOn:
+      - KBVFraudEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
+      FunctionName: !Ref KBVFraudEventProcessorFunction
 
-#  KBVFraudKMSPolicy:
-#    DependsOn:
-#      - KBVFraudLambdaAccessRole
-#    Type: AWS::IAM::Policy
-#    Properties:
-#      Roles:
-#        - !Ref KBVFraudLambdaAccessRole
-#      PolicyName: kbv_kms_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'kms:Decrypt'
-#            Resource:
-#              - "{{resolve:ssm:KbvFraudKmsArn}}"
+  KBVFraudKMSPolicy:
+    DependsOn:
+      - KBVFraudLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref KBVFraudLambdaAccessRole
+      PolicyName: kbv_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:KbvFraudKmsArn}}"
 
   IPVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1021,30 +1021,30 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-#  SPOTLambdaEventSourceMapping:
-#    DependsOn:
-#      - SPOTEventProcessorFunction
-#    Type: AWS::Lambda::EventSourceMapping
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      EventSourceArn: "{{resolve:ssm:SPOTQueueARN}}"
-#      FunctionName: !Ref SPOTEventProcessorFunction
+  SPOTLambdaEventSourceMapping:
+    DependsOn:
+      - SPOTEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:SPOTQueueARN}}"
+      FunctionName: !Ref SPOTEventProcessorFunction
 
-#  SPOTKMSPolicy:
-#    DependsOn:
-#      - SPOTLambdaAccessRole
-#    Type: AWS::IAM::Policy
-#    Properties:
-#      Roles:
-#        - !Ref SPOTLambdaAccessRole
-#      PolicyName: spot_kms_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'kms:Decrypt'
-#            Resource: '{{resolve:ssm:SpotKmsArn}}'
+  SPOTKMSPolicy:
+    DependsOn:
+      - SPOTLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref SPOTLambdaAccessRole
+      PolicyName: spot_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: '{{resolve:ssm:SpotKmsArn}}'
 
   FireHoseKMSKey:
     Type: AWS::KMS::Key
