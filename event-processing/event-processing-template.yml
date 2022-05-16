@@ -113,6 +113,12 @@ Resources:
               - 'kms:GenerateDataKey*'
               - 'kms:DescribeKey'
             Resource: '*'
+          - Effect: "Allow"
+            Principal:
+              AWS: "{{resolve:ssm:AuditAccountARN}}"
+            Action:
+              - 'kms:Decrypt'
+            Resource: '*'
 
   SNSKMSKeyAlias:
     Type: AWS::KMS::Alias
@@ -142,6 +148,7 @@ Resources:
             Principal:
               AWS:
                 - "{{resolve:ssm:AuditAccountARN}}"
+                - !Sub "${AWS::AccountId}"
             Resource: !Ref epSNSTopic
       Topics:
         - !Ref epSNSTopic
@@ -174,6 +181,11 @@ Resources:
             Resource: !Sub
               - 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${topicName}'
               - topicName: !GetAtt epSNSTopic.TopicName
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:GenerateDataKey*'
+            Resource: !GetAtt SNSKMSKey.Arn
 
   KBVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1026,7 +1038,7 @@ Resources:
 #          - Effect: Allow
 #            Action:
 #              - 'kms:Decrypt'
-#            Resource: "{{resolve:ssm:SpotKmsArn}}"
+#            Resource: '{{resolve:ssm:SpotKmsArn}}'
 
   FireHoseKMSKey:
     Type: AWS::KMS::Key
