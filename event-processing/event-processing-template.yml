@@ -205,6 +205,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt KBVLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -347,6 +348,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt KBVAddressLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -489,6 +491,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt KBVFraudLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -631,6 +634,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt IPVLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -774,6 +778,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt IPVPassLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -917,6 +922,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt SPOTLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -1848,6 +1854,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt ObfuscationFunctionRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -1873,6 +1880,7 @@ Resources:
 #      PackageType: Zip
 #      Handler: app.handler
 #      Runtime: nodejs14.x
+#      Timeout: 90
 #      Events:
 #        FraudBucket:
 #          Type: S3
