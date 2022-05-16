@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 import { SQSEvent, SQSRecord } from 'aws-lambda';
-import { AuditEvent } from '../../models/audit-event';
+import { IAuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-events/unknown-audit-event';
 
 export class TestHelper {
@@ -44,7 +44,7 @@ export class TestHelper {
         const sqsEvent = {
             Records: Array<SQSRecord>(),
         };
-        
+
         for (let i = 0; i < numberOfRecords; i++) {
             const sqsRecord: SQSRecord = JSON.parse(JSON.stringify(this.sqsRecord));
             sqsRecord.body = message;
@@ -55,7 +55,7 @@ export class TestHelper {
         return sqsEvent;
     }
 
-    static encodeAuditEvent(message: AuditEvent): string {
+    static encodeAuditEvent(message: IAuditEvent): string {
         return JSON.stringify(message);
     }
 

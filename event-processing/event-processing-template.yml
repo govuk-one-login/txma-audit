@@ -37,10 +37,9 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
-  IsBuild:
-    Fn::Equals:
-      - !Ref Environment
-      - "build"
+  IsBuild: !Or
+    - !Equals [ !Ref Environment, dev ]
+    - !Equals [ !Ref Environment, build ]
 
 Globals:
   Function:
@@ -114,67 +113,18 @@ Resources:
               - 'kms:GenerateDataKey*'
               - 'kms:DescribeKey'
             Resource: '*'
+          - Effect: "Allow"
+            Principal:
+              AWS: "{{resolve:ssm:AuditAccountARN}}"
+            Action:
+              - 'kms:Decrypt'
+            Resource: '*'
 
   SNSKMSKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SNSKMSKey"
       TargetKeyId: !Ref SNSKMSKey
-
-  FireHoseKMSKey:
-    Type: AWS::KMS::Key
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action:
-              - "kms:*"
-            Resource:
-              - "*"
-          - Effect: "Allow"
-            Principal:
-              Service: "firehose.amazonaws.com"
-            Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource: '*'
-          - Effect: "Allow"
-            Principal:
-              Service: "sns.amazonaws.com"
-            Action:
-              - 'kms:GenerateDataKey*'
-            Resource:
-              - "*"
-            Condition:
-              ArnEquals:
-                "aws:PrincipalArn": !Ref epSNSTopic
-          - Effect: "Allow"
-            Principal:
-              Service: "lambda.amazonaws.com"
-            Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource:
-              - "*"
-            Condition:
-              ForAnyValue:ArnEquals:
-                "aws:PrincipalArn":
-                  - !GetAtt ObfuscationFunction.Arn
-#                  - !GetAtt ReIngestFunction.Arn
-
-  FireHoseKMSKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/FireHoseKMSKey"
-      TargetKeyId: !Ref FireHoseKMSKey
 
   epSNSTopic:
     Type: AWS::SNS::Topic
@@ -197,7 +147,8 @@ Resources:
               - 'sns:Subscribe'
             Principal:
               AWS:
-                - '{{resolve:ssm:AuditAccountARN}}'
+                - "{{resolve:ssm:AuditAccountARN}}"
+                - !Sub "${AWS::AccountId}"
             Resource: !Ref epSNSTopic
       Topics:
         - !Ref epSNSTopic
@@ -230,6 +181,11 @@ Resources:
             Resource: !Sub
               - 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${topicName}'
               - topicName: !GetAtt epSNSTopic.TopicName
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:GenerateDataKey*'
+            Resource: !GetAtt SNSKMSKey.Arn
 
   KBVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -249,6 +205,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt KBVLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -353,7 +310,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn: '{{resolve:ssm:KBVQueueARN}}'
+#      EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
 #      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVKMSPolicy:
@@ -371,7 +328,7 @@ Resources:
 #            Action:
 #              - 'kms:Decrypt'
 #            Resource:
-#              - '{{resolve:ssm:KbvKmsArn}}'
+#              - "{{resolve:ssm:KbvKmsArn}}"
 
   KBVAddressEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -391,6 +348,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt KBVAddressLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -495,7 +453,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn: '{{resolve:ssm:KBVAddressQueueARN}}'
+#      EventSourceArn: "{{resolve:ssm:KBVAddressQueueARN}}"
 #      FunctionName: !Ref KBVAddressEventProcessorFunction
 
 #  KBVAddressKMSPolicy:
@@ -513,7 +471,7 @@ Resources:
 #            Action:
 #              - 'kms:Decrypt'
 #            Resource:
-#              - '{{resolve:ssm:KbvAddressKmsArn}}'
+#              - "{{resolve:ssm:KbvAddressKmsArn}}"
 
   KBVFraudEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -533,6 +491,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt KBVFraudLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -637,7 +596,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn: '{{resolve:ssm:KBVFraudQueueARN}}'
+#      EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
 #      FunctionName: !Ref KBVEventProcessorFunction
 
 #  KBVFraudKMSPolicy:
@@ -655,7 +614,7 @@ Resources:
 #            Action:
 #              - 'kms:Decrypt'
 #            Resource:
-#              - '{{resolve:ssm:KbvFraudKmsArn}}'
+#              - "{{resolve:ssm:KbvFraudKmsArn}}"
 
   IPVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -675,6 +634,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt IPVLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -779,7 +739,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: '{{resolve:ssm:IPVCoreQueueARN}}'
+      EventSourceArn: "{{resolve:ssm:IPVCoreQueueARN}}"
       FunctionName: !Ref IPVEventProcessorFunction
 
   IPVKMSPolicy:
@@ -798,7 +758,7 @@ Resources:
             Action:
               - 'kms:Decrypt'
             Resource:
-              - '{{resolve:ssm:IPVCoreKmsArn}}'
+              - "{{resolve:ssm:IPVCoreKmsArn}}"
 
   IPVPassEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -818,6 +778,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt IPVPassLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -922,7 +883,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: '{{resolve:ssm:IPVPassportQueueARN}}'
+      EventSourceArn: "{{resolve:ssm:IPVPassportQueueARN}}"
       FunctionName: !Ref IPVPassEventProcessorFunction
 
   IPVPassKMSPolicy:
@@ -941,7 +902,7 @@ Resources:
             Action:
               - 'kms:Decrypt'
             Resource:
-              - '{{resolve:ssm:IPVPassportKmsArn}}'
+              - "{{resolve:ssm:IPVPassportKmsArn}}"
 
   SPOTEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -961,6 +922,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
       Role: !GetAtt SPOTLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -1065,7 +1027,7 @@ Resources:
 #    Type: AWS::Lambda::EventSourceMapping
 #    Condition: IsProductionOrStaging
 #    Properties:
-#      EventSourceArn: '{{resolve:ssm:SPOTQueueARN}}'
+#      EventSourceArn: "{{resolve:ssm:SPOTQueueARN}}"
 #      FunctionName: !Ref SPOTEventProcessorFunction
 
 #  SPOTKMSPolicy:
@@ -1083,6 +1045,61 @@ Resources:
 #            Action:
 #              - 'kms:Decrypt'
 #            Resource: '{{resolve:ssm:SpotKmsArn}}'
+
+  FireHoseKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service: "firehose.amazonaws.com"
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
+          - Effect: "Allow"
+            Principal:
+              Service: "sns.amazonaws.com"
+            Action:
+              - 'kms:GenerateDataKey*'
+            Resource:
+              - "*"
+            Condition:
+              ArnLike:
+                "aws:PrincipalArn": "arn:aws:sns:*:${AWS::AccountId}:*"
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource:
+              - "*"
+            Condition:
+              ForAnyValue:ArnEquals:
+                "aws:PrincipalArn":
+                  - !GetAtt ObfuscationFunction.Arn
+#                  - !GetAtt ReIngestFunction.Arn
+
+  FireHoseKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/FireHoseKMSKey"
+      TargetKeyId: !Ref FireHoseKMSKey
 
   SplunkDeliveryBucketLogsBucket:
     Type: AWS::S3::Bucket
@@ -1141,6 +1158,46 @@ Resources:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/fraud-splunk-delivery-failure-bucket/"
 
+  FraudTestS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsBuild
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${FraudSplunkDeliveryTestBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
+  FraudSplunkDeliveryTestBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsBuild
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-test"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
+        LogFilePrefix: "event-processing/fraud-splunk-delivery-test-bucket/"
+
   CyberS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -1179,6 +1236,46 @@ Resources:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/cyber-splunk-delivery-failure-bucket/"
 
+  CyberTestS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsBuild
+    Properties:
+      Bucket: !Ref CyberSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${CyberSplunkDeliveryTestBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
+  CyberSplunkDeliveryTestBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsBuild
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-cyber-splunk-test"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
+        LogFilePrefix: "event-processing/cyber-splunk-delivery-test-bucket/"
+
   PerformanceS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -1216,6 +1313,46 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/performance-splunk-delivery-failure-bucket/"
+
+  PerformanceTestS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsBuild
+    Properties:
+      Bucket: !Ref PerformanceSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${PerformanceSplunkDeliveryTestBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
+  PerformanceSplunkDeliveryTestBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsBuild
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-test"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
+        LogFilePrefix: "event-processing/performance-splunk-delivery-test-bucket/"
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1291,15 +1428,21 @@ Resources:
                 - - 'arn:aws:s3:::'
                   - !Ref FraudSplunkDeliveryFailureBucket
                   - '*'
-#          - Effect: Allow
-#            Action:
-#              - 'firehose:DescribeDeliveryStream'
-#              - 'firehose:ListDeliveryStreams'
-#              - 'firehose:ListTagsForDeliveryStream'
-#              - 'firehose:PutRecord'
-#              - 'firehose:PutRecordBatch'
-#            Resource:
-#              - !GetAtt FraudDeliveryStream.Arn
+          - Effect: Allow
+            Action:
+              - 'firehose:DescribeDeliveryStream'
+              - 'firehose:ListDeliveryStreams'
+              - 'firehose:ListTagsForDeliveryStream'
+              - 'firehose:PutRecord'
+              - 'firehose:PutRecordBatch'
+            Resource:
+              - !GetAtt FraudDeliveryStream.Arn
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+              - 'lambda:GetFunctionConfiguration'
+            Resource:
+              - !Sub "${ObfuscationFunction.Arn}*"
 
   CyberDeliveryStreamRole:
     Type: AWS::IAM::Role
@@ -1344,15 +1487,21 @@ Resources:
                 - - 'arn:aws:s3:::'
                   - !Ref CyberSplunkDeliveryFailureBucket
                   - '*'
-#          - Effect: Allow
-#            Action:
-#              - 'firehose:DescribeDeliveryStream'
-#              - 'firehose:ListDeliveryStreams'
-#              - 'firehose:ListTagsForDeliveryStream'
-#              - 'firehose:PutRecord'
-#              - 'firehose:PutRecordBatch'
-#              Resource:
-#                - !GetAtt CyberDeliveryStream.Arn
+          - Effect: Allow
+            Action:
+              - 'firehose:DescribeDeliveryStream'
+              - 'firehose:ListDeliveryStreams'
+              - 'firehose:ListTagsForDeliveryStream'
+              - 'firehose:PutRecord'
+              - 'firehose:PutRecordBatch'
+            Resource:
+              - !GetAtt CyberDeliveryStream.Arn
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+              - 'lambda:GetFunctionConfiguration'
+            Resource:
+              - !Sub "${ObfuscationFunction.Arn}*"
 
   PerformanceDeliveryStreamRole:
     Type: AWS::IAM::Role
@@ -1397,173 +1546,305 @@ Resources:
                 - - 'arn:aws:s3:::'
                   - !Ref PerformanceSplunkDeliveryFailureBucket
                   - '*'
-#          - Effect: Allow
-#            Action:
-#              - 'firehose:DescribeDeliveryStream'
-#              - 'firehose:ListDeliveryStreams'
-#              - 'firehose:ListTagsForDeliveryStream'
-#              - 'firehose:PutRecord'
-#              - 'firehose:PutRecordBatch'
-#              Resource:
-#                - !GetAtt PerformanceDeliveryStream.Arn
+          - Effect: Allow
+            Action:
+              - 'firehose:DescribeDeliveryStream'
+              - 'firehose:ListDeliveryStreams'
+              - 'firehose:ListTagsForDeliveryStream'
+              - 'firehose:PutRecord'
+              - 'firehose:PutRecordBatch'
+            Resource:
+              - !GetAtt PerformanceDeliveryStream.Arn
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+              - 'lambda:GetFunctionConfiguration'
+            Resource:
+              - !Sub "${ObfuscationFunction.Arn}*"
 
-#  FraudDeliveryStream:
-#    DependsOn:
-#      - FraudDeliveryStreamRole
-#      - FraudFirehoseLogStream
-#    Type: AWS::KinesisFirehose::DeliveryStream
-#    Properties:
-#      DeliveryStreamName: !Sub
-#        - "FraudFireHose-${EnvironmentName}"
-#        - EnvironmentName: !Ref Environment
-#      DeliveryStreamType: DirectPut
-#      DeliveryStreamEncryptionConfigurationInput:
-#        KeyARN: !GetAtt FireHoseKMSKey.Arn
-#        KeyType: "CUSTOMER_MANAGED_CMK"
-#      SplunkDestinationConfiguration:
-#        HECAcknowledgmentTimeoutInSeconds: 300
-#        HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
-#        HECEndpointType: Raw
-#        HECToken: "The HTTP Event Collector (HEC) endpoint token"
-#        RetryOptions:
-#          DurationInSeconds: 7200
-#        S3BackupMode: "FailedEventsOnly"
-#        S3Configuration:
-#          BucketARN: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
-#          BufferingHints:
-#            IntervalInSeconds: !If
-#              - IsBuild
-#              - 60
-#              - 900
-#            SizeInMBs: 128
-#            CloudWatchLoggingOptions:
-#              Enabled: true
-#              LogGroupName: !Ref FirehoseLogGroup
-#              LogStreamName: !Ref FraudFirehoseLogStream
-#            CompressionFormat: GZIP
-#            ErrorOutputPrefix: "FraudDeliveryErrors"
-#            RoleArn: !GetAtt FraudDeliveryStreamRole.Arn
+  FireHoseSNSSubscriptionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: sns_kinesis_firehose_access_policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - 'firehose:DescribeDeliveryStream'
+                  - 'firehose:ListDeliveryStreams'
+                  - 'firehose:ListTagsForDeliveryStream'
+                  - 'firehose:PutRecord'
+                  - 'firehose:PutRecordBatch'
+                Effect: Allow
+                Resource:
+                  - !GetAtt FraudDeliveryStream.Arn
+                  - !GetAtt CyberDeliveryStream.Arn
+                  - !GetAtt PerformanceDeliveryStream.Arn
 
-#  CyberDeliveryStream:
-#    DependsOn:
-#      - CyberDeliveryStreamRole
-#      - CyberFirehoseLogStream
-#    Type: AWS::KinesisFirehose::DeliveryStream
-#    Properties:
-#      DeliveryStreamName: !Sub
-#        - "CyberFireHose-${EnvironmentName}"
-#        - EnvironmentName: !Ref Environment
-#      DeliveryStreamType: DirectPut
-#      DeliveryStreamEncryptionConfigurationInput:
-#        KeyARN: !GetAtt FireHoseKMSKey.Arn
-#        KeyType: "CUSTOMER_MANAGED_CMK"
-#      SplunkDestinationConfiguration:
-#        HECAcknowledgmentTimeoutInSeconds: 300
-#        HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
-#        HECEndpointType: Raw
-#        HECToken: "The HTTP Event Collector (HEC) endpoint token"
-#        RetryOptions:
-#          DurationInSeconds: 7200
-#        S3BackupMode: "FailedEventsOnly"
-#        S3Configuration:
-#          BucketARN: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
-#          BufferingHints:
-#            IntervalInSeconds: !If
-#              - IsBuild
-#              - 60
-#              - 900
-#            SizeInMBs: 128
-#            CloudWatchLoggingOptions:
-#              Enabled: true
-#              LogGroupName: !Ref FirehoseLogGroup
-#              LogStreamName: !Ref CyberFirehoseLogStream
-#            CompressionFormat: GZIP
-#            ErrorOutputPrefix: "CyberDeliveryErrors"
-#            RoleArn: !GetAtt CyberDeliveryStreamRole.Arn
-#      ProcessingConfiguration:
-#        Enabled: true
-#        Processors:
-#          - Type: Lambda
-#            Parameters:
-#              - ParameterName: LambdaArn
-#                ParameterValue: !Ref ObfuscationFunction
+  FraudDeliveryStream:
+    DependsOn:
+      - FraudDeliveryStreamRole
+      - FraudFirehoseLogStream
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Sub "FraudFireHose-${Environment}"
+      DeliveryStreamType: DirectPut
+      DeliveryStreamEncryptionConfigurationInput:
+        KeyARN: !GetAtt FireHoseKMSKey.Arn
+        KeyType: "CUSTOMER_MANAGED_CMK"
+      SplunkDestinationConfiguration:
+        Fn::If:
+          - IsProductionOrStaging
+          -
+            HECAcknowledgmentTimeoutInSeconds: 300
+            HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
+            HECEndpointType: Raw
+            HECToken: "{{resolve:ssm:HECToken}}"
+            RetryOptions:
+              DurationInSeconds: 7200
+            S3BackupMode: "FailedEventsOnly"
+            S3Configuration:
+              BucketARN: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
+              BufferingHints:
+                IntervalInSeconds: !If
+                  - IsBuild
+                  - 60
+                  - 900
+                SizeInMBs: 128
+              CloudWatchLoggingOptions:
+                Enabled: true
+                LogGroupName: !Ref FirehoseLogGroup
+                LogStreamName: !Ref FraudFirehoseLogStream
+              CompressionFormat: GZIP
+              ErrorOutputPrefix: "FraudDeliveryErrors"
+              RoleARN: !GetAtt FraudDeliveryStreamRole.Arn
+            ProcessingConfiguration:
+              Enabled: true
+              Processors:
+                - Type: Lambda
+                  Parameters:
+                    - ParameterName: LambdaArn
+                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                    - ParameterName: RoleArn
+                      ParameterValue: !GetAtt FraudDeliveryStreamRole.Arn
+          - !Ref "AWS::NoValue"
+      ExtendedS3DestinationConfiguration:
+        Fn::If:
+          - IsBuild
+          -
+            Prefix: "firehose/"
+            BucketARN: !GetAtt FraudSplunkDeliveryTestBucket.Arn
+            BufferingHints:
+              IntervalInSeconds: !If
+                - IsBuild
+                - 60
+                - 900
+              SizeInMBs: 128
+            CompressionFormat: "GZIP"
+            RoleARN: !GetAtt FraudDeliveryStreamRole.Arn
+          - !Ref "AWS::NoValue"
 
-#  PerformanceDeliveryStream:
-#    DependsOn:
-#      - PerformanceDeliveryStreamRole
-#      - PerformanceFirehoseLogStream
-#    Type: AWS::KinesisFirehose::DeliveryStream
-#    Properties:
-#      DeliveryStreamName: !Sub
-#        - "PerformanceFireHose-${EnvironmentName}"
-#        - EnvironmentName: !Ref Environment
-#      DeliveryStreamType: DirectPut
-#      DeliveryStreamEncryptionConfigurationInput:
-#        KeyARN: !GetAtt FireHoseKMSKey.Arn
-#        KeyType: "CUSTOMER_MANAGED_CMK"
-#      SplunkDestinationConfiguration:
-#        HECAcknowledgmentTimeoutInSeconds: 300
-#        HECEndpoint: "The HTTP Event Collector (HEC) endpoint"
-#        HECEndpointType: Raw
-#        HECToken: "The HTTP Event Collector (HEC) endpoint token"
-#        RetryOptions:
-#          DurationInSeconds: 7200
-#        S3BackupMode: "FailedEventsOnly"
-#        S3Configuration:
-#          BucketARN: !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
-#          BufferingHints:
-#            IntervalInSeconds: !If
-#              - IsBuild
-#              - 60
-#              - 900
-#            SizeInMBs: 128
-#            CloudWatchLoggingOptions:
-#              Enabled: true
-#              LogGroupName: !Ref FirehoseLogGroup
-#              LogStreamName: !Ref PerformanceFirehoseLogStream
-#            CompressionFormat: GZIP
-#            ErrorOutputPrefix: "PerformanceDeliveryErrors"
-#            RoleArn: !GetAtt PerformanceDeliveryStreamRole.Arn
-#      ProcessingConfiguration:
-#        Enabled: true
-#        Processors:
-#          - Type: Lambda
-#            Parameters:
-#              - ParameterName: LambdaArn
-#                ParameterValue: !Ref ObfuscationFunction
+  CyberDeliveryStream:
+    DependsOn:
+      - CyberDeliveryStreamRole
+      - CyberFirehoseLogStream
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Sub "CyberFireHose-${Environment}"
+      DeliveryStreamType: DirectPut
+      DeliveryStreamEncryptionConfigurationInput:
+        KeyARN: !GetAtt FireHoseKMSKey.Arn
+        KeyType: "CUSTOMER_MANAGED_CMK"
+      SplunkDestinationConfiguration:
+        Fn::If:
+          - IsProductionOrStaging
+          -
+            HECAcknowledgmentTimeoutInSeconds: 300
+            HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
+            HECEndpointType: Raw
+            HECToken: "{{resolve:ssm:HECToken}}"
+            RetryOptions:
+              DurationInSeconds: 7200
+            S3BackupMode: "FailedEventsOnly"
+            S3Configuration:
+              BucketARN: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
+              BufferingHints:
+                IntervalInSeconds: !If
+                  - IsBuild
+                  - 60
+                  - 900
+                SizeInMBs: 128
+              CloudWatchLoggingOptions:
+                Enabled: true
+                LogGroupName: !Ref FirehoseLogGroup
+                LogStreamName: !Ref CyberFirehoseLogStream
+              CompressionFormat: GZIP
+              ErrorOutputPrefix: "CyberDeliveryErrors"
+              RoleARN: !GetAtt CyberDeliveryStreamRole.Arn
+            ProcessingConfiguration:
+              Enabled: true
+              Processors:
+                - Type: Lambda
+                  Parameters:
+                    - ParameterName: LambdaArn
+                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                    - ParameterName: RoleArn
+                      ParameterValue: !GetAtt CyberDeliveryStreamRole.Arn
+          - !Ref "AWS::NoValue"
+      ExtendedS3DestinationConfiguration:
+        Fn::If:
+          - IsBuild
+          -
+            Prefix: "firehose/"
+            BucketARN: !GetAtt CyberSplunkDeliveryTestBucket.Arn
+            BufferingHints:
+              IntervalInSeconds: !If
+                - IsBuild
+                - 60
+                - 900
+              SizeInMBs: 128
+            CompressionFormat: "GZIP"
+            RoleARN: !GetAtt CyberDeliveryStreamRole.Arn
+          - !Ref "AWS::NoValue"
 
-#  FraudDeliveryStreamSubscription:
-#    Type: AWS::SNS::Subscription
-#    Properties:
-#      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
-#      Endpoint: !GetAtt FraudDeliveryStream.Arn #FireHose
-#      Protocol: firehose
-#      SubscriptionRoleArn: !GetAtt FraudDeliveryStreamRole.Arn
-##      FilterPolicy:
-##        event_name:
-##          - somevalue
+  PerformanceDeliveryStream:
+    DependsOn:
+      - PerformanceDeliveryStreamRole
+      - PerformanceFirehoseLogStream
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Sub "PerformanceFireHose-${Environment}"
+      DeliveryStreamType: DirectPut
+      DeliveryStreamEncryptionConfigurationInput:
+        KeyARN: !GetAtt FireHoseKMSKey.Arn
+        KeyType: "CUSTOMER_MANAGED_CMK"
+      SplunkDestinationConfiguration:
+        Fn::If:
+          - IsProductionOrStaging
+          -
+            HECAcknowledgmentTimeoutInSeconds: 300
+            HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
+            HECEndpointType: Raw
+            HECToken: "{{resolve:ssm:HECToken}}"
+            RetryOptions:
+              DurationInSeconds: 7200
+            S3BackupMode: "FailedEventsOnly"
+            S3Configuration:
+              BucketARN: !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
+              BufferingHints:
+                IntervalInSeconds: !If
+                  - IsBuild
+                  - 60
+                  - 900
+                SizeInMBs: 128
+              CloudWatchLoggingOptions:
+                Enabled: true
+                LogGroupName: !Ref FirehoseLogGroup
+                LogStreamName: !Ref PerformanceFirehoseLogStream
+              CompressionFormat: GZIP
+              ErrorOutputPrefix: "PerformanceDeliveryErrors"
+              RoleARN: !GetAtt PerformanceDeliveryStreamRole.Arn
+            ProcessingConfiguration:
+              Enabled: true
+              Processors:
+                - Type: Lambda
+                  Parameters:
+                    - ParameterName: LambdaArn
+                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                    - ParameterName: RoleArn
+                      ParameterValue: !GetAtt PerformanceDeliveryStreamRole.Arn
+          - !Ref "AWS::NoValue"
+      ExtendedS3DestinationConfiguration:
+        Fn::If:
+          - IsBuild
+          -
+            Prefix: "firehose/"
+            BucketARN: !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
+            BufferingHints:
+              IntervalInSeconds: !If
+                - IsBuild
+                - 60
+                - 900
+              SizeInMBs: 128
+            CompressionFormat: "GZIP"
+            RoleARN: !GetAtt PerformanceDeliveryStreamRole.Arn
+          - !Ref "AWS::NoValue"
 
-#  CyberDeliveryStreamSubscription:
-#    Type: AWS::SNS::Subscription
-#    Properties:
-#      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
-#      Endpoint: !GetAtt CyberDeliveryStream.Arn #FireHose
-#      Protocol: firehose
-#      SubscriptionRoleArn: !GetAtt CyberDeliveryStreamRole.Arn
-##      FilterPolicy:
-##        event_name:
-##          - somevalue
+  FraudDeliveryStreamSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref epSNSTopic
+      Endpoint: !GetAtt FraudDeliveryStream.Arn #FireHose
+      Protocol: firehose
+      RawMessageDelivery: true
+      SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
+  #      FilterPolicy:
+  #        event_name:
+  #          - somevalue
 
-#  PerformanceDeliveryStreamSubscription:
-#    Type: AWS::SNS::Subscription
-#    Properties:
-#      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
-#      Endpoint: !GetAtt PerformanceDeliveryStream.Arn #FireHose
-#      Protocol: firehose
-#      SubscriptionRoleArn: !GetAtt PerformanceDeliveryStreamRole.Arn
-#  #      FilterPolicy:
-#  #        event_name:
-#  #          - somevalue
+  CyberDeliveryStreamSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref epSNSTopic
+      Endpoint: !GetAtt CyberDeliveryStream.Arn #FireHose
+      Protocol: firehose
+      RawMessageDelivery: true
+      SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
+  #      FilterPolicy:
+  #        event_name:
+  #          - somevalue
+
+  PerformanceDeliveryStreamSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref epSNSTopic
+      Endpoint: !GetAtt PerformanceDeliveryStream.Arn #FireHose
+      Protocol: firehose
+      RawMessageDelivery: true
+      SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
+  #      FilterPolicy:
+  #        event_name:
+  #          - somevalue
+
+  ObfuscationFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+
+  ObfuscationLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/ObfuscationFunction"
+      RetentionInDays: 7
 
   ObfuscationFunction:
     Type: AWS::Serverless::Function
@@ -1573,6 +1854,8 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
+      Timeout: 90
+      Role: !GetAtt ObfuscationFunctionRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -1582,6 +1865,13 @@ Resources:
         EntryPoints:
           - app.ts
 
+#  ReIngestLogGroup:
+#    Type: AWS::Logs::LogGroup
+#    Properties:
+#      KmsKeyId: !GetAtt LogsKmsKey.Arn
+#      LogGroupName: "/aws/lambda/ReIngest"
+#      RetentionInDays: 7
+
 #  ReIngestFunction:
 #    Type: AWS::Serverless::Function
 #    Properties:
@@ -1590,6 +1880,7 @@ Resources:
 #      PackageType: Zip
 #      Handler: app.handler
 #      Runtime: nodejs14.x
+#      Timeout: 90
 #      Events:
 #        FraudBucket:
 #          Type: S3
@@ -1608,11 +1899,11 @@ Resources:
 #            Events: 's3:ObjectCreated:*'
 #      Policies:
 #        - S3ReadPolicy:
-#            BucketName: "fraud-splunk-delivery-failure-bucket"
+#            BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
 #        - S3ReadPolicy:
-#            BucketName: "cyber-splunk-delivery-failure-bucket"
+#            BucketName: !Sub "${AWS::StackName}-${Environment}-cyber-splunk-fail"
 #        - S3ReadPolicy:
-#            BucketName: "performance-splunk-delivery-failure-bucket"
+#            BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
 ##        - FirehoseWritePolicy:
 ##            DeliveryStreamName: !Ref FraudDeliveryStream
 ##        - FirehoseWritePolicy:

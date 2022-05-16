@@ -1,5 +1,5 @@
 import { SQSRecord } from 'aws-lambda';
-import { AuditEvent } from '../models/audit-event';
+import { IAuditEvent, AuditEvent } from '../models/audit-event';
 import { IValidationResponse } from '../models/validation-response.interface';
 import { IUnknownFieldsError } from '../models/unknown-fields-error.interface';
 import { IAuditEventUnknownFields } from '../models/audit-event-unknown-fields';
@@ -16,10 +16,10 @@ export class validationService {
 
     private static async isValidEventMessage(message: string, eventSource: string): Promise<IValidationResponse> {
         const eventMessage = AuditEvent.fromJSONString(message) as IAuditEventUnknownFields;
-        const eventMessageUser = eventMessage.user as IUserUnknownFields
+        const eventMessageUser = eventMessage.user as IUserUnknownFields;
         if (
             (eventMessage._unknownFields && eventMessage._unknownFields.size > 0) ||
-            (eventMessageUser._unknownFields && eventMessageUser._unknownFields.size > 0)
+            (eventMessageUser?._unknownFields && eventMessageUser?._unknownFields.size > 0)
         ) {
             const unknownFieldsError: IUnknownFieldsError = {
                 sqsResourceName: eventSource,
@@ -30,11 +30,11 @@ export class validationService {
                 unknownFields: [],
             };
 
-            unknownFieldsError.unknownFields.push(...(await this.getUnknownFields(eventMessage, 'AuditEvent')));
+            if (eventMessage._unknownFields && eventMessage._unknownFields.size > 0)
+                unknownFieldsError.unknownFields.push(...(await this.getUnknownFields(eventMessage, 'AuditEvent')));
 
-            if (eventMessage.user) {
-                unknownFieldsError.unknownFields.push(...(await this.getUnknownFields(eventMessage.user, 'User')));
-            }
+            if (eventMessageUser && eventMessageUser?._unknownFields && eventMessageUser?._unknownFields.size > 0)
+                unknownFieldsError.unknownFields.push(...(await this.getUnknownFields(eventMessageUser, 'User')));
 
             console.log('[WARN] UNKNOWN FIELDS\n' + JSON.stringify(unknownFieldsError));
         }
@@ -42,7 +42,7 @@ export class validationService {
         if (!eventMessage.event_name) {
             return {
                 isValid: false,
-                message: AuditEvent.toJSON(eventMessage as AuditEvent) as string,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent) as string,
                 error: {
                     sqsResourceName: eventSource,
                     eventId: eventMessage.event_id,
@@ -57,7 +57,7 @@ export class validationService {
         if (!eventMessage.timestamp) {
             return {
                 isValid: false,
-                message: AuditEvent.toJSON(eventMessage as AuditEvent) as string,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent) as string,
                 error: {
                     sqsResourceName: eventSource,
                     eventId: eventMessage.event_id,
@@ -75,7 +75,7 @@ export class validationService {
 
         return {
             isValid: true,
-            message: AuditEvent.toJSON(eventMessage as AuditEvent) as string,
+            message: AuditEvent.toJSON(eventMessage as IAuditEvent) as string,
         };
     }
 

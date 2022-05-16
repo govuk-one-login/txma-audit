@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { handler } from '../../app';
 import { TestHelper } from './test-helper';
-import { AuditEvent } from '../../models/audit-event';
+import { IAuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-events/unknown-audit-event';
 
 describe('Unit test for app handler', function () {
@@ -15,11 +15,28 @@ describe('Unit test for app handler', function () {
        consoleWarningMock.mockRestore();
     });
 
+    it('accepts a bare minimum payload and stringifies', async () => {
+        const expectedResult =
+            '[{"event_id":"","request_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","persistent_session_id":""}]';
+
+        const exampleMessage: IAuditEvent = {
+            timestamp: 1609462861,
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+        };
+
+        const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
+
+        const result = await handler(sqsEvent);
+
+        expect(result).toEqual(expectedResult);
+    });
+
     it('successfully stringifies an SQS event', async () => {
         const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}]';
+            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
 
-        const exampleMessage: AuditEvent = {
+        const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             request_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
@@ -28,34 +45,19 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             user: {
-                id: 'a52f6f87',
+                transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
                 phone: '07711223344',
                 ip_address: '100.100.100.100',
             },
             platform: {
-                keyValuePair: [
-                    {
-                        key: 'xray_trace_id',
-                        value: '24727sda4192',
-                    },
-                ],
+               xray_trace_id: '24727sda4192',
             },
             restricted: {
-                keyValuePair: [
-                    {
-                        key: 'experian_ref',
-                        value: 'DSJJSEE29392',
-                    },
-                ],
+               experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-                keyValuePair: [
-                    {
-                        key: 'response',
-                        value: 'Authentication successful',
-                    },
-                ],
+               response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
@@ -69,10 +71,10 @@ describe('Unit test for app handler', function () {
 
     it('successfully stringifies multiple events', async () => {
         const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"},' +
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}]';
+            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"},' +
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
 
-        const exampleMessage: AuditEvent = {
+        const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             request_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
@@ -81,34 +83,19 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             user: {
-                id: 'a52f6f87',
+                transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
                 phone: '07711223344',
                 ip_address: '100.100.100.100',
             },
             platform: {
-                keyValuePair: [
-                    {
-                        key: 'xray_trace_id',
-                        value: '24727sda4192',
-                    },
-                ],
+               xray_trace_id: '24727sda4192',
             },
             restricted: {
-                keyValuePair: [
-                    {
-                        key: 'experian_ref',
-                        value: 'DSJJSEE29392',
-                    },
-                ],
+               experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-                keyValuePair: [
-                    {
-                        key: 'response',
-                        value: 'Authentication successful',
-                    },
-                ],
+               response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
@@ -122,7 +109,7 @@ describe('Unit test for app handler', function () {
 
     it('successfully removes unrecognised elements from an audit event and user field and then logs to cloudwatch', async () => {
         const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}]';
+            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
 
         const exampleMessage: UnknownAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -133,35 +120,21 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             user: {
-                id: 'a52f6f87',
+                transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
                 phone: '07711223344',
                 ip_address: '100.100.100.100',
                 unknown_user_field: 'some unknown user field'
             },
             platform: {
-                keyValuePair: [
-                    {
-                        key: 'xray_trace_id',
-                        value: '24727sda4192',
-                    },
-                ],
+
+               xray_trace_id: '24727sda4192',
             },
             restricted: {
-                keyValuePair: [
-                    {
-                        key: 'experian_ref',
-                        value: 'DSJJSEE29392',
-                    },
-                ],
+               experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-                keyValuePair: [
-                    {
-                        key: 'response',
-                        value: 'Authentication successful',
-                    },
-                ],
+               response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
             new_unknown_field: "an unknown field"
@@ -178,9 +151,9 @@ describe('Unit test for app handler', function () {
 
     it('successfully populates missing formatted timestamp fields', async () => {
         const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-01T01:01:01.000Z","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}]';
+            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-01T01:01:01.000Z","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
 
-        const exampleMessage: AuditEvent = {
+        const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             request_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
@@ -189,34 +162,19 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '',
             event_name: 'AUTHENTICATION_ATTEMPT',
             user: {
-                id: 'a52f6f87',
+                transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
                 phone: '07711223344',
                 ip_address: '100.100.100.100',
             },
             platform: {
-                keyValuePair: [
-                    {
-                        key: 'xray_trace_id',
-                        value: '24727sda4192',
-                    },
-                ],
+               xray_trace_id: '24727sda4192',
             },
             restricted: {
-                keyValuePair: [
-                    {
-                        key: 'experian_ref',
-                        value: 'DSJJSEE29392',
-                    },
-                ],
+               experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-                keyValuePair: [
-                    {
-                        key: 'response',
-                        value: 'Authentication successful',
-                    },
-                ],
+               response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
@@ -228,13 +186,12 @@ describe('Unit test for app handler', function () {
         expect(result).toEqual(expectedResult);
     });
 
-
     it('logs an error when validation fails on event name', async () => {
         const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"},' +
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}]';
+            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"},' +
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
 
-        const exampleMessage: AuditEvent = {
+        const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             request_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
@@ -243,39 +200,24 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             user: {
-                id: 'a52f6f87',
+                transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
                 phone: '07711223344',
                 ip_address: '100.100.100.100',
             },
             platform: {
-                keyValuePair: [
-                    {
-                        key: 'xray_trace_id',
-                        value: '24727sda4192',
-                    },
-                ],
+               xray_trace_id: '24727sda4192',
             },
             restricted: {
-                keyValuePair: [
-                    {
-                        key: 'experian_ref',
-                        value: 'DSJJSEE29392',
-                    },
-                ],
+               experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-                keyValuePair: [
-                    {
-                        key: 'response',
-                        value: 'Authentication successful',
-                    },
-                ],
+               response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
 
-        const exampleInvalidMessage: AuditEvent = {
+        const exampleInvalidMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             request_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
@@ -284,34 +226,19 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: '',
             user: {
-                id: 'a52f6f87',
+                transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
                 phone: '07711223344',
                 ip_address: '100.100.100.100',
             },
             platform: {
-                keyValuePair: [
-                    {
-                        key: 'xray_trace_id',
-                        value: '24727sda4192',
-                    },
-                ],
+               xray_trace_id: '24727sda4192',
             },
             restricted: {
-                keyValuePair: [
-                    {
-                        key: 'experian_ref',
-                        value: 'DSJJSEE29392',
-                    },
-                ],
+               experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-                keyValuePair: [
-                    {
-                        key: 'response',
-                        value: 'Authentication successful',
-                    },
-                ],
+               response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
@@ -330,10 +257,10 @@ describe('Unit test for app handler', function () {
 
     it('logs an error when validation fails on timestamp', async () => {
         const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"},' +
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"keyValuePair":[{"key":"xray_trace_id","value":"24727sda4192"}]},"restricted":{"keyValuePair":[{"key":"experian_ref","value":"DSJJSEE29392"}]},"extensions":{"keyValuePair":[{"key":"response","value":"Authentication successful"}]},"persistent_session_id":"some session id"}]';
+            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"},' +
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
 
-        const exampleMessage: AuditEvent = {
+        const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             request_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
@@ -342,39 +269,24 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             user: {
-                id: 'a52f6f87',
+                transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
                 phone: '07711223344',
                 ip_address: '100.100.100.100',
             },
             platform: {
-                keyValuePair: [
-                    {
-                        key: 'xray_trace_id',
-                        value: '24727sda4192',
-                    },
-                ],
+               xray_trace_id: '24727sda4192',
             },
             restricted: {
-                keyValuePair: [
-                    {
-                        key: 'experian_ref',
-                        value: 'DSJJSEE29392',
-                    },
-                ],
+               experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-                keyValuePair: [
-                    {
-                        key: 'response',
-                        value: 'Authentication successful',
-                    },
-                ],
+               response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
 
-        const exampleInvalidMessage: AuditEvent = {
+        const exampleInvalidMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             request_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
@@ -383,34 +295,19 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             user: {
-                id: 'a52f6f87',
+                transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
                 phone: '07711223344',
                 ip_address: '100.100.100.100',
             },
             platform: {
-                keyValuePair: [
-                    {
-                        key: 'xray_trace_id',
-                        value: '24727sda4192',
-                    },
-                ],
+               xray_trace_id: '24727sda4192',
             },
             restricted: {
-                keyValuePair: [
-                    {
-                        key: 'experian_ref',
-                        value: 'DSJJSEE29392',
-                    },
-                ],
+               experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-                keyValuePair: [
-                    {
-                        key: 'response',
-                        value: 'Authentication successful',
-                    },
-                ],
+               response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };

@@ -1,28 +1,11 @@
-import {
-    AuditEvent_extensionsMessage,
-    AuditEvent_platformMessage,
-    AuditEvent_restrictedMessage,
-} from './audit-event';
-import { IUserUnknownFields } from './user-unknown-fields.interface';
+import { IAuditEvent } from './audit-event';
 
-export interface IAuditEventUnknownFields {
-    event_id: string;
-    request_id: string;
-    session_id: string;
-    client_id: string;
-    timestamp: number;
-    timestamp_formatted: string;
-    event_name: string;
-    user: IUserUnknownFields | undefined;
-    platform: AuditEvent_platformMessage | undefined;
-    restricted: AuditEvent_restrictedMessage | undefined;
-    extensions: AuditEvent_extensionsMessage | undefined;
-    persistent_session_id: string;
+export interface IAuditEventUnknownFields extends IAuditEvent {
     _unknownFields: Map<string, unknown>;
 }
 
-export const IAuditEventUnknownFields = {
-    fromAuditMessage(object: any, unknown_fields: Map<string, unknown> ) {
+export class AuditEventUnknownFields {
+    static fromAuditMessage(object: any, unknown_fields: Map<string, unknown>): IAuditEventUnknownFields {
         return {
             event_id: isSet(object.event_id) ? String(object.event_id) : '',
             request_id: isSet(object.request_id) ? String(object.request_id) : '',
@@ -31,7 +14,7 @@ export const IAuditEventUnknownFields = {
             timestamp: isSet(object.timestamp) ? Number(object.timestamp) : 0,
             timestamp_formatted: isSet(object.timestamp_formatted) ? String(object.timestamp_formatted) : '',
             event_name: isSet(object.event_name) ? String(object.event_name) : '',
-            user: isSet(object.user) ? object.user: undefined,
+            user: isSet(object.user) ? object.user : undefined,
             platform: isSet(object.platform) ? object.platform : undefined,
             restricted: isSet(object.restricted) ? object.restricted : undefined,
             extensions: isSet(object.extensions) ? object.extensions : undefined,
@@ -41,6 +24,6 @@ export const IAuditEventUnknownFields = {
     }
 }
 
-function isSet(value: any): boolean {
+function isSet(value: unknown): boolean {
     return value !== null && value !== undefined;
 }

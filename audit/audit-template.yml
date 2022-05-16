@@ -144,6 +144,7 @@ Resources:
       TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
       Endpoint: !GetAtt AuditDeliveryStream.Arn #FireHose
       Protocol: firehose
+      RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
 
   DeliveryStreamRole:
@@ -209,12 +210,16 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Action:
+              - Effect: Allow
+                Action:
                   - 'firehose:DescribeDeliveryStream'
                   - 'firehose:ListDeliveryStreams'
                   - 'firehose:ListTagsForDeliveryStream'
                   - 'firehose:PutRecord'
                   - 'firehose:PutRecordBatch'
-                Effect: Allow
                 Resource:
                   - !GetAtt AuditDeliveryStream.Arn
+              - Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                Resource: '{{resolve:ssm:SNSKMSKeyARN}}'
