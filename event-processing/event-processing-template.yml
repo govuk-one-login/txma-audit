@@ -1030,7 +1030,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: "{{resolve:ssm:SPOTQueueARN}}"
+      EventSourceArn: "{{resolve:ssm:SPOTQueueArn}}"
       FunctionName: !Ref SPOTEventProcessorFunction
 
   SPOTKMSPolicy:
@@ -1048,7 +1048,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: '{{resolve:ssm:SpotKmsArn}}'
+            Resource: '{{resolve:ssm:SPOTKmsArn}}'
 
   FireHoseKMSKey:
     Type: AWS::KMS::Key
