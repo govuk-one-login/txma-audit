@@ -1,46 +1,29 @@
-import { IAuditEventUnknownFields } from './audit-event-unknown-fields';
-import { IUserUnknownFields } from './user-unknown-fields.interface';
+import { AuditEventUnknownFields, IAuditEventUnknownFields } from './audit-event-unknown-fields';
+import { IUserUnknownFields, UserUnknownFields } from './user-unknown-fields.interface';
 
-export interface AuditEvent {
-    event_id: string;
-    request_id: string;
-    session_id: string;
-    client_id: string;
+export interface IAuditEvent {
+    event_id?: string;
+    request_id?: string;
+    session_id?: string;
+    client_id?: string;
     timestamp: number;
-    timestamp_formatted: string;
+    timestamp_formatted?: string;
     event_name: string;
-    user: AuditEvent_userMessage | IUserUnknownFields | undefined;
-    platform: AuditEvent_platformMessage | undefined;
-    restricted: AuditEvent_restrictedMessage | undefined;
-    extensions: AuditEvent_extensionsMessage | undefined;
-    persistent_session_id: string;
+    user?: IAuditEventUserMessage | undefined;
+    platform?: unknown | undefined;
+    restricted?: unknown | undefined;
+    extensions?: unknown | undefined;
+    persistent_session_id?: string;
 }
 
-export interface AuditEvent_userMessage {
-    id: string;
-    email: string;
-    phone: string;
+export interface IAuditEventUserMessage {
+    transaction_id?: string;
+    email?: string;
+    phone?: string;
     ip_address: string;
 }
 
-export interface AuditEvent_keyValuePairMessage {
-    key: string;
-    value: string;
-}
-
-export interface AuditEvent_platformMessage {
-    keyValuePair: AuditEvent_keyValuePairMessage[];
-}
-
-export interface AuditEvent_restrictedMessage {
-    keyValuePair: AuditEvent_keyValuePairMessage[];
-}
-
-export interface AuditEvent_extensionsMessage {
-    keyValuePair: AuditEvent_keyValuePairMessage[];
-}
-
-function createBaseAuditEvent(): AuditEvent {
+function createBaseAuditEvent(): IAuditEvent {
     return {
         event_id: '',
         request_id: '',
@@ -57,47 +40,47 @@ function createBaseAuditEvent(): AuditEvent {
     };
 }
 
-export const AuditEvent = {
-    fromJSONString(object: string) {
-        let event = createBaseAuditEvent();
-        let jsonObject = JSON.parse(object);
-        let unknown_fields = new Map<string, unknown>();
-        for (var value in jsonObject) {  
-            switch(value) {
-                case "event_id":
+export class AuditEvent {
+    static fromJSONString(object: string) {
+        const event = createBaseAuditEvent();
+        const jsonObject = JSON.parse(object);
+        const unknown_fields = new Map<string, unknown>();
+        for (const value in jsonObject) {
+            switch (value) {
+                case 'event_id':
                     event.event_id = jsonObject[value];
                     break;
-                case "request_id":
+                case 'request_id':
                     event.request_id = jsonObject[value];
                     break;
-                case "session_id":
+                case 'session_id':
                     event.session_id = jsonObject[value];
                     break;
-                case "client_id":
+                case 'client_id':
                     event.client_id = jsonObject[value];
                     break;
-                case "timestamp":
+                case 'timestamp':
                     event.timestamp = jsonObject[value];
                     break;
-                case "timestamp_formatted":
+                case 'timestamp_formatted':
                     event.timestamp_formatted = jsonObject[value];
                     break;
-                case "event_name":
+                case 'event_name':
                     event.event_name = jsonObject[value];
                     break;
-                case "user":
-                    event.user = AuditEvent_userMessage.fromObject(jsonObject[value]);
+                case 'user':
+                    event.user = AuditEventUserMessage.fromObject(jsonObject[value]);
                     break;
-                case "platform":
+                case 'platform':
                     event.platform = jsonObject[value];
                     break;
-                case "restricted":
+                case 'restricted':
                     event.restricted = jsonObject[value];
                     break;
-                case "extensions":
+                case 'extensions':
                     event.extensions = jsonObject[value];
                     break;
-                case "persistent_session_id":
+                case 'persistent_session_id':
                     event.persistent_session_id = jsonObject[value];
                     break;
                 default:
@@ -106,12 +89,12 @@ export const AuditEvent = {
             }
         }
 
-        if (unknown_fields.size > 0) 
-            return IAuditEventUnknownFields.fromAuditMessage(event, unknown_fields)
-        return event
-    },
+        if (unknown_fields.size > 0)
+            return AuditEventUnknownFields.fromAuditMessage(event, unknown_fields) as IAuditEventUnknownFields;
+        return event;
+    }
 
-    toJSON(message: AuditEvent): unknown {
+    static toJSON(message: IAuditEvent): unknown {
         const obj: any = {};
         message.event_id !== undefined && (obj.event_id = message.event_id);
         message.request_id !== undefined && (obj.request_id = message.request_id);
@@ -121,38 +104,35 @@ export const AuditEvent = {
         message.timestamp_formatted !== undefined && (obj.timestamp_formatted = message.timestamp_formatted);
         message.event_name !== undefined && (obj.event_name = message.event_name);
         message.user !== undefined &&
-            (obj.user = message.user ? AuditEvent_userMessage.toJSON(message.user) : undefined);
-        message.platform !== undefined &&
-            (obj.platform = message.platform ? AuditEvent_platformMessage.toJSON(message.platform) : undefined);
-        message.restricted !== undefined &&
-            (obj.restricted = message.restricted ? AuditEvent_restrictedMessage.toJSON(message.restricted) : undefined);
-        message.extensions !== undefined &&
-            (obj.extensions = message.extensions ? AuditEvent_extensionsMessage.toJSON(message.extensions) : undefined);
+            (obj.user = message.user ? AuditEventUserMessage.toJSON(message.user) : undefined);
+        message.platform !== undefined && (obj.platform = message.platform ? message.platform : undefined);
+        message.restricted !== undefined && (obj.restricted = message.restricted ? message.restricted : undefined);
+        message.extensions !== undefined && (obj.extensions = message.extensions ? message.extensions : undefined);
         message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
         return obj;
-    },
-};
-
-function createBaseAuditEvent_userMessage(): AuditEvent_userMessage {
-    return { id: '', email: '', phone: '', ip_address: '' };
+    }
 }
 
-export const AuditEvent_userMessage = {
-    fromObject(object: any): AuditEvent_userMessage {
-        let unknown_fields = new Map<string, any>();
-        let user = createBaseAuditEvent_userMessage();
-        for (var value in object) {
-            switch(value) {
-                case "id":
-                    user.id = object.id;
+function createBaseAuditEventUserMessage(): IAuditEventUserMessage {
+    return { transaction_id: '', email: '', phone: '', ip_address: '' };
+}
+
+export class AuditEventUserMessage {
+    static fromObject(object: any): IAuditEventUserMessage {
+        const unknown_fields = new Map<string, any>();
+        const user = createBaseAuditEventUserMessage();
+        for (const value in object) {
+            switch (value) {
+                case 'transaction_id':
+                    user.transaction_id = object.transaction_id;
                     break;
-                case "email":
+                case 'email':
                     user.email = object.email;
                     break;
-                case "phone":
+                case 'phone':
                     user.phone = object.phone;
                     break;
-                case "ip_address":
+                case 'ip_address':
                     user.ip_address = object.ip_address;
                     break;
                 default:
@@ -160,120 +140,18 @@ export const AuditEvent_userMessage = {
                     break;
             }
         }
-        if(unknown_fields.size > 0){
-            return IUserUnknownFields.fromAuditEvent(user, unknown_fields)
+        if (unknown_fields.size > 0) {
+            return UserUnknownFields.fromAuditEvent(user, unknown_fields) as IUserUnknownFields;
         }
         return user;
-    },
-    
-    toJSON(message: AuditEvent_userMessage): unknown {
+    }
+
+    static toJSON(message: IAuditEventUserMessage): unknown {
         const obj: any = {};
-        message.id !== undefined && (obj.id = message.id);
+        message.transaction_id !== undefined && (obj.transaction_id = message.transaction_id);
         message.email !== undefined && (obj.email = message.email);
         message.phone !== undefined && (obj.phone = message.phone);
         message.ip_address !== undefined && (obj.ip_address = message.ip_address);
         return obj;
-    },
-};
-
-function createBaseAuditEvent_keyValuePairMessage(): AuditEvent_keyValuePairMessage {
-    return { key: '', value: '' };
-}
-
-export const AuditEvent_keyValuePairMessage = {
-    fromJSON(object: any): AuditEvent_keyValuePairMessage {
-        return {
-            key: isSet(object.key) ? String(object.key) : '',
-            value: isSet(object.value) ? String(object.value) : '',
-        };
-    },
-
-    toJSON(message: AuditEvent_keyValuePairMessage): unknown {
-        const obj: any = {};
-        message.key !== undefined && (obj.key = message.key);
-        message.value !== undefined && (obj.value = message.value);
-        return obj;
-    },
-};
-
-function createBaseAuditEvent_platformMessage(): AuditEvent_platformMessage {
-    return { keyValuePair: [] };
-}
-
-export const AuditEvent_platformMessage = {
-    fromJSON(object: any): AuditEvent_platformMessage {
-        return {
-            keyValuePair: Array.isArray(object?.keyValuePair)
-                ? object.keyValuePair.map((e: any) => AuditEvent_keyValuePairMessage.fromJSON(e))
-                : [],
-        };
-    },
-
-    toJSON(message: AuditEvent_platformMessage): unknown {
-        const obj: any = {};
-        if (message.keyValuePair) {
-            obj.keyValuePair = message.keyValuePair.map((e) =>
-                e ? AuditEvent_keyValuePairMessage.toJSON(e) : undefined,
-            );
-        } else {
-            obj.keyValuePair = [];
-        }
-        return obj;
-    },
-};
-
-function createBaseAuditEvent_restrictedMessage(): AuditEvent_restrictedMessage {
-    return { keyValuePair: [] };
-}
-
-export const AuditEvent_restrictedMessage = {
-    fromJSON(object: any): AuditEvent_restrictedMessage {
-        return {
-            keyValuePair: Array.isArray(object?.keyValuePair)
-                ? object.keyValuePair.map((e: any) => AuditEvent_keyValuePairMessage.fromJSON(e))
-                : [],
-        };
-    },
-
-    toJSON(message: AuditEvent_restrictedMessage): unknown {
-        const obj: any = {};
-        if (message.keyValuePair) {
-            obj.keyValuePair = message.keyValuePair.map((e) =>
-                e ? AuditEvent_keyValuePairMessage.toJSON(e) : undefined,
-            );
-        } else {
-            obj.keyValuePair = [];
-        }
-        return obj;
-    },
-};
-
-function createBaseAuditEvent_extensionsMessage(): AuditEvent_extensionsMessage {
-    return { keyValuePair: [] };
-}
-
-export const AuditEvent_extensionsMessage = {
-    fromJSON(object: any): AuditEvent_extensionsMessage {
-        return {
-            keyValuePair: Array.isArray(object?.keyValuePair)
-                ? object.keyValuePair.map((e: any) => AuditEvent_keyValuePairMessage.fromJSON(e))
-                : [],
-        };
-    },
-
-    toJSON(message: AuditEvent_extensionsMessage): unknown {
-        const obj: any = {};
-        if (message.keyValuePair) {
-            obj.keyValuePair = message.keyValuePair.map((e) =>
-                e ? AuditEvent_keyValuePairMessage.toJSON(e) : undefined,
-            );
-        } else {
-            obj.keyValuePair = [];
-        }
-        return obj;
-    },
-};
-
-function isSet(value: any): boolean {
-    return value !== null && value !== undefined;
+    }
 }
