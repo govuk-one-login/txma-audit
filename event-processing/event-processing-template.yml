@@ -205,7 +205,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Timeout: 90
+      Timeout: 30
       Role: !GetAtt KBVLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -349,7 +349,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Timeout: 90
+      Timeout: 30
       Role: !GetAtt KBVAddressLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -493,7 +493,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Timeout: 90
+      Timeout: 30
       Role: !GetAtt KBVFraudLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -637,7 +637,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Timeout: 90
+      Timeout: 30
       Role: !GetAtt IPVLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -781,7 +781,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Timeout: 90
+      Timeout: 30
       Role: !GetAtt IPVPassLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -925,7 +925,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Timeout: 90
+      Timeout: 30
       Role: !GetAtt SPOTLambdaAccessRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -1030,7 +1030,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: "{{resolve:ssm:SPOTQueueARN}}"
+      EventSourceArn: "{{resolve:ssm:SPOTQueueArn}}"
       FunctionName: !Ref SPOTEventProcessorFunction
 
   SPOTKMSPolicy:
@@ -1048,7 +1048,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
-            Resource: '{{resolve:ssm:SpotKmsArn}}'
+            Resource: '{{resolve:ssm:SPOTKmsArn}}'
 
   FireHoseKMSKey:
     Type: AWS::KMS::Key
@@ -1942,7 +1942,7 @@ Resources:
       PackageType: Zip
       Handler: app.handler
       Runtime: nodejs14.x
-      Timeout: 90
+      Timeout: 30
       Role: !GetAtt ObfuscationFunctionRole.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -1968,7 +1968,7 @@ Resources:
 #      PackageType: Zip
 #      Handler: app.handler
 #      Runtime: nodejs14.x
-#      Timeout: 90
+#      Timeout: 30
 #      Events:
 #        FraudBucket:
 #          Type: S3
