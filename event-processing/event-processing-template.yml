@@ -304,31 +304,32 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-#  KBVLambdaEventSourceMapping:
-#    DependsOn:
-#      - KBVEventProcessorFunction
-#    Type: AWS::Lambda::EventSourceMapping
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
-#      FunctionName: !Ref KBVEventProcessorFunction
+  KBVLambdaEventSourceMapping:
+    DependsOn:
+      - KBVEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
+      FunctionName: !Ref KBVEventProcessorFunction
 
-#  KBVKMSPolicy:
-#    DependsOn:
-#      - KBVLambdaAccessRole
-#    Type: AWS::IAM::Policy
-#    Properties:
-#      Roles:
-#        - !Ref KBVLambdaAccessRole
-#      PolicyName: kbv_kms_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'kms:Decrypt'
-#            Resource:
-#              - "{{resolve:ssm:KbvKmsArn}}"
+  KBVKMSPolicy:
+    DependsOn:
+      - KBVLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref KBVLambdaAccessRole
+      PolicyName: kbv_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:KbvKmsArn}}"
 
   KBVAddressEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -447,31 +448,32 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-#  KBVAddressLambdaEventSourceMapping:
-#    DependsOn:
-#      - KBVAddressEventProcessorFunction
-#    Type: AWS::Lambda::EventSourceMapping
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      EventSourceArn: "{{resolve:ssm:KBVAddressQueueARN}}"
-#      FunctionName: !Ref KBVAddressEventProcessorFunction
+  KBVAddressLambdaEventSourceMapping:
+    DependsOn:
+      - KBVAddressEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:KBVAddressQueueARN}}"
+      FunctionName: !Ref KBVAddressEventProcessorFunction
 
-#  KBVAddressKMSPolicy:
-#    DependsOn:
-#      - KBVAddressLambdaAccessRole
-#    Type: AWS::IAM::Policy
-#    Properties:
-#      Roles:
-#        - !Ref KBVAddressLambdaAccessRole
-#      PolicyName: kbv_kms_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'kms:Decrypt'
-#            Resource:
-#              - "{{resolve:ssm:KbvAddressKmsArn}}"
+  KBVAddressKMSPolicy:
+    DependsOn:
+      - KBVAddressLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref KBVAddressLambdaAccessRole
+      PolicyName: kbv_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:KbvAddressKmsArn}}"
 
   KBVFraudEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -590,31 +592,32 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-#  KBVFraudLambdaEventSourceMapping:
-#    DependsOn:
-#      - KBVEventProcessorFunction
-#    Type: AWS::Lambda::EventSourceMapping
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
-#      FunctionName: !Ref KBVEventProcessorFunction
+  KBVFraudLambdaEventSourceMapping:
+    DependsOn:
+      - KBVFraudEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
+      FunctionName: !Ref KBVFraudEventProcessorFunction
 
-#  KBVFraudKMSPolicy:
-#    DependsOn:
-#      - KBVFraudLambdaAccessRole
-#    Type: AWS::IAM::Policy
-#    Properties:
-#      Roles:
-#        - !Ref KBVFraudLambdaAccessRole
-#      PolicyName: kbv_kms_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'kms:Decrypt'
-#            Resource:
-#              - "{{resolve:ssm:KbvFraudKmsArn}}"
+  KBVFraudKMSPolicy:
+    DependsOn:
+      - KBVFraudLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref KBVFraudLambdaAccessRole
+      PolicyName: kbv_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:KbvFraudKmsArn}}"
 
   IPVEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1021,30 +1024,31 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-#  SPOTLambdaEventSourceMapping:
-#    DependsOn:
-#      - SPOTEventProcessorFunction
-#    Type: AWS::Lambda::EventSourceMapping
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      EventSourceArn: "{{resolve:ssm:SPOTQueueARN}}"
-#      FunctionName: !Ref SPOTEventProcessorFunction
+  SPOTLambdaEventSourceMapping:
+    DependsOn:
+      - SPOTEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:SPOTQueueARN}}"
+      FunctionName: !Ref SPOTEventProcessorFunction
 
-#  SPOTKMSPolicy:
-#    DependsOn:
-#      - SPOTLambdaAccessRole
-#    Type: AWS::IAM::Policy
-#    Properties:
-#      Roles:
-#        - !Ref SPOTLambdaAccessRole
-#      PolicyName: spot_kms_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'kms:Decrypt'
-#            Resource: '{{resolve:ssm:SpotKmsArn}}'
+  SPOTKMSPolicy:
+    DependsOn:
+      - SPOTLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref SPOTLambdaAccessRole
+      PolicyName: spot_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: '{{resolve:ssm:SpotKmsArn}}'
 
   FireHoseKMSKey:
     Type: AWS::KMS::Key
@@ -1444,6 +1448,34 @@ Resources:
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
 
+  FraudDeliveryStreamTestPolicy:
+    DependsOn:
+      - FraudDeliveryStreamRole
+    Type: AWS::IAM::Policy
+    Condition: IsBuild
+    Properties:
+      Roles:
+        - !Ref FraudDeliveryStreamRole
+      PolicyName: fraud_firehose_delivery_test_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref FraudSplunkDeliveryTestBucket
+                  - '*'
+
   CyberDeliveryStreamRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1503,6 +1535,34 @@ Resources:
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
 
+  CyberDeliveryStreamTestPolicy:
+    DependsOn:
+      - CyberDeliveryStreamRole
+    Type: AWS::IAM::Policy
+    Condition: IsBuild
+    Properties:
+      Roles:
+        - !Ref CyberDeliveryStreamRole
+      PolicyName: cyber_firehose_delivery_test_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt CyberSplunkDeliveryTestBucket.Arn
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref CyberSplunkDeliveryTestBucket
+                  - '*'
+
   PerformanceDeliveryStreamRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1561,6 +1621,34 @@ Resources:
               - 'lambda:GetFunctionConfiguration'
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
+
+  PerformanceDeliveryStreamTestPolicy:
+    DependsOn:
+      - PerformanceDeliveryStreamRole
+    Type: AWS::IAM::Policy
+    Condition: IsBuild
+    Properties:
+      Roles:
+        - !Ref PerformanceDeliveryStreamRole
+      PolicyName: performance_firehose_delivery_test_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref PerformanceSplunkDeliveryTestBucket
+                  - '*'
 
   FireHoseSNSSubscriptionRole:
     Type: AWS::IAM::Role
