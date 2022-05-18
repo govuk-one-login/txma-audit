@@ -1,14 +1,15 @@
 import { SQSEvent, SQSRecord } from 'aws-lambda';
-import { validationService } from './services/validation-service';
+import { ValidationService } from './services/validation-service';
+import { SnsService } from './services/sns-service';
 import { IValidationResponse } from './models/validation-response.interface';
 import { ValidationException } from './exceptions/validation-exception';
 import { IRequiredFieldError } from './models/required-field-error.interface';
 
-export const handler = async (event: SQSEvent): Promise<string> => {
+export const handler = async (event: SQSEvent): Promise<void> => {
     const validationResponses: IValidationResponse[] = [];
 
     for (const record of event.Records) {
-        validationResponses.push(await validationService.validateSQSRecord(record as SQSRecord));
+        validationResponses.push(await ValidationService.validateSQSRecord(record as SQSRecord));
     }
 
     if (validationResponses.some((response: IValidationResponse) => !response.isValid)) {
@@ -29,13 +30,18 @@ export const handler = async (event: SQSEvent): Promise<string> => {
         );
     }
 
-    return JSON.stringify(
-        validationResponses
-            .filter((response: IValidationResponse) => {
-                return response.isValid;
-            })
-            .map((validationResponse: IValidationResponse) => {
-                return validationResponse.message;
-            }),
+    await SnsService.publishMessageToSNS(
+        JSON.stringify(
+            validationResponses
+                .filter((response: IValidationResponse) => {
+                    return response.isValid;
+                })
+                .map((validationResponse: IValidationResponse) => {
+                    return validationResponse.message;
+                }),
+        ),
+        process.env.topicArn,
     );
+
+    return;
 };

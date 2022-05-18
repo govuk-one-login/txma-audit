@@ -3,16 +3,38 @@ import { handler } from '../../app';
 import { TestHelper } from './test-helper';
 import { IAuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-events/unknown-audit-event';
+import {SNS} from "aws-sdk";
+import {MockedFunction} from "ts-jest";
+
+jest.mock('aws-sdk', () => {
+    const mockSNSInstance = {
+        publish: jest.fn().mockReturnThis(),
+        promise: jest.fn(),
+    };
+    const mockSNS = jest.fn(() => mockSNSInstance);
+
+    return {
+        SNS: mockSNS,
+        config: {
+            update: jest.fn()
+        }
+    };
+});
 
 describe('Unit test for app handler', function () {
-    let consoleWarningMock: jest.SpyInstance;
+    let consoleMock: jest.SpyInstance;
+    let sns: SNS;
 
     beforeEach(() => {
-        consoleWarningMock = jest.spyOn(global.console, 'log');
+        consoleMock = jest.spyOn(global.console, 'log');
+        sns = new SNS();
+
+        process.env.topicArn = 'SOME-SNS-TOPIC';
     });
 
     afterEach(() => {
-       consoleWarningMock.mockRestore();
+       consoleMock.mockRestore();
+       jest.clearAllMocks();
     });
 
     it('accepts a bare minimum payload and stringifies', async () => {
@@ -25,11 +47,21 @@ describe('Unit test for app handler', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
         };
 
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        const result = await handler(sqsEvent);
+        await handler(sqsEvent);
 
-        expect(result).toEqual(expectedResult);
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
+        expect(consoleMock).toHaveBeenCalledTimes(2);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
     it('successfully stringifies an SQS event', async () => {
@@ -62,11 +94,21 @@ describe('Unit test for app handler', function () {
             persistent_session_id: 'some session id',
         };
 
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        const result = await handler(sqsEvent);
+        await handler(sqsEvent);
 
-        expect(result).toEqual(expectedResult);
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
+        expect(consoleMock).toHaveBeenCalledTimes(2);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
     it('successfully stringifies multiple events', async () => {
@@ -100,11 +142,21 @@ describe('Unit test for app handler', function () {
             persistent_session_id: 'some session id',
         };
 
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
 
-        const result = await handler(sqsEvent);
+        await handler(sqsEvent);
 
-        expect(result).toEqual(expectedResult);
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
+        expect(consoleMock).toHaveBeenCalledTimes(2);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
     it('successfully removes unrecognised elements from an audit event and user field and then logs to cloudwatch', async () => {
@@ -140,13 +192,22 @@ describe('Unit test for app handler', function () {
             new_unknown_field: "an unknown field"
         };
 
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEventWithUnknownField(exampleMessage));
 
-        const result = await handler(sqsEvent);
-        
-        expect(result).toEqual(expectedResult);
-        expect(consoleWarningMock).toHaveBeenCalledTimes(1);
-        expect(consoleWarningMock).toHaveBeenCalledWith('[WARN] UNKNOWN FIELDS\n{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"1609462861","message":"Unknown fields in message.","unknownFields":[{"key":"new_unknown_field","fieldName":"AuditEvent"},{"key":"unknown_user_field","fieldName":"User"}]}');
+        await handler(sqsEvent);
+
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
+        expect(consoleMock).toHaveBeenCalledTimes(3);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, '[WARN] UNKNOWN FIELDS\n{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"1609462861","message":"Unknown fields in message.","unknownFields":[{"key":"new_unknown_field","fieldName":"AuditEvent"},{"key":"unknown_user_field","fieldName":"User"}]}');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
     });
 
     it('successfully populates missing formatted timestamp fields', async () => {
@@ -179,11 +240,21 @@ describe('Unit test for app handler', function () {
             persistent_session_id: 'some session id',
         };
 
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        const result = await handler(sqsEvent);
+        await handler(sqsEvent);
 
-        expect(result).toEqual(expectedResult);
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
+        expect(consoleMock).toHaveBeenCalledTimes(2);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
     it('logs an error when validation fails on event name', async () => {
@@ -243,16 +314,25 @@ describe('Unit test for app handler', function () {
             persistent_session_id: 'some session id',
         };
 
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
         const sqsEventWithInvalidMessage = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleInvalidMessage));
 
         sqsEvent.Records.push(...sqsEventWithInvalidMessage.Records)
 
-        const result = await handler(sqsEvent);
+        await handler(sqsEvent);
 
-        expect(consoleWarningMock).toHaveBeenCalledTimes(1);
-        expect(consoleWarningMock).toHaveBeenCalledWith('[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"","timestamp":"1609462861","requiredField":"event_name","message":"event_name is a required field."}]}')
-        expect(result).toEqual(expectedResult);
+        expect(consoleMock).toHaveBeenCalledTimes(3);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, '[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"","timestamp":"1609462861","requiredField":"event_name","message":"event_name is a required field."}]}')
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
     });
 
     it('logs an error when validation fails on timestamp', async () => {
@@ -312,15 +392,24 @@ describe('Unit test for app handler', function () {
             persistent_session_id: 'some session id',
         };
 
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
         const sqsEventWithInvalidMessage = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleInvalidMessage));
 
         sqsEvent.Records.push(...sqsEventWithInvalidMessage.Records)
 
-        const result = await handler(sqsEvent);
+        await handler(sqsEvent);
 
-        expect(consoleWarningMock).toHaveBeenCalledTimes(1);
-        expect(consoleWarningMock).toHaveBeenCalledWith('[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","requiredField":"timestamp","message":"timestamp is a required field."}]}')
-        expect(result).toEqual(expectedResult);
+        expect(consoleMock).toHaveBeenCalledTimes(3);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, '[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","requiredField":"timestamp","message":"timestamp is a required field."}]}')
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
     });
 });
