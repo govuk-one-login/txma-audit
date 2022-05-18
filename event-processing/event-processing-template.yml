@@ -126,6 +126,34 @@ Resources:
       AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SNSKMSKey"
       TargetKeyId: !Ref SNSKMSKey
 
+  LambdaKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'kms:Decrypt'
+            Resource: '*'
+
+  LambdaKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/LambdaKMSKey"
+      TargetKeyId: !Ref LambdaKMSKey
+
   epSNSTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -208,6 +236,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -341,6 +370,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -474,6 +504,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -607,6 +638,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -741,6 +773,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -874,6 +907,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
