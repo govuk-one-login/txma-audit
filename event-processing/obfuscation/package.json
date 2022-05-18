@@ -6,8 +6,7 @@
   "repository": "https://github.com/alphagov/di-txma-audit",
   "author": "GDS",
   "license": "MIT",
-  "dependencies": {
-  },
+  "dependencies": {},
   "scripts": {
     "unit": "jest",
     "lint": "eslint '*.ts' --quiet --fix",

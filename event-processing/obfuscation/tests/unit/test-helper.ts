@@ -1,9 +1,7 @@
 /* istanbul ignore file */
 import {
     FirehoseTransformationEvent,
-    FirehoseTransformationEventRecord,
-    FirehoseTransformationResult,
-    FirehoseTransformationResultRecord,
+    FirehoseTransformationEventRecord
 } from 'aws-lambda';
 import { IAuditEvent } from '../../models/audit-event';
 

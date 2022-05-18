@@ -1,8 +1,8 @@
 Feature: Auth event data journey from SNS to Firehose
 
   Scenario: Verify the data journey from SNS to S3
-    Given the input file "KBV_SNS_001.json" is available
-    And the expected file "KBV_S3_001.json" is available
+    Given the input file "IPV/Firehose_001.json" is available
+    And the expected file "IPV/S3_001.json" is available
     And we can read all current S3 keys
     When the message is sent to firehose
     Then the s3 should have a new event data

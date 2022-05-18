@@ -4,7 +4,6 @@ import {
     FirehoseTransformationResult,
     FirehoseTransformationResultRecord,
 } from 'aws-lambda';
-
 import { AuditEvent, IAuditEvent } from './models/audit-event';
 import { ObfuscatedEvent } from './models/obfuscated-event';
 

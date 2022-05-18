@@ -80,30 +80,9 @@ export class AuditEvent {
                 case 'persistent_session_id':
                     event.persistent_session_id = jsonObject[value];
                     break;
-                default:
-                    unknown_fields.set(value, jsonObject[value]);
-                    break;
             }
         }
         return event;
-    }
-
-    static toJSON(message: IAuditEvent): unknown {
-        const obj: any = {};
-        message.event_id !== undefined && (obj.event_id = message.event_id);
-        message.request_id !== undefined && (obj.request_id = message.request_id);
-        message.session_id !== undefined && (obj.session_id = message.session_id);
-        message.client_id !== undefined && (obj.client_id = message.client_id);
-        message.timestamp !== undefined && (obj.timestamp = Math.round(message.timestamp));
-        message.timestamp_formatted !== undefined && (obj.timestamp_formatted = message.timestamp_formatted);
-        message.event_name !== undefined && (obj.event_name = message.event_name);
-        message.user !== undefined &&
-            (obj.user = message.user ? AuditEventUserMessage.toJSON(message.user) : undefined);
-        message.platform !== undefined && (obj.platform = message.platform ? message.platform : undefined);
-        message.restricted !== undefined && (obj.restricted = message.restricted ? message.restricted : undefined);
-        message.extensions !== undefined && (obj.extensions = message.extensions ? message.extensions : undefined);
-        message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
-        return obj;
     }
 }
 
@@ -129,20 +108,8 @@ export class AuditEventUserMessage {
                 case 'ip_address':
                     user.ip_address = object.ip_address;
                     break;
-                default:
-                    unknown_fields.set(value, object[value]);
-                    break;
             }
         }
         return user;
-    }
-
-    static toJSON(message: IAuditEventUserMessage): unknown {
-        const obj: any = {};
-        message.transaction_id !== undefined && (obj.transaction_id = message.transaction_id);
-        message.email !== undefined && (obj.email = message.email);
-        message.phone !== undefined && (obj.phone = message.phone);
-        message.ip_address !== undefined && (obj.ip_address = message.ip_address);
-        return obj;
     }
 }

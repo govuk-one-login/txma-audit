@@ -33,7 +33,7 @@ describe('Unit test for app handler', function () {
         }
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
-        console.log(JSON.stringify(firehoseEvent))
+        
         const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
@@ -56,7 +56,7 @@ describe('Unit test for app handler', function () {
         }
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
-        console.log(JSON.stringify(firehoseEvent))
+        
         const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
