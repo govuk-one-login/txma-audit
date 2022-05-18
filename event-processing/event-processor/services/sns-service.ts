@@ -17,7 +17,6 @@ export class SnsService {
 
         await publishTextPromise
             .then((data) => {
-                console.log(`Message ${params.Message} send sent to the topic ${params.TopicArn}`);
                 console.log('MessageID is ' + data.MessageId);
             })
             .catch((err) => {

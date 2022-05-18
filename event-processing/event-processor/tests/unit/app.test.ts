@@ -59,10 +59,9 @@ describe('Unit test for app handler', function () {
                 TopicArn: 'SOME-SNS-TOPIC'
             }
         );
-        expect(consoleMock).toHaveBeenCalledTimes(3);
+        expect(consoleMock).toHaveBeenCalledTimes(2);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(2, 'Message [{\"event_id\":\"\",\"request_id\":\"\",\"session_id\":\"\",\"client_id\":\"\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-23T15:43:21.842\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"persistent_session_id\":\"\"}] send sent to the topic SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
     it('successfully stringifies an SQS event', async () => {
@@ -107,10 +106,9 @@ describe('Unit test for app handler', function () {
                 TopicArn: 'SOME-SNS-TOPIC'
             }
         );
-        expect(consoleMock).toHaveBeenCalledTimes(3);
+        expect(consoleMock).toHaveBeenCalledTimes(2);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(2, 'Message [{\"event_id\":\"66258f3e-82fc-4f61-9ba0-62424e1f06b4\",\"request_id\":\"43143-233Ds-2823-283-dj299j1\",\"session_id\":\"c222c1ec\",\"client_id\":\"some-client\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-23T15:43:21.842\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"user\":{\"transaction_id\":\"a52f6f87\",\"email\":\"foo@bar.com\",\"phone\":\"07711223344\",\"ip_address\":\"100.100.100.100\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentication successful\"},\"persistent_session_id\":\"some session id\"}] send sent to the topic SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
     it('successfully stringifies multiple events', async () => {
@@ -156,10 +154,9 @@ describe('Unit test for app handler', function () {
                 TopicArn: 'SOME-SNS-TOPIC'
             }
         );
-        expect(consoleMock).toHaveBeenCalledTimes(3);
+        expect(consoleMock).toHaveBeenCalledTimes(2);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(2, 'Message [{\"event_id\":\"66258f3e-82fc-4f61-9ba0-62424e1f06b4\",\"request_id\":\"43143-233Ds-2823-283-dj299j1\",\"session_id\":\"c222c1ec\",\"client_id\":\"some-client\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-23T15:43:21.842\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"user\":{\"transaction_id\":\"a52f6f87\",\"email\":\"foo@bar.com\",\"phone\":\"07711223344\",\"ip_address\":\"100.100.100.100\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentication successful\"},\"persistent_session_id\":\"some session id\"},{\"event_id\":\"66258f3e-82fc-4f61-9ba0-62424e1f06b4\",\"request_id\":\"43143-233Ds-2823-283-dj299j1\",\"session_id\":\"c222c1ec\",\"client_id\":\"some-client\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-23T15:43:21.842\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"user\":{\"transaction_id\":\"a52f6f87\",\"email\":\"foo@bar.com\",\"phone\":\"07711223344\",\"ip_address\":\"100.100.100.100\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentication successful\"},\"persistent_session_id\":\"some session id\"}] send sent to the topic SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
     it('successfully removes unrecognised elements from an audit event and user field and then logs to cloudwatch', async () => {
@@ -207,11 +204,10 @@ describe('Unit test for app handler', function () {
                 TopicArn: 'SOME-SNS-TOPIC'
             }
         );
-        expect(consoleMock).toHaveBeenCalledTimes(4);
+        expect(consoleMock).toHaveBeenCalledTimes(3);
         expect(consoleMock).toHaveBeenNthCalledWith(1, '[WARN] UNKNOWN FIELDS\n{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"1609462861","message":"Unknown fields in message.","unknownFields":[{"key":"new_unknown_field","fieldName":"AuditEvent"},{"key":"unknown_user_field","fieldName":"User"}]}');
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(3, 'Message [{\"event_id\":\"66258f3e-82fc-4f61-9ba0-62424e1f06b4\",\"request_id\":\"43143-233Ds-2823-283-dj299j1\",\"session_id\":\"c222c1ec\",\"client_id\":\"some-client\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-23T15:43:21.842\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"user\":{\"transaction_id\":\"a52f6f87\",\"email\":\"foo@bar.com\",\"phone\":\"07711223344\",\"ip_address\":\"100.100.100.100\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentication successful\"},\"persistent_session_id\":\"some session id\"}] send sent to the topic SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
     });
 
     it('successfully populates missing formatted timestamp fields', async () => {
@@ -256,10 +252,9 @@ describe('Unit test for app handler', function () {
                 TopicArn: 'SOME-SNS-TOPIC'
             }
         );
-        expect(consoleMock).toHaveBeenCalledTimes(3);
+        expect(consoleMock).toHaveBeenCalledTimes(2);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(2, 'Message [{\"event_id\":\"66258f3e-82fc-4f61-9ba0-62424e1f06b4\",\"request_id\":\"43143-233Ds-2823-283-dj299j1\",\"session_id\":\"c222c1ec\",\"client_id\":\"some-client\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-01T01:01:01.000Z\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"user\":{\"transaction_id\":\"a52f6f87\",\"email\":\"foo@bar.com\",\"phone\":\"07711223344\",\"ip_address\":\"100.100.100.100\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentication successful\"},\"persistent_session_id\":\"some session id\"}] send sent to the topic SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
     it('logs an error when validation fails on event name', async () => {
@@ -328,11 +323,10 @@ describe('Unit test for app handler', function () {
 
         await handler(sqsEvent);
 
-        expect(consoleMock).toHaveBeenCalledTimes(4);
+        expect(consoleMock).toHaveBeenCalledTimes(3);
         expect(consoleMock).toHaveBeenNthCalledWith(1, '[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"","timestamp":"1609462861","requiredField":"event_name","message":"event_name is a required field."}]}')
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(3, 'Message [{\"event_id\":\"66258f3e-82fc-4f61-9ba0-62424e1f06b4\",\"request_id\":\"43143-233Ds-2823-283-dj299j1\",\"session_id\":\"c222c1ec\",\"client_id\":\"some-client\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-23T15:43:21.842\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"user\":{\"transaction_id\":\"a52f6f87\",\"email\":\"foo@bar.com\",\"phone\":\"07711223344\",\"ip_address\":\"100.100.100.100\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentication successful\"},\"persistent_session_id\":\"some session id\"},{\"event_id\":\"66258f3e-82fc-4f61-9ba0-62424e1f06b4\",\"request_id\":\"43143-233Ds-2823-283-dj299j1\",\"session_id\":\"c222c1ec\",\"client_id\":\"some-client\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-23T15:43:21.842\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"user\":{\"transaction_id\":\"a52f6f87\",\"email\":\"foo@bar.com\",\"phone\":\"07711223344\",\"ip_address\":\"100.100.100.100\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentication successful\"},\"persistent_session_id\":\"some session id\"}] send sent to the topic SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
@@ -407,11 +401,10 @@ describe('Unit test for app handler', function () {
 
         await handler(sqsEvent);
 
-        expect(consoleMock).toHaveBeenCalledTimes(4);
+        expect(consoleMock).toHaveBeenCalledTimes(3);
         expect(consoleMock).toHaveBeenNthCalledWith(1, '[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","requiredField":"timestamp","message":"timestamp is a required field."}]}')
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(3, 'Message [{\"event_id\":\"66258f3e-82fc-4f61-9ba0-62424e1f06b4\",\"request_id\":\"43143-233Ds-2823-283-dj299j1\",\"session_id\":\"c222c1ec\",\"client_id\":\"some-client\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-23T15:43:21.842\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"user\":{\"transaction_id\":\"a52f6f87\",\"email\":\"foo@bar.com\",\"phone\":\"07711223344\",\"ip_address\":\"100.100.100.100\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentication successful\"},\"persistent_session_id\":\"some session id\"},{\"event_id\":\"66258f3e-82fc-4f61-9ba0-62424e1f06b4\",\"request_id\":\"43143-233Ds-2823-283-dj299j1\",\"session_id\":\"c222c1ec\",\"client_id\":\"some-client\",\"timestamp\":1609462861,\"timestamp_formatted\":\"2021-01-23T15:43:21.842\",\"event_name\":\"AUTHENTICATION_ATTEMPT\",\"user\":{\"transaction_id\":\"a52f6f87\",\"email\":\"foo@bar.com\",\"phone\":\"07711223344\",\"ip_address\":\"100.100.100.100\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentication successful\"},\"persistent_session_id\":\"some session id\"}] send sent to the topic SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
