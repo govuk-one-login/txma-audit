@@ -20,7 +20,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -34,10 +33,7 @@ public class LambdaToS3 {
     Region region = Region.EU_WEST_2;
     String output;
     String input;
-    ArrayList<String> keys = new ArrayList<>();
     Instant time;
-
-    private static S3Client s3;
 
 
     @Given("the SQS file {string} is available")
@@ -118,7 +114,7 @@ public class LambdaToS3 {
         int timer = 0;
 
         Region region = Region.EU_WEST_2;
-        s3 = S3Client.builder()
+        S3Client s3 = S3Client.builder()
                 .region(region)
                 .build();
 
