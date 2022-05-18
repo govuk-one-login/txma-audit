@@ -7,7 +7,7 @@ import { IUserUnknownFields } from '../models/user-unknown-fields.interface';
 import { RequiredFieldsEnum } from '../enums/required-fields.enum';
 import { IUnknownFieldDetails } from '../models/unknown-field-details.interface';
 
-export class validationService {
+export class ValidationService {
     static async validateSQSRecord(record: SQSRecord): Promise<IValidationResponse> {
         const message = record.body;
 

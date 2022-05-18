@@ -126,6 +126,34 @@ Resources:
       AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SNSKMSKey"
       TargetKeyId: !Ref SNSKMSKey
 
+  LambdaKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'kms:Decrypt'
+            Resource: '*'
+
+  LambdaKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/LambdaKMSKey"
+      TargetKeyId: !Ref LambdaKMSKey
+
   epSNSTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -178,9 +206,7 @@ Resources:
           - Effect: Allow
             Action:
               - 'sns:Publish'
-            Resource: !Sub
-              - 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${topicName}'
-              - topicName: !GetAtt epSNSTopic.TopicName
+            Resource: !Ref epSNSTopic
           - Effect: Allow
             Action:
               - 'kms:Decrypt'
@@ -207,6 +233,10 @@ Resources:
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -215,20 +245,6 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
-
-  KBVEventInvokeConfig:
-    DependsOn:
-      - SNSPublishPolicy
-      - KBVEventProcessorFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      FunctionName: !Ref KBVEventProcessorFunction
-      Qualifier: "$LATEST"
-      MaximumEventAgeInSeconds: 600
-      MaximumRetryAttempts: 2
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Ref epSNSTopic
 
   KBVEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -351,6 +367,10 @@ Resources:
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVAddressLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -359,20 +379,6 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
-
-  KBVAddressEventInvokeConfig:
-    DependsOn:
-      - SNSPublishPolicy
-      - KBVAddressEventProcessorFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      FunctionName: !Ref KBVAddressEventProcessorFunction
-      Qualifier: "$LATEST"
-      MaximumEventAgeInSeconds: 600
-      MaximumRetryAttempts: 2
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Ref epSNSTopic
 
   KBVAddressEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -495,6 +501,10 @@ Resources:
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVFraudLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -503,20 +513,6 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
-
-  KBVFraudEventInvokeConfig:
-    DependsOn:
-      - SNSPublishPolicy
-      - KBVFraudEventProcessorFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      FunctionName: !Ref KBVFraudEventProcessorFunction
-      Qualifier: "$LATEST"
-      MaximumEventAgeInSeconds: 600
-      MaximumRetryAttempts: 2
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Ref epSNSTopic
 
   KBVFraudEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -639,6 +635,10 @@ Resources:
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -648,19 +648,6 @@ Resources:
         EntryPoints:
           - app.ts
 
-  IPVEventInvokeConfig:
-    DependsOn:
-      - SNSPublishPolicy
-      - IPVEventProcessorFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      FunctionName: !Ref IPVEventProcessorFunction
-      Qualifier: "$LATEST"
-      MaximumEventAgeInSeconds: 600
-      MaximumRetryAttempts: 2
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Ref epSNSTopic
 
   IPVEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -783,6 +770,10 @@ Resources:
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVPassLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -791,20 +782,6 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
-
-  IPVPassEventInvokeConfig:
-    DependsOn:
-      - SNSPublishPolicy
-      - IPVPassEventProcessorFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      FunctionName: !Ref IPVPassEventProcessorFunction
-      Qualifier: "$LATEST"
-      MaximumEventAgeInSeconds: 600
-      MaximumRetryAttempts: 2
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Ref epSNSTopic
 
   IPVPassEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -927,6 +904,10 @@ Resources:
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt SPOTLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -935,20 +916,6 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
-
-  SPOTEventInvokeConfig:
-    DependsOn:
-      - SNSPublishPolicy
-      - SPOTEventProcessorFunction
-    Type: AWS::Lambda::EventInvokeConfig
-    Properties:
-      FunctionName: !Ref SPOTEventProcessorFunction
-      Qualifier: "$LATEST"
-      MaximumEventAgeInSeconds: 600
-      MaximumRetryAttempts: 2
-      DestinationConfig:
-        OnSuccess:
-          Destination: !Ref epSNSTopic
 
   SPOTEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
