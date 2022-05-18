@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 
-public class SNStoS3 {
+public class FirehoseToS3 {
     private static final String firehoseName = "AuditFireHose-build";
     private static final String bucketName = "audit-build-message-batch";
     private static S3Client s3;
@@ -92,7 +92,7 @@ public class SNStoS3 {
                     .build();
 
             PutRecordResponse recordResponse = firehoseClient.putRecord(recordRequest);
-            assertNotNull(recordResponse.recordId());
+            assertEquals(200, recordResponse.sdkHttpResponse().statusCode());
         } catch (FirehoseException e) {
             System.out.println(e.getLocalizedMessage());
             System.exit(1);
@@ -105,7 +105,7 @@ public class SNStoS3 {
         int timer = 0;
 
         while (timer < 20 && newkey == null){
-            Thread.sleep(60000);
+            Thread.sleep(70000);
             timer ++;
             try {
                 ListObjectsRequest listObjects = ListObjectsRequest
