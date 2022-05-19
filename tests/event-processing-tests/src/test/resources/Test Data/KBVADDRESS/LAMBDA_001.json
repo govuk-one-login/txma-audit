@@ -1,19 +1,25 @@
 {
-  "Records": [
-    {
-      "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
-      "receiptHandle": "AQEBwJnKyrHigUMZj6rYigCgxlaS3SLy0a...",
-      "body": "{\"event_id\":\"529f-decd-615e-kbva\",\"request_id\":\"915b-e4a4-6be2-b1dd\",\"session_id\":\"8cd1b8hc\",\"client_id\":\"KBVADDR\",\"timestamp\":1647168122,\"timestamp_formatted\":\"2022-03-22T16:35:32.882\",\"event_name\":\"KBVADDRESS\",\"persistent_session_id\":\"...\",\"user\":{\"transaction_id\":\"12e467e2\",\"email\":\"m.thompson@randatmail.com\",\"phone\":\"33600182839\",\"ip_address\":\"181.246.129.108\"},\"platform\":{\"xray_trace_id\":\"24727sda4192\"},\"restricted\":{\"experian_ref\":\"DSJJSEE29392\"},\"extensions\":{\"response\":\"Authentification successful\"}}",      "attributes": {
-        "ApproximateReceiveCount": "1",
-        "SentTimestamp": "1545082649183",
-        "SenderId": "AIDAIENQZJOLO23YVJ4VO",
-        "ApproximateFirstReceiveTimestamp": "1545082649185"
-      },
-      "messageAttributes": {},
-      "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
-      "eventSource": "aws:sqs",
-      "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
-      "awsRegion": "us-east-2"
-    }
-  ]
+  "event_id": "529f-decd-615e-kbva",
+  "request_id": "915b-e4a4-6be2-b1dd",
+  "session_id": "8cd1b8hc",
+  "client_id": "KBVADDR",
+  "timestamp": 1647168122,
+  "timestamp_formatted": "2022-03-22T16:35:32.882",
+  "event_name": "KBVADDRESS",
+  "user": {
+    "transaction_id": "12e467e2",
+    "email": "m.thompson@randatmail.com",
+    "phone": "33600182839",
+    "ip_address": "181.246.129.108"
+  },
+  "platform": {
+    "xray_trace_id": "24727sda4192"
+  },
+  "restricted": {
+    "experian_ref": "DSJJSEE29392"
+  },
+  "extensions": {
+    "response": "Authentification successful"
+  },
+  "persistent_session_id": "..."
 }
