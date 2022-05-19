@@ -40,7 +40,7 @@ public class LambdaToS3 {
     String input;
     Instant time;
     String requestid;
-    String randString = null;
+    String timestamp;
 
 
     @Given("the SQS file {string} is available")
@@ -49,8 +49,9 @@ public class LambdaToS3 {
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        JSONObject change = addRandomString(json);
+        JSONObject change = addTimestamp(json);
         input = wrapJSON(change);
+        System.out.println(input);
     }
 
     @And("the output file {string} is available")
@@ -189,7 +190,7 @@ public class LambdaToS3 {
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        JSONObject expectedS3 = addRandomString(json);
+        JSONObject expectedS3 = addTimestamp(json);
 
         JSONArray array = separate(output);
 
@@ -219,14 +220,12 @@ public class LambdaToS3 {
         return wrapped.toString();
     }
 
-    private JSONObject addRandomString(JSONObject json){
-        if (randString == null){
-            byte[] chars = new byte[10];
-            new Random().nextBytes(chars);
-            randString = new String(chars, StandardCharsets.UTF_8);
-        }
+    private JSONObject addTimestamp(JSONObject json){
         if (json.has("event_name")){
-            json.put("event_name", json.getString("event_name")+randString);
+            if (timestamp == null){
+                timestamp = Instant.now().toString();
+            }
+            json.put("event_name", json.getString("event_name")+" "+timestamp);
         }
         return json;
     }
