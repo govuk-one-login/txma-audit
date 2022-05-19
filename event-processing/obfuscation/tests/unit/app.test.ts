@@ -60,5 +60,7 @@ describe('Unit test for app handler', function () {
         const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
+        var resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
+        console.log(JSON.stringify(resultData));
     });
 });
