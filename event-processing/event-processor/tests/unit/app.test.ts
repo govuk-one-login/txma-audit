@@ -37,6 +37,33 @@ describe('Unit test for app handler', function () {
        jest.clearAllMocks();
     });
 
+    it('does not send a message if the Lambda errors', async () => {
+        const exampleMessage: IAuditEvent = {
+            timestamp: 1609464356546575462861, //Incorrect timestamp value
+            event_name: 'AUTHENTICATION_ATTEMPT',
+        };
+
+        const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
+
+        await expect(handler(sqsEvent))
+            .rejects
+            .toThrow();
+
+        expect(sns.publish).toBeCalledTimes(0);
+    });
+
+    it('does not send a message if the Lambda only contains invalid messages', async () => {
+        const exampleMessage = {
+            event_name: 'AUTHENTICATION_ATTEMPT',
+        }; //Missing required field
+
+        const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage as IAuditEvent));
+
+        await handler(sqsEvent);
+
+        expect(sns.publish).toBeCalledTimes(0);
+    });
+
     it('accepts a bare minimum payload and stringifies', async () => {
         const expectedResult =
             '[{"event_id":"","request_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","persistent_session_id":""}]';
