@@ -4,9 +4,11 @@ import { SnsService } from './services/sns-service';
 import { IValidationResponse } from './models/validation-response.interface';
 import { ValidationException } from './exceptions/validation-exception';
 import { IRequiredFieldError } from './models/required-field-error.interface';
+import { EnrichmentService } from './services/enrichment-service';
 
 export const handler = async (event: SQSEvent): Promise<void> => {
     const validationResponses: IValidationResponse[] = [];
+    const enrichedMessages: string[] = [];
 
     for (const record of event.Records) {
         validationResponses.push(await ValidationService.validateSQSRecord(record as SQSRecord));
@@ -31,19 +33,16 @@ export const handler = async (event: SQSEvent): Promise<void> => {
     }
 
     if (validationResponses.some((response: IValidationResponse) => response.isValid)) {
-        await SnsService.publishMessageToSNS(
-            JSON.stringify(
-                validationResponses
-                    .filter((response: IValidationResponse) => {
-                        return response.isValid;
-                    })
-                    .map((validationResponse: IValidationResponse) => {
-                        return validationResponse.message;
-                    }),
-            ),
-            process.env.topicArn,
-        );
+        const validResponses = validationResponses.filter((response: IValidationResponse) => {
+            return response.isValid;
+        });
+        for (const element of validResponses) {
+            enrichedMessages.push(await EnrichmentService.enrichValidationResponse(element));
+        }
     }
 
+    if (enrichedMessages?.length) {
+        await SnsService.publishMessageToSNS(JSON.stringify(enrichedMessages), process.env.topicArn);
+    }
     return;
 };
