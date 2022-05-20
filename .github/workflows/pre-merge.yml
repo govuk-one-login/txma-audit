@@ -41,6 +41,9 @@ jobs:
       - name: Test
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: yarn test
+      - name: Test
+        working-directory: ${{ env.eventProcessorDirectory }}/obfuscation
+        run: yarn test
       - name: SAM Validate
         run: |
           sam validate --template-file event-processing-template.yml --config-env ${{ env.environment }}
