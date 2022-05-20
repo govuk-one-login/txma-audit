@@ -60,6 +60,12 @@ export class TestHelper {
         return event;
     }
 
+    static encodeAuditEventArray(message: unknown): string {
+        let messages : unknown[] = []
+        messages.push(message);
+        return JSON.stringify(messages);
+    }
+
     static encodeAuditEvent(message: unknown): string {
         return JSON.stringify(message);
     }

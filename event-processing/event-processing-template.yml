@@ -1711,6 +1711,15 @@ Resources:
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt FraudDeliveryStreamRole.Arn
+            ProcessingConfiguration:
+              Enabled: true
+              Processors:
+                - Type: Lambda
+                  Parameters:
+                    - ParameterName: LambdaArn
+                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                    - ParameterName: RoleArn
+                      ParameterValue: !GetAtt FraudDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
 
   CyberDeliveryStream:
@@ -1774,6 +1783,15 @@ Resources:
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt CyberDeliveryStreamRole.Arn
+            ProcessingConfiguration:
+              Enabled: true
+              Processors:
+                - Type: Lambda
+                  Parameters:
+                    - ParameterName: LambdaArn
+                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                    - ParameterName: RoleArn
+                      ParameterValue: !GetAtt CyberDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
 
   PerformanceDeliveryStream:
@@ -1837,6 +1855,15 @@ Resources:
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt PerformanceDeliveryStreamRole.Arn
+            ProcessingConfiguration:
+              Enabled: true
+              Processors:
+                - Type: Lambda
+                  Parameters:
+                    - ParameterName: LambdaArn
+                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                    - ParameterName: RoleArn
+                      ParameterValue: !GetAtt PerformanceDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
 
   FraudDeliveryStreamSubscription:
