@@ -19,13 +19,11 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Stack;
 import java.util.zip.GZIPInputStream;
 
@@ -38,7 +36,7 @@ public class LambdaToS3 {
     Region region = Region.EU_WEST_2;
     String output;
     String input;
-    Instant time;
+    Instant time = Instant.now();
     String requestid;
     String timestamp;
 
@@ -62,7 +60,6 @@ public class LambdaToS3 {
 
     @When("the {string} lambda is invoked")
     public void the_lambda_is_invoked(String account) {
-        time = Instant.now();
         String functionName = "EventProcessorFunction-" + account;
         LambdaClient awsLambda = LambdaClient.builder()
                 .region(region)
