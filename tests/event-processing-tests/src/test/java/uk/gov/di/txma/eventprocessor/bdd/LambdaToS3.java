@@ -49,7 +49,6 @@ public class LambdaToS3 {
         JSONObject json = new JSONObject(file);
         JSONObject change = addTimestamp(json);
         input = wrapJSON(change);
-        System.out.println(input);
     }
 
     @And("the output file {string} is available")
