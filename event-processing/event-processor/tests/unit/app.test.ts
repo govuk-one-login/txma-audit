@@ -45,10 +45,6 @@ describe('Unit test for app handler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await expect(handler(sqsEvent))
-            .rejects
-            .toThrow();
-
         expect(sns.publish).toBeCalledTimes(0);
     });
 

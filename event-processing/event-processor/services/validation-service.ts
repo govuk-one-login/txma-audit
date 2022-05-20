@@ -54,7 +54,7 @@ export class ValidationService {
             };
         }
 
-        if (!eventMessage.timestamp) {
+        if (!eventMessage.timestamp || !this.isDate(eventMessage.timestamp)) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent) as string,
@@ -91,5 +91,9 @@ export class ValidationService {
         });
 
         return unknownFields;
+    }
+
+    private static isDate = (timestamp: number): boolean => {
+        return (new Date(timestamp*1000).getTime() > 0)
     }
 }

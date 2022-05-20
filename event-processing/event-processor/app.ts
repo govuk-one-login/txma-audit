@@ -44,18 +44,19 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         for (const message of messages) {
             await SnsService.publishMessageToSNS(message, process.env.topicArn);
         }
+    }
 
         // Replace above with my code
-      const validResponses = validationResponses.filter((response: IValidationResponse) => {
-        return response.isValid;
-      });
-      for (const element of validResponses) {
-        enrichedMessages.push(await EnrichmentService.enrichValidationResponse(element));
-      }
-    }
-
-    if (enrichedMessages?.length) {
-        await SnsService.publishMessageToSNS(JSON.stringify(enrichedMessages), process.env.topicArn);
-    }
+    //   const validResponses = validationResponses.filter((response: IValidationResponse) => {
+    //     return response.isValid;
+    //   });
+    //   for (const element of validResponses) {
+    //     enrichedMessages.push(await EnrichmentService.enrichValidationResponse(element));
+    //   }
+    // }
+    //
+    // if (enrichedMessages?.length) {
+    //     await SnsService.publishMessageToSNS(JSON.stringify(enrichedMessages), process.env.topicArn);
+    // }
     return;
 };
