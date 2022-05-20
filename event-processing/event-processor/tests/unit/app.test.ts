@@ -363,11 +363,11 @@ describe('Unit test for app handler', function () {
         await handler(sqsEvent);
 
         expect(consoleMock).toHaveBeenCalledTimes(5);
-        expect(consoleMock).toHaveBeenNthCalledWith(1, '[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"","timestamp":"1609462861","requiredField":"event_name","message":"event_name is a required field."}]}')
-        expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
-        expect(consoleMock).toHaveBeenNthCalledWith(4, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(5, 'MessageID is 2');
+        expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(3, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 2');
+        expect(consoleMock).toHaveBeenNthCalledWith(5, '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"","timestamp":"1609462861","requiredField":"event_name","message":"event_name is a required field."}}');
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResultOne,
@@ -452,11 +452,11 @@ describe('Unit test for app handler', function () {
         await handler(sqsEvent);
 
         expect(consoleMock).toHaveBeenCalledTimes(5);
-        expect(consoleMock).toHaveBeenNthCalledWith(1, '[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","requiredField":"timestamp","message":"timestamp is a required field."}]}')
-        expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
-        expect(consoleMock).toHaveBeenNthCalledWith(4, 'Topic ARN: SOME-SNS-TOPIC');
-        expect(consoleMock).toHaveBeenNthCalledWith(5, 'MessageID is 2');
+        expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(3, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 2');
+        expect(consoleMock).toHaveBeenNthCalledWith(5, '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","requiredField":"timestamp","message":"timestamp is a required field."}}');
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResultOne,

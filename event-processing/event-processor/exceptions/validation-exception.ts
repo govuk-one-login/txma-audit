@@ -2,14 +2,14 @@ import { IRequiredFieldsException } from '../models/required-fields-exception.in
 import { IRequiredFieldError } from '../models/required-field-error.interface';
 
 export class ValidationException extends Error implements IRequiredFieldsException {
-    constructor(message: string, requiredFieldErrors: IRequiredFieldError[] = []) {
+    constructor(message: string, requiredFieldError: IRequiredFieldError) {
         super(message);
 
         // Set the prototype explicitly.
         Object.setPrototypeOf(this, ValidationException.prototype);
 
-        this.requireFieldErrors = requiredFieldErrors;
+        this.requireFieldError = requiredFieldError;
     }
 
-    requireFieldErrors: IRequiredFieldError[];
+    requireFieldError: IRequiredFieldError;
 }
