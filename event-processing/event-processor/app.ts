@@ -30,16 +30,18 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         );
     }
 
-    const messages: string[] = validationResponses
-        .filter((response: IValidationResponse) => {
-            return response.isValid;
-        })
-        .map((validationResponse: IValidationResponse) => {
-            return validationResponse.message;
-        });
+    if (validationResponses.some((response: IValidationResponse) => response.isValid)) {
+        const messages: string[] = validationResponses
+            .filter((response: IValidationResponse) => {
+                return response.isValid;
+            })
+            .map((validationResponse: IValidationResponse) => {
+                return JSON.stringify(validationResponse.message);
+            });
 
-    for (const message of messages) {
-        await SnsService.publishMessageToSNS(message, process.env.topicArn);
+        for (const message of messages) {
+            await SnsService.publishMessageToSNS(message, process.env.topicArn);
+        }
     }
 
     return;
