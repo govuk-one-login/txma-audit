@@ -66,7 +66,7 @@ describe('Unit test for app handler', function () {
 
     it('accepts a bare minimum payload and stringifies', async () => {
         const expectedResult =
-            '[{"event_id":"","request_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","persistent_session_id":""}]';
+            '{"event_id":"","request_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","persistent_session_id":""}';
 
         const exampleMessage: IAuditEvent = {
             timestamp: 1609462861,
@@ -93,7 +93,7 @@ describe('Unit test for app handler', function () {
 
     it('successfully stringifies an SQS event', async () => {
         const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -139,9 +139,10 @@ describe('Unit test for app handler', function () {
     });
 
     it('successfully stringifies multiple events', async () => {
-        const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"},' +
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
+        const expectedResultOne =
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
+        const expectedResultTwo =
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -170,6 +171,7 @@ describe('Unit test for app handler', function () {
         };
 
         (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "2" });
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
 
@@ -177,18 +179,26 @@ describe('Unit test for app handler', function () {
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
-                Message: expectedResult,
+                Message: expectedResultOne,
                 TopicArn: 'SOME-SNS-TOPIC'
             }
         );
-        expect(consoleMock).toHaveBeenCalledTimes(2);
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResultTwo,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
+        expect(consoleMock).toHaveBeenCalledTimes(4);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(3, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 2');
     });
 
     it('successfully removes unrecognised elements from an audit event and user field and then logs to cloudwatch', async () => {
         const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: UnknownAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -239,7 +249,7 @@ describe('Unit test for app handler', function () {
 
     it('successfully populates missing formatted timestamp fields', async () => {
         const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-01T01:01:01.000Z","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-01T01:01:01.000Z","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -285,9 +295,10 @@ describe('Unit test for app handler', function () {
     });
 
     it('logs an error when validation fails on event name', async () => {
-        const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"},' +
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
+        const expectedResultOne =
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
+        const expectedResultTwo =
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -342,6 +353,7 @@ describe('Unit test for app handler', function () {
         };
 
         (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "2" });
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
         const sqsEventWithInvalidMessage = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleInvalidMessage));
@@ -350,22 +362,32 @@ describe('Unit test for app handler', function () {
 
         await handler(sqsEvent);
 
-        expect(consoleMock).toHaveBeenCalledTimes(3);
+        expect(consoleMock).toHaveBeenCalledTimes(5);
         expect(consoleMock).toHaveBeenNthCalledWith(1, '[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"","timestamp":"1609462861","requiredField":"event_name","message":"event_name is a required field."}]}')
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
         expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(4, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(5, 'MessageID is 2');
         expect(sns.publish).toHaveBeenCalledWith(
             {
-                Message: expectedResult,
+                Message: expectedResultOne,
                 TopicArn: 'SOME-SNS-TOPIC'
             }
         );
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResultTwo,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
+
     });
 
     it('logs an error when validation fails on timestamp', async () => {
-        const expectedResult =
-            '[{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"},' +
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}]';
+        const expectedResultOne =
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
+        const expectedResultTwo =
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -420,6 +442,7 @@ describe('Unit test for app handler', function () {
         };
 
         (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "2" });
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
         const sqsEventWithInvalidMessage = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleInvalidMessage));
@@ -428,13 +451,21 @@ describe('Unit test for app handler', function () {
 
         await handler(sqsEvent);
 
-        expect(consoleMock).toHaveBeenCalledTimes(3);
+        expect(consoleMock).toHaveBeenCalledTimes(5);
         expect(consoleMock).toHaveBeenNthCalledWith(1, '[ERROR] VALIDATION ERROR\n{"requireFieldErrors":[{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","requiredField":"timestamp","message":"timestamp is a required field."}]}')
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
         expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
+        expect(consoleMock).toHaveBeenNthCalledWith(4, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(5, 'MessageID is 2');
         expect(sns.publish).toHaveBeenCalledWith(
             {
-                Message: expectedResult,
+                Message: expectedResultOne,
+                TopicArn: 'SOME-SNS-TOPIC'
+            }
+        );
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResultTwo,
                 TopicArn: 'SOME-SNS-TOPIC'
             }
         );

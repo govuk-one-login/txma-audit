@@ -35,11 +35,17 @@ jobs:
         uses: actions/setup-node@v3.0.0
         with:
           node-version: '14.x'
-      - name: Install Dependencies
+      - name: Install Event Processor Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
         run: yarn install --immutable --immutable-cache --check-cache
-      - name: Test
+      - name: Install Obfuscation Dependencies
+        working-directory: ${{ env.eventProcessorDirectory }}/obfuscation
+        run: yarn install --immutable --immutable-cache --check-cache
+      - name: Test Event Processor
         working-directory: ${{ env.eventProcessorDirectory }}/event-processor
+        run: yarn test
+      - name: Test Obfuscation
+        working-directory: ${{ env.eventProcessorDirectory }}/obfuscation
         run: yarn test
       - name: SAM Validate
         run: |

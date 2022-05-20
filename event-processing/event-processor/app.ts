@@ -33,12 +33,25 @@ export const handler = async (event: SQSEvent): Promise<void> => {
     }
 
     if (validationResponses.some((response: IValidationResponse) => response.isValid)) {
-        const validResponses = validationResponses.filter((response: IValidationResponse) => {
-            return response.isValid;
-        });
-        for (const element of validResponses) {
-            enrichedMessages.push(await EnrichmentService.enrichValidationResponse(element));
+        const messages: string[] = validationResponses
+            .filter((response: IValidationResponse) => {
+                return response.isValid;
+            })
+            .map((validationResponse: IValidationResponse) => {
+                return JSON.stringify(validationResponse.message);
+            });
+
+        for (const message of messages) {
+            await SnsService.publishMessageToSNS(message, process.env.topicArn);
         }
+
+        // Replace above with my code
+      const validResponses = validationResponses.filter((response: IValidationResponse) => {
+        return response.isValid;
+      });
+      for (const element of validResponses) {
+        enrichedMessages.push(await EnrichmentService.enrichValidationResponse(element));
+      }
     }
 
     if (enrichedMessages?.length) {
