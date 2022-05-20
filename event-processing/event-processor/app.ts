@@ -13,7 +13,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
                 '[ERROR] VALIDATION ERROR\n' +
                     JSON.stringify(
                         new ValidationException(
-                            'One or more event messages failed validation.',
+                            'An event message failed validation.',
                             validationResponse.error as IRequiredFieldError,
                         ),
                     ),
