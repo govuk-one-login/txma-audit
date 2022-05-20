@@ -56,6 +56,11 @@ jobs:
       - name: Test Obfuscation
         working-directory: ${{ env.eventProcessorDirectory }}/obfuscation
         run: yarn test
+      - name: Publish artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: event-processing-sam
+          path: '${{ env.eventProcessorDirectory }}/.aws-sam'
   deploy_event_processor_dev:
     runs-on: ubuntu-latest
     needs: validate_and_build_event_processor
@@ -67,6 +72,15 @@ jobs:
       run:
         working-directory: ${{ env.eventProcessorDirectory }}
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: event-processing-sam
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_EVENT_PROCESSING_DEV }}
+          aws-region: ${{ env.awsRegion }}
       - name: Package SAM application
         env:
           ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING_DEV }}
@@ -96,6 +110,15 @@ jobs:
       run:
         working-directory: ${{ env.eventProcessorDirectory }}
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: event-processing-sam
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_EVENT_PROCESSING }}
+          aws-region: ${{ env.awsRegion }}
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -159,6 +182,11 @@ jobs:
       - name: SAM Build
         run: |
           sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
+      - name: Publish artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: audit-sam
+          path: '${{ env.auditDirectory }}/.aws-sam'
   deploy_audit_dev:
     runs-on: ubuntu-latest
     needs: validate_and_build_audit
@@ -170,6 +198,15 @@ jobs:
       run:
         working-directory: ${{ env.auditDirectory }}
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: audit-sam
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_AUDIT_DEV }}
+          aws-region: ${{ env.awsRegion }}
       - name: Package SAM application
         env:
           ARTIFACT_SOURCE_BUCKET_NAME_AUDIT: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT_DEV }}
@@ -195,6 +232,15 @@ jobs:
       run:
         working-directory: ${{ env.auditDirectory }}
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: audit-sam
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_AUDIT }}
+          aws-region: ${{ env.awsRegion }}
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
