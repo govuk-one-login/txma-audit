@@ -195,7 +195,6 @@ public class LambdaToS3 {
         JSONArray array = separate(output);
 
         boolean foundInS3 = false;
-
         for (Object object: array){
             if (Objects.equals(object.toString(), expectedS3.toString())){
                 foundInS3 = true;
@@ -233,9 +232,9 @@ public class LambdaToS3 {
     private JSONArray separate(String input){
         JSONArray output = new JSONArray();
         for (int index = 0; index < input.length(); ) {
-            if (input.charAt(index) == '[') {
+            if (input.charAt(index) == '{') {
                 int close = findBracket(input, index);  // find the  close parentheses
-                output.put(new JSONObject(input.substring(index + 1, close)));
+                output.put(new JSONObject(input.substring(index, close+1)));
                 index = close + 1;  // skip content and nested parentheses
             } else {
                 index++;
@@ -247,9 +246,9 @@ public class LambdaToS3 {
     private static int findBracket(String input, int start) {
         Stack<Integer> stack = new Stack<>();
         for (int index = start; index < input.length(); index++) {
-            if (input.charAt(index) == '[') {
+            if (input.charAt(index) == '{') {
                 stack.push(index);
-            } else if (input.charAt(index) == ']') {
+            } else if (input.charAt(index) == '}') {
                 stack.pop();
                 if (stack.isEmpty()) {
                     return index;
