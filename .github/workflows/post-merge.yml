@@ -56,6 +56,17 @@ jobs:
       - name: Test Obfuscation
         working-directory: ${{ env.eventProcessorDirectory }}/obfuscation
         run: yarn test
+  deploy_event_processor:
+    runs-on: ubuntu-latest
+    needs: validate_and_build_event_processor
+    environment: 'build'
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: ${{ env.eventProcessorDirectory }}
+    steps:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -119,6 +130,17 @@ jobs:
       - name: SAM Build
         run: |
           sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
+  deploy_audit:
+    runs-on: ubuntu-latest
+    needs: validate_and_build_audit
+    environment: 'build'
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: ${{ env.auditDirectory }}
+    steps:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
