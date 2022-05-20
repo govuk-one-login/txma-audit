@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-public class LambdaToS3 {
+public class LambdaToS3StepDefinitions {
     Region region = Region.EU_WEST_2;
     String output;
     String input;
@@ -157,7 +157,7 @@ public class LambdaToS3 {
                 System.exit(1);
             }
             if (newkey == null){
-                Thread.sleep(60000);
+                Thread.sleep(70000);
             }
         }
 
