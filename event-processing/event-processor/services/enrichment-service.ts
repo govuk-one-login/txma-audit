@@ -18,9 +18,9 @@ export class EnrichmentService {
       eventMessage.timestamp_formatted = new Date(eventMessage.timestamp * 1000).toISOString();
     }
 
-    // if (!eventMessage.event_id) {
-    //   eventMessage.event_id = randomUUID()
-    // }
+    if (!eventMessage.event_id) {
+      eventMessage.event_id = randomUUID()
+    }
 
     return AuditEvent.toJSON(eventMessage as IAuditEvent) as string
   }
