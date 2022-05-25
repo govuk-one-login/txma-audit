@@ -1414,6 +1414,13 @@ Resources:
               - 'lambda:GetFunctionConfiguration'
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
+            Resource:
+              - '*'
 
   FraudDeliveryStreamTestPolicy:
     DependsOn:
@@ -1501,6 +1508,13 @@ Resources:
               - 'lambda:GetFunctionConfiguration'
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
+            Resource:
+              - '*'
 
   CyberDeliveryStreamTestPolicy:
     DependsOn:
@@ -1588,6 +1602,13 @@ Resources:
               - 'lambda:GetFunctionConfiguration'
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
+            Resource:
+              - '*'
 
   PerformanceDeliveryStreamTestPolicy:
     DependsOn:
@@ -1711,6 +1732,10 @@ Resources:
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt FraudDeliveryStreamRole.Arn
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref FraudFirehoseLogStream
             ProcessingConfiguration:
               Enabled: true
               Processors:
@@ -1783,6 +1808,10 @@ Resources:
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt CyberDeliveryStreamRole.Arn
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref CyberFirehoseLogStream
             ProcessingConfiguration:
               Enabled: true
               Processors:
@@ -1855,6 +1884,10 @@ Resources:
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt PerformanceDeliveryStreamRole.Arn
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref PerformanceFirehoseLogStream
             ProcessingConfiguration:
               Enabled: true
               Processors:
