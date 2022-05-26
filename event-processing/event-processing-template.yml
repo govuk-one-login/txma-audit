@@ -186,10 +186,6 @@ Resources:
               - 'kms:GenerateDataKey*'
               - 'kms:DescribeKey'
             Resource: '*'
-            Condition:
-              ForAnyValue:ArnEquals:
-                "aws:PrincipalArn":
-                  - !GetAtt ObfuscationFunction.Arn
 
   HMACKeyKMSKeyAlias:
     Type: AWS::KMS::Alias
