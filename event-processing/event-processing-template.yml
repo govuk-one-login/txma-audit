@@ -2005,6 +2005,8 @@ Resources:
       RetentionInDays: 7
 
   ObfuscationFunction:
+    DependsOn:
+      - ObfuscationHMACSecret
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "ObfuscationFunction"
