@@ -2042,8 +2042,6 @@ Resources:
         PasswordLength: 32
       KmsKeyId: !Ref HMACKeyKMSKey
       Name: "ObfuscationHMACSecret"
-      ReplicaRegions:
-        - ReplicaRegion
       Tags:
         -
           Key: BillingEnvironment
