@@ -1356,6 +1356,30 @@ Resources:
       LogGroupName: !Ref FirehoseLogGroup
       LogStreamName: "performance"
 
+  FraudDeliveryFirehoseLogStream:
+    DependsOn:
+      - FirehoseLogGroup
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: "fraud/deliveries"
+
+  CyberDeliveryFirehoseLogStream:
+    DependsOn:
+      - FirehoseLogGroup
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: "cyber/deliveries"
+
+  PerformanceDeliveryFirehoseLogStream:
+    DependsOn:
+      - FirehoseLogGroup
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: "performance/deliveries"
+
   FraudDeliveryStreamRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1692,6 +1716,10 @@ Resources:
             HECToken: "{{resolve:ssm:HECToken}}"
             RetryOptions:
               DurationInSeconds: 7200
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref FraudDeliveryFirehoseLogStream
             S3BackupMode: "FailedEventsOnly"
             S3Configuration:
               BucketARN: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
@@ -1768,6 +1796,10 @@ Resources:
             HECToken: "{{resolve:ssm:HECToken}}"
             RetryOptions:
               DurationInSeconds: 7200
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref CyberDeliveryFirehoseLogStream
             S3BackupMode: "FailedEventsOnly"
             S3Configuration:
               BucketARN: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
@@ -1844,6 +1876,10 @@ Resources:
             HECToken: "{{resolve:ssm:HECToken}}"
             RetryOptions:
               DurationInSeconds: 7200
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref PerformanceDeliveryFirehoseLogStream
             S3BackupMode: "FailedEventsOnly"
             S3Configuration:
               BucketARN: !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
