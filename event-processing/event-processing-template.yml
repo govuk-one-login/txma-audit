@@ -2008,7 +2008,7 @@ Resources:
       Role: !GetAtt ObfuscationFunctionRole.Arn
       Environment:
         Variables:
-          secretArn: "{{resolve:ssm:HMACSecretArn}}"
+          SECRET_ARN: "{{resolve:ssm:HMACSecretArn}}"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
