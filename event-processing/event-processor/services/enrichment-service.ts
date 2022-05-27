@@ -22,10 +22,6 @@ export class EnrichmentService {
       eventMessage.event_id = randomUUID()
     }
 
-    if (!eventMessage.service_name) {
-      eventMessage.service_name = 'TEST_SERVICE'
-    }
-
     return AuditEvent.toJSON(eventMessage as IAuditEvent) as string
   }
 
