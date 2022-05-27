@@ -1,22 +1,39 @@
 import {
+    FirehoseRecordTransformationStatus,
     FirehoseTransformationEvent,
     FirehoseTransformationEventRecord,
     FirehoseTransformationResult,
     FirehoseTransformationResultRecord,
 } from 'aws-lambda';
 import { AuditEvent, IAuditEvent } from './models/audit-event';
-import { ObfuscatedEvent } from './models/obfuscated-event';
 import { KeyService } from './services/key-service';
 import { ObfuscationService } from './services/obfuscation-service';
 
 export const handler = async (event: FirehoseTransformationEvent): Promise<FirehoseTransformationResult> => {
     /* Process the list of records and transform them */
-    const hmacKey : string = await KeyService.getHmacKey();
+    let transformationResult : FirehoseRecordTransformationStatus = 'Ok';
+    let hmacKey : string = "";
+    
+    try {
+        hmacKey = await KeyService.getHmacKey();
+    }
+    catch(e) {
+        transformationResult = 'ProcessingFailed';
+        console.log("An error occured getting the hmac key.  Failed with error: " + e);
+    }
+
     const output = event.records.map((record: FirehoseTransformationEventRecord) => {
         const plaintextData: string = Buffer.from(record.data, 'base64').toString('ascii');
         const events: unknown[] = JSON.parse(plaintextData);
-        const obfuscatedEvents: ObfuscatedEvent[] = [];
+        const obfuscatedEvents: IAuditEvent[] = [];
         let data: string;
+        if(transformationResult === 'ProcessingFailed')
+            return {
+                recordId: record.recordId,
+                result: transformationResult,
+                data: record.data
+            } as FirehoseTransformationResultRecord;
+        
         if (events.length > 0) {
             for (let i = 0; i < events.length; i++) {
                 let auditEvent: IAuditEvent = AuditEvent.fromJSONString(JSON.stringify(events[i]));
@@ -31,11 +48,13 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
         }
         return {
             recordId: record.recordId,
-            result: 'Ok',
+            result: transformationResult,
             data: data,
         } as FirehoseTransformationResultRecord;
     });
-    console.log(`Processing completed.  Successful records ${output.length}.`);
+    if(transformationResult === 'ProcessingFailed')
+        console.log(`Processing completed.  Failed records ${output.length}.`);
+    else
+        console.log(`Processing completed.  Successful records ${output.length}.`);
     return { records: output };
 };
-

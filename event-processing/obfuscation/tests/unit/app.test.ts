@@ -1,23 +1,30 @@
 /* eslint-disable */
-jest.mock("aws-sdk");
-
+import AWS from "aws-sdk";
 import { handler } from '../../app';
 import { TestHelper } from './test-helper';
 import { FirehoseTransformationResult } from 'aws-lambda';
-import AWS from "aws-sdk";
-import { IAuditEvent } from '../../models/audit-event';
+import { AuditEvent, IAuditEvent } from '../../models/audit-event';
+import { ObfuscationService } from '../../services/obfuscation-service';
+
+jest.mock("aws-sdk");
 
 const mockgetSecretValue = jest.fn((SecretId) => {
     switch (SecretId) {
-      case "arn:aws:secretsmanager:eu-west-2:248098332657:secret:ObfuscationHMACSecret-LaDT1y":
-        return {
-          SecretString: "secret-1-value",
-        };
-      default:
-        throw Error("secret not found");
+        case "secreet-string":
+            return {
+                SecretString: "secret-1-value",
+            };
+        case "secreet-binary":
+            return {
+              SecretBinary: Buffer.from("secret-1-value").toString('base64'),
+            };
+        case "no-data-secret":
+            return {  };
+        default:
+            throw Error("secret not found");
     }
-  });
-  
+});
+
 jest.mock("aws-sdk", () => {
     return {
       config: {
@@ -44,6 +51,7 @@ describe('Unit test for app handler', function () {
     beforeEach(() => {
         consoleWarningMock = jest.spyOn(global.console, 'log');
         awsSpy = jest.spyOn(AWS, 'SecretsManager');
+        process.env.SECRET_ARN = "secreet-string";
     });
 
     afterEach(() => {
@@ -94,10 +102,115 @@ describe('Unit test for app handler', function () {
         const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
-        var resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
     });
 
-    it('removes all additional fields if its a single event', async () => {
+    it('removes all additional fields if its a single event with secret string', async () => {
+        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+
+        const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: data,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "Ok"
+            }]
+        }
+        
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        
+        const result = await handler(firehoseEvent);
+
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('removes all additional fields if its a single event with secret binary', async () => {
+        process.env.SECRET_ARN = "secreet-binary";
+        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+
+        const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: data,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "Ok"
+            }]
+        }
+        
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        
+        const result = await handler(firehoseEvent);
+
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('Records marked as processing failed if no secret arn', async () => {
+        delete process.env.SECRET_ARN;
+        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+
+        const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: data,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "ProcessingFailed"
+            }]
+        }
+        
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        
+        const result = await handler(firehoseEvent);
+        expect(result.records[0].result).toEqual('ProcessingFailed');
+        expect(consoleWarningMock).toHaveBeenCalledTimes(2);
+        expect(consoleWarningMock).toHaveBeenNthCalledWith(1, 'An error occured getting the hmac key.  Failed with error: Unable to load secret from environment');
+        expect(consoleWarningMock).toHaveBeenNthCalledWith(2, 'Processing completed.  Failed records 1.');
+    });
+
+    it('Records marked as processing failed if no secret arn not present in secret manager', async () => {
+        process.env.SECRET_ARN = "unknown_arn";
+        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+
+        const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: data,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "ProcessingFailed"
+            }]
+        }
+        
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        
+        const result = await handler(firehoseEvent);
+        expect(result.records[0].result).toEqual('ProcessingFailed');
+        expect(consoleWarningMock).toHaveBeenCalledTimes(2);
+        expect(consoleWarningMock).toHaveBeenNthCalledWith(1, 'An error occured getting the hmac key.  Failed with error: Unable to load secret from secret manager');
+        expect(consoleWarningMock).toHaveBeenNthCalledWith(2, 'Processing completed.  Failed records 1.');
+    });
+
+    it('Records marked as processing failed if no data in response from secret manager', async () => {
+        process.env.SECRET_ARN = "no-data-secret";
+        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+
+        const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: data,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "ProcessingFailed"
+            }]
+        }
+        
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        
+        const result = await handler(firehoseEvent);
+        expect(result.records[0].result).toEqual('ProcessingFailed');
+        expect(consoleWarningMock).toHaveBeenCalledTimes(2);
+        expect(consoleWarningMock).toHaveBeenNthCalledWith(1, 'An error occured getting the hmac key.  Failed with error: Unable to load secret from data');
+        expect(consoleWarningMock).toHaveBeenNthCalledWith(2, 'Processing completed.  Failed records 1.');
+    });
+
+    it('Check data matches obfuscated result', async () => {
+        process.env.SECRET_ARN = "secreet-binary";
         const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
 
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
@@ -115,5 +228,16 @@ describe('Unit test for app handler', function () {
 
         expect(result).toEqual(expectedResult);
         var resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
+        var resultAuditEvent : IAuditEvent = AuditEvent.fromJSONString(resultData);
+        expect(resultAuditEvent).toEqual(expectedData);
+    });
+
+    it('HMAC obfuscation method gives expected result', async () => {
+        const message : string = "My Secret String";
+        const key : string = "My secret key";
+        const expectedResult = "5d224b25388f72dc5e329dd68385680535f6d9bda65c5f830631d72e255b9f95"
+
+        var result : string = ObfuscationService.obfuscate(message, key);
+        expect(result).toEqual(expectedResult);
     });
 });
