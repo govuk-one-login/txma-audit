@@ -4,9 +4,12 @@ import { AuditEvent, IAuditEvent } from '../models/audit-event';
 export class ObfuscationService {
     static async obfuscateEvent(auditEvent : IAuditEvent, hmacKey : string): Promise<IAuditEvent> {
         if(auditEvent.user) {
-            auditEvent.user.transaction_id = this.obfuscate(auditEvent.user.transaction_id, hmacKey);
-            auditEvent.user.email = this.obfuscate(auditEvent.user.email, hmacKey);
-            auditEvent.user.phone = this.obfuscate(auditEvent.user.phone, hmacKey);
+            let user = auditEvent.user as any;
+            for (const k in user) {
+                if(k === "ip_address")
+                    continue;
+                user[k] = this.obfuscate(user[k], hmacKey)
+            }
         }
         if(auditEvent.restricted) {
             let restricted = auditEvent.restricted as any;
