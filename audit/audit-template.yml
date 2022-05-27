@@ -53,6 +53,35 @@ Globals:
       - x86_64
 
 Resources:
+  LogsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource:
+              - "*"
+            Condition:
+              ArnLike:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+
   MessageBucketLogsBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -117,6 +146,21 @@ Resources:
               - TransitionInDays: 90
                 StorageClass: GLACIER
 
+  FirehoseLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/firehose"
+      RetentionInDays: 7
+
+  FirehoseLogStream:
+    DependsOn:
+      - FirehoseLogGroup
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: "audit"
+
   AuditDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     DependsOn:
@@ -137,6 +181,10 @@ Resources:
           SizeInMBs: 128
         CompressionFormat: "GZIP"
         RoleARN: !GetAtt DeliveryStreamRole.Arn
+        CloudWatchLoggingOptions:
+          Enabled: true
+          LogGroupName: !Ref FirehoseLogGroup
+          LogStreamName: !Ref FirehoseLogStream
 
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -188,6 +236,13 @@ Resources:
                 - - 'arn:aws:s3:::'
                   - !Ref MessageBatchBucket
                   - '*'
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
+            Resource:
+              - '*'
 
   SNSTopicSubscriptionRole:
     Type: AWS::IAM::Role
