@@ -153,46 +153,6 @@ Resources:
       AliasName: !Sub "alias/${AWS::StackName}/${Environment}/LambdaKMSKey"
       TargetKeyId: !Ref LambdaKMSKey
 
-  HMACKeyKMSKey:
-    Type: AWS::KMS::Key
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action:
-              - "kms:*"
-            Resource:
-              - "*"
-          - Effect: "Allow"
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action:
-              - "kms:Decrypt"
-              - "kms:Encrypt"
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource:
-              - "{{resolve:ssm:AuthAccountARN}}"
-          - Effect: "Allow"
-            Principal:
-              Service: "lambda.amazonaws.com"
-            Action:
-              - "kms:Decrypt"
-              - "kms:Encrypt"
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource: '*'
-
-  HMACKeyKMSKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/HMACKeyKMSKey"
-      TargetKeyId: !Ref HMACKeyKMSKey
-
   epSNSTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -2037,8 +1997,6 @@ Resources:
       RetentionInDays: 7
 
   ObfuscationFunction:
-    DependsOn:
-      - ObfuscationHMACSecret
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "ObfuscationFunction"
@@ -2050,7 +2008,7 @@ Resources:
       Role: !GetAtt ObfuscationFunctionRole.Arn
       Environment:
         Variables:
-          secretArn: !Ref ObfuscationHMACSecret
+          secretArn: "{{resolve:ssm:HMACSecretArn}}"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -2060,33 +2018,6 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
-
-  ObfuscationHMACSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Description: "HMAC Secret to encrypt data using the obfuscation function"
-      GenerateSecretString:
-        ExcludeLowercase: false
-        ExcludeNumbers: false
-        ExcludePunctuation: true
-        ExcludeUppercase: false
-        IncludeSpace: false
-        PasswordLength: 32
-      KmsKeyId: !Ref HMACKeyKMSKey
-      Name: "ObfuscationHMACSecret"
-      Tags:
-        -
-          Key: BillingEnvironment
-          Value: !Ref Environment
-        -
-          Key: BillingOrganization
-          Value: "GDS"
-        -
-          Key: BillingProgramme
-          Value: "One Login for Government"
-        -
-          Key: BillingProject
-          Value: "TxMA"
 
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
