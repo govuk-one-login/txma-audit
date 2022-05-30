@@ -6,7 +6,6 @@ import { ValidationException } from './exceptions/validation-exception';
 import { EnrichmentService } from './services/enrichment-service';
 
 export const handler = async (event: SQSEvent): Promise<void> => {
-
     for (const record of event.Records) {
         const validationResponse = await ValidationService.validateSQSRecord(record as SQSRecord);
 
@@ -21,7 +20,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
                     ),
             );
         } else {
-            const message = await EnrichmentService.enrichValidationResponse(validationResponse)
+            const message = await EnrichmentService.enrichValidationResponse(validationResponse);
             await SnsService.publishMessageToSNS(JSON.stringify(message), process.env.topicArn);
         }
     }
