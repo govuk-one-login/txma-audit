@@ -1,4 +1,4 @@
-import { IAuditEvent } from "./audit-event";
+import { IAuditEvent } from './audit-event';
 
 export interface IObfuscatedEvent {
     timestamp: number;
@@ -11,7 +11,7 @@ export class ObfuscatedEvent {
         return {
             timestamp: event.timestamp,
             timestamp_formatted: event.timestamp_formatted,
-            event_name: event.event_name
-        }
+            event_name: event.event_name,
+        };
     }
 }

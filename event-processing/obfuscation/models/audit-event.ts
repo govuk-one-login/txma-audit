@@ -1,15 +1,17 @@
 export interface IAuditEvent {
     event_id?: string;
-    request_id?: string;
+    govuk_signin_journey_id?: string;
     session_id?: string;
     client_id?: string;
     timestamp: number;
     timestamp_formatted?: string;
     event_name: string;
+    component_id: string;
     user?: IAuditEventUserMessage | undefined;
     platform?: unknown | undefined;
     restricted?: unknown | undefined;
     extensions?: unknown | undefined;
+    service_name?: string;
     persistent_session_id?: string;
 }
 
@@ -23,17 +25,19 @@ export interface IAuditEventUserMessage {
 function createBaseAuditEvent(): IAuditEvent {
     return {
         event_id: '',
-        request_id: '',
+        govuk_signin_journey_id: '',
         session_id: '',
         client_id: '',
         timestamp: 0,
         timestamp_formatted: '',
         event_name: '',
+        component_id: '',
         user: undefined,
         platform: undefined,
         restricted: undefined,
         extensions: undefined,
         persistent_session_id: '',
+        service_name: '',
     };
 }
 
@@ -47,8 +51,8 @@ export class AuditEvent {
                 case 'event_id':
                     event.event_id = jsonObject[value];
                     break;
-                case 'request_id':
-                    event.request_id = jsonObject[value];
+                case 'govuk_signin_journey_id':
+                    event.govuk_signin_journey_id = jsonObject[value];
                     break;
                 case 'session_id':
                     event.session_id = jsonObject[value];
@@ -65,6 +69,9 @@ export class AuditEvent {
                 case 'event_name':
                     event.event_name = jsonObject[value];
                     break;
+                case 'component_id':
+                    event.component_id = jsonObject[value];
+                    break;
                 case 'user':
                     event.user = AuditEventUserMessage.fromObject(jsonObject[value]);
                     break;
@@ -79,6 +86,9 @@ export class AuditEvent {
                     break;
                 case 'persistent_session_id':
                     event.persistent_session_id = jsonObject[value];
+                    break;
+                case 'service_name':
+                    event.service_name = jsonObject[value];
                     break;
             }
         }
