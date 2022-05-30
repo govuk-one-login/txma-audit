@@ -11,15 +11,14 @@ import { ObfuscationService } from './services/obfuscation-service';
 
 export const handler = async (event: FirehoseTransformationEvent): Promise<FirehoseTransformationResult> => {
     /* Process the list of records and transform them */
-    let transformationResult : FirehoseRecordTransformationStatus = 'Ok';
-    let hmacKey : string = "";
-    
+    let transformationResult: FirehoseRecordTransformationStatus = 'Ok';
+    let hmacKey = '';
+
     try {
         hmacKey = await KeyService.getHmacKey();
-    }
-    catch(e) {
+    } catch (e) {
         transformationResult = 'ProcessingFailed';
-        console.log("An error occured getting the hmac key.  Failed with error: " + e);
+        console.log('An error occurred getting the hmac key.  Failed with error: ' + e);
     }
 
     const output = event.records.map((record: FirehoseTransformationEventRecord) => {
@@ -27,34 +26,39 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
         const events: unknown[] = JSON.parse(plaintextData);
         const obfuscatedEvents: IAuditEvent[] = [];
         let data: string;
-        if(transformationResult === 'ProcessingFailed')
+
+        if (transformationResult === 'ProcessingFailed')
             return {
                 recordId: record.recordId,
                 result: transformationResult,
-                data: record.data
+                data: record.data,
             } as FirehoseTransformationResultRecord;
-        
+
         if (events.length > 0) {
             for (let i = 0; i < events.length; i++) {
-                let auditEvent: IAuditEvent = AuditEvent.fromJSONString(JSON.stringify(events[i]));
-                ObfuscationService.obfuscateEvent(auditEvent, hmacKey)
+                const auditEvent: IAuditEvent = AuditEvent.fromJSONString(JSON.stringify(events[i]));
+                ObfuscationService.obfuscateEvent(auditEvent, hmacKey);
                 obfuscatedEvents.push(auditEvent);
             }
             data = Buffer.from(JSON.stringify(obfuscatedEvents)).toString('base64');
         } else {
-            let auditEvent: IAuditEvent = AuditEvent.fromJSONString(plaintextData);
+            const auditEvent: IAuditEvent = AuditEvent.fromJSONString(plaintextData);
             ObfuscationService.obfuscateEvent(auditEvent, hmacKey);
             data = Buffer.from(JSON.stringify(auditEvent)).toString('base64');
         }
+
         return {
             recordId: record.recordId,
             result: transformationResult,
             data: data,
         } as FirehoseTransformationResultRecord;
     });
-    if(transformationResult === 'ProcessingFailed')
-        console.log(`Processing completed.  Failed records ${output.length}.`);
-    else
-        console.log(`Processing completed.  Successful records ${output.length}.`);
+
+    if (transformationResult === 'ProcessingFailed') {
+        console.log(`Processing completed. Failed records ${output.length}.`);
+    } else {
+        console.log(`Processing completed. Successful records ${output.length}.`);
+    }
+
     return { records: output };
 };
