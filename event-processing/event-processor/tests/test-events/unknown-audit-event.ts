@@ -14,7 +14,6 @@ export interface AuditEvent {
     restricted: unknown | undefined;
     extensions: unknown | undefined;
     persistent_session_id: string;
-    service_name?: string;
     new_unknown_field: string;
 }
 
@@ -42,7 +41,6 @@ export class AuditEvent {
             restricted: isSet(object.restricted) ? object.restricted : undefined,
             extensions: isSet(object.extensions) ? object.extensions : undefined,
             persistent_session_id: isSet(object.persistent_session_id) ? String(object.persistent_session_id) : '',
-            service_name: isSet(object.service_name) ? String(object.service_name) : '',
             new_unknown_field: isSet(object.new_unknown_field) ? String(object.new_unknown_field) : '',
         };
     }
@@ -66,7 +64,6 @@ export class AuditEvent {
         message.extensions !== undefined &&
             (obj.extensions = message.extensions ? message.extensions : undefined);
         message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
-        message.service_name !== undefined && (obj.service_name = message.service_name);
         message.new_unknown_field !== undefined && (obj.new_unknown_field = message.new_unknown_field);
         return obj;
     }

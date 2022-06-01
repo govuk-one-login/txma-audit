@@ -15,7 +15,6 @@ export interface IAuditEvent {
     restricted?: unknown | undefined;
     extensions?: unknown | undefined;
     persistent_session_id?: string;
-    service_name?: string;
 }
 
 export interface IAuditEventUserMessage {
@@ -40,7 +39,6 @@ function createBaseAuditEvent(): IAuditEvent {
         restricted: undefined,
         extensions: undefined,
         persistent_session_id: '',
-        service_name: '',
     };
 }
 
@@ -90,9 +88,6 @@ export class AuditEvent {
                 case 'persistent_session_id':
                     event.persistent_session_id = jsonObject[value];
                     break;
-                case 'service_name':
-                    event.service_name = jsonObject[value];
-                    break;
                 default:
                     unknown_fields.set(value, jsonObject[value]);
                     break;
@@ -121,7 +116,6 @@ export class AuditEvent {
         message.restricted !== undefined && (obj.restricted = message.restricted ? message.restricted : undefined);
         message.extensions !== undefined && (obj.extensions = message.extensions ? message.extensions : undefined);
         message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
-        message.service_name !== undefined && (obj.service_name = message.service_name);
         return obj;
     }
 }

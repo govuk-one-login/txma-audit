@@ -11,7 +11,6 @@ export interface IAuditEvent {
     platform?: unknown | undefined;
     restricted?: unknown | undefined;
     extensions?: unknown | undefined;
-    service_name?: string;
     persistent_session_id?: string;
 }
 
@@ -37,7 +36,6 @@ function createBaseAuditEvent(): IAuditEvent {
         restricted: undefined,
         extensions: undefined,
         persistent_session_id: '',
-        service_name: '',
     };
 }
 
@@ -45,7 +43,6 @@ export class AuditEvent {
     static fromJSONString(object: string): IAuditEvent {
         const event = createBaseAuditEvent();
         const jsonObject = JSON.parse(object);
-        const unknown_fields = new Map<string, unknown>();
         for (const value in jsonObject) {
             switch (value) {
                 case 'event_id':
@@ -87,9 +84,6 @@ export class AuditEvent {
                 case 'persistent_session_id':
                     event.persistent_session_id = jsonObject[value];
                     break;
-                case 'service_name':
-                    event.service_name = jsonObject[value];
-                    break;
             }
         }
         return event;
@@ -102,7 +96,6 @@ function createBaseAuditEventUserMessage(): IAuditEventUserMessage {
 
 export class AuditEventUserMessage {
     static fromObject(object: any): IAuditEventUserMessage {
-        const unknown_fields = new Map<string, any>();
         const user = createBaseAuditEventUserMessage();
         for (const value in object) {
             switch (value) {

@@ -74,7 +74,7 @@ describe('Unit test for app handler', function () {
 
     it('accepts a bare minimum payload and stringifies', async () => {
         const expectedResult =
-            '{"event_id":"58339721-64c9-486b-903f-ad7e63fc45de","govuk_signin_journey_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","persistent_session_id":"","service_name":""}';
+            '{"event_id":"58339721-64c9-486b-903f-ad7e63fc45de","govuk_signin_journey_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","persistent_session_id":""}';
 
         const exampleMessage: IAuditEvent = {
             timestamp: 1609462861,
@@ -103,7 +103,7 @@ describe('Unit test for app handler', function () {
 
     it('successfully stringifies an SQS event', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id","service_name":""}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -151,7 +151,7 @@ describe('Unit test for app handler', function () {
 
     it('successfully stringifies multiple events', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id","service_name":""}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -208,7 +208,7 @@ describe('Unit test for app handler', function () {
 
     it('successfully removes unrecognised elements from an audit event and user field and then logs to cloudwatch', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id","service_name":""}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: UnknownAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -260,7 +260,7 @@ describe('Unit test for app handler', function () {
 
     it('successfully populates missing formatted timestamp fields', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-01T01:01:01.000Z","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id","service_name":""}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-01T01:01:01.000Z","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -308,7 +308,7 @@ describe('Unit test for app handler', function () {
 
     it('logs an error when validation fails on event name', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id","service_name":""}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
@@ -397,7 +397,7 @@ describe('Unit test for app handler', function () {
 
     it('logs an error when validation fails on timestamp', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id","service_name":""}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',

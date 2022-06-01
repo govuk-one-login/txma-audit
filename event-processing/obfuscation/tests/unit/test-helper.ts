@@ -11,7 +11,7 @@ export class TestHelper {
         timestamp: 1609462861,
         timestamp_formatted: '2021-01-23T15:43:21.842',
         event_name: 'AUTHENTICATION_ATTEMPT',
-        component_id: '1234',
+        component_id: 'AUTH',
         user: {
             transaction_id: 'a52f6f87',
             email: 'foo@bar.com',
@@ -28,7 +28,6 @@ export class TestHelper {
             response: 'Authentication successful',
         },
         persistent_session_id: 'some session id',
-        service_name: '',
     };
 
     private static firehoseTransformationEvent: FirehoseTransformationEvent = {
