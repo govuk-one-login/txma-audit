@@ -92,7 +92,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(2);
@@ -141,7 +147,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(2);
@@ -190,13 +202,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
-            }
-        );
-        expect(sns.publish).toHaveBeenCalledWith(
-            {
-                Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(4);
@@ -249,7 +261,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(3);
@@ -298,7 +316,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(2);
@@ -383,13 +407,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
-            }
-        );
-        expect(sns.publish).toHaveBeenCalledWith(
-            {
-                Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
 
@@ -472,13 +496,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
-            }
-        );
-        expect(sns.publish).toHaveBeenCalledWith(
-            {
-                Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
     });
