@@ -5,6 +5,7 @@ import { IAuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-events/unknown-audit-event';
 import {SNS} from "aws-sdk";
 import {MockedFunction} from "ts-jest";
+import { randomUUID } from 'crypto';
 
 jest.mock('aws-sdk', () => {
     const mockSNSInstance = {
@@ -18,6 +19,14 @@ jest.mock('aws-sdk', () => {
         config: {
             update: jest.fn()
         }
+    };
+});
+
+jest.mock('crypto', () => {
+    return {
+        randomUUID: jest.fn(() => {
+            return "58339721-64c9-486b-903f-ad7e63fc45de"
+        })
     };
 });
 
@@ -45,9 +54,7 @@ describe('Unit test for app handler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await expect(handler(sqsEvent))
-            .rejects
-            .toThrow();
+        await handler(sqsEvent);
 
         expect(sns.publish).toBeCalledTimes(0);
     });
@@ -66,7 +73,7 @@ describe('Unit test for app handler', function () {
 
     it('accepts a bare minimum payload and stringifies', async () => {
         const expectedResult =
-            '{"event_id":"","request_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","persistent_session_id":""}';
+            '{"event_id":"58339721-64c9-486b-903f-ad7e63fc45de","request_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","persistent_session_id":""}';
 
         const exampleMessage: IAuditEvent = {
             timestamp: 1609462861,
@@ -87,6 +94,7 @@ describe('Unit test for app handler', function () {
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(2);
+        expect(randomUUID).toHaveBeenCalledTimes(1);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });

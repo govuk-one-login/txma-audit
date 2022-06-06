@@ -14,6 +14,7 @@ export interface IAuditEvent {
     restricted?: unknown | undefined;
     extensions?: unknown | undefined;
     persistent_session_id?: string;
+    service_name?: string;
 }
 
 export interface IAuditEventUserMessage {
@@ -37,6 +38,7 @@ function createBaseAuditEvent(): IAuditEvent {
         restricted: undefined,
         extensions: undefined,
         persistent_session_id: '',
+        service_name: '',
     };
 }
 
@@ -83,6 +85,9 @@ export class AuditEvent {
                 case 'persistent_session_id':
                     event.persistent_session_id = jsonObject[value];
                     break;
+                case 'service_name':
+                    event.service_name = jsonObject[value];
+                    break;
                 default:
                     unknown_fields.set(value, jsonObject[value]);
                     break;
@@ -94,7 +99,7 @@ export class AuditEvent {
         return event;
     }
 
-    static toJSON(message: IAuditEvent): unknown {
+    static toJSON(message: IAuditEvent): object {
         const obj: any = {};
         message.event_id !== undefined && (obj.event_id = message.event_id);
         message.request_id !== undefined && (obj.request_id = message.request_id);
@@ -146,7 +151,7 @@ export class AuditEventUserMessage {
         return user;
     }
 
-    static toJSON(message: IAuditEventUserMessage): unknown {
+    static toJSON(message: IAuditEventUserMessage): object {
         const obj: any = {};
         message.transaction_id !== undefined && (obj.transaction_id = message.transaction_id);
         message.email !== undefined && (obj.email = message.email);

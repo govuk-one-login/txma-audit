@@ -94,7 +94,7 @@ The event type we use for the event-processor lambda is an SQSEvent.
 Run functions locally and invoke them with the `sam local invoke` command.
 
 ```bash
-event-processor$ sam local invoke EventProcessorFunction --event events/event.json
+event-processor$ sam local invoke EventProcessorFunction --event events/event.json --env-vars invoke-vars/environment-vars.json --profile <dev acccount profile>
 ```
 You can also test against a Lambda deployed into the Dev environment using the AWS CLI:
 

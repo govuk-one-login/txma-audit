@@ -19,6 +19,7 @@ export class AuditEventUnknownFields {
             restricted: isSet(object.restricted) ? object.restricted : undefined,
             extensions: isSet(object.extensions) ? object.extensions : undefined,
             persistent_session_id: isSet(object.persistent_session_id) ? String(object.persistent_session_id) : '',
+            service_name: isSet(object.service_name) ? object.service_name : '',
             _unknownFields: unknown_fields,
         };
     }

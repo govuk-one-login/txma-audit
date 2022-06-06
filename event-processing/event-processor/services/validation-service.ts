@@ -42,7 +42,7 @@ export class ValidationService {
         if (!eventMessage.event_name) {
             return {
                 isValid: false,
-                message: AuditEvent.toJSON(eventMessage as IAuditEvent) as string,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent),
                 error: {
                     sqsResourceName: eventSource,
                     eventId: eventMessage.event_id,
@@ -54,10 +54,10 @@ export class ValidationService {
             };
         }
 
-        if (!eventMessage.timestamp) {
+        if (!eventMessage.timestamp || !this.isDate(eventMessage.timestamp)) {
             return {
                 isValid: false,
-                message: AuditEvent.toJSON(eventMessage as IAuditEvent) as string,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent),
                 error: {
                     sqsResourceName: eventSource,
                     eventId: eventMessage.event_id,
@@ -69,13 +69,9 @@ export class ValidationService {
             };
         }
 
-        if (!eventMessage.timestamp_formatted) {
-            eventMessage.timestamp_formatted = new Date(eventMessage.timestamp * 1000).toISOString();
-        }
-
         return {
             isValid: true,
-            message: AuditEvent.toJSON(eventMessage as IAuditEvent) as string,
+            message: AuditEvent.toJSON(eventMessage as IAuditEvent),
         };
     }
 
@@ -96,4 +92,8 @@ export class ValidationService {
 
         return unknownFields;
     }
+
+    private static isDate = (timestamp: number): boolean => {
+        return new Date(timestamp * 1000).getTime() > 0;
+    };
 }
