@@ -2,12 +2,13 @@
 /* istanbul ignore file */ 
 export interface AuditEvent {
     event_id: string;
-    request_id: string;
+    govuk_signin_journey_id: string;
     session_id: string;
     client_id: string;
     timestamp: number;
     timestamp_formatted: string;
     event_name: string;
+    component_id: string;
     user: IAuditEventUserMessage | undefined;
     platform: unknown | undefined;
     restricted: unknown | undefined;
@@ -28,12 +29,13 @@ export class AuditEvent {
     static fromJSON(object: any): AuditEvent {
         return {
             event_id: isSet(object.event_id) ? String(object.event_id) : '',
-            request_id: isSet(object.request_id) ? String(object.request_id) : '',
+            govuk_signin_journey_id: isSet(object.govuk_signin_journey_id) ? String(object.govuk_signin_journey_id) : '',
             session_id: isSet(object.session_id) ? String(object.session_id) : '',
             client_id: isSet(object.client_id) ? String(object.client_id) : '',
             timestamp: isSet(object.timestamp) ? Number(object.timestamp) : 0,
             timestamp_formatted: isSet(object.timestamp_formatted) ? String(object.timestamp_formatted) : '',
             event_name: isSet(object.event_name) ? String(object.event_name) : '',
+            component_id: isSet(object.component_id) ? String(object.component_id) : '',
             user: isSet(object.user) ? AuditEventUserMessage.fromJSON(object.user) : undefined,
             platform: isSet(object.platform) ? object.platform : undefined,
             restricted: isSet(object.restricted) ? object.restricted : undefined,
@@ -46,12 +48,13 @@ export class AuditEvent {
     static toJSON(message: AuditEvent): unknown {
         const obj: any = {};
         message.event_id !== undefined && (obj.event_id = message.event_id);
-        message.request_id !== undefined && (obj.request_id = message.request_id);
+        message.govuk_signin_journey_id !== undefined && (obj.govuk_signin_journey_id = message.govuk_signin_journey_id);
         message.session_id !== undefined && (obj.session_id = message.session_id);
         message.client_id !== undefined && (obj.client_id = message.client_id);
         message.timestamp !== undefined && (obj.timestamp = Math.round(message.timestamp));
         message.timestamp_formatted !== undefined && (obj.timestamp_formatted = message.timestamp_formatted);
         message.event_name !== undefined && (obj.event_name = message.event_name);
+        message.component_id !== undefined && (obj.component_id = message.component_id);
         message.user !== undefined &&
             (obj.user = message.user ? AuditEventUserMessage.toJSON(message.user) : undefined);
         message.platform !== undefined &&
