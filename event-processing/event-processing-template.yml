@@ -2022,6 +2022,9 @@ Resources:
   AuthHMACAccessRole:
     Type: AWS::IAM::Role
     Condition: IsProductionOrStaging
+    Tags:
+      Key: CheckovRulesToSkip
+      Value: CKV_AWS_61 #To Allow Auth Account to assume role
     Properties:
       PermissionsBoundary: !If
         - SetPermissionsBoundary
