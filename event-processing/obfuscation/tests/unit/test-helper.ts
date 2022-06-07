@@ -34,24 +34,25 @@ export class TestHelper {
 
     static exampleObfuscatedMessage: IAuditEvent = {
         event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-        request_id: '43143-233Ds-2823-283-dj299j1',
+        govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
         session_id: 'c222c1ec',
         client_id: 'some-client',
         timestamp: 1609462861,
         timestamp_formatted: '2021-01-23T15:43:21.842',
         event_name: 'AUTHENTICATION_ATTEMPT',
+        component_id: 'AUTH',
         user: {
-            transaction_id: ObfuscationService.obfuscate('a52f6f87', "secret-1-value"),
-            email: ObfuscationService.obfuscate('foo@bar.com', "secret-1-value"),
-            phone: ObfuscationService.obfuscate('07711223344', "secret-1-value"),
+            transaction_id: ObfuscationService.obfuscate('a52f6f87', 'secret-1-value'),
+            email: ObfuscationService.obfuscate('foo@bar.com', 'secret-1-value'),
+            phone: ObfuscationService.obfuscate('07711223344', 'secret-1-value'),
             ip_address: '100.100.100.100',
         },
         platform: {
             xray_trace_id: '24727sda4192',
         },
         restricted: {
-            experian_ref: ObfuscationService.obfuscate('DSJJSEE29392', "secret-1-value"),
-            passport_number: ObfuscationService.obfuscate(1040349934, "secret-1-value"),
+            experian_ref: ObfuscationService.obfuscate('DSJJSEE29392', 'secret-1-value'),
+            passport_number: ObfuscationService.obfuscate(1040349934, 'secret-1-value'),
         },
         extensions: {
             response: 'Authentication successful',
