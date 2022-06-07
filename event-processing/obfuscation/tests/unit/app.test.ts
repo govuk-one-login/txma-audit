@@ -120,7 +120,7 @@ describe('Unit test for app handler', function () {
         expect(result).toEqual(expectedResult);
     });
 
-    it('removes all additional fields if its a single event with secret binary', async () => {
+    it('obfuscates all expected fields when receiving a single event using a secret binary', async () => {
         process.env.SECRET_ARN = "secret-binary";
         const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
 
