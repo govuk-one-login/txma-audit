@@ -2021,18 +2021,26 @@ Resources:
 
   HMACSecretAuthAccessPolicy:
     Type: AWS::SecretsManager::ResourcePolicy
-    Condition: IsProductionOrStaging
     Properties:
       BlockPublicPolicy: True
       SecretId: "{{resolve:ssm:HMACSecretArn}}"
       ResourcePolicy:
         Version: '2012-10-17'
         Statement:
+          - !If
+            - IsProductionOrStaging
+            -
+              Effect: "Allow"
+              Principal:
+                AWS: "{{resolve:ssm:AuthAccountARN}}"
+              Action: "secretsmanager:GetSecretValue"
+              Resource: "{{resolve:ssm:HMACSecretArn}}"
+            - !Ref "AWS::NoValue"
           - Resource: "{{resolve:ssm:HMACSecretArn}}"
             Action: "secretsmanager:GetSecretValue"
             Effect: Allow
             Principal:
-              AWS: "{{resolve:ssm:AuthAccountARN}}"
+              AWS: !Sub "${AWS::AccountId}"
 
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
