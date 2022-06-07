@@ -142,8 +142,7 @@ Resources:
               - "*"
           - Effect: "Allow"
             Principal:
-              Service:
-                - lambda.amazonaws.com
+              Service: "lambda.amazonaws.com"
             Action:
               - 'kms:Decrypt'
             Resource: '*'
@@ -1356,6 +1355,30 @@ Resources:
       LogGroupName: !Ref FirehoseLogGroup
       LogStreamName: "performance"
 
+  FraudDeliveryFirehoseLogStream:
+    DependsOn:
+      - FirehoseLogGroup
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: "fraud/deliveries"
+
+  CyberDeliveryFirehoseLogStream:
+    DependsOn:
+      - FirehoseLogGroup
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: "cyber/deliveries"
+
+  PerformanceDeliveryFirehoseLogStream:
+    DependsOn:
+      - FirehoseLogGroup
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: "performance/deliveries"
+
   FraudDeliveryStreamRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1414,6 +1437,13 @@ Resources:
               - 'lambda:GetFunctionConfiguration'
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
+            Resource:
+              - '*'
 
   FraudDeliveryStreamTestPolicy:
     DependsOn:
@@ -1501,6 +1531,13 @@ Resources:
               - 'lambda:GetFunctionConfiguration'
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
+            Resource:
+              - '*'
 
   CyberDeliveryStreamTestPolicy:
     DependsOn:
@@ -1588,6 +1625,13 @@ Resources:
               - 'lambda:GetFunctionConfiguration'
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
+            Resource:
+              - '*'
 
   PerformanceDeliveryStreamTestPolicy:
     DependsOn:
@@ -1671,6 +1715,10 @@ Resources:
             HECToken: "{{resolve:ssm:HECToken}}"
             RetryOptions:
               DurationInSeconds: 7200
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref FraudDeliveryFirehoseLogStream
             S3BackupMode: "FailedEventsOnly"
             S3Configuration:
               BucketARN: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
@@ -1711,6 +1759,10 @@ Resources:
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt FraudDeliveryStreamRole.Arn
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref FraudFirehoseLogStream
             ProcessingConfiguration:
               Enabled: true
               Processors:
@@ -1743,6 +1795,10 @@ Resources:
             HECToken: "{{resolve:ssm:HECToken}}"
             RetryOptions:
               DurationInSeconds: 7200
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref CyberDeliveryFirehoseLogStream
             S3BackupMode: "FailedEventsOnly"
             S3Configuration:
               BucketARN: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
@@ -1783,6 +1839,10 @@ Resources:
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt CyberDeliveryStreamRole.Arn
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref CyberFirehoseLogStream
             ProcessingConfiguration:
               Enabled: true
               Processors:
@@ -1815,6 +1875,10 @@ Resources:
             HECToken: "{{resolve:ssm:HECToken}}"
             RetryOptions:
               DurationInSeconds: 7200
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref PerformanceDeliveryFirehoseLogStream
             S3BackupMode: "FailedEventsOnly"
             S3Configuration:
               BucketARN: !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
@@ -1855,6 +1919,10 @@ Resources:
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt PerformanceDeliveryStreamRole.Arn
+            CloudWatchLoggingOptions:
+              Enabled: true
+              LogGroupName: !Ref FirehoseLogGroup
+              LogStreamName: !Ref PerformanceFirehoseLogStream
             ProcessingConfiguration:
               Enabled: true
               Processors:
@@ -1938,6 +2006,10 @@ Resources:
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt ObfuscationFunctionRole.Arn
+      Environment:
+        Variables:
+          SECRET_ARN: "{{resolve:ssm:HMACSecretArn}}"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -1946,6 +2018,47 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
+
+  AuthHMACAccessRole:
+    Type: AWS::IAM::Role
+    Condition: IsProductionOrStaging
+    Properties:
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - "{{resolve:ssm:AuthAccountARN}}"
+            Action:
+              - sts:AssumeRole
+
+  AuthHMACAccessPolicy:
+    DependsOn:
+      - AuthHMACAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref AuthHMACAccessRole
+      PolicyName: auth_hmac_access_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'secretsmanager:GetSecretValue'
+            Resource:
+              - "{{resolve:ssm:HMACSecretArn}}"
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:HMACKeyKMSKeyArn}}"
 
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
@@ -2000,3 +2113,9 @@ Resources:
 #        Sourcemap: true
 #        EntryPoints:
 #          - app.ts
+
+Outputs:
+  AuthHMACAccessRoleARN:
+    Description: Access Role for Auth to be able to read the HMAC Secret value
+    Value: !GetAtt AuthHMACAccessRole.Arn
+    Condition: IsProductionOrStaging

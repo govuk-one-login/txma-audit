@@ -5,6 +5,7 @@ import { IAuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-events/unknown-audit-event';
 import {SNS} from "aws-sdk";
 import {MockedFunction} from "ts-jest";
+import { randomUUID } from 'crypto';
 
 jest.mock('aws-sdk', () => {
     const mockSNSInstance = {
@@ -21,6 +22,14 @@ jest.mock('aws-sdk', () => {
     };
 });
 
+jest.mock('crypto', () => {
+    return {
+        randomUUID: jest.fn(() => {
+            return "58339721-64c9-486b-903f-ad7e63fc45de"
+        })
+    };
+});
+
 describe('Unit test for app handler', function () {
     let consoleMock: jest.SpyInstance;
     let sns: SNS;
@@ -33,21 +42,20 @@ describe('Unit test for app handler', function () {
     });
 
     afterEach(() => {
-       consoleMock.mockRestore();
-       jest.clearAllMocks();
+        consoleMock.mockRestore();
+        jest.clearAllMocks();
     });
 
     it('does not send a message if the Lambda errors', async () => {
         const exampleMessage: IAuditEvent = {
             timestamp: 1609464356546575462861, //Incorrect timestamp value
             event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234'
         };
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await expect(handler(sqsEvent))
-            .rejects
-            .toThrow();
+        await handler(sqsEvent);
 
         expect(sns.publish).toBeCalledTimes(0);
     });
@@ -66,12 +74,13 @@ describe('Unit test for app handler', function () {
 
     it('accepts a bare minimum payload and stringifies', async () => {
         const expectedResult =
-            '{"event_id":"","request_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","persistent_session_id":""}';
+            '{"event_id":"58339721-64c9-486b-903f-ad7e63fc45de","govuk_signin_journey_id":"","session_id":"","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","persistent_session_id":""}';
 
         const exampleMessage: IAuditEvent = {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
         };
 
         (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
@@ -83,26 +92,34 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(2);
+        expect(randomUUID).toHaveBeenCalledTimes(1);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
     it('successfully stringifies an SQS event', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-            request_id: '43143-233Ds-2823-283-dj299j1',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
             client_id: 'some-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
             user: {
                 transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
@@ -110,13 +127,13 @@ describe('Unit test for app handler', function () {
                 ip_address: '100.100.100.100',
             },
             platform: {
-               xray_trace_id: '24727sda4192',
+                xray_trace_id: '24727sda4192',
             },
             restricted: {
-               experian_ref: 'DSJJSEE29392',
+                experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-               response: 'Authentication successful',
+                response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
@@ -130,7 +147,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(2);
@@ -140,16 +163,17 @@ describe('Unit test for app handler', function () {
 
     it('successfully stringifies multiple events', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-            request_id: '43143-233Ds-2823-283-dj299j1',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
             client_id: 'some-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
             user: {
                 transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
@@ -157,13 +181,13 @@ describe('Unit test for app handler', function () {
                 ip_address: '100.100.100.100',
             },
             platform: {
-               xray_trace_id: '24727sda4192',
+                xray_trace_id: '24727sda4192',
             },
             restricted: {
-               experian_ref: 'DSJJSEE29392',
+                experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-               response: 'Authentication successful',
+                response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
@@ -178,13 +202,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
-            }
-        );
-        expect(sns.publish).toHaveBeenCalledWith(
-            {
-                Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(4);
@@ -196,16 +220,17 @@ describe('Unit test for app handler', function () {
 
     it('successfully removes unrecognised elements from an audit event and user field and then logs to cloudwatch', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: UnknownAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-            request_id: '43143-233Ds-2823-283-dj299j1',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
             client_id: 'some-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
             user: {
                 transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
@@ -215,13 +240,13 @@ describe('Unit test for app handler', function () {
             },
             platform: {
 
-               xray_trace_id: '24727sda4192',
+                xray_trace_id: '24727sda4192',
             },
             restricted: {
-               experian_ref: 'DSJJSEE29392',
+                experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-               response: 'Authentication successful',
+                response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
             new_unknown_field: "an unknown field"
@@ -236,7 +261,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(3);
@@ -247,16 +278,17 @@ describe('Unit test for app handler', function () {
 
     it('successfully populates missing formatted timestamp fields', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-01T01:01:01.000Z","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-01T01:01:01.000Z","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-            request_id: '43143-233Ds-2823-283-dj299j1',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
             client_id: 'some-client',
             timestamp: 1609462861,
             timestamp_formatted: '',
             event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
             user: {
                 transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
@@ -264,13 +296,13 @@ describe('Unit test for app handler', function () {
                 ip_address: '100.100.100.100',
             },
             platform: {
-               xray_trace_id: '24727sda4192',
+                xray_trace_id: '24727sda4192',
             },
             restricted: {
-               experian_ref: 'DSJJSEE29392',
+                experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-               response: 'Authentication successful',
+                response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
@@ -284,7 +316,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
         expect(consoleMock).toHaveBeenCalledTimes(2);
@@ -294,16 +332,17 @@ describe('Unit test for app handler', function () {
 
     it('logs an error when validation fails on event name', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-            request_id: '43143-233Ds-2823-283-dj299j1',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
             client_id: 'some-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
             user: {
                 transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
@@ -311,25 +350,26 @@ describe('Unit test for app handler', function () {
                 ip_address: '100.100.100.100',
             },
             platform: {
-               xray_trace_id: '24727sda4192',
+                xray_trace_id: '24727sda4192',
             },
             restricted: {
-               experian_ref: 'DSJJSEE29392',
+                experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-               response: 'Authentication successful',
+                response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
 
         const exampleInvalidMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-            request_id: '43143-233Ds-2823-283-dj299j1',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
             client_id: 'some-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: '',
+            component_id: '1234',
             user: {
                 transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
@@ -337,13 +377,13 @@ describe('Unit test for app handler', function () {
                 ip_address: '100.100.100.100',
             },
             platform: {
-               xray_trace_id: '24727sda4192',
+                xray_trace_id: '24727sda4192',
             },
             restricted: {
-               experian_ref: 'DSJJSEE29392',
+                experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-               response: 'Authentication successful',
+                response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
@@ -367,13 +407,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
-            }
-        );
-        expect(sns.publish).toHaveBeenCalledWith(
-            {
-                Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
 
@@ -381,16 +421,17 @@ describe('Unit test for app handler', function () {
 
     it('logs an error when validation fails on timestamp', async () => {
         const expectedResult =
-            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","request_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","govuk_signin_journey_id":"43143-233Ds-2823-283-dj299j1","session_id":"c222c1ec","client_id":"some-client","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"},"persistent_session_id":"some session id"}';
 
         const exampleMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-            request_id: '43143-233Ds-2823-283-dj299j1',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
             client_id: 'some-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
             user: {
                 transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
@@ -398,25 +439,26 @@ describe('Unit test for app handler', function () {
                 ip_address: '100.100.100.100',
             },
             platform: {
-               xray_trace_id: '24727sda4192',
+                xray_trace_id: '24727sda4192',
             },
             restricted: {
-               experian_ref: 'DSJJSEE29392',
+                experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-               response: 'Authentication successful',
+                response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
 
         const exampleInvalidMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-            request_id: '43143-233Ds-2823-283-dj299j1',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             session_id: 'c222c1ec',
             client_id: 'some-client',
             timestamp: 0,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
             user: {
                 transaction_id: 'a52f6f87',
                 email: 'foo@bar.com',
@@ -424,13 +466,13 @@ describe('Unit test for app handler', function () {
                 ip_address: '100.100.100.100',
             },
             platform: {
-               xray_trace_id: '24727sda4192',
+                xray_trace_id: '24727sda4192',
             },
             restricted: {
-               experian_ref: 'DSJJSEE29392',
+                experian_ref: 'DSJJSEE29392',
             },
             extensions: {
-               response: 'Authentication successful',
+                response: 'Authentication successful',
             },
             persistent_session_id: 'some session id',
         };
@@ -454,13 +496,13 @@ describe('Unit test for app handler', function () {
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
-            }
-        );
-        expect(sns.publish).toHaveBeenCalledWith(
-            {
-                Message: expectedResult,
-                TopicArn: 'SOME-SNS-TOPIC'
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
             }
         );
     });
