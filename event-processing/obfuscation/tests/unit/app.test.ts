@@ -153,7 +153,7 @@ describe('Unit test for app handler', function () {
         expect(consoleWarningMock).toHaveBeenNthCalledWith(2, 'Processing completed. Failed records 1.');
     });
 
-    it('Records marked as processing failed if no secret arn not present in secret manager', async () => {
+    it('marks records as processing failed if no secret arn is present in secret manager', async () => {
         process.env.SECRET_ARN = "unknown_arn";
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
