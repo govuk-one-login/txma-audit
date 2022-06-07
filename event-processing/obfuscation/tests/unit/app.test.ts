@@ -101,7 +101,7 @@ describe('Unit test for app handler', function () {
         expect(result).toEqual(expectedResult);
     });
 
-    it('removes all additional fields if its a single event with secret string', async () => {
+    it('obfuscates expected fields when receiving a single event using the secret string', async () => {
         const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
 
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
