@@ -2021,6 +2021,7 @@ Resources:
 
   HMACSecretAuthAccessPolicy:
     Type: AWS::SecretsManager::ResourcePolicy
+    Condition: IsProductionOrStaging
     Properties:
       BlockPublicPolicy: True
       SecretId: "{{resolve:ssm:HMACSecretArn}}"
