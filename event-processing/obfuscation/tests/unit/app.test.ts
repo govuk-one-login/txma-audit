@@ -82,7 +82,7 @@ describe('Unit test for app handler', function () {
         expect(result).toEqual(expectedResult);
     });
 
-    it('removes all additional fields if its an array', async () => {
+    it('obfuscates all expected fields when receiving an array', async () => {
         const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
 
         const data : string = Buffer.from(TestHelper.encodeAuditEventArray(expectedData)).toString('base64')
