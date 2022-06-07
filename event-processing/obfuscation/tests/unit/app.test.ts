@@ -204,7 +204,7 @@ describe('Unit test for app handler', function () {
         expect(resultAuditEvent).toEqual(expectedData);
     });
 
-    it('HMAC obfuscation method gives expected result', async () => {
+    it('has the expected result when using HMAC obfuscation method', async () => {
         const message : string = "My Secret String";
         const key : string = "My secret key";
         const expectedResult = "5d224b25388f72dc5e329dd68385680535f6d9bda65c5f830631d72e255b9f95"
