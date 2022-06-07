@@ -179,7 +179,7 @@ describe('Unit test for app handler', function () {
         expect(consoleWarningMock).toHaveBeenNthCalledWith(2, 'Processing completed. Failed records 1.');
     });
 
-    it('Check data matches obfuscated result', async () => {
+    it('has expected data in obfuscated result', async () => {
         process.env.SECRET_ARN = "secret-binary";
         const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
 
