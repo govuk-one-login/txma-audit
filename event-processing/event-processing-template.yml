@@ -1676,9 +1676,6 @@ Resources:
       Protocol: firehose
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
-  #      FilterPolicy:
-  #        event_name:
-  #          - somevalue
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -1688,9 +1685,10 @@ Resources:
       Protocol: firehose
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
-  #      FilterPolicy:
-  #        event_name:
-  #          - somevalue
+        FilterPolicy:
+          eventName:
+            - IPV_JOURNEY_START
+            - IPV_JOURNEY_END
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
