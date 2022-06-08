@@ -1606,7 +1606,7 @@ Resources:
             HECAcknowledgmentTimeoutInSeconds: 300
             HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
             HECEndpointType: Raw
-            HECToken: "{{resolve:ssm:HECPerformanceTokenParameter}}"
+            HECToken: "{{resolve:ssm:HECPerformanceToken}}"
             RetryOptions:
               DurationInSeconds: 7200
             CloudWatchLoggingOptions:
