@@ -3,11 +3,15 @@
 ## Prerequisites
 
 1. [A GDS AWS account](https://gds-request-an-aws-account.cloudapps.digital/)
-2. [The GDS CLI installed](https://github.com/alphagov/gds-cli)
+2. [The GDS CLI configured](https://github.com/alphagov/gds-cli)
 
 ## Running locally
 
-Firstly, you need to set your environment variables to match a session token which you can generate using the following command:
+Firstly, clone the `di-txma-audit` repository.
+
+After this, open the `di-txma-audit/tests/event-processing-tests` directory as the main project.
+
+Then, you need to set your environment variables to match a session token which you can generate using the following command:
 ```bash
 gds aws di-txma-build -e
 ```
@@ -25,3 +29,7 @@ Windows:
 gradlew.bat clean test
 ```
 
+To view the report produced, run the following command:
+``` bash
+open build/reports/tests/test/index.html
+```
