@@ -1992,6 +1992,22 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
 
+  ObfuscationHmacKmsPolicy:
+    DependsOn:
+      - ObfuscationFunctionRole
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref ObfuscationFunctionRole
+      PolicyName: hmac_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: "{{resolve:ssm:HMACKeyKMSKeyArn}}"
+
   ObfuscationLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
