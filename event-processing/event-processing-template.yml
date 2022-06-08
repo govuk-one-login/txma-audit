@@ -1171,84 +1171,6 @@ Resources:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/fraud-splunk-delivery-test-bucket/"
 
-  CyberS3AccessLogsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref CyberSplunkDeliveryFailureBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
-            Resource:
-              - !Sub "${CyberSplunkDeliveryFailureBucket.Arn}/*"
-            Principal:
-              Service: "logging.s3.amazonaws.com"
-            Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
-
-  CyberSplunkDeliveryFailureBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-cyber-splunk-fail"
-      VersioningConfiguration:
-        Status: "Enabled"
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      LoggingConfiguration:
-        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
-        LogFilePrefix: "event-processing/cyber-splunk-delivery-failure-bucket/"
-
-  CyberTestS3AccessLogsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: IsBuild
-    Properties:
-      Bucket: !Ref CyberSplunkDeliveryTestBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
-            Resource:
-              - !Sub "${CyberSplunkDeliveryTestBucket.Arn}/*"
-            Principal:
-              Service: "logging.s3.amazonaws.com"
-            Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
-
-  CyberSplunkDeliveryTestBucket:
-    Type: AWS::S3::Bucket
-    Condition: IsBuild
-    Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-cyber-splunk-test"
-      VersioningConfiguration:
-        Status: "Enabled"
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      LoggingConfiguration:
-        DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
-        LogFilePrefix: "event-processing/cyber-splunk-delivery-test-bucket/"
-
   PerformanceS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -1342,14 +1264,6 @@ Resources:
       LogGroupName: !Ref FirehoseLogGroup
       LogStreamName: "fraud"
 
-  CyberFirehoseLogStream:
-    DependsOn:
-      - FirehoseLogGroup
-    Type: AWS::Logs::LogStream
-    Properties:
-      LogGroupName: !Ref FirehoseLogGroup
-      LogStreamName: "cyber"
-
   PerformanceFirehoseLogStream:
     DependsOn:
       - FirehoseLogGroup
@@ -1365,14 +1279,6 @@ Resources:
     Properties:
       LogGroupName: !Ref FirehoseLogGroup
       LogStreamName: "fraud/deliveries"
-
-  CyberDeliveryFirehoseLogStream:
-    DependsOn:
-      - FirehoseLogGroup
-    Type: AWS::Logs::LogStream
-    Properties:
-      LogGroupName: !Ref FirehoseLogGroup
-      LogStreamName: "cyber/deliveries"
 
   PerformanceDeliveryFirehoseLogStream:
     DependsOn:
@@ -1474,100 +1380,6 @@ Resources:
                 - ''
                 - - 'arn:aws:s3:::'
                   - !Ref FraudSplunkDeliveryTestBucket
-                  - '*'
-
-  CyberDeliveryStreamRole:
-    Type: AWS::IAM::Role
-    Properties:
-      PermissionsBoundary: !If
-        - SetPermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: ''
-            Effect: Allow
-            Principal:
-              Service:
-                - 'firehose.amazonaws.com'
-            Action: 'sts:AssumeRole'
-
-  CyberDeliveryStreamPolicy:
-    DependsOn:
-      - CyberDeliveryStreamRole
-    Type: AWS::IAM::Policy
-    Properties:
-      Roles:
-        - !Ref CyberDeliveryStreamRole
-      PolicyName: cyber_firehose_delivery_policy
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action:
-              - 's3:AbortMultipartUpload'
-              - 's3:GetBucketLocation'
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:ListBucketMultipartUploads'
-              - 's3:PutObject'
-            Resource:
-              - !GetAtt CyberSplunkDeliveryFailureBucket.Arn
-              - !Join
-                - ''
-                - - 'arn:aws:s3:::'
-                  - !Ref CyberSplunkDeliveryFailureBucket
-                  - '*'
-          - Effect: Allow
-            Action:
-              - 'firehose:DescribeDeliveryStream'
-              - 'firehose:ListDeliveryStreams'
-              - 'firehose:ListTagsForDeliveryStream'
-              - 'firehose:PutRecord'
-              - 'firehose:PutRecordBatch'
-            Resource:
-              - !GetAtt CyberDeliveryStream.Arn
-          - Effect: Allow
-            Action:
-              - 'lambda:InvokeFunction'
-              - 'lambda:GetFunctionConfiguration'
-            Resource:
-              - !Sub "${ObfuscationFunction.Arn}*"
-          - Effect: Allow
-            Action:
-              - 'logs:CreateLogGroup'
-              - 'logs:PutLogEvents'
-              - 'logs:CreateLogStream'
-            Resource:
-              - '*'
-
-  CyberDeliveryStreamTestPolicy:
-    DependsOn:
-      - CyberDeliveryStreamRole
-    Type: AWS::IAM::Policy
-    Condition: IsBuild
-    Properties:
-      Roles:
-        - !Ref CyberDeliveryStreamRole
-      PolicyName: cyber_firehose_delivery_test_policy
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action:
-              - 's3:AbortMultipartUpload'
-              - 's3:GetBucketLocation'
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:ListBucketMultipartUploads'
-              - 's3:PutObject'
-            Resource:
-              - !GetAtt CyberSplunkDeliveryTestBucket.Arn
-              - !Join
-                - ''
-                - - 'arn:aws:s3:::'
-                  - !Ref CyberSplunkDeliveryTestBucket
                   - '*'
 
   PerformanceDeliveryStreamRole:
@@ -1694,7 +1506,6 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !GetAtt FraudDeliveryStream.Arn
-                  - !GetAtt CyberDeliveryStream.Arn
                   - !GetAtt PerformanceDeliveryStream.Arn
 
   FraudDeliveryStream:
@@ -1775,86 +1586,6 @@ Resources:
                       ParameterValue: !GetAtt ObfuscationFunction.Arn
                     - ParameterName: RoleArn
                       ParameterValue: !GetAtt FraudDeliveryStreamRole.Arn
-          - !Ref "AWS::NoValue"
-
-  CyberDeliveryStream:
-    DependsOn:
-      - CyberDeliveryStreamRole
-      - CyberFirehoseLogStream
-    Type: AWS::KinesisFirehose::DeliveryStream
-    Properties:
-      DeliveryStreamName: !Sub "CyberFireHose-${Environment}"
-      DeliveryStreamType: DirectPut
-      DeliveryStreamEncryptionConfigurationInput:
-        KeyARN: !GetAtt FireHoseKMSKey.Arn
-        KeyType: "CUSTOMER_MANAGED_CMK"
-      SplunkDestinationConfiguration:
-        Fn::If:
-          - IsProductionOrStaging
-          -
-            HECAcknowledgmentTimeoutInSeconds: 300
-            HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
-            HECEndpointType: Raw
-            HECToken: "{{resolve:ssm:HECToken}}"
-            RetryOptions:
-              DurationInSeconds: 7200
-            CloudWatchLoggingOptions:
-              Enabled: true
-              LogGroupName: !Ref FirehoseLogGroup
-              LogStreamName: !Ref CyberDeliveryFirehoseLogStream
-            S3BackupMode: "FailedEventsOnly"
-            S3Configuration:
-              BucketARN: !GetAtt CyberSplunkDeliveryFailureBucket.Arn
-              BufferingHints:
-                IntervalInSeconds: !If
-                  - IsBuild
-                  - 60
-                  - 900
-                SizeInMBs: 128
-              CloudWatchLoggingOptions:
-                Enabled: true
-                LogGroupName: !Ref FirehoseLogGroup
-                LogStreamName: !Ref CyberFirehoseLogStream
-              CompressionFormat: GZIP
-              ErrorOutputPrefix: "CyberDeliveryErrors"
-              RoleARN: !GetAtt CyberDeliveryStreamRole.Arn
-            ProcessingConfiguration:
-              Enabled: true
-              Processors:
-                - Type: Lambda
-                  Parameters:
-                    - ParameterName: LambdaArn
-                      ParameterValue: !GetAtt ObfuscationFunction.Arn
-                    - ParameterName: RoleArn
-                      ParameterValue: !GetAtt CyberDeliveryStreamRole.Arn
-          - !Ref "AWS::NoValue"
-      ExtendedS3DestinationConfiguration:
-        Fn::If:
-          - IsBuild
-          -
-            Prefix: "firehose/"
-            BucketARN: !GetAtt CyberSplunkDeliveryTestBucket.Arn
-            BufferingHints:
-              IntervalInSeconds: !If
-                - IsBuild
-                - 60
-                - 900
-              SizeInMBs: 128
-            CompressionFormat: "GZIP"
-            RoleARN: !GetAtt CyberDeliveryStreamRole.Arn
-            CloudWatchLoggingOptions:
-              Enabled: true
-              LogGroupName: !Ref FirehoseLogGroup
-              LogStreamName: !Ref CyberFirehoseLogStream
-            ProcessingConfiguration:
-              Enabled: true
-              Processors:
-                - Type: Lambda
-                  Parameters:
-                    - ParameterName: LambdaArn
-                      ParameterValue: !GetAtt ObfuscationFunction.Arn
-                    - ParameterName: RoleArn
-                      ParameterValue: !GetAtt CyberDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
 
   PerformanceDeliveryStream:
@@ -1942,18 +1673,6 @@ Resources:
     Properties:
       TopicArn: !Ref epSNSTopic
       Endpoint: !GetAtt FraudDeliveryStream.Arn #FireHose
-      Protocol: firehose
-      RawMessageDelivery: true
-      SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
-  #      FilterPolicy:
-  #        event_name:
-  #          - somevalue
-
-  CyberDeliveryStreamSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      TopicArn: !Ref epSNSTopic
-      Endpoint: !GetAtt CyberDeliveryStream.Arn #FireHose
       Protocol: firehose
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
@@ -2085,11 +1804,6 @@ Resources:
 #          Properties:
 #            Bucket: !Ref FraudSplunkDeliveryFailureBucket
 #            Events: 's3:ObjectCreated:*'
-#        CyberBucket:
-#          Type: S3
-#          Properties:
-#            Bucket: !Ref CyberSplunkDeliveryFailureBucket
-#            Events: 's3:ObjectCreated:*'
 #        PerformanceBucket:
 #          Type: S3
 #          Properties:
@@ -2099,13 +1813,9 @@ Resources:
 #        - S3ReadPolicy:
 #            BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
 #        - S3ReadPolicy:
-#            BucketName: !Sub "${AWS::StackName}-${Environment}-cyber-splunk-fail"
-#        - S3ReadPolicy:
 #            BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
 ##        - FirehoseWritePolicy:
 ##            DeliveryStreamName: !Ref FraudDeliveryStream
-##        - FirehoseWritePolicy:
-##            DeliveryStreamName: !Ref CyberDeliveryStream
 ##        - FirehoseWritePolicy:
 ##            DeliveryStreamName: !Ref PerformanceDeliveryStream
 #    Metadata: # Manage esbuild properties
