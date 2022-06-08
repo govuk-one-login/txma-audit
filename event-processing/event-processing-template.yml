@@ -1685,10 +1685,10 @@ Resources:
       Protocol: firehose
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
-        FilterPolicy:
-          eventName:
-            - IPV_JOURNEY_START
-            - IPV_JOURNEY_END
+      FilterPolicy:
+        eventName:
+          - IPV_JOURNEY_START
+          - IPV_JOURNEY_END
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
