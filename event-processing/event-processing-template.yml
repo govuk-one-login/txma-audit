@@ -2023,6 +2023,8 @@ Resources:
           - app.ts
 
   HMACSecretAuthAccessPolicy:
+    DependsOn:
+      - ObfuscationFunctionRole
     Type: AWS::SecretsManager::ResourcePolicy
     Properties:
       BlockPublicPolicy: True
@@ -2043,7 +2045,7 @@ Resources:
             Action: "secretsmanager:GetSecretValue"
             Effect: Allow
             Principal:
-              AWS: !Sub "${AWS::AccountId}"
+              AWS: !GetAtt ObfuscationFunctionRole.Arn
 
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
