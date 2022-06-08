@@ -3,6 +3,8 @@ import { ValidationService } from './services/validation-service';
 import { SnsService } from './services/sns-service';
 import { IRequiredFieldError } from './models/required-field-error.interface';
 import { ValidationException } from './exceptions/validation-exception';
+import { EnrichmentService } from './services/enrichment-service';
+import { IAuditEvent } from './models/audit-event';
 
 export const handler = async (event: SQSEvent): Promise<void> => {
     for (const record of event.Records) {
@@ -19,7 +21,8 @@ export const handler = async (event: SQSEvent): Promise<void> => {
                     ),
             );
         } else {
-            await SnsService.publishMessageToSNS(JSON.stringify(validationResponse.message), process.env.topicArn);
+            const message: IAuditEvent = await EnrichmentService.enrichValidationResponse(validationResponse);
+            await SnsService.publishMessageToSNS(message, process.env.topicArn);
         }
     }
 

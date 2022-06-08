@@ -34,6 +34,9 @@ Conditions:
       - Fn::Equals:
           - !Ref CodeSigningConfigArn
           - "none"
+  IsStagingOrIntegration: !Or
+  - !Equals [ !Ref Environment, integration ]
+  - !Equals [ !Ref Environment, staging ]
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
@@ -142,8 +145,7 @@ Resources:
               - "*"
           - Effect: "Allow"
             Principal:
-              Service:
-                - lambda.amazonaws.com
+              Service: "lambda.amazonaws.com"
             Action:
               - 'kms:Decrypt'
             Resource: '*'
@@ -324,7 +326,7 @@ Resources:
     DependsOn:
       - KBVEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
       FunctionName: !Ref KBVEventProcessorFunction
@@ -333,7 +335,7 @@ Resources:
     DependsOn:
       - KBVLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       Roles:
         - !Ref KBVLambdaAccessRole
@@ -458,7 +460,7 @@ Resources:
     DependsOn:
       - KBVAddressEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVAddressQueueARN}}"
       FunctionName: !Ref KBVAddressEventProcessorFunction
@@ -467,7 +469,7 @@ Resources:
     DependsOn:
       - KBVAddressLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       Roles:
         - !Ref KBVAddressLambdaAccessRole
@@ -592,7 +594,7 @@ Resources:
     DependsOn:
       - KBVFraudEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
       FunctionName: !Ref KBVFraudEventProcessorFunction
@@ -601,7 +603,7 @@ Resources:
     DependsOn:
       - KBVFraudLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       Roles:
         - !Ref KBVFraudLambdaAccessRole
@@ -2007,6 +2009,10 @@ Resources:
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt ObfuscationFunctionRole.Arn
+      Environment:
+        Variables:
+          SECRET_ARN: "{{resolve:ssm:HMACSecretArn}}"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -2015,6 +2021,29 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
+
+  HMACSecretAuthAccessPolicy:
+    Type: AWS::SecretsManager::ResourcePolicy
+    Properties:
+      BlockPublicPolicy: True
+      SecretId: "{{resolve:ssm:HMACSecretArn}}"
+      ResourcePolicy:
+        Version: '2012-10-17'
+        Statement:
+          - !If
+            - IsProductionOrStaging
+            -
+              Effect: "Allow"
+              Principal:
+                AWS: "{{resolve:ssm:AuthAccountARN}}"
+              Action: "secretsmanager:GetSecretValue"
+              Resource: "{{resolve:ssm:HMACSecretArn}}"
+            - !Ref "AWS::NoValue"
+          - Resource: "{{resolve:ssm:HMACSecretArn}}"
+            Action: "secretsmanager:GetSecretValue"
+            Effect: Allow
+            Principal:
+              AWS: !Sub "${AWS::AccountId}"
 
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup

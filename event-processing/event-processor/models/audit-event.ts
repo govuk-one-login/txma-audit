@@ -3,12 +3,13 @@ import { IUserUnknownFields, UserUnknownFields } from './user-unknown-fields.int
 
 export interface IAuditEvent {
     event_id?: string;
-    request_id?: string;
+    govuk_signin_journey_id?: string;
     session_id?: string;
     client_id?: string;
     timestamp: number;
     timestamp_formatted?: string;
     event_name: string;
+    component_id: string;
     user?: IAuditEventUserMessage | undefined;
     platform?: unknown | undefined;
     restricted?: unknown | undefined;
@@ -26,12 +27,13 @@ export interface IAuditEventUserMessage {
 function createBaseAuditEvent(): IAuditEvent {
     return {
         event_id: '',
-        request_id: '',
+        govuk_signin_journey_id: '',
         session_id: '',
         client_id: '',
         timestamp: 0,
         timestamp_formatted: '',
         event_name: '',
+        component_id: '',
         user: undefined,
         platform: undefined,
         restricted: undefined,
@@ -50,8 +52,8 @@ export class AuditEvent {
                 case 'event_id':
                     event.event_id = jsonObject[value];
                     break;
-                case 'request_id':
-                    event.request_id = jsonObject[value];
+                case 'govuk_signin_journey_id':
+                    event.govuk_signin_journey_id = jsonObject[value];
                     break;
                 case 'session_id':
                     event.session_id = jsonObject[value];
@@ -67,6 +69,9 @@ export class AuditEvent {
                     break;
                 case 'event_name':
                     event.event_name = jsonObject[value];
+                    break;
+                case 'component_id':
+                    event.component_id = jsonObject[value];
                     break;
                 case 'user':
                     event.user = AuditEventUserMessage.fromObject(jsonObject[value]);
@@ -94,15 +99,17 @@ export class AuditEvent {
         return event;
     }
 
-    static toJSON(message: IAuditEvent): unknown {
+    static toJSON(message: IAuditEvent): object {
         const obj: any = {};
         message.event_id !== undefined && (obj.event_id = message.event_id);
-        message.request_id !== undefined && (obj.request_id = message.request_id);
+        message.govuk_signin_journey_id !== undefined &&
+            (obj.govuk_signin_journey_id = message.govuk_signin_journey_id);
         message.session_id !== undefined && (obj.session_id = message.session_id);
         message.client_id !== undefined && (obj.client_id = message.client_id);
         message.timestamp !== undefined && (obj.timestamp = Math.round(message.timestamp));
         message.timestamp_formatted !== undefined && (obj.timestamp_formatted = message.timestamp_formatted);
         message.event_name !== undefined && (obj.event_name = message.event_name);
+        message.component_id !== undefined && (obj.component_id = message.component_id);
         message.user !== undefined &&
             (obj.user = message.user ? AuditEventUserMessage.toJSON(message.user) : undefined);
         message.platform !== undefined && (obj.platform = message.platform ? message.platform : undefined);
@@ -146,7 +153,7 @@ export class AuditEventUserMessage {
         return user;
     }
 
-    static toJSON(message: IAuditEventUserMessage): unknown {
+    static toJSON(message: IAuditEventUserMessage): object {
         const obj: any = {};
         message.transaction_id !== undefined && (obj.transaction_id = message.transaction_id);
         message.email !== undefined && (obj.email = message.email);
