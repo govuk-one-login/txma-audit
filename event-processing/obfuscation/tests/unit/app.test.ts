@@ -150,7 +150,7 @@ describe('Unit test for app handler', function () {
 
         expect(result.records[0].result).toEqual('ProcessingFailed');
         expect(consoleWarningMock).toHaveBeenCalledTimes(2);
-        expect(consoleWarningMock).toHaveBeenNthCalledWith(1, 'An error occurred getting the hmac key.  Failed with error: Unable to load secret from environment');
+        expect(consoleWarningMock).toHaveBeenNthCalledWith(1, 'An error occurred getting the hmac key.  Failed with Error: Unable to load secret ARN from environment');
         expect(consoleWarningMock).toHaveBeenNthCalledWith(2, 'Processing completed. Failed records 1.');
     });
 
@@ -163,7 +163,7 @@ describe('Unit test for app handler', function () {
 
         expect(result.records[0].result).toEqual('ProcessingFailed');
         expect(consoleWarningMock).toHaveBeenCalledTimes(2);
-        expect(consoleWarningMock).toHaveBeenNthCalledWith(1, 'An error occurred getting the hmac key.  Failed with error: Unable to load secret from secret manager');
+        expect(consoleWarningMock).toHaveBeenNthCalledWith(1, 'An error occurred getting the hmac key.  Failed with Error: Unable to load secret from secret manager. InnerException: Error: secret not found');
         expect(consoleWarningMock).toHaveBeenNthCalledWith(2, 'Processing completed. Failed records 1.');
     });
 
@@ -176,7 +176,7 @@ describe('Unit test for app handler', function () {
 
         expect(result.records[0].result).toEqual('ProcessingFailed');
         expect(consoleWarningMock).toHaveBeenCalledTimes(2);
-        expect(consoleWarningMock).toHaveBeenNthCalledWith(1, 'An error occurred getting the hmac key.  Failed with error: Unable to load secret from data');
+        expect(consoleWarningMock).toHaveBeenNthCalledWith(1, 'An error occurred getting the hmac key.  Failed with Error: Secret does not contain a secret value');
         expect(consoleWarningMock).toHaveBeenNthCalledWith(2, 'Processing completed. Failed records 1.');
     });
 
