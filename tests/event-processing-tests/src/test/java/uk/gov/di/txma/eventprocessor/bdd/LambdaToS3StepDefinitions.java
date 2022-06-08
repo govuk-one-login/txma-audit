@@ -23,9 +23,9 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,6 +38,8 @@ public class LambdaToS3StepDefinitions {
     Instant time;
     String requestid;
     String timestamp;
+    Boolean warn;
+    JSONObject correctS3;
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -121,6 +123,27 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
+     * Ensures that an error does appear in cloudwatch when the lambda was invoked
+     *
+     * @param account   The service team account name for the corresponding lambda
+     */
+    @Then("there should be an error message in the {string} lambda cloudwatch")
+    public void there_should_be_an_error_message_in_the_lambda_cloudwatch(String account) {
+        assertTrue(findCloudWatchError(account));
+    }
+
+    /**
+     * Ensures that a warn error does appear in cloudwatch when the lambda was invoked
+     *
+     * @param account   The service team account name for the corresponding lambda
+     */
+    @Then("there should be a warn message in the {string} lambda cloudwatch")
+    public void there_should_be_a_warn_message_in_the_lambda_cloudwatch(String account) {
+        assertFalse(findCloudWatchError(account));
+        assertTrue(warn);
+    }
+
+    /**
      * This searches the S3 bucket and checks that the new data contains the output file
      *
      * @param account       Which account inputted the message
@@ -148,13 +171,12 @@ public class LambdaToS3StepDefinitions {
             JSONObject expectedS3 = addTimestamp(json);
 
             // Splits the batched outputs into individual jsons
-            JSONArray array = separate(output);
+            List<JSONObject> array = separate(output);
 
             // Compares all individual jsons with our test data
             boolean foundInS3 = false;
-            for (Object object: array){
-                System.err.println(object.toString());
-                if (Objects.equals(object.toString(), expectedS3.toString())){
+            for (JSONObject object: array){
+                if (compareOutput(object, expectedS3)){
                     foundInS3 = true;
                     break;
                 }
@@ -163,6 +185,16 @@ public class LambdaToS3StepDefinitions {
             assertTrue(foundInS3);
         }
 
+    }
+
+    /**
+     * This checks that any additional fields are not in the S3 message found
+     *
+     * @param field     The name of the field which shouldn't be present
+     */
+    @And("this s3 event should not contain the {string} field")
+    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_files(String field) {
+        assertFalse(correctS3.has(field));
     }
 
     /**
@@ -198,6 +230,8 @@ public class LambdaToS3StepDefinitions {
         boolean noEvent = true;
         // errorFound tracks if we find an error or not
         boolean errorFound = false;
+        // This will return true if a warning is found, but won't fail any tests
+        warn = false;
         // count will prevent an infinite loop if the event is not found
         int count = 0;
 
@@ -230,6 +264,9 @@ public class LambdaToS3StepDefinitions {
                             if (message.contains(requestid)) {
                                 if (message.contains("ERROR")) {
                                     errorFound = true;
+                                }
+                                if (message.contains("WARN")) {
+                                    warn = true;
                                 }
                                 noEvent = false;
                             }
@@ -290,24 +327,27 @@ public class LambdaToS3StepDefinitions {
                     .region(region)
                     .build()){
 
+                ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
                 // Lists all objects
                 ListObjectsRequest listObjects = ListObjectsRequest
                         .builder()
                         .bucket(bucketName)
+                        .prefix("firehose/"+now.getYear()+"/")
                         .build();
 
                 // Finds the latest object
                 ListObjectsResponse res = s3.listObjects(listObjects);
                 List<S3Object> objects = res.contents();
-                S3Object latest = objects.get(objects.size() - 1);
+                if (objects.size() > 0) {
+                    S3Object latest = objects.get(objects.size() - 1);
 
-                // Checks it has been created past the time the test started and stored the corresponding key
-                if (latest.lastModified().compareTo(time)>0){
-                    newkey = latest.key();
-                }
-                else {
-                    // Gives the message time to pass through Firehose
-                    Thread.sleep(30000);
+                    // Checks it has been created past the time the test started and stored the corresponding key
+                    if (latest.lastModified().compareTo(time) > 0) {
+                        newkey = latest.key();
+                    } else {
+                        // Gives the message time to pass through Firehose
+                        Thread.sleep(90000);
+                    }
                 }
 
             } catch (S3Exception e) {
@@ -349,12 +389,12 @@ public class LambdaToS3StepDefinitions {
      * @param input The batched jsons
      * @return      The array of jsons
      */
-    private JSONArray separate(String input){
-        JSONArray output = new JSONArray();
+    private List<JSONObject> separate(String input){
+        List<JSONObject> output = new ArrayList<>();
         for (int index = 0; index < input.length(); ) {
             if (input.charAt(index) == '{') {
                 int close = findBracket(input, index);
-                output.put(new JSONObject(input.substring(index, close+1)));
+                output.add(new JSONObject(input.substring(index, close + 1)));
                 index = close + 1;
             } else {
                 index++;
@@ -383,5 +423,35 @@ public class LambdaToS3StepDefinitions {
             }
         }
         return 0;
+    }
+
+    /**
+     * This compares a message in S3 to the expected S3 output
+     *
+     * @param S3            The S3 message to be compared
+     * @param expectedS3    The expected message
+     * @return              True or false depending on if the S3 message contains the expected S3
+     */
+    private boolean compareOutput(JSONObject S3, JSONObject expectedS3){
+
+        // Loops through the keys of the expected result
+        Iterator<String> keys = expectedS3.keys();
+        while(keys.hasNext()) {
+            String key = keys.next();
+
+            // Returns false if not present, or doesn't match the value
+            if (S3.has(key)){
+                if (!Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())){
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+
+        // Saves the correct S3 message if needed for later
+        correctS3 = S3;
+        return true;
     }
 }
