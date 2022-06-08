@@ -18,7 +18,7 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
         hmacKey = await KeyService.getHmacKey();
     } catch (e) {
         transformationResult = 'ProcessingFailed';
-        console.log('An error occurred getting the hmac key.  Failed with error: ' + e);
+        console.log('An error occurred getting the hmac key.  Failed with ' + e);
     }
 
     const output = event.records.map((record: FirehoseTransformationEventRecord) => {
