@@ -1,11 +1,12 @@
 {
   "event_id":"529f-decd-615e-spot",
-  "request_id":"915b-e4a4-6be2-b8dd",
+  "govuk_signin_journey_id":"915b-e4a4-6be2-b8dd",
   "session_id":"8cd1b82c",
   "client_id":"SPOT",
   "timestamp":1647968132,
-  "timestamp_formatted":"2022-03-22T16:55:32.882",
+  "timestamp_formatted":"2022-03-22T16:55:32.000Z",
   "event_name":"SPOT_USER_FAILED",
+  "component_id": "KBV",
   "user":
   {
     "transaction_id":"12e467e2",
