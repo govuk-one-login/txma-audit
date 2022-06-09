@@ -241,7 +241,7 @@ public class LambdaToS3StepDefinitions {
                 .build()){
             while (noEvent){
                 // Gives the cloudwatch time to update
-                Thread.sleep(4000);
+                Thread.sleep(60000);
 
                 // Finds all log streams in Cloudwatch
                 DescribeLogStreamsRequest req = DescribeLogStreamsRequest.builder().logGroupName(logGroupName).orderBy("LastEventTime").descending(true).limit(10).build();
@@ -346,7 +346,7 @@ public class LambdaToS3StepDefinitions {
                         newkey = latest.key();
                     } else {
                         // Gives the message time to pass through Firehose
-                        Thread.sleep(90000);
+                        Thread.sleep(30000);
                     }
                 }
 
