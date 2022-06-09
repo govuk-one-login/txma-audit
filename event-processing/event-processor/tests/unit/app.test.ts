@@ -492,7 +492,7 @@ describe('Unit test for app handler', function () {
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
         expect(consoleMock).toHaveBeenNthCalledWith(3, 'Topic ARN: SOME-SNS-TOPIC');
         expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 2');
-        expect(consoleMock).toHaveBeenNthCalledWith(5, '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","componentId":"1234","requiredField":"timestamp","message":"timestamp is a required field."}}');
+        expect(consoleMock).toHaveBeenNthCalledWith(5, '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","componentId":"1234","timestamp":"0","requiredField":"timestamp","message":"timestamp is a required field."}}');
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
@@ -580,7 +580,7 @@ describe('Unit test for app handler', function () {
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
         expect(consoleMock).toHaveBeenNthCalledWith(3, 'Topic ARN: SOME-SNS-TOPIC');
         expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 2');
-        expect(consoleMock).toHaveBeenNthCalledWith(5, '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"1609462861","requiredField":"component_id","message":"component_id is a required field."}}');
+        expect(consoleMock).toHaveBeenNthCalledWith(5, '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","componentId":"","timestamp":"1609462861","requiredField":"component_id","message":"component_id is a required field."}}');
         expect(sns.publish).toHaveBeenCalledWith(
             {
                 Message: expectedResult,
