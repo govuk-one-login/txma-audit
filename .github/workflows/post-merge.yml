@@ -80,7 +80,7 @@ jobs:
           artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_EVENT_PROCESSING }}
           working-directory: ${{ env.eventProcessorDirectory }}
-          template-file: config/samconfig-event-processing.toml
+          template-file: event-processing-template.yml
 
   validate_and_build_audit:
     needs: validate_and_build_event_processor
@@ -132,4 +132,4 @@ jobs:
           artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
           working-directory: ${{ env.auditDirectory }}
-          template-file: config/samconfig-audit.toml
+          template-file: audit-template.yml
