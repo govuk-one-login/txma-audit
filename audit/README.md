@@ -20,14 +20,14 @@ To use the SAM CLI, you need the following tools.
 To build and deploy your application for the first time, run the following in your shell whilst in the audit folder:
 
 ```bash
-sam build --template-file <account-name>-template.yml --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
-sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
+sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env "<environment name>"
+sam deploy --config-file config/samconfig-audit.toml --config-env "<environment name>"
 ```
 
 *Deploying Locally*: When deploying locally you can specify the profile to be used for deployment by adding the profile argument e.g.
 
 ```bash
-sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --profile <aws profile name>
+sam deploy --config-file config/samconfig-audit.toml --config-env "<environment name>" --profile <aws profile name>
 ```
 
 You can also provide overrides directly when calling sam deploy if you need to provide different parameters to the stacks:
