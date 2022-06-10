@@ -4,8 +4,8 @@
   "session_id": "8cd1b8hc",
   "client_id": "KBVADDR",
   "timestamp_formatted": "2022-03-22T16:35:32.000Z",
-  "event_name": "KBVADDRESS",
-  "component_id": "KBV",
+  "event_name": "IPV_JOURNEY_START",
+  "component_id": "KBVADDRESS",
   "user": {
     "transaction_id": "12e467e2",
     "email": "m.thompson@randatmail.com",

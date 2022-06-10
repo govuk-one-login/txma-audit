@@ -5,7 +5,7 @@
   "client_id": "IPVPASS",
   "timestamp": 1647969132,
   "timestamp_formatted": "2022-03-22T16:55:42.000Z",
-  "event_name": "IPVPASS",
+  "event_name": "IPV_JOURNEY_START",
   "component_id": "IPVPASS",
   "user": {
     "transaction_id": "12e467e2",
