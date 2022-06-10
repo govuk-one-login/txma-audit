@@ -9,9 +9,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import org.json.JSONArray;
@@ -42,29 +40,31 @@ public class FirehoseToS3 {
      * Checks that the input test data is present, and adds a timestamp to make it unique
      *
      * @param filename  The name of the file which act as the SNS input from the event-processing account
+     * @param account   The name of the team which the event if from
      * @throws IOException
      */
-    @Given("the input file {string} is available")
-    public void the_input_file_is_available(String filename) throws IOException{
+    @Given("the SQS file {string} is available for the {string} team")
+    public void the_input_file_is_available_for_the_team(String filename, String account) throws IOException{
         Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        SNSInput = addTimestamp(json).toString();
+        SNSInput = addUniqueComponentID(json, account).toString();
     }
 
     /**
      * Checks that the test data of what is expected is present. And adds the timestamp to match the input
      *
      * @param filename  The name of the file which should match the data ending at the S3 buckets
+     * @param account   The name of the team which the event if from
      */
-    @And("the expected file {string} is available")
-    public void the_expected_file_is_available(String filename) throws IOException{
+    @And("the expected file {string} is available for the {string} team")
+    public void the_expected_file_is_available_for_the_team(String filename, String account) throws IOException{
         Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        expectedS3 = addTimestamp(json);
+        expectedS3 = addUniqueComponentID(json, account);
     }
 
     /**
@@ -179,13 +179,14 @@ public class FirehoseToS3 {
     @And("the event data should match with the S3 file")
     public void the_event_data_should_match_with_the_S3_file() {
         // Splits the batched outputs into individual jsons
-        JSONArray array = separate(output);
+        List<JSONObject> array = separate(output);
 
         // Compares all individual jsons with our test data
         boolean foundInS3 = false;
-        for (Object object: array){
-            if (Objects.equals(object.toString(), expectedS3.toString())){
+        for (JSONObject object: array){
+            if (compareOutput(object, expectedS3)){
                 foundInS3 = true;
+                break;
             }
         }
 
@@ -193,17 +194,19 @@ public class FirehoseToS3 {
     }
 
     /**
-     * This adds the current timestamp to the event_name to ensure the message is unique
+     * This adds the current timestamp to a component_id for each team to ensure the message is unique
      *
-     * @param json  This is the json which the event_name is being changed
-     * @return      Returns the amended json
+     * @param json      This is the json which the component_id is being amended
+     * @param account   This is the account name to be added to the component_id
+     * @return          Returns the amended json
      */
-    private JSONObject addTimestamp(JSONObject json){
-        if (json.has("event_name")){
+    private JSONObject addUniqueComponentID(JSONObject json, String account){
+        // Only adds the new component_id if it's already in the file
+        if (json.has("component_id")){
             if (timestamp == null){
                 timestamp = Instant.now().toString();
             }
-            json.put("event_name", json.getString("event_name")+" "+timestamp);
+            json.put("component_id", account+" "+timestamp);
         }
         return json;
     }
@@ -214,12 +217,12 @@ public class FirehoseToS3 {
      * @param input The batched jsons
      * @return      The array of jsons
      */
-    private JSONArray separate(String input){
-        JSONArray output = new JSONArray();
+    private List<JSONObject> separate(String input){
+        List<JSONObject> output = new ArrayList<>();
         for (int index = 0; index < input.length(); ) {
             if (input.charAt(index) == '{') {
                 int close = findBracket(input, index);
-                output.put(new JSONObject(input.substring(index, close+1)));
+                output.add(new JSONObject(input.substring(index, close + 1)));
                 index = close + 1;
             } else {
                 index++;
@@ -248,5 +251,33 @@ public class FirehoseToS3 {
             }
         }
         return 0;
+    }
+
+    /**
+     * This compares a message in S3 to the expected S3 output
+     *
+     * @param S3            The S3 message to be compared
+     * @param expectedS3    The expected message
+     * @return              True or false depending on if the S3 message contains the expected S3
+     */
+    private boolean compareOutput(JSONObject S3, JSONObject expectedS3){
+
+        // Loops through the keys of the expected result
+        Iterator<String> keys = expectedS3.keys();
+        while(keys.hasNext()) {
+            String key = keys.next();
+
+            // Returns false if not present, or doesn't match the value
+            if (S3.has(key)){
+                if (!Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())){
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
