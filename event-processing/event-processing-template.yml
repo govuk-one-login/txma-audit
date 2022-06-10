@@ -1526,7 +1526,7 @@ Resources:
             HECAcknowledgmentTimeoutInSeconds: 300
             HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
             HECEndpointType: Raw
-            HECToken: "{{resolve:ssm:HECToken}}"
+            HECToken: "{{resolve:ssm:HECTICFToken}}"
             RetryOptions:
               DurationInSeconds: 7200
             CloudWatchLoggingOptions:
@@ -1606,7 +1606,7 @@ Resources:
             HECAcknowledgmentTimeoutInSeconds: 300
             HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
             HECEndpointType: Raw
-            HECToken: "{{resolve:ssm:HECToken}}"
+            HECToken: "{{resolve:ssm:HECPerformanceToken}}"
             RetryOptions:
               DurationInSeconds: 7200
             CloudWatchLoggingOptions:
@@ -1676,9 +1676,76 @@ Resources:
       Protocol: firehose
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
-  #      FilterPolicy:
-  #        event_name:
-  #          - somevalue
+      FilterPolicy:
+        eventName:
+          - AUTH_SUITABLE_FOR_SERVICE
+          - AUTH_IPV_CAPACITY_REQUESTED
+          - AUTH_IPV_AUTHORISATION_REQUESTED
+          - IPV_JOURNEY_START
+          - IPV_REDIRECT_TO_CRI
+          - IPV_PASSPORT_CRI_START
+          - IPV_PASSPORT_CRI_RESPONSE_RECEIVED
+          - IPV_PASSPORT_CRI_REQUEST_SENT
+          - IPV_PASSPORT_CRI_END
+          - IPV_PASSPORT_CRI_VC_ISSUED
+          - IPV_ADDRESS_CRI_START
+          - IPV_ADDRESS_CRI_REQUEST_SENT
+          - IPV_ADDRESS_CRI_VC_ISSUED
+          - IPV_FRAUD_CRI_START
+          - IPV_FRAUD_CRI_VC_ISSUED
+          - IPV_KBV_CRI_START
+          - IPV_KBV_CRI_REQUEST_SENT
+          - IPV_KBV_CRI_VC_ISSUED
+          - IPV_KBV_CRI_THIRD_PARTY_REQUEST_ENDED
+          - IPV_CRI_AUTH_RESPONSE_RECEIVED
+          - IPV_VC_RECEIVED
+          - IPV_JOURNEY_END
+          - IPV_IDENTITY_ISSUED
+          - AUTH_SIGNED_VC_RECEIVED
+          - AUTH_REQUEST_SPOT_CHECK
+          - AUTH_SPOT_CHECK_RECEIVED
+          - IPV_SPOT_REQUEST_RECEIVED
+          - IPV_SPOT_RESPONSE_APPROVED
+          - IPV_SPOT_RESPONSE_REJECTED
+          - AUTH_AUTHORISATION_REQUEST_ERROR
+          - AUTH_AUTHORISATION_INITIATED
+          - AUTH_AUTHORISATION_REQUEST_RECEIVED
+          - AUTH_AUTH_CODE_ISSUED
+          - AUTH_LOG_OUT_SUCCESS
+          - AUTH_ACCOUNT_TEMPORARILY_LOCKED
+          - AUTH_INVALID_CREDENTIALS
+          - AUTH_NO_ACCOUNT_WITH_EMAIL
+          - AUTH_CODE_MAX_RETRIES_REACHED
+          - AUTH_CODE_VERIFIED
+          - AUTH_PASSWORD_RESET_REQUESTED
+          - AUTH_PASSWORD_RESET_SUCCESSFUL
+          - AUTH_LOG_IN_SUCCESS
+          - AUTH_CHECK_USER_INVALID_EMAIL
+          - AUTH_CHECK_USER_NO_ACCOUNT_WITH_EMAIL
+          - AUTH_CHECK_USER_KNOWN_EMAIL
+          - AUTH_CREATE_ACCOUNT_EMAIL_ALREADY_EXISTS
+          - AUTH_CREATE_ACCOUNT
+          - AUTH_CLIENT_INFO_FOUND
+          - AUTH_UPDATE_PROFILE_REQUEST_RECEIVED
+          - AUTH_UPDATE_PROFILE_REQUEST_ERROR
+          - AUTH_UPDATE_PROFILE_PHONE_NUMBER
+          - AUTH_UPDATE_PROFILE_CONSENT_UPDATED
+          - AUTH_UPDATE_PROFILE_TERMS_CONDS_ACCEPTANCE
+          - AUTH_MFA_INVALID_CODE_REQUEST
+          - AUTH_MFA_MISMATCHED_EMAIL
+          - AUTH_MFA_MISSING_PHONE_NUMBER
+          - AUTH_MFA_CODE_SENT
+          - AUTH_MFA_CODE_SENT_FOR_TEST_CLIENT
+          - AUTH_UPDATE_EMAIL
+          - AUTH_UPDATE_PASSWORD
+          - AUTH_UPDATE_PHONE_NUMBER
+          - AUTH_ACCOUNT_MANAGEMENT_AUTHENTICATE
+          - AUTH_DELETE_ACCOUNT
+          - AUTH_SEND_OTP
+          - AUTH_REGISTER_CLIENT_REQUEST_RECEIVED
+          - AUTH_REGISTER_CLIENT_REQUEST_ERROR
+          - AUTH_UPDATE_CLIENT_REQUEST_RECEIVED
+          - AUTH_UPDATE_CLIENT_REQUEST_ERROR
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -1688,9 +1755,10 @@ Resources:
       Protocol: firehose
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
-  #      FilterPolicy:
-  #        event_name:
-  #          - somevalue
+      FilterPolicy:
+        eventName:
+          - IPV_JOURNEY_START
+          - IPV_JOURNEY_END
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
