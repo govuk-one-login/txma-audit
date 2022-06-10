@@ -15,6 +15,7 @@ To use the SAM CLI, you need the following tools.
 * SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
 * Node.js - [Install Node.js 14](https://nodejs.org/en/), including the NPM package management tool.
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
+* Yarn - [Install Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
 
 To build and deploy your application for the first time, run the following in your shell whilst in the audit folder:
 
