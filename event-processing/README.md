@@ -19,19 +19,20 @@ To use the SAM CLI, you need the following tools.
 * SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
 * Node.js - [Install Node.js 14](https://nodejs.org/en/), including the NPM package management tool.
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
+* Yarn - [Install Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
 
 To build and deploy your application for the first time, run the following in your shell whilst in the event-processing folder:
 
 ```bash
-sam build --template-file <account-name>-template.yml --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
-sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
+sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "<environment name>"
+sam deploy --config-file config/samconfig-event-processing.toml --config-env "<environment name>"
 ```
 *Note*: When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket of the lambda zip.
 
 *Deploying Locally*: When deploying locally you can specify the profile to be used for deployment by adding the profile argument e.g.
 
 ```bash
-sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --profile <aws profile name>
+sam deploy --config-file config/samconfig-event-processing.toml --config-env "<environment name>" --profile <aws profile name>
 ```
 
 You can also provide overrides directly when calling sam deploy if you need to provide different parameters to the stacks:
@@ -77,7 +78,7 @@ event-processor$ aws lambda invoke --function-name EventProcessorFunction --invo
 
 ## Unit tests
 
-Tests are defined in the `event-processor/tests` folder in this project. Use NPM to install the [Jest test framework](https://jestjs.io/) and run unit tests.
+Tests are defined in the `event-processor/tests` folder in this project. Use YARN to install the [Jest test framework](https://jestjs.io/) and run unit tests.
 
 ```bash
 event-processor$ cd event-processor
