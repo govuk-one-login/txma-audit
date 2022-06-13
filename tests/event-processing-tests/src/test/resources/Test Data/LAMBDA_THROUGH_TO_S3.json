@@ -1,12 +1,12 @@
 {
-  "event_id": "529f-decd-815e-dkbv",
-  "govuk_signin_journey_id": "915b-e4a4-6bl2-b8dd",
-  "session_id": "8cd1b86c",
-  "client_id": "KBV",
-  "timestamp": 1647168132,
-  "timestamp_formatted": "2022-01-22T16:55:32.000Z",
+  "event_id": "529f-dece-615e-dipv",
+  "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd",
+  "session_id": "8casd82c",
+  "client_id": "IPV",
+  "timestamp": 1647969131,
+  "timestamp_formatted": "2022-03-22T17:12:11.000Z",
   "event_name": "IPV_JOURNEY_START",
-  "component_id": "KBV",
+  "component_id": "",
   "user": {
     "transaction_id": "12e467e2",
     "email": "m.thompson@randatmail.com",
@@ -22,6 +22,5 @@
   "extensions": {
     "response": "Authentification successful"
   },
-  "persistent_session_id": "...",
-  "additional": "Remove me"
+  "persistent_session_id": "..."
 }
