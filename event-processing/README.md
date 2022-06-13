@@ -10,6 +10,41 @@ This project contains source code and supporting files for creating the Event Pr
 
 The application uses several AWS resources, including Lambda functions, SNS, Kinesis FireHose and S3. These resources are defined in the template files located in the event-processing and audit sub-folders. You can update the template to add AWS resources through the same deployment process that updates your application code.
 
+## Pre-requisites
+
+The deployment of the resources contained here rely on the following AWS System Manager Parameters being available in the event processing account:
+
+* AuthAccountARN - Auth Root Account
+* AuditAccountARN - Audit Root Account
+* KBVQueueARN - SQS Queue for KBV events
+* KBVAddressQueueARN - SQS Queue for KBV Address events
+* KBVFraudQueueARN - SQS Queue for KBV Fraud events
+* KbvKmsArn - KMS ARN used for at rest encryption of the KBV queue
+* KbvAddressKmsArn - KMS ARN used for at rest encryption of the KBV Address queue
+* KbvFraudKmsArn - KMS ARN used for at rest encryption of the KBV Fraud queue
+* IPVCoreQueueARN - SQS Queue for IPV Core events
+* IPVPassportQueueARN - SQS Queue for IPV Passport events
+* IPVCoreKmsArn - KMS ARN used for at rest encryption of the IPV Core queue
+* IPVPassportKmsArn - KMS ARN used for at rest encryption of the IPV Passport queue
+* SPOTKmsArn - KMS ARN used for at rest encryption of the SPOT queue
+* SPOTQueueArn - SQS Queue for SPOT events
+* HECEndpoint - Splunk instance endpoint for FireHose instances
+* HECTICFToken - Splunk token for the TiCF index
+* HECPerformanceToken - Splunk token for performance index
+* HMACKeyKMSKey - 32 Char string used for HMAC encryption
+* HMACSecretArnParameter - ARN for the Secret Manager secret containing the string used for HMAC encryption
+
+You can see these values being referenced throughout the event-processing-template file in the following format:
+
+`"{{resolve:ssm:IPVCoreKmsArn}}"`
+
+See the following on how to create the parameters via:
+
+* [AWS Console](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-create-console.html)
+* [AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/param-create-cli.html)
+* [Powershell](https://docs.aws.amazon.com/systems-manager/latest/userguide/param-create-ps.html)
+* [CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-parameter.html)
+
 ## Deploy the sample application
 
 The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.

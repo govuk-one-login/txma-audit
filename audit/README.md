@@ -6,6 +6,25 @@ This project contains source code and supporting files for creating the Audit se
 
 The application uses several AWS resources Kinesis FireHose and S3.
 
+## Pre-requisites
+
+The deployment of the resources contained here rely on the following AWS System Manager Parameters being available in the audit account:
+
+* EventProcessorSNSTopicARN - Event Processing SNS topic ARN
+* SNSKMSKeyARN - KMS key used for encryption on the Event Processing SNS topic
+
+You can see these values being referenced throughout the audit-template file in the following format:
+
+`"{{resolve:ssm:EventProcessorSNSTopicARN}}"`
+
+See the following on how to create the parameters via:
+
+* [AWS Console](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-create-console.html)
+* [AWS CLI](https://docs.aws.amazon.com/systems-manager/latest/userguide/param-create-cli.html)
+* [Powershell](https://docs.aws.amazon.com/systems-manager/latest/userguide/param-create-ps.html)
+* [CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-parameter.html)
+
+
 ## Deploy the sample application
 
 The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
