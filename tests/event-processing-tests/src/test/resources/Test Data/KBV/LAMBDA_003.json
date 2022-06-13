@@ -4,7 +4,7 @@
   "session_id": "8cd1b86c",
   "client_id": "KBV",
   "timestamp_formatted": "2022-01-22T16:55:32.000Z",
-  "event_name": "KBV",
+  "event_name": "IPV_JOURNEY_START",
   "component_id": "KBV",
   "user": {
     "transaction_id": "12e467e2",

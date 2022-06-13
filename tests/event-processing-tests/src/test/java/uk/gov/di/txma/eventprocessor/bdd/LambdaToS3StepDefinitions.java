@@ -72,7 +72,7 @@ public class LambdaToS3StepDefinitions {
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        JSONObject change = addTimestamp(json);
+        JSONObject change = addUniqueComponentID(json);
         input = wrapJSON(change);
     }
 
@@ -183,11 +183,11 @@ public class LambdaToS3StepDefinitions {
 
             assertNotNull(output);
 
-            // Takes the input file, and adds a timestamp to the event_name
+            // Takes the input file, and adds a timestamp to the component_id
             Path filePath = Path.of(new File("src/test/resources/Test Data/" + account + "/" + endpoint.get(0) + "_S3_" + fileNumber + ".json").getAbsolutePath());
             String file = Files.readString(filePath);
             JSONObject json = new JSONObject(file);
-            JSONObject expectedS3 = addTimestamp(json);
+            JSONObject expectedS3 = addUniqueComponentID(json);
 
             // Splits the batched outputs into individual jsons
             List<JSONObject> array = separate(output);
@@ -263,7 +263,7 @@ public class LambdaToS3StepDefinitions {
                 Thread.sleep(60000);
 
                 // Finds all log streams in Cloudwatch
-                DescribeLogStreamsRequest req = DescribeLogStreamsRequest.builder().logGroupName(logGroupName).orderBy("LastEventTime").descending(true).limit(10).build();
+                DescribeLogStreamsRequest req = DescribeLogStreamsRequest.builder().logGroupName(logGroupName).orderBy("LastEventTime").descending(true).build();
                 DescribeLogStreamsResponse res2 = cloudWatchLogsClient.describeLogStreams(req);
                 List<LogStream> logStreams = res2.logStreams();
 
@@ -310,17 +310,18 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
-     * This adds the current timestamp to the event_name to ensure the message is unique
+     * This adds the current timestamp to a component_id for each team to ensure the message is unique
      *
-     * @param json  This is the json which the event_name is being changed
+     * @param json  This is the json which the component_id is being amended
      * @return      Returns the amended json
      */
-    private JSONObject addTimestamp(JSONObject json){
-        if (json.has("event_name")){
+    private JSONObject addUniqueComponentID(JSONObject json){
+        // Only adds the new component_id if it's already in the file
+        if (json.has("component_id")){
             if (timestamp == null){
                 timestamp = Instant.now().toString();
             }
-            json.put("event_name", json.getString("event_name")+" "+timestamp);
+            json.put("component_id", json.getString("component_id")+" "+timestamp);
         }
         return json;
     }
