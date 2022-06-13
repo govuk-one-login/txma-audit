@@ -454,25 +454,24 @@ public class LambdaToS3StepDefinitions {
      * @return              True or false depending on if the S3 message contains the expected S3
      */
     private boolean compareOutput(JSONObject S3, JSONObject expectedS3){
-
         // Loops through the keys of the expected result
         Iterator<String> keys = expectedS3.keys();
-        while(keys.hasNext()) {
-            String key = keys.next();
-
-            // Returns false if not present, or doesn't match the value
-            if (S3.has(key)){
+        keys.forEachRemaining(key -> {
+            Boolean found = true;
+            if (S3.has(key)) {
                 if (!Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())){
-                    return false;
+                    found = false;
                 }
             }
             else {
-                return false;
+                found = false;
             }
-        }
+            if (found) {
+                // Saves the correct S3 message if needed for later
+                correctS3 = S3;
+            }
+        });
 
-        // Saves the correct S3 message if needed for later
-        correctS3 = S3;
         return true;
     }
 }
