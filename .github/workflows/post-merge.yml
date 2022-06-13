@@ -74,24 +74,13 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_INTEGRATION:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_INTEGRATION:$IMAGE_TAG
-      - name: Package SAM application
-        env:
-          ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
-          SIGNING_PROFILE_NAME_EVENT_PROCESSING: ${{ secrets.SIGNING_PROFILE_NAME_EVENT_PROCESSING }}
-        run: |
-          sam package \
-            --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING" \
-            --output-template-file=cf-template.yaml \
-            --signing-profiles KBVEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" KBVAddressEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" \
-            KBVFraudEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" IPVEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" \
-            IPVPassEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" SPOTEventProcessorFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING" \
-            ObfuscationFunction="$SIGNING_PROFILE_NAME_EVENT_PROCESSING"
-      - name: Zip the CloudFormation template
-        run: zip template.zip cf-template.yaml config/samconfig-event-processing.toml
-      - name: Upload zipped CloudFormation artifact to S3
-        env:
-          ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
-        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING/template.zip"
+      - name: Deploy SAM app
+        uses: alphagov/di-devplatform-upload-action@v2
+        with:
+          artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
+          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_EVENT_PROCESSING }}
+          working-directory: ${{ env.eventProcessorDirectory }}
+          template-file: event-processing-template.yml
 
   validate_and_build_audit:
     needs: validate_and_build_event_processor
@@ -137,17 +126,10 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_INTEGRATION:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_INTEGRATION:$IMAGE_TAG
-      - name: Package SAM application
-        env:
-          ARTIFACT_SOURCE_BUCKET_NAME_AUDIT: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
-          SIGNING_PROFILE_NAME_AUDIT: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
-        run: |
-          sam package \
-            --s3-bucket="$ARTIFACT_SOURCE_BUCKET_NAME_AUDIT" \
-            --output-template-file=cf-template.yaml
-      - name: Zip the CloudFormation template
-        run: zip template.zip cf-template.yaml config/samconfig-audit.toml
-      - name: Upload zipped CloudFormation artifact to S3
-        env:
-          ARTIFACT_SOURCE_BUCKET_NAME_AUDIT: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
-        run: aws s3 cp template.zip "s3://$ARTIFACT_SOURCE_BUCKET_NAME_AUDIT/template.zip"
+      - name: Deploy SAM app
+        uses: alphagov/di-devplatform-upload-action@v2
+        with:
+          artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
+          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
+          working-directory: ${{ env.auditDirectory }}
+          template-file: audit-template.yml
