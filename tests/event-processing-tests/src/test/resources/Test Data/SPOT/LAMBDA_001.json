@@ -5,8 +5,8 @@
   "client_id":"SPOT",
   "timestamp":1647968132,
   "timestamp_formatted":"2022-03-22T16:55:32.000Z",
-  "event_name":"SPOT_USER_FAILED",
-  "component_id": "KBV",
+  "event_name": "IPV_JOURNEY_START",
+  "component_id": "SPOT",
   "user":
   {
     "transaction_id":"12e467e2",

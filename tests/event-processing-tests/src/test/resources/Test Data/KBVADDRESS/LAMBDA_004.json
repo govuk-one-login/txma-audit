@@ -22,5 +22,6 @@
   "extensions": {
     "response": "Authentification successful"
   },
-  "persistent_session_id": "..."
+  "persistent_session_id": "...",
+  "additional": "Remove me"
 }
