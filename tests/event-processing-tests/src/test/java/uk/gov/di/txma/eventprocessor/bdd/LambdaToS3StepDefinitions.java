@@ -50,7 +50,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-
 public class LambdaToS3StepDefinitions {
     Region region = Region.EU_WEST_2;
     String output = null;
@@ -68,7 +67,7 @@ public class LambdaToS3StepDefinitions {
      * @throws IOException
      */
     @Given("the SQS file {string} is available")
-    public void the_SQS_file_is_available(String filename) throws IOException{
+    public void the_SQS_file_is_available(String filename) throws IOException {
         Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
         String file = Files.readString(filePath);
 
