@@ -5,14 +5,16 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.core.SdkBytes;
@@ -22,9 +24,15 @@ import software.amazon.awssdk.services.firehose.model.PutRecordRequest;
 import software.amazon.awssdk.services.firehose.model.PutRecordResponse;
 import software.amazon.awssdk.services.firehose.model.Record;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class FirehoseToS3 {
@@ -44,7 +52,7 @@ public class FirehoseToS3 {
      * @throws IOException
      */
     @Given("the SQS file {string} is available for the {string} team")
-    public void the_input_file_is_available_for_the_team(String filename, String account) throws IOException{
+    public void the_input_file_is_available_for_the_team(String filename, String account) throws IOException {
         Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
         String file = Files.readString(filePath);
 
@@ -261,23 +269,21 @@ public class FirehoseToS3 {
      * @return              True or false depending on if the S3 message contains the expected S3
      */
     private boolean compareOutput(JSONObject S3, JSONObject expectedS3){
-
+        final boolean[] found = {true};
         // Loops through the keys of the expected result
         Iterator<String> keys = expectedS3.keys();
-        while(keys.hasNext()) {
-            String key = keys.next();
-
+        keys.forEachRemaining(key -> {
             // Returns false if not present, or doesn't match the value
             if (S3.has(key)){
                 if (!Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())){
-                    return false;
+                    found[0] = false;
                 }
             }
             else {
-                return false;
+                found[0] = false;
             }
-        }
+        });
 
-        return true;
+        return found[0];
     }
 }
