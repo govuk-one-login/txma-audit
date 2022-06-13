@@ -64,32 +64,31 @@ public class LambdaToS3StepDefinitions {
      * Checks that the input test data is present. And changes it to look like an SQS message
      *
      * @param filename      The name of the file which act as the SQS input from the service teams' accounts
+     * @param account       The name of the team which the event if from
      * @throws IOException
      */
-    @Given("the SQS file {string} is available")
-    public void the_SQS_file_is_available(String filename) throws IOException {
+    @Given("the SQS file {string} is available for the {string} team")
+    public void the_SQS_file_is_available_for_the_team(String filename, String account) throws IOException {
         Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        JSONObject change = addUniqueComponentID(json);
+        JSONObject change = addUniqueComponentID(json, account);
         input = wrapJSON(change);
     }
 
     /**
      * Checks the expected S3 output file is present
      *
-     * @param account      The name of the file which should match the S3 data at the end of the test
-     * @param fileNumber   The number of the file to check against
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the {string} output file {string} is available")
-    public void the_output_file_is_available(String account, String fileNumber, DataTable endpoints) throws IOException{
+    @And("the output file is available")
+    public void the_output_file_is_available(DataTable endpoints) throws IOException{
         // Loops through the possible endpoints
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + account + "/" + endpoint.get(0) + "_S3_" + fileNumber + ".json").getAbsolutePath());
+            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_S3_EXPECTED.json").getAbsolutePath());
             Files.readString(filePath);
         }
     }
@@ -166,12 +165,11 @@ public class LambdaToS3StepDefinitions {
      * This searches the S3 bucket and checks that the new data contains the output file
      *
      * @param account       Which account inputted the message
-     * @param fileNumber    Which file number we are checking
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the s3 below should have a new event matching the respective {string} output file {string}")
-    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_files(String account, String fileNumber, DataTable endpoints) throws IOException {
+    @And("the s3 below should have a new event matching the respective {string} output file")
+    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_file(String account, DataTable endpoints) throws IOException {
 
         // Loops through the possible outputs
         List<List<String>> data = endpoints.asLists(String.class);
@@ -184,10 +182,10 @@ public class LambdaToS3StepDefinitions {
             assertNotNull(output);
 
             // Takes the input file, and adds a timestamp to the component_id
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + account + "/" + endpoint.get(0) + "_S3_" + fileNumber + ".json").getAbsolutePath());
+            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_S3_EXPECTED.json").getAbsolutePath());
             String file = Files.readString(filePath);
             JSONObject json = new JSONObject(file);
-            JSONObject expectedS3 = addUniqueComponentID(json);
+            JSONObject expectedS3 = addUniqueComponentID(json, account);
 
             // Splits the batched outputs into individual jsons
             List<JSONObject> array = separate(output);
@@ -312,16 +310,17 @@ public class LambdaToS3StepDefinitions {
     /**
      * This adds the current timestamp to a component_id for each team to ensure the message is unique
      *
-     * @param json  This is the json which the component_id is being amended
-     * @return      Returns the amended json
+     * @param json      This is the json which the component_id is being amended
+     * @param account   This is the account name to be added to the component_id
+     * @return          Returns the amended json
      */
-    private JSONObject addUniqueComponentID(JSONObject json){
+    private JSONObject addUniqueComponentID(JSONObject json, String account){
         // Only adds the new component_id if it's already in the file
         if (json.has("component_id")){
             if (timestamp == null){
                 timestamp = Instant.now().toString();
             }
-            json.put("component_id", json.getString("component_id")+" "+timestamp);
+            json.put("component_id", account + " " + timestamp);
         }
         return json;
     }
