@@ -9,14 +9,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.cloudwatch.model.CloudWatchException;
-import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
-
-import software.amazon.awssdk.services.cloudwatchlogs.model.DescribeLogStreamsRequest;
-import software.amazon.awssdk.services.cloudwatchlogs.model.DescribeLogStreamsResponse;
-import software.amazon.awssdk.services.cloudwatchlogs.model.GetLogEventsRequest;
-import software.amazon.awssdk.services.cloudwatchlogs.model.LogStream;
-import software.amazon.awssdk.services.cloudwatchlogs.model.OutputLogEvent;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
@@ -33,12 +25,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -46,6 +40,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.Objects;
 
 import static java.util.Objects.isNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -56,10 +53,9 @@ public class LambdaToS3StepDefinitions {
     String output = null;
     String input;
     Instant time;
-    String requestid;
     String timestamp;
-    Boolean warn;
     JSONObject correctS3;
+    String log;
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -113,14 +109,15 @@ public class LambdaToS3StepDefinitions {
             SdkBytes payload = SdkBytes.fromUtf8String(input);
             InvokeRequest request = InvokeRequest.builder()
                     .functionName(functionName)
-                    .invocationType("Event")
+                    .logType("Tail")
                     .payload(payload)
                     .build();
 
             // Checks the data is sent, and records the Request ID to track it
             res = awsLambda.invoke(request);
-            assertEquals(202, res.sdkHttpResponse().statusCode());
-            requestid = res.responseMetadata().requestId();
+            assertEquals(200, res.sdkHttpResponse().statusCode());
+            log = new String (Base64.getDecoder().decode(res.logResult()), StandardCharsets.UTF_8);
+
 
         } catch (LambdaException e) {
             System.err.println(e.getMessage());
@@ -132,34 +129,28 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
-     * Ensures that an error does not appear in cloudwatch when the lambda was invoked
-     *
-     * @param account   The service team account name for the corresponding lambda
+     * Ensures that an error does not appear in cloudwatch log produced when the lambda was invoked
      */
-    @Then("there shouldn't be an error message in the {string} lambda cloudwatch")
-    public void there_shouldnt_be_an_error_message_in_the_lambda_cloudwatch(String account) {
-        assertFalse(findCloudWatchError(account));
+    @Then("there shouldn't be an error message in the lambda logs")
+    public void there_shouldnt_be_an_error_message_in_the_lambda_cloudwatch() {
+        assertThat(log, not(containsString("ERROR")));
     }
 
     /**
-     * Ensures that an error does appear in cloudwatch when the lambda was invoked
-     *
-     * @param account   The service team account name for the corresponding lambda
+     * Ensures that an error does appear in cloudwatch log produced when the lambda was invoked
      */
-    @Then("there should be an error message in the {string} lambda cloudwatch")
-    public void there_should_be_an_error_message_in_the_lambda_cloudwatch(String account) {
-        assertTrue(findCloudWatchError(account));
+    @Then("there should be an error message in the lambda logs")
+    public void there_should_be_an_error_message_in_the_lambda_cloudwatch() {
+        assertThat(log, containsString("ERROR"));
     }
 
     /**
-     * Ensures that a warn error does appear in cloudwatch when the lambda was invoked
-     *
-     * @param account   The service team account name for the corresponding lambda
+     * Ensures that a warn error does appear in cloudwatch log produced when the lambda was invoked
      */
-    @Then("there should be a warn message in the {string} lambda cloudwatch")
-    public void there_should_be_a_warn_message_in_the_lambda_cloudwatch(String account) {
-        assertFalse(findCloudWatchError(account));
-        assertTrue(warn);
+    @Then("there should be a warn message in the lambda logs")
+    public void there_should_be_a_warn_message_in_the_lambda_cloudwatch() {
+        assertThat(log, not(containsString("ERROR")));
+        assertThat(log, containsString("WARN"));
     }
 
     /**
@@ -234,78 +225,6 @@ public class LambdaToS3StepDefinitions {
         wrapped.put("Records", array);
 
         return wrapped.toString();
-    }
-
-    /**
-     * Searches the Cloudwatch Logs for the request id, and returns if an error was found
-     *
-     * @param account   The service team account name for the corresponding lambda
-     * @return          True if an error is found, false if not
-     */
-    private Boolean findCloudWatchError(String account){
-        String logGroupName = "/aws/lambda/EventProcessorFunction-" + account;
-        // noEvent ensures we wait for cloudwatch to be updated
-        boolean noEvent = true;
-        // errorFound tracks if we find an error or not
-        boolean errorFound = false;
-        // This will return true if a warning is found, but won't fail any tests
-        warn = false;
-        // count will prevent an infinite loop if the event is not found
-        int count = 0;
-
-        // Opens the cloudwatch client
-        try (CloudWatchLogsClient cloudWatchLogsClient = CloudWatchLogsClient.builder()
-                .region(region)
-                .build()){
-            while (noEvent){
-                // Gives the cloudwatch time to update
-                Thread.sleep(60000);
-
-                // Finds all log streams in Cloudwatch
-                DescribeLogStreamsRequest req = DescribeLogStreamsRequest.builder().logGroupName(logGroupName).orderBy("LastEventTime").descending(true).build();
-                DescribeLogStreamsResponse res2 = cloudWatchLogsClient.describeLogStreams(req);
-                List<LogStream> logStreams = res2.logStreams();
-
-                for (LogStream logStream : logStreams) {
-                    if (logStream.lastEventTimestamp() > time.getEpochSecond()) {
-                        String logStreamName = logStream.logStreamName();
-                        // Get the messages from the latest batch of cloudwatch messages
-                        GetLogEventsRequest getLogEventsRequest = GetLogEventsRequest.builder()
-                                .logGroupName(logGroupName)
-                                .logStreamName(logStreamName)
-                                .startFromHead(false)
-                                .build();
-
-                        // Checks the logs don't contain an 'ERROR'
-                        for (OutputLogEvent event : cloudWatchLogsClient.getLogEvents(getLogEventsRequest).events()) {
-                            String message = event.message();
-                            if (message.contains(requestid)) {
-                                if (message.contains("ERROR")) {
-                                    errorFound = true;
-                                }
-                                if (message.contains("WARN")) {
-                                    warn = true;
-                                }
-                                noEvent = false;
-                            }
-                        }
-                    }
-                }
-
-                count ++;
-                if (count == 30){
-                    System.err.println("No corresponding event found");
-                    System.exit(1);
-                }
-            }
-        } catch (CloudWatchException e) {
-            System.err.println(e.awsErrorDetails().errorMessage());
-            System.exit(1);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        return errorFound;
     }
 
     /**
