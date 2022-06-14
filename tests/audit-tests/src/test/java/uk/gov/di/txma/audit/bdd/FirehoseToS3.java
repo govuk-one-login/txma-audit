@@ -34,6 +34,7 @@ import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
+import static java.util.Objects.isNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,6 +48,7 @@ public class FirehoseToS3 {
     JSONObject expectedS3;
     Instant time = Instant.now();
     String timestamp;
+    JSONObject correctS3;
 
     /**
      * Checks that the input test data is present, and adds a timestamp to make it unique
@@ -273,21 +275,20 @@ public class FirehoseToS3 {
      * @return              True or false depending on if the S3 message contains the expected S3
      */
     private boolean compareOutput(JSONObject S3, JSONObject expectedS3){
-        final boolean[] found = {true};
-        // Loops through the keys of the expected result
-        Iterator<String> keys = expectedS3.keys();
-        keys.forEachRemaining(key -> {
-            // Returns false if not present, or doesn't match the value
-            if (S3.has(key)){
-                if (!Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())){
-                    found[0] = false;
-                }
-            }
-            else {
-                found[0] = false;
-            }
-        });
+        // If not already found
+        if (isNull(correctS3)) {
+            // This will hold the correct message if all elements match
+            correctS3 = S3;
 
-        return found[0];
+            // Loops through the keys of the expected result
+            Iterator<String> keys = expectedS3.keys();
+            keys.forEachRemaining(key -> {
+                if (!S3.has(key) || !Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())) {
+                    // removes the message if found to not be the right one
+                    correctS3 = null;
+                }
+            });
+        }
+        return !isNull(correctS3);
     }
 }
