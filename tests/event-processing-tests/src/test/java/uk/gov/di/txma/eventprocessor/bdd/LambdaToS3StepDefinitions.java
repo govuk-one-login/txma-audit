@@ -45,6 +45,7 @@ import java.util.Stack;
 import java.util.zip.GZIPInputStream;
 import java.util.Objects;
 
+import static java.util.Objects.isNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -452,24 +453,20 @@ public class LambdaToS3StepDefinitions {
      * @return              True or false depending on if the S3 message contains the expected S3
      */
     private boolean compareOutput(JSONObject S3, JSONObject expectedS3){
-        // Loops through the keys of the expected result
-        Iterator<String> keys = expectedS3.keys();
-        keys.forEachRemaining(key -> {
-            Boolean found = true;
-            if (S3.has(key)) {
-                if (!Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())){
-                    found = false;
-                }
-            }
-            else {
-                found = false;
-            }
-            if (found) {
-                // Saves the correct S3 message if needed for later
-                correctS3 = S3;
-            }
-        });
+        // If not already found
+        if (isNull(correctS3)) {
+            // This will hold the correct message if all elements match
+            correctS3 = S3;
 
-        return true;
+            // Loops through the keys of the expected result
+            Iterator<String> keys = expectedS3.keys();
+            keys.forEachRemaining(key -> {
+                if (!S3.has(key) || !Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())) {
+                    // removes the message if found to not be the right one
+                    correctS3 = null;
+                }
+            });
+        }
+        return !isNull(correctS3);
     }
 }
