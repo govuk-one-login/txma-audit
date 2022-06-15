@@ -178,7 +178,7 @@ public class LambdaToS3StepDefinitions {
 
                 // Checks for latest key and saves the contents in the output variable
                 output = null;
-                findLatestKey(endpoint.get(0).toLowerCase());
+                findLatestKeys(endpoint.get(0).toLowerCase());
 
                 // Splits the batched outputs into individual jsons
                 List<JSONObject> array = separate(output);
@@ -253,12 +253,11 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
-     * Finds the latest key in the S3 bucket and saves the contents in the output variable
+     * Finds the latest 2 keys in the S3 bucket and saves the contents in the output variable
      *
      * @param endpoint  What S3 bucket to look at
      */
-    private void findLatestKey(String endpoint){
-        String latestKey = null;
+    private void findLatestKeys(String endpoint){
         String bucketName = "event-processing-build-"+endpoint+"-splunk-test";
 
         // Opens an S3 client
@@ -279,23 +278,29 @@ public class LambdaToS3StepDefinitions {
             ListObjectsResponse res = s3.listObjects(listObjects);
             List<S3Object> objects = res.contents();
 
-            // This makes sure that there are some logs
-            if (objects.size() > 0) {
-                // This is the latest key
-                latestKey = objects.get(objects.size() - 1).key();
+            // This makes sure that there are at least two logs
+            if (objects.size() > 1) {
+                // This is the latest keys
+                String latestKey = objects.get(objects.size() - 1).key();
+                String previousKey = objects.get(objects.size() - 2).key();
 
-                // Gets the new object
-                GetObjectRequest objectRequest = GetObjectRequest
-                        .builder()
-                        .key(latestKey)
-                        .bucket(bucketName)
-                        .build();
+                output = "";
+                StringBuilder str = new StringBuilder(output);
+                for (String key : new String[]{latestKey, previousKey}){
+                    // Gets the new object
+                    GetObjectRequest objectRequest = GetObjectRequest
+                            .builder()
+                            .key(key)
+                            .bucket(bucketName)
+                            .build();
 
-                // Reads the new object
-                GZIPInputStream gzinpstr = new GZIPInputStream(s3.getObject(objectRequest));
-                InputStreamReader inpstr = new InputStreamReader(gzinpstr);
-                BufferedReader read = new BufferedReader(inpstr);
-                output = read.readLine();
+                    // Reads the new object
+                    GZIPInputStream gzinpstr = new GZIPInputStream(s3.getObject(objectRequest));
+                    InputStreamReader inpstr = new InputStreamReader(gzinpstr);
+                    BufferedReader read = new BufferedReader(inpstr);
+                    str.append(read.readLine());
+                }
+                output = str.toString();
             }
 
         } catch (S3Exception e) {
