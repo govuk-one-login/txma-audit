@@ -52,7 +52,6 @@ public class LambdaToS3StepDefinitions {
     Region region = Region.EU_WEST_2;
     String output = null;
     String input;
-    Instant time;
     String timestamp;
     JSONObject correctS3;
     String log;
@@ -123,9 +122,6 @@ public class LambdaToS3StepDefinitions {
             System.err.println(e.getMessage());
             System.exit(1);
         }
-
-        // Records the time of when the lambda is sent to only check later objects in the S3
-        time = Instant.now();
     }
 
     /**
@@ -161,33 +157,44 @@ public class LambdaToS3StepDefinitions {
      * @throws IOException
      */
     @And("the s3 below should have a new event matching the respective {string} output file")
-    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_file(String account, DataTable endpoints) throws IOException {
+    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_file(String account, DataTable endpoints) throws IOException, InterruptedException {
 
-        // Loops through the possible outputs
+        // Loops through the possible endpoints
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            output = null;
-
-            // Checks for a new key
-            checkForNewKey(endpoint.get(0).toLowerCase());
-
-            assertNotNull(output);
-
-            // Takes the input file, and adds a timestamp to the component_id
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_S3_EXPECTED.json").getAbsolutePath());
-            String file = Files.readString(filePath);
-            JSONObject json = new JSONObject(file);
-            JSONObject expectedS3 = addUniqueComponentID(json, account);
-
-            // Splits the batched outputs into individual jsons
-            List<JSONObject> array = separate(output);
-
-            // Compares all individual jsons with our test data
             boolean foundInS3 = false;
-            for (JSONObject object: array){
-                if (compareOutput(object, expectedS3)){
-                    foundInS3 = true;
-                    break;
+            // count will make sure it only searches for a finite time
+            int count = 0;
+
+            // Has a retry loop in case it finds the wrong key on the first try
+            // Count < 11 is enough time for it to be processed by the Firehose
+            // If it is the first firehose being checked, it will wait the full time (or until it is found)
+            // If it is a later firehose, we know that enough time has already passed, so it only goes through the loop once
+            while (!foundInS3 && ((count < 11  && endpoint == data.get(0)) || (count < 1))) {
+                if (count > 0){
+                    Thread.sleep(10000);
+                }
+                count ++;
+
+                // Checks for latest key and saves the contents in the output variable
+                output = null;
+                findLatestKey(endpoint.get(0).toLowerCase());
+
+                // Splits the batched outputs into individual jsons
+                List<JSONObject> array = separate(output);
+
+                // Takes the input file, and adds a timestamp to the component_id
+                Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_S3_EXPECTED.json").getAbsolutePath());
+                String file = Files.readString(filePath);
+                JSONObject json = new JSONObject(file);
+                JSONObject expectedS3 = addUniqueComponentID(json, account);
+
+                // Compares all individual jsons with our test data
+                for (JSONObject object : array) {
+                    if (compareOutput(object, expectedS3)) {
+                        foundInS3 = true;
+                        break;
+                    }
                 }
             }
 
@@ -246,67 +253,41 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
-     * This checks for a new key
+     * Finds the latest key in the S3 bucket and saves the contents in the output variable
      *
      * @param endpoint  What S3 bucket to look at
      */
-    private void checkForNewKey(String endpoint){
-        String newkey = null;
-
+    private void findLatestKey(String endpoint){
+        String latestKey = null;
         String bucketName = "event-processing-build-"+endpoint+"-splunk-test";
-        // This ensures that the test will eventually fail, even if a new message is not found
-        int timer = 0;
 
+        // Opens an S3 client
+        try (S3Client s3 = S3Client.builder()
+                .region(region)
+                .build()){
 
-        while (timer < 5 && newkey == null){
-            timer ++;
+            // This is used to get the current year, so that we can search the correct s3 files
+            ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
+            // Lists all objects
+            ListObjectsRequest listObjects = ListObjectsRequest
+                    .builder()
+                    .bucket(bucketName)
+                    .prefix("firehose/"+now.getYear()+"/")
+                    .build();
 
-            // Opens an S3 client
-            try (S3Client s3 = S3Client.builder()
-                    .region(region)
-                    .build()){
+            // Finds the latest object
+            ListObjectsResponse res = s3.listObjects(listObjects);
+            List<S3Object> objects = res.contents();
 
-                ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
-                // Lists all objects
-                ListObjectsRequest listObjects = ListObjectsRequest
-                        .builder()
-                        .bucket(bucketName)
-                        .prefix("firehose/"+now.getYear()+"/")
-                        .build();
-
-                // Finds the latest object
-                ListObjectsResponse res = s3.listObjects(listObjects);
-                List<S3Object> objects = res.contents();
-                if (objects.size() > 0) {
-                    S3Object latest = objects.get(objects.size() - 1);
-
-                    // Checks it has been created past the time the test started and stored the corresponding key
-                    if (latest.lastModified().compareTo(time) > 0) {
-                        newkey = latest.key();
-                    } else {
-                        // Gives the message time to pass through Firehose
-                        Thread.sleep(30000);
-                    }
-                }
-
-            } catch (S3Exception e) {
-                System.err.println(e.awsErrorDetails().errorMessage());
-                System.exit(1);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        if (newkey != null){
-            // Opens S3 client
-            try (S3Client s3 = S3Client.builder()
-                    .region(region)
-                    .build()){
+            // This makes sure that there are some logs
+            if (objects.size() > 0) {
+                // This is the latest key
+                latestKey = objects.get(objects.size() - 1).key();
 
                 // Gets the new object
                 GetObjectRequest objectRequest = GetObjectRequest
                         .builder()
-                        .key(newkey)
+                        .key(latestKey)
                         .bucket(bucketName)
                         .build();
 
@@ -315,10 +296,13 @@ public class LambdaToS3StepDefinitions {
                 InputStreamReader inpstr = new InputStreamReader(gzinpstr);
                 BufferedReader read = new BufferedReader(inpstr);
                 output = read.readLine();
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
+
+        } catch (S3Exception e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            System.exit(1);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
