@@ -10,8 +10,6 @@ LABEL "GIT_REPO" = ${GIT_REPO}
 
 RUN yum install -y awscli
 RUN yum install -y shadow-utils
-RUN yum install -y wget
-RUN yum install -y unzip
 RUN useradd -ms /bin/bash AutomationUser
 
 WORKDIR /home/AutomationUser
