@@ -6,8 +6,7 @@ export class ObfuscationService {
         if (auditEvent.user) {
             const user = auditEvent.user as any;
             for (const k in user) {
-                if (k === 'ip_address') continue;
-                user[k] = this.obfuscate(user[k], hmacKey);
+                if (['transaction_id', 'email', 'phone'].indexOf(k) !== -1) user[k] = this.obfuscate(user[k], hmacKey);
             }
         }
 

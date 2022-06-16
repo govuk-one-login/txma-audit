@@ -58,14 +58,11 @@ describe('Unit test for app handler', function () {
     it('accepts a bare minimum payload and stringifies', async () => {
         const exampleMessage: IAuditEvent = {
             event_id: "",
-            govuk_signin_journey_id: "",
-            session_id: "",
             client_id: "",
             timestamp: 1609462861,
             timestamp_formatted: "2021-01-23T15:43:21.842",
             event_name: "AUTHENTICATION_ATTEMPT",
-            component_id: "AUTH",
-            persistent_session_id: ""
+            component_id: "AUTH"
         }
 
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString('base64')
