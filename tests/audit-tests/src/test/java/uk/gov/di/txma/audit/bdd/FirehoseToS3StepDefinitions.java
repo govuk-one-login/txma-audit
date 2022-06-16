@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class FirehoseToS3 {
+public class FirehoseToS3StepDefinitions {
 
     String output;
     SdkBytes input;
