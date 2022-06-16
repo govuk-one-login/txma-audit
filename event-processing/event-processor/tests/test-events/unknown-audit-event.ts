@@ -19,9 +19,9 @@ export interface IAuditEventUserMessage {
     email: string;
     phone: string;
     ip_address: string;
-    session_id?: string;
-    persistent_session_id?: string;
-    govuk_signin_journey_id?: string;
+    session_id: string;
+    persistent_session_id: string;
+    govuk_signin_journey_id: string;
     unknown_user_field: string;
 }
 
