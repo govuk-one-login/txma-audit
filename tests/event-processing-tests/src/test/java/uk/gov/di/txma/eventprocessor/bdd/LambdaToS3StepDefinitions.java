@@ -165,6 +165,9 @@ public class LambdaToS3StepDefinitions {
             // count will make sure it only searches for a finite time
             int count = 0;
 
+            // Reset correctS3 for next endpoint
+            correctS3 = null;
+
             // Has a retry loop in case it finds the wrong key on the first try
             // Count < 11 is enough time for it to be processed by the Firehose
             // If it is the first firehose being checked, it will wait the full time (or until it is found)
