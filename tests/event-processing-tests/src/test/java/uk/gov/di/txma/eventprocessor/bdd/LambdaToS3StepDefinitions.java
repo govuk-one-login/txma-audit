@@ -84,12 +84,12 @@ public class LambdaToS3StepDefinitions {
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the output file is available")
-    public void the_output_file_is_available(DataTable endpoints) throws IOException{
+    @And("the output file {string} is available")
+    public void the_output_file_is_available(String filename,DataTable endpoints) throws IOException{
         // Loops through the possible endpoints
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_S3_EXPECTED.json").getAbsolutePath());
+            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + filename+".json").getAbsolutePath());
             Files.readString(filePath);
         }
     }
@@ -169,8 +169,8 @@ public class LambdaToS3StepDefinitions {
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the s3 below should have a new event matching the respective {string} output file")
-    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_file(String account, DataTable endpoints) throws IOException {
+    @And("the s3 below should have a new event matching the respective {string} output file {string}")
+    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_file(String account, String filename, DataTable endpoints) throws IOException {
 
         // Loops through the possible outputs
         List<List<String>> data = endpoints.asLists(String.class);
@@ -183,7 +183,7 @@ public class LambdaToS3StepDefinitions {
             assertNotNull(output);
 
             // Takes the input file, and adds a timestamp to the component_id
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_S3_EXPECTED.json").getAbsolutePath());
+            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + filename+".json").getAbsolutePath());
             String file = Files.readString(filePath);
             JSONObject json = new JSONObject(file);
             JSONObject expectedS3 = addUniqueComponentID(json, account);
@@ -194,6 +194,7 @@ public class LambdaToS3StepDefinitions {
             // Compares all individual jsons with our test data
             boolean foundInS3 = false;
             for (JSONObject object: array){
+                System.out.println("object = " + object);
                 if (compareOutput(object, expectedS3)){
                     foundInS3 = true;
                     break;
@@ -469,4 +470,43 @@ public class LambdaToS3StepDefinitions {
         }
         return !isNull(correctS3);
     }
-}
+
+    @And("the  S3 below should not have a new event matching the respective {string} output file {string}")
+    public void the_s3_below_should_not_have_a_new_event_matching_the_respective_output_file(String account,String filename, DataTable endpoints) throws IOException {
+        // Loops through the possible outputs
+        List<List<String>> data = endpoints.asLists(String.class);
+        for (List<String> endpoint : data) {
+            output = null;
+
+            // Checks for a new key
+            checkForNewKey(endpoint.get(0).toLowerCase());
+
+            if (output !=null) {
+
+
+                // Takes the input file, and adds a timestamp to the component_id
+                Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + filename+".json").getAbsolutePath());
+                String file = Files.readString(filePath);
+                JSONObject json = new JSONObject(file);
+                JSONObject expectedS3 = addUniqueComponentID(json, account);
+
+                // Splits the batched outputs into individual jsons
+                List<JSONObject> array = separate(output);
+
+                // Compares all individual jsons with our test data
+                boolean foundInS3 = false;
+                for (JSONObject object : array) {
+                    if (compareOutput(object, expectedS3)) {
+                        foundInS3 = true;
+                        break;
+                    }
+                }
+
+                assertFalse(foundInS3);
+            }
+        }
+
+    }
+
+    }
+
