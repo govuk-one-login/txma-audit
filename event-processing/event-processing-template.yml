@@ -1035,12 +1035,6 @@ Resources:
               - "*"
           - Effect: "Allow"
             Principal:
-              AWS: "{{resolve:ssm:AuditAccountARN}}"
-            Action:
-              - 'kms:Decrypt'
-            Resource: '*'
-          - Effect: "Allow"
-            Principal:
               Service: "firehose.amazonaws.com"
             Action:
               - 'kms:Decrypt'
