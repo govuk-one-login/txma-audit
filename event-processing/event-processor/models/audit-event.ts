@@ -3,8 +3,6 @@ import { IUserUnknownFields, UserUnknownFields } from './user-unknown-fields.int
 
 export interface IAuditEvent {
     event_id?: string;
-    govuk_signin_journey_id?: string;
-    session_id?: string;
     client_id?: string;
     timestamp: number;
     timestamp_formatted?: string;
@@ -14,7 +12,6 @@ export interface IAuditEvent {
     platform?: unknown | undefined;
     restricted?: unknown | undefined;
     extensions?: unknown | undefined;
-    persistent_session_id?: string;
 }
 
 export interface IAuditEventUserMessage {
@@ -22,13 +19,14 @@ export interface IAuditEventUserMessage {
     email?: string;
     phone?: string;
     ip_address: string;
+    session_id?: string;
+    persistent_session_id?: string;
+    govuk_signin_journey_id?: string;
 }
 
 function createBaseAuditEvent(): IAuditEvent {
     return {
         event_id: '',
-        govuk_signin_journey_id: '',
-        session_id: '',
         client_id: '',
         timestamp: 0,
         timestamp_formatted: '',
@@ -38,7 +36,6 @@ function createBaseAuditEvent(): IAuditEvent {
         platform: undefined,
         restricted: undefined,
         extensions: undefined,
-        persistent_session_id: '',
     };
 }
 
@@ -51,12 +48,6 @@ export class AuditEvent {
             switch (value) {
                 case 'event_id':
                     event.event_id = jsonObject[value];
-                    break;
-                case 'govuk_signin_journey_id':
-                    event.govuk_signin_journey_id = jsonObject[value];
-                    break;
-                case 'session_id':
-                    event.session_id = jsonObject[value];
                     break;
                 case 'client_id':
                     event.client_id = jsonObject[value];
@@ -85,9 +76,6 @@ export class AuditEvent {
                 case 'extensions':
                     event.extensions = jsonObject[value];
                     break;
-                case 'persistent_session_id':
-                    event.persistent_session_id = jsonObject[value];
-                    break;
                 default:
                     unknown_fields.set(value, jsonObject[value]);
                     break;
@@ -102,9 +90,6 @@ export class AuditEvent {
     static toJSON(message: IAuditEvent): object {
         const obj: any = {};
         message.event_id !== undefined && (obj.event_id = message.event_id);
-        message.govuk_signin_journey_id !== undefined &&
-            (obj.govuk_signin_journey_id = message.govuk_signin_journey_id);
-        message.session_id !== undefined && (obj.session_id = message.session_id);
         message.client_id !== undefined && (obj.client_id = message.client_id);
         message.timestamp !== undefined && (obj.timestamp = Math.round(message.timestamp));
         message.timestamp_formatted !== undefined && (obj.timestamp_formatted = message.timestamp_formatted);
@@ -115,13 +100,20 @@ export class AuditEvent {
         message.platform !== undefined && (obj.platform = message.platform ? message.platform : undefined);
         message.restricted !== undefined && (obj.restricted = message.restricted ? message.restricted : undefined);
         message.extensions !== undefined && (obj.extensions = message.extensions ? message.extensions : undefined);
-        message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
         return obj;
     }
 }
 
 function createBaseAuditEventUserMessage(): IAuditEventUserMessage {
-    return { transaction_id: '', email: '', phone: '', ip_address: '' };
+    return {
+        transaction_id: '',
+        email: '',
+        phone: '',
+        ip_address: '',
+        session_id: '',
+        persistent_session_id: '',
+        govuk_signin_journey_id: '',
+    };
 }
 
 export class AuditEventUserMessage {
@@ -142,6 +134,15 @@ export class AuditEventUserMessage {
                 case 'ip_address':
                     user.ip_address = object.ip_address;
                     break;
+                case 'session_id':
+                    user.session_id = object.session_id;
+                    break;
+                case 'persistent_session_id':
+                    user.persistent_session_id = object.persistent_session_id;
+                    break;
+                case 'govuk_signin_journey_id':
+                    user.govuk_signin_journey_id = object.govuk_signin_journey_id;
+                    break;
                 default:
                     unknown_fields.set(value, object[value]);
                     break;
@@ -159,6 +160,10 @@ export class AuditEventUserMessage {
         message.email !== undefined && (obj.email = message.email);
         message.phone !== undefined && (obj.phone = message.phone);
         message.ip_address !== undefined && (obj.ip_address = message.ip_address);
+        message.session_id !== undefined && (obj.session_id = message.session_id);
+        message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
+        message.govuk_signin_journey_id !== undefined &&
+            (obj.govuk_signin_journey_id = message.govuk_signin_journey_id);
         return obj;
     }
 }

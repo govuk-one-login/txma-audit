@@ -6,8 +6,6 @@ import { ObfuscationService } from '../../services/obfuscation-service';
 export class TestHelper {
     static exampleMessage: IAuditEvent = {
         event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-        govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
-        session_id: 'c222c1ec',
         client_id: 'some-client',
         timestamp: 1609462861,
         timestamp_formatted: '2021-01-23T15:43:21.842',
@@ -18,6 +16,9 @@ export class TestHelper {
             email: 'foo@bar.com',
             phone: '07711223344',
             ip_address: '100.100.100.100',
+            session_id: 'c222c1ec',
+            persistent_session_id: 'some session id',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
         },
         platform: {
             xray_trace_id: '24727sda4192',
@@ -29,13 +30,10 @@ export class TestHelper {
         extensions: {
             response: 'Authentication successful',
         },
-        persistent_session_id: 'some session id',
     };
 
     static exampleObfuscatedMessage: IAuditEvent = {
         event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-        govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
-        session_id: 'c222c1ec',
         client_id: 'some-client',
         timestamp: 1609462861,
         timestamp_formatted: '2021-01-23T15:43:21.842',
@@ -46,6 +44,9 @@ export class TestHelper {
             email: ObfuscationService.obfuscate('foo@bar.com', 'secret-1-value'),
             phone: ObfuscationService.obfuscate('07711223344', 'secret-1-value'),
             ip_address: '100.100.100.100',
+            session_id: 'c222c1ec',
+            persistent_session_id: 'some session id',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
         },
         platform: {
             xray_trace_id: '24727sda4192',
@@ -57,7 +58,6 @@ export class TestHelper {
         extensions: {
             response: 'Authentication successful',
         },
-        persistent_session_id: 'some session id',
     };
 
     private static firehoseTransformationEvent: FirehoseTransformationEvent = {
