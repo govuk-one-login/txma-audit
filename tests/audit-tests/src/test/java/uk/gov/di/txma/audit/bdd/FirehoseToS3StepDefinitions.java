@@ -1,6 +1,5 @@
 package uk.gov.di.txma.audit.bdd;
 
-import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
@@ -13,8 +12,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -39,7 +36,6 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 
 import static java.util.Objects.isNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -50,7 +46,7 @@ public class FirehoseToS3StepDefinitions {
     String SNSInput;
     JSONObject expectedS3;
     String timestamp;
-    JSONObject correctS3;
+    JSONObject correctS3 = null;
     Region region = Region.EU_WEST_2;
 
     /**
@@ -127,13 +123,8 @@ public class FirehoseToS3StepDefinitions {
         // count will make sure it only searches for a finite time
         int count = 0;
 
-        // Reset correctS3 for next endpoint
-        correctS3 = null;
-
         // Has a retry loop in case it finds the wrong key on the first try
         // Count < 11 is enough time for it to be processed by the Firehose
-        // If it is the first firehose being checked, it will wait the full time (or until it is found)
-        // If it is a later firehose, we know that enough time has already passed, so it only goes through the loop once
         while (!foundInS3 && count < 11) {
             if (count > 0){
                 Thread.sleep(10000);
@@ -257,8 +248,6 @@ public class FirehoseToS3StepDefinitions {
                 .region(region)
                 .build()){
 
-            // This is used to get the current year, so that we can search the correct s3 files
-            ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
             // Lists all objects
             ListObjectsRequest listObjects = ListObjectsRequest
                     .builder()
