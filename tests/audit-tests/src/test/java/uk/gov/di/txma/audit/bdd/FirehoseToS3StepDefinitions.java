@@ -1,5 +1,6 @@
 package uk.gov.di.txma.audit.bdd;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
@@ -12,6 +13,8 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -46,9 +49,9 @@ public class FirehoseToS3StepDefinitions {
     SdkBytes input;
     String SNSInput;
     JSONObject expectedS3;
-    Instant time = Instant.now();
     String timestamp;
     JSONObject correctS3;
+    Region region = Region.EU_WEST_2;
 
     /**
      * Checks that the input test data is present, and adds a timestamp to make it unique
@@ -87,7 +90,6 @@ public class FirehoseToS3StepDefinitions {
     @When("the message is sent to firehose")
     public void the_message_is_sent_to_firehose() {
         String firehoseName = "AuditFireHose-build";
-        Region region = Region.EU_WEST_2;
 
         // Opens a firehose client
         try (FirehoseClient firehoseClient = FirehoseClient.builder()
@@ -116,91 +118,42 @@ public class FirehoseToS3StepDefinitions {
     }
 
     /**
-     * Checks the S3 bucket until a new message is found
-     *
-     * @throws InterruptedException
+     * This searches the S3 bucket and checks that the new data contains the output file
      */
-    @Then("the s3 should have a new event data")
-    public void the_s3_should_have_a_new_event_data() throws InterruptedException {
-        String newkey = null;
-        String bucketName = "audit-build-message-batch";
-        // This ensures that the test will eventually fail, even if a new message is not found
-        int timer = 0;
+    @Then("the s3 below should have a new event matching the output file")
+    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_file() throws InterruptedException {
 
-        Region region = Region.EU_WEST_2;
-
-        while (timer < 20 && newkey == null){
-            timer ++;
-            // Gives the message time to pass through Firehose
-            Thread.sleep(65000);
-
-            // Opens an S3 client
-            try (S3Client s3 = S3Client.builder()
-                    .region(region)
-                    .build()){
-
-                // Lists all objects
-                ListObjectsRequest listObjects = ListObjectsRequest
-                        .builder()
-                        .bucket(bucketName)
-                        .build();
-
-                // Finds the latest object
-                ListObjectsResponse res = s3.listObjects(listObjects);
-                List<S3Object> objects = res.contents();
-                S3Object latest = objects.get(objects.size() - 1);
-
-                // Checks it has been created past the time the test started and stored the corresponding key
-                if (latest.lastModified().compareTo(time)>0){
-                    newkey = latest.key();
-                }
-
-            } catch (S3Exception e) {
-                System.err.println(e.awsErrorDetails().errorMessage());
-                System.exit(1);
-            }
-        }
-
-        // Checks a new key was found
-        assertNotNull(newkey);
-
-        // Opens S3 client
-        try (S3Client s3 = S3Client.builder()
-                .region(region)
-                .build()){
-
-            // Gets the new object
-            GetObjectRequest objectRequest = GetObjectRequest
-                    .builder()
-                    .key(newkey)
-                    .bucket(bucketName)
-                    .build();
-
-            // Reads the new object
-            GZIPInputStream gzinpstr = new GZIPInputStream(s3.getObject(objectRequest));
-            InputStreamReader inpstr = new InputStreamReader(gzinpstr);
-            BufferedReader read = new BufferedReader(inpstr);
-            output = read.readLine();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Compares the new object to the test data
-     */
-    @And("the event data should match with the S3 file")
-    public void the_event_data_should_match_with_the_S3_file() {
-        // Splits the batched outputs into individual jsons
-        List<JSONObject> array = separate(output);
-
-        // Compares all individual jsons with our test data
         boolean foundInS3 = false;
-        for (JSONObject object: array){
-            if (compareOutput(object, expectedS3)){
-                foundInS3 = true;
-                break;
+        // count will make sure it only searches for a finite time
+        int count = 0;
+
+        // Reset correctS3 for next endpoint
+        correctS3 = null;
+
+        // Has a retry loop in case it finds the wrong key on the first try
+        // Count < 11 is enough time for it to be processed by the Firehose
+        // If it is the first firehose being checked, it will wait the full time (or until it is found)
+        // If it is a later firehose, we know that enough time has already passed, so it only goes through the loop once
+        while (!foundInS3 && count < 11) {
+            if (count > 0){
+                Thread.sleep(10000);
+            }
+            count ++;
+
+            // Checks for latest key and saves the contents in the output variable
+            output = null;
+            findLatestKeys();
+
+            // Splits the batched outputs into individual jsons
+            List<JSONObject> array = separate(output);
+
+
+            // Compares all individual jsons with our test data
+            for (JSONObject object : array) {
+                if (compareOutput(object, expectedS3)) {
+                    foundInS3 = true;
+                    break;
+                }
             }
         }
 
@@ -290,5 +243,62 @@ public class FirehoseToS3StepDefinitions {
             });
         }
         return !isNull(correctS3);
+    }
+
+
+    /**
+     * Finds the latest 2 keys in the S3 bucket and saves the contents in the output variable
+     */
+    private void findLatestKeys(){
+        String bucketName = "audit-build-message-batch";
+
+        // Opens an S3 client
+        try (S3Client s3 = S3Client.builder()
+                .region(region)
+                .build()){
+
+            // This is used to get the current year, so that we can search the correct s3 files
+            ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
+            // Lists all objects
+            ListObjectsRequest listObjects = ListObjectsRequest
+                    .builder()
+                    .bucket(bucketName)
+                    .build();
+
+            // Finds the latest object
+            ListObjectsResponse res = s3.listObjects(listObjects);
+            List<S3Object> objects = res.contents();
+
+            // This makes sure that there are at least two logs
+            if (objects.size() > 1) {
+                // This is the latest keys
+                String latestKey = objects.get(objects.size() - 1).key();
+                String previousKey = objects.get(objects.size() - 2).key();
+
+                output = "";
+                StringBuilder str = new StringBuilder(output);
+                for (String key : new String[]{latestKey, previousKey}){
+                    // Gets the new object
+                    GetObjectRequest objectRequest = GetObjectRequest
+                            .builder()
+                            .key(key)
+                            .bucket(bucketName)
+                            .build();
+
+                    // Reads the new object
+                    GZIPInputStream gzinpstr = new GZIPInputStream(s3.getObject(objectRequest));
+                    InputStreamReader inpstr = new InputStreamReader(gzinpstr);
+                    BufferedReader read = new BufferedReader(inpstr);
+                    str.append(read.readLine());
+                }
+                output = str.toString();
+            }
+
+        } catch (S3Exception e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            System.exit(1);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
