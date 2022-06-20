@@ -124,7 +124,7 @@ jobs:
           ECR_REPOSITORY_INTEGRATION: ${{ secrets.ECR_REPOSITORY_AUDIT_INTEGRATION }}
           IMAGE_TAG: latest
         run: |
-          docker build /
+          docker build \
             --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
             --build-arg GIT_REPO=$GITHUB_REPOSITORY \
             --build-arg COMMIT_SHA=$GITHUB_SHA \
