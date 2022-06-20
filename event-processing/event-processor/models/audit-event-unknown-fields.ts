@@ -8,10 +8,6 @@ export class AuditEventUnknownFields {
     static fromAuditMessage(object: any, unknown_fields: Map<string, unknown>): IAuditEventUnknownFields {
         return {
             event_id: isSet(object.event_id) ? String(object.event_id) : '',
-            govuk_signin_journey_id: isSet(object.govuk_signin_journey_id)
-                ? String(object.govuk_signin_journey_id)
-                : '',
-            session_id: isSet(object.session_id) ? String(object.session_id) : '',
             client_id: isSet(object.client_id) ? String(object.client_id) : '',
             timestamp: isSet(object.timestamp) ? Number(object.timestamp) : 0,
             timestamp_formatted: isSet(object.timestamp_formatted) ? String(object.timestamp_formatted) : '',
@@ -21,7 +17,6 @@ export class AuditEventUnknownFields {
             platform: isSet(object.platform) ? object.platform : undefined,
             restricted: isSet(object.restricted) ? object.restricted : undefined,
             extensions: isSet(object.extensions) ? object.extensions : undefined,
-            persistent_session_id: isSet(object.persistent_session_id) ? String(object.persistent_session_id) : '',
             _unknownFields: unknown_fields,
         };
     }

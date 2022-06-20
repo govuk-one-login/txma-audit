@@ -3,10 +3,9 @@
   "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd",
   "session_id": "8casd82c",
   "client_id": "IPV",
-  "timestamp": 1647969131,
   "timestamp_formatted": "2022-03-22T17:12:11.000Z",
-  "event_name": "IPV",
-  "component_id": "IPV",
+  "event_name": "IPV_JOURNEY_START",
+  "component_id": "",
   "user": {
     "transaction_id": "12e467e2",
     "email": "m.thompson@randatmail.com",
