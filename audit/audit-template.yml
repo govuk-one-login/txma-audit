@@ -105,16 +105,6 @@ Resources:
               - 'kms:GenerateDataKey*'
               - 'kms:DescribeKey'
             Resource: '*'
-          - Effect: "Allow"
-            Principal:
-              Service: "sns.amazonaws.com"
-            Action:
-              - 'kms:GenerateDataKey*'
-            Resource:
-              - "*"
-            Condition:
-              ArnLike:
-                "aws:PrincipalArn": "arn:aws:sns:*:{{resolve:ssm:EventProcessorAccountARN}}:*"
 
   FireHoseKMSKeyAlias:
     Type: AWS::KMS::Alias

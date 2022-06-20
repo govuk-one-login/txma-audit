@@ -1044,16 +1044,6 @@ Resources:
             Resource: '*'
           - Effect: "Allow"
             Principal:
-              Service: "sns.amazonaws.com"
-            Action:
-              - 'kms:GenerateDataKey*'
-            Resource:
-              - "*"
-            Condition:
-              ArnLike:
-                "aws:PrincipalArn": "arn:aws:sns:*:${AWS::AccountId}:*"
-          - Effect: "Allow"
-            Principal:
               Service: "lambda.amazonaws.com"
             Action:
               - 'kms:Decrypt'
