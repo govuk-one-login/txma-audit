@@ -128,7 +128,7 @@ public class LambdaToS3StepDefinitions {
      */
     @Then("there shouldn't be an error message in the lambda logs")
     public void there_shouldnt_be_an_error_message_in_the_lambda_cloudwatch() {
-        assertThat(log, not(containsString("ERROR")));
+        assertThat(log, not(containsString("[ERROR]")));
     }
 
     /**
@@ -136,7 +136,7 @@ public class LambdaToS3StepDefinitions {
      */
     @Then("there should be an error message in the lambda logs")
     public void there_should_be_an_error_message_in_the_lambda_cloudwatch() {
-        assertThat(log, containsString("ERROR"));
+        assertThat(log, containsString("[ERROR]"));
     }
 
     /**
@@ -144,8 +144,8 @@ public class LambdaToS3StepDefinitions {
      */
     @Then("there should be a warn message in the lambda logs")
     public void there_should_be_a_warn_message_in_the_lambda_cloudwatch() {
-        assertThat(log, not(containsString("ERROR")));
-        assertThat(log, containsString("WARN"));
+        assertThat(log, not(containsString("[ERROR]")));
+        assertThat(log, containsString("[WARN]"));
     }
 
     /**
