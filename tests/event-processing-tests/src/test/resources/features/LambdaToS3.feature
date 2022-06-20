@@ -6,7 +6,7 @@ Feature: Raw event data journey from the lambda to S3
       | FRAUD    |
       | PERF     |
     When the "<account>" lambda is invoked
-    Then there shouldn't be an error message in the "<account>" lambda cloudwatch
+    Then there shouldn't be an error message in the lambda logs
     And the s3 below should have a new event matching the respective "<account>" output file
       | FRAUD    |
       | PERF     |
@@ -24,7 +24,7 @@ Feature: Raw event data journey from the lambda to S3
   Scenario Outline: Check messages don't pass through lambda if missing event_name
     Given the SQS file "LAMBDA_MISSING_EVENT_NAME.json" is available for the "<account>" team
     When the "<account>" lambda is invoked
-    Then there should be an error message in the "<account>" lambda cloudwatch
+    Then there should be an error message in the lambda logs
 
     Examples:
       | account     |
@@ -38,7 +38,7 @@ Feature: Raw event data journey from the lambda to S3
   Scenario Outline: Check messages don't pass through lambda if missing timestamp
     Given the SQS file "LAMBDA_MISSING_TIMESTAMP.json" is available for the "<account>" team
     When the "<account>" lambda is invoked
-    Then there should be an error message in the "<account>" lambda cloudwatch
+    Then there should be an error message in the lambda logs
 
     Examples:
       | account     |
@@ -54,7 +54,7 @@ Feature: Raw event data journey from the lambda to S3
     And the output file is available
       | FRAUD    |
     When the "<account>" lambda is invoked
-    Then there should be a warn message in the "<account>" lambda cloudwatch
+    Then there should be a warn message in the lambda logs
     And the s3 below should have a new event matching the respective "<account>" output file
       | FRAUD    |
     And this s3 event should not contain the "additional" field
