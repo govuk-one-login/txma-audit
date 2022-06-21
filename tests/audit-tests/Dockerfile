@@ -14,8 +14,6 @@ RUN yum install -y wget
 RUN yum install -y unzip
 RUN useradd -ms /bin/bash AutomationUser
 
-COPY run-tests.sh ./
-
 WORKDIR /home/AutomationUser
 
 # copy source code over
