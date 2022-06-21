@@ -114,7 +114,7 @@ public class LambdaToS3StepDefinitions {
 
             // Checks the data is sent, and records the Request ID to track it
             res = awsLambda.invoke(request);
-            assertEquals(200, res.sdkHttpResponse().statusCode());
+            assertEquals(200, res.sdkHttpResponse().statusCode(), "A problem calling the lambda. HTTP response was incorrect.");
             log = new String (Base64.getDecoder().decode(res.logResult()), StandardCharsets.UTF_8);
 
 
@@ -129,7 +129,7 @@ public class LambdaToS3StepDefinitions {
      */
     @Then("there shouldn't be an error message in the lambda logs")
     public void there_shouldnt_be_an_error_message_in_the_lambda_cloudwatch() {
-        assertThat(log, not(containsString("[ERROR]")));
+        assertThat("A log from the lambda contained an [ERROR] message.", log, not(containsString("[ERROR]")));
     }
 
     /**
@@ -137,7 +137,7 @@ public class LambdaToS3StepDefinitions {
      */
     @Then("there should be an error message in the lambda logs")
     public void there_should_be_an_error_message_in_the_lambda_cloudwatch() {
-        assertThat(log, containsString("[ERROR]"));
+        assertThat("No log from the lambda contained an [ERROR] message.", log, containsString("[ERROR]"));
     }
 
     /**
@@ -145,8 +145,8 @@ public class LambdaToS3StepDefinitions {
      */
     @Then("there should be a warn message in the lambda logs")
     public void there_should_be_a_warn_message_in_the_lambda_cloudwatch() {
-        assertThat(log, not(containsString("[ERROR]")));
-        assertThat(log, containsString("[WARN]"));
+        assertThat("A log from the lambda contained an [ERROR] message.", log, not(containsString("[ERROR]")));
+        assertThat("No log from the lambda contained a [WARN] message.", log, containsString("[WARN]"));
     }
 
     /**
@@ -161,7 +161,7 @@ public class LambdaToS3StepDefinitions {
         // Loops through the possible endpoints
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            assertTrue(findInS3(endpoint.get(0), filename, account));
+            assertTrue(findInS3(endpoint.get(0), filename, account),  "The message " + filename + " from " + account + " was not found in the " + endpoint.get(0) + " S3 bucket.");
         }
     }
 
@@ -177,7 +177,7 @@ public class LambdaToS3StepDefinitions {
         // Loops through the possible outputs
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            assertFalse(findInS3(endpoint.get(0), filename, account));
+            assertFalse(findInS3(endpoint.get(0), filename, account), "The message " + filename + " from " + account + " incorrectly made it through to the " + endpoint.get(0) + " S3 bucket.");
         }
     }
 
@@ -188,7 +188,7 @@ public class LambdaToS3StepDefinitions {
      */
     @And("this s3 event should not contain the {string} field")
     public void the_s3_below_should_have_a_new_event_matching_the_respective_output_files(String field) {
-        assertFalse(correctS3.has(field));
+        assertFalse(correctS3.has(field), "The message found in the S3 bucket contained the incorrect field " + field + " which should have been removed by the EP lambda.");
     }
 
     /**
