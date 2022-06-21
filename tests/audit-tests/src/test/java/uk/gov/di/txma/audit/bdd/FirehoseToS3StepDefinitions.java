@@ -215,7 +215,7 @@ public class FirehoseToS3StepDefinitions {
      * Finds the latest 2 keys in the S3 bucket and saves the contents in the output variable
      */
     private void findLatestKeys(){
-        String bucketName = "audit-" + System.getenv("environment") + "-message-batch";
+        String bucketName = "audit-" + System.getenv("TEST_ENVIRONMENT") + "-message-batch";
 
         // Opens an S3 client
         try (S3Client s3 = S3Client.builder()
