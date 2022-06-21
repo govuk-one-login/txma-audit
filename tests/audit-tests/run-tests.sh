@@ -2,7 +2,7 @@
 
 set -eu
 
-#gradle clean cucumber
+#./gradlew clean test -Dcucumber.filter.tags="@$environment"
 
 cat <<EOF > "$TEST_REPORT_DIR/result.json"
 [
