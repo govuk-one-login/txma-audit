@@ -27,5 +27,6 @@ tasks {
         dependsOn assemble, testClasses
         useJUnitPlatform ()
         systemProperty("cucumber.execution.parallel.enabled", true)
+        systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
     }
 }
