@@ -105,7 +105,7 @@ public class FirehoseToS3StepDefinitions {
 
             // Checks the response
             PutRecordResponse recordResponse = firehoseClient.putRecord(recordRequest);
-            assertEquals(200, recordResponse.sdkHttpResponse().statusCode());
+            assertEquals(200, recordResponse.sdkHttpResponse().statusCode(), "A problem calling the lambda. HTTP response was incorrect.");
         } catch (FirehoseException e) {
             System.out.println(e.getLocalizedMessage());
             System.exit(1);
@@ -147,7 +147,7 @@ public class FirehoseToS3StepDefinitions {
             }
         }
 
-        assertTrue(foundInS3);
+        assertTrue(foundInS3, "The message was not found in the S3 bucket.");
     }
 
     /**
