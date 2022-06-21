@@ -9,8 +9,3 @@ Feature: IPV event data journey from firehose to S3
     Examples:
       | account     |
       | IPV         |
-      | IPVPass     |
-      | KBV         |
-      | KBVAddress  |
-      | KBVFraud    |
-      | SPOT        |
