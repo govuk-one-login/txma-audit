@@ -84,28 +84,19 @@ Feature: Raw event data journey from the lambda to S3
     Examples:
       | account     |
       | IPV         |
-      | IPVPass     |
-      | KBV         |
-      | KBVAddress  |
-      | KBVFraud    |
-      | SPOT        |
+
 
   Scenario Outline: Checking the filter sends "RANDOM_EVENT" to neither Fraud, nor Performance
     Given the SQS file "random_event.json" is available for the "<account>" team
-    And the output file "_expected" is available
+    And the output file "_expected_random" is available
       | FRAUD    |
       | PERF     |
     When the "<account>" lambda is invoked
     Then there shouldn't be an error message in the lambda logs
-    And the  S3 below should not have a new event matching the respective "<account>" output file "_expected"
+    And the  S3 below should not have a new event matching the respective "<account>" output file "_expected_random"
       | FRAUD    |
       | PERF     |
 
     Examples:
       | account     |
       | IPV         |
-      | IPVPass     |
-      | KBV         |
-      | KBVAddress  |
-      | KBVFraud    |
-      | SPOT        |
