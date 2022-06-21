@@ -3,7 +3,9 @@
 set -eu
 
 gradle -v
-#./gradlew clean test -Dcucumber.filter.tags="$environment"
+
+echo "Current Environment $TEST_ENVIRONMENT"
+#./gradlew clean test -Dcucumber.filter.tags="$TEST_ENVIRONMENT"
 
 cat <<EOF > "$TEST_REPORT_DIR/result.json"
 [
