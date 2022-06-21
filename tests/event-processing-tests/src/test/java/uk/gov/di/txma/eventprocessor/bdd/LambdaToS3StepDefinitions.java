@@ -54,6 +54,7 @@ public class LambdaToS3StepDefinitions {
     String timestamp;
     JSONObject correctS3;
     String log;
+    boolean firstSearch = true;
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -78,12 +79,12 @@ public class LambdaToS3StepDefinitions {
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the output file is available")
-    public void the_output_file_is_available(DataTable endpoints) throws IOException{
+    @And("the output file {string} is available")
+    public void the_output_file_is_available(String filename,DataTable endpoints) throws IOException{
         // Loops through the possible endpoints
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_S3_EXPECTED.json").getAbsolutePath());
+            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + filename+".json").getAbsolutePath());
             Files.readString(filePath);
         }
     }
@@ -155,54 +156,29 @@ public class LambdaToS3StepDefinitions {
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the s3 below should have a new event matching the respective {string} output file")
-    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_file(String account, DataTable endpoints) throws IOException, InterruptedException {
-
+    @And("the s3 below should have a new event matching the respective {string} output file {string}")
+    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_file(String account, String filename, DataTable endpoints) throws IOException, InterruptedException {
         // Loops through the possible endpoints
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            boolean foundInS3 = false;
-            // count will make sure it only searches for a finite time
-            int count = 0;
-
-            // Reset correctS3 for next endpoint
-            correctS3 = null;
-
-            // Has a retry loop in case it finds the wrong key on the first try
-            // Count < 11 is enough time for it to be processed by the Firehose
-            // If it is the first firehose being checked, it will wait the full time (or until it is found)
-            // If it is a later firehose, we know that enough time has already passed, so it only goes through the loop once
-            while (!foundInS3 && ((count < 11  && endpoint == data.get(0)) || (count < 1))) {
-                if (count > 0){
-                    Thread.sleep(10000);
-                }
-                count ++;
-
-                // Checks for latest key and saves the contents in the output variable
-                output = null;
-                findLatestKeys(endpoint.get(0).toLowerCase());
-
-                // Splits the batched outputs into individual jsons
-                List<JSONObject> array = separate(output);
-
-                // Takes the input file, and adds a timestamp to the component_id
-                Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_S3_EXPECTED.json").getAbsolutePath());
-                String file = Files.readString(filePath);
-                JSONObject json = new JSONObject(file);
-                JSONObject expectedS3 = addUniqueComponentID(json, account);
-
-                // Compares all individual jsons with our test data
-                for (JSONObject object : array) {
-                    if (compareOutput(object, expectedS3)) {
-                        foundInS3 = true;
-                        break;
-                    }
-                }
-            }
-
-            assertTrue(foundInS3);
+            assertTrue(findInS3(endpoint.get(0), filename, account));
         }
+    }
 
+    /**
+     * This searches the S3 bucket and checks that any new data does not contain the output file
+     *
+     * @param account       Which account inputted the message
+     * @param endpoints     The endpoints we're checking against
+     * @throws IOException
+     */
+    @And("the  S3 below should not have a new event matching the respective {string} output file {string}")
+    public void the_s3_below_should_not_have_a_new_event_matching_the_respective_output_file(String account,String filename, DataTable endpoints) throws IOException, InterruptedException {
+        // Loops through the possible outputs
+        List<List<String>> data = endpoints.asLists(String.class);
+        for (List<String> endpoint : data) {
+            assertFalse(findInS3(endpoint.get(0), filename, account));
+        }
     }
 
     /**
@@ -379,4 +355,59 @@ public class LambdaToS3StepDefinitions {
         }
         return !isNull(correctS3);
     }
+
+    /**
+     * This searches the S3 bucket for the latest objects and compares them to the output file
+     *
+     * @param endpoint  Which S3 bucket we are searching
+     * @param filename  The output file name
+     * @param account   The account which sent the message
+     * @return          True or false depending on whether the message was found or not
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public boolean findInS3 (String endpoint, String filename, String account) throws IOException, InterruptedException {
+        boolean foundInS3 = false;
+        // count will make sure it only searches for a finite time
+        int count = 0;
+
+        // Reset correctS3 for next endpoint
+        correctS3 = null;
+
+        // Has a retry loop in case it finds the wrong key on the first try
+        // Count < 11 is enough time for it to be processed by the Firehose
+        // If it is the first firehose being checked, it will wait the full time (or until it is found)
+        // If it is a later firehose, we know that enough time has already passed, so it only goes through the loop once
+        while (!foundInS3 && ((count < 11  && firstSearch) || (count < 1))) {
+            if (count > 0){
+                Thread.sleep(10000);
+            }
+            count ++;
+
+            // Checks for latest key and saves the contents in the output variable
+            output = null;
+            findLatestKeys(endpoint.toLowerCase());
+
+            // Splits the batched outputs into individual jsons
+            List<JSONObject> array = separate(output);
+
+            // Takes the input file, and adds a timestamp to the component_id
+            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + filename+".json").getAbsolutePath());
+            String file = Files.readString(filePath);
+            JSONObject json = new JSONObject(file);
+            JSONObject expectedS3 = addUniqueComponentID(json, account);
+
+            // Compares all individual jsons with our test data
+            for (JSONObject object : array) {
+                if (compareOutput(object, expectedS3)) {
+                    foundInS3 = true;
+                    break;
+                }
+            }
+        }
+        firstSearch = false;
+        return foundInS3;
+    }
+
 }
+
