@@ -52,7 +52,6 @@ public class LambdaToS3StepDefinitions {
     String output = null;
     String input;
     String timestamp;
-    JSONObject correctS3;
     String log;
     boolean firstSearch = true;
 
@@ -179,16 +178,6 @@ public class LambdaToS3StepDefinitions {
         for (List<String> endpoint : data) {
             assertFalse(findInS3(endpoint.get(0), filename, account), "The message " + filename + " from " + account + " incorrectly made it through to the " + endpoint.get(0) + " S3 bucket.");
         }
-    }
-
-    /**
-     * This checks that any additional fields are not in the S3 message found
-     *
-     * @param field     The name of the field which shouldn't be present
-     */
-    @And("this s3 event should not contain the {string} field")
-    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_files(String field) {
-        assertFalse(correctS3.has(field), "The message found in the S3 bucket contained the incorrect field " + field + " which should have been removed by the EP lambda.");
     }
 
     /**
@@ -332,31 +321,6 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
-     * This compares a message in S3 to the expected S3 output
-     *
-     * @param S3            The S3 message to be compared
-     * @param expectedS3    The expected message
-     * @return              True or false depending on if the S3 message contains the expected S3
-     */
-    private boolean compareOutput(JSONObject S3, JSONObject expectedS3){
-        // If not already found
-        if (isNull(correctS3)) {
-            // This will hold the correct message if all elements match
-            correctS3 = S3;
-
-            // Loops through the keys of the expected result
-            Iterator<String> keys = expectedS3.keys();
-            keys.forEachRemaining(key -> {
-                if (!S3.has(key) || !Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())) {
-                    // removes the message if found to not be the right one
-                    correctS3 = null;
-                }
-            });
-        }
-        return !isNull(correctS3);
-    }
-
-    /**
      * This searches the S3 bucket for the latest objects and compares them to the output file
      *
      * @param endpoint  Which S3 bucket we are searching
@@ -370,9 +334,6 @@ public class LambdaToS3StepDefinitions {
         boolean foundInS3 = false;
         // count will make sure it only searches for a finite time
         int count = 0;
-
-        // Reset correctS3 for next endpoint
-        correctS3 = null;
 
         // Has a retry loop in case it finds the wrong key on the first try
         // Count < 11 is enough time for it to be processed by the Firehose
@@ -399,7 +360,7 @@ public class LambdaToS3StepDefinitions {
 
             // Compares all individual jsons with our test data
             for (JSONObject object : array) {
-                if (compareOutput(object, expectedS3)) {
+                if (object.similar(expectedS3)) {
                     foundInS3 = true;
                     break;
                 }
