@@ -46,7 +46,6 @@ public class FirehoseToS3StepDefinitions {
     String SNSInput;
     JSONObject expectedS3;
     String timestamp;
-    JSONObject correctS3 = null;
     Region region = Region.EU_WEST_2;
 
     /**
@@ -141,7 +140,7 @@ public class FirehoseToS3StepDefinitions {
 
             // Compares all individual jsons with our test data
             for (JSONObject object : array) {
-                if (compareOutput(object, expectedS3)) {
+                if (object.similar(expectedS3)) {
                     foundInS3 = true;
                     break;
                 }
@@ -209,31 +208,6 @@ public class FirehoseToS3StepDefinitions {
             }
         }
         return 0;
-    }
-
-    /**
-     * This compares a message in S3 to the expected S3 output
-     *
-     * @param S3            The S3 message to be compared
-     * @param expectedS3    The expected message
-     * @return              True or false depending on if the S3 message contains the expected S3
-     */
-    private boolean compareOutput(JSONObject S3, JSONObject expectedS3){
-        // If not already found
-        if (isNull(correctS3)) {
-            // This will hold the correct message if all elements match
-            correctS3 = S3;
-
-            // Loops through the keys of the expected result
-            Iterator<String> keys = expectedS3.keys();
-            keys.forEachRemaining(key -> {
-                if (!S3.has(key) || !Objects.equals(S3.get(key).toString(), expectedS3.get(key).toString())) {
-                    // removes the message if found to not be the right one
-                    correctS3 = null;
-                }
-            });
-        }
-        return !isNull(correctS3);
     }
 
 
