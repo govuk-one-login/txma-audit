@@ -57,7 +57,6 @@ Feature: Raw event data journey from the lambda to S3
     Then there should be a warn message in the lambda logs
     And the s3 below should have a new event matching the respective "<account>" output file "_S3_EXPECTED"
       | FRAUD    |
-    And this s3 event should not contain the "additional" field
 
     Examples:
       | account     |
