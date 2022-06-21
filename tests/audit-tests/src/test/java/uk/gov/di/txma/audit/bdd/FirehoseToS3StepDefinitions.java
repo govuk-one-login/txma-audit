@@ -84,7 +84,7 @@ public class FirehoseToS3StepDefinitions {
      */
     @When("the message is sent to firehose")
     public void the_message_is_sent_to_firehose() {
-        String firehoseName = "AuditFireHose-build";
+        String firehoseName = "AuditFireHose-" + System.getenv("environment");
 
         // Opens a firehose client
         try (FirehoseClient firehoseClient = FirehoseClient.builder()
@@ -215,7 +215,7 @@ public class FirehoseToS3StepDefinitions {
      * Finds the latest 2 keys in the S3 bucket and saves the contents in the output variable
      */
     private void findLatestKeys(){
-        String bucketName = "audit-build-message-batch";
+        String bucketName = "audit-" + System.getenv("environment") + "-message-batch";
 
         // Opens an S3 client
         try (S3Client s3 = S3Client.builder()
