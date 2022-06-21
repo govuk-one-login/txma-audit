@@ -12,6 +12,8 @@ RUN yum install -y awscli
 RUN yum install -y shadow-utils
 RUN useradd -ms /bin/bash AutomationUser
 
+COPY run-tests.sh ./
+
 WORKDIR /home/AutomationUser
 
 # copy source code over
@@ -32,6 +34,6 @@ ENV PATH=$PATH:$GRADLE_HOME/bin
 RUN echo $PATH
 RUN gradle -v
 
-ENTRYPOINT ["/home/AutomationUser/run-tests.sh"]
+ENTRYPOINT ["./run-tests.sh"]
 
 USER AutomationUser
