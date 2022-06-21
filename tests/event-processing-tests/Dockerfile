@@ -34,6 +34,6 @@ ENV PATH=$PATH:$GRADLE_HOME/bin
 RUN echo $PATH
 RUN gradle -v
 
-ENTRYPOINT ["./run-tests.sh"]
+ENTRYPOINT ["/home/AutomationUser/run-tests.sh"]
 
 USER AutomationUser
