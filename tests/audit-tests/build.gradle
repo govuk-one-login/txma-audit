@@ -27,5 +27,6 @@ tasks {
         dependsOn assemble, testClasses
         useJUnitPlatform ()
         systemProperty("cucumber.execution.parallel.enabled", true)
+        systemProperty("cucumber.plugin", "pretty, json:$TEST_ENVIRONMENT/result.json, junit:$TEST_ENVIRONMENT/result.xml")
     }
 }
