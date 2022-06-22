@@ -1,4 +1,5 @@
-Feature: Raw event data journey from the lambda to S3
+@build @dev
+Feature: Raw event data journey from the lambda to S3 for build (and dev) environment
 
   Scenario Outline: Check messages pass through lambda to S3
     Given the SQS file "LAMBDA_THROUGH_TO_S3.json" is available for the "<account>" team
