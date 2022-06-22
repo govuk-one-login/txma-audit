@@ -81,7 +81,7 @@ public class FirehoseToS3StepDefinitions {
      */
     @When("the message is sent to firehose")
     public void the_message_is_sent_to_firehose() {
-        String firehoseName = "AuditFireHose-" + System.getenv("environment");
+        String firehoseName = "AuditFireHose-" + System.getenv("TEST_ENVIRONMENT");
 
         // Opens a firehose client
         try (FirehoseClient firehoseClient = FirehoseClient.builder()
