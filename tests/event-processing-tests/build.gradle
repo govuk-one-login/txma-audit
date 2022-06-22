@@ -29,5 +29,6 @@ tasks {
         useJUnitPlatform ()
         systemProperty("cucumber.execution.parallel.enabled", true)
         systemProperty("cucumber.junit-platform.naming-strategy", "long")
+        systemProperty("cucumber.plugin", "pretty, json:$TEST_ENVIRONMENT/result.json, junit:$TEST_ENVIRONMENT/result.xml")
     }
 }
