@@ -5,36 +5,18 @@ export interface ICleansedEvent {
   session_id?: string;
 }
 
+export class CleansedEvent implements ICleansedEvent {
 
-function createBaseCleansedEvent(): ICleansedEvent {
-  return {
-    event_id: '',
-    timestamp: 0,
-    event_name: '',
-    session_id: ''
-  };
-}
+  readonly event_id?: string;
+  readonly timestamp: number;
+  readonly event_name: string;
+  session_id?: string;
 
-export class CleansedEvent {
-  static fromJSONString(object: string): ICleansedEvent {
-    const event = createBaseCleansedEvent();
-    const jsonObject = JSON.parse(object);
-    for (const value in jsonObject) {
-      switch (value) {
-        case 'event_id':
-          event.event_id = jsonObject[value];
-          break;
-        case 'timestamp':
-          event.timestamp = jsonObject[value];
-          break;
-        case 'event_name':
-          event.event_name = jsonObject[value];
-          break;
-        case 'session_id':
-          event.session_id = jsonObject[value];
-          break;
-      }
-    }
-    return event;
+  constructor(event_id: string, event_name: string, timestamp: number) {
+    this.event_id = event_id
+    this.event_name = event_name
+    this.timestamp = timestamp
   }
+  
 }
+
