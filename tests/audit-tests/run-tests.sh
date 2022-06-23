@@ -12,6 +12,8 @@ echo "Security Token: $AWS_SECURITY_TOKEN"
 
 cd /home/AutomationUser
 
+cd /home/AutomationUser
+
 ./gradlew clean test -PTEST_REPORT_DIR=$TEST_REPORT_DIR
 
 exit 0
