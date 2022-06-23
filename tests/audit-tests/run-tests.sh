@@ -2,36 +2,16 @@
 
 set -eu
 
-#./gradlew clean test -Dcucumber.filter.tags="$environment"
+gradle -v
 
-cat <<EOF > "$TEST_REPORT_DIR/result.json"
-[
-  {
-    "uri": "test.sh",
-    "name": "Acceptance test",
-    "elements": [
-      {
-        "type": "scenario",
-        "name": "API Gateway request",
-        "line": 6,
-        "steps": [
-          {
-            "keyword": "Given ",
-            "name": "this step fails",
-            "line": 6,
-            "match": {
-              "location": "test.sh:4"
-            },
-            "result": {
-              "status": "passed",
-              "duration": 1
-            }
-          }
-        ]
-      }
-    ]
-  }
-]
-EOF
+echo "Environment: $TEST_ENVIRONMENT"
+echo "Access Key Id: $AWS_ACCESS_KEY_ID"
+echo "Secret Access Key: $AWS_SECRET_ACCESS_KEY"
+echo "Session Token: $AWS_SESSION_TOKEN"
+echo "Security Token: $AWS_SECURITY_TOKEN"
+
+cd /home/AutomationUser
+
+./gradlew clean test
 
 exit 0

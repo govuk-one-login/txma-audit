@@ -34,9 +34,6 @@ Conditions:
       - Fn::Equals:
           - !Ref CodeSigningConfigArn
           - "none"
-  IsStagingOrIntegration: !Or
-  - !Equals [ !Ref Environment, integration ]
-  - !Equals [ !Ref Environment, staging ]
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
@@ -326,7 +323,7 @@ Resources:
     DependsOn:
       - KBVEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
       FunctionName: !Ref KBVEventProcessorFunction
@@ -335,7 +332,7 @@ Resources:
     DependsOn:
       - KBVLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       Roles:
         - !Ref KBVLambdaAccessRole
@@ -460,7 +457,7 @@ Resources:
     DependsOn:
       - KBVAddressEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVAddressQueueARN}}"
       FunctionName: !Ref KBVAddressEventProcessorFunction
@@ -469,7 +466,7 @@ Resources:
     DependsOn:
       - KBVAddressLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       Roles:
         - !Ref KBVAddressLambdaAccessRole
@@ -594,7 +591,7 @@ Resources:
     DependsOn:
       - KBVFraudEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
       FunctionName: !Ref KBVFraudEventProcessorFunction
@@ -603,7 +600,7 @@ Resources:
     DependsOn:
       - KBVFraudLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       Roles:
         - !Ref KBVFraudLambdaAccessRole
@@ -1042,16 +1039,6 @@ Resources:
               - 'kms:GenerateDataKey*'
               - 'kms:DescribeKey'
             Resource: '*'
-          - Effect: "Allow"
-            Principal:
-              Service: "sns.amazonaws.com"
-            Action:
-              - 'kms:GenerateDataKey*'
-            Resource:
-              - "*"
-            Condition:
-              ArnLike:
-                "aws:PrincipalArn": "arn:aws:sns:*:${AWS::AccountId}:*"
           - Effect: "Allow"
             Principal:
               Service: "lambda.amazonaws.com"

@@ -82,6 +82,36 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
+  FireHoseKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service: "firehose.amazonaws.com"
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
+
+  FireHoseKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/FireHoseKMSKey"
+      TargetKeyId: !Ref FireHoseKMSKey
+
   MessageBucketLogsBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -170,6 +200,9 @@ Resources:
         - "AuditFireHose-${EnvironmentName}"
         - EnvironmentName: !Ref Environment
       DeliveryStreamType: DirectPut
+      DeliveryStreamEncryptionConfigurationInput:
+        KeyARN: !GetAtt FireHoseKMSKey.Arn
+        KeyType: "CUSTOMER_MANAGED_CMK"
       ExtendedS3DestinationConfiguration:
         Prefix: "firehose/"
         BucketARN: !GetAtt MessageBatchBucket.Arn
