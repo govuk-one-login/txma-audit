@@ -35,8 +35,9 @@ export class TestHelper {
     static exampleResultMessage: ICleansedEvent = {
         event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
         event_name: 'AUTHENTICATION_ATTEMPT',
+        component_id: 'AUTH',
         timestamp: 1609462861,
-        session_id: 'c222c1ec'
+        timestamp_formatted: '2021-01-23T15:43:21.842'
     }
 
     private static firehoseTransformationEvent: FirehoseTransformationEvent = {
