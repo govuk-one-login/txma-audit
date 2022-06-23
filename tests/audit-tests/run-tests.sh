@@ -14,6 +14,6 @@ cd /home/AutomationUser
 
 cd /home/AutomationUser
 
-./gradlew clean test -PTEST_REPORT_DIR=$TEST_REPORT_DIR
+./gradlew clean test
 
 exit 0
