@@ -38,4 +38,6 @@ cat <<EOF > "$TEST_REPORT_DIR/result.json"
 ]
 EOF
 
+echo "Successfully generated report"
+
 exit 0
