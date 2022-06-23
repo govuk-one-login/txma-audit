@@ -6,19 +6,18 @@ import {
     FirehoseTransformationResultRecord,
 } from 'aws-lambda';
 import { AuditEvent, IAuditEvent } from './models/audit-event';
-import { CleansingService } from "./services/cleansing-service";
-import {ICleansedEvent} from "./models/cleansed-event";
+import { CleansingService } from './services/cleansing-service';
+import { ICleansedEvent } from './models/cleansed-event';
 
 export const handler = async (event: FirehoseTransformationEvent): Promise<FirehoseTransformationResult> => {
     /* Process the list of records and transform them */
-    let transformationResult: FirehoseRecordTransformationStatus = 'Ok';
+    const transformationResult: FirehoseRecordTransformationStatus = 'Ok';
 
     const output = event.records.map((record: FirehoseTransformationEventRecord) => {
         const plaintextData: string = Buffer.from(record.data, 'base64').toString('ascii');
         const events: unknown[] = JSON.parse(plaintextData);
         const cleansedEvents: ICleansedEvent[] = [];
         let data: string;
-
 
         if (events.length > 0) {
             for (let i = 0; i < events.length; i++) {
