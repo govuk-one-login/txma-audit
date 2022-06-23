@@ -1066,6 +1066,7 @@ Resources:
               ForAnyValue:ArnEquals:
                 "aws:PrincipalArn":
                   - !GetAtt ObfuscationFunction.Arn
+                  - !GetAtt CleanserFunction.Arn
 #                  - !GetAtt ReIngestFunction.Arn
 
   FireHoseKMSKeyAlias:
@@ -1439,7 +1440,7 @@ Resources:
               - 'lambda:InvokeFunction'
               - 'lambda:GetFunctionConfiguration'
             Resource:
-              - !Sub "${ObfuscationFunction.Arn}*"
+              - !Sub "${CleanserFunction.Arn}*"
           - Effect: Allow
             Action:
               - 'logs:CreateLogGroup'
@@ -1635,7 +1636,7 @@ Resources:
                 - Type: Lambda
                   Parameters:
                     - ParameterName: LambdaArn
-                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                      ParameterValue: !GetAtt CleanserFunction.Arn
                     - ParameterName: RoleArn
                       ParameterValue: !GetAtt PerformanceDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
@@ -1663,7 +1664,7 @@ Resources:
                 - Type: Lambda
                   Parameters:
                     - ParameterName: LambdaArn
-                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                      ParameterValue: !GetAtt CleanserFunction.Arn
                     - ParameterName: RoleArn
                       ParameterValue: !GetAtt PerformanceDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
