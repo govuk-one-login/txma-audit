@@ -6,7 +6,7 @@ export class ObfuscationService {
         if (auditEvent.user) {
             const user = auditEvent.user as any;
             for (const k in user) {
-                if (['transaction_id', 'email', 'phone'].indexOf(k) !== -1)
+                if (['ip_address', 'session_id', 'persistent_session_id', 'govuk_signin_journey_id'].indexOf(k) == -1)
                     user[k] = this.obfuscateField(user[k], hmacKey);
             }
         }
