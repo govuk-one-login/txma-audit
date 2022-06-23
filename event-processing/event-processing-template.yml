@@ -1850,6 +1850,51 @@ Resources:
             Principal:
               AWS: !GetAtt ObfuscationFunctionRole.Arn
 
+  CleanserFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+
+  CleanserLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/CleanserFunction"
+      RetentionInDays: 7
+
+  CleanserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "CleanserFunction"
+      CodeUri: ../event-processing/cleanser
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt CleanserFunctionRole.Arn
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
 #    Properties:

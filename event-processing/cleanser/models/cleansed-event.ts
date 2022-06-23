@@ -17,6 +17,6 @@ export class CleansedEvent implements ICleansedEvent {
     this.event_name = event_name
     this.timestamp = timestamp
   }
-  
+
 }
 
