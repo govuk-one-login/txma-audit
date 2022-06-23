@@ -16,4 +16,6 @@ cd /home/AutomationUser
 
 ./gradlew clean test
 
+echo "Successfully generated report"
+
 exit 0
