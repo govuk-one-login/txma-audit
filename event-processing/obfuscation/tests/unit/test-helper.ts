@@ -40,9 +40,9 @@ export class TestHelper {
         event_name: 'AUTHENTICATION_ATTEMPT',
         component_id: 'AUTH',
         user: {
-            transaction_id: ObfuscationService.obfuscate('a52f6f87', 'secret-1-value'),
-            email: ObfuscationService.obfuscate('foo@bar.com', 'secret-1-value'),
-            phone: ObfuscationService.obfuscate('07711223344', 'secret-1-value'),
+            transaction_id: ObfuscationService.obfuscateField('a52f6f87', 'secret-1-value'),
+            email: ObfuscationService.obfuscateField('foo@bar.com', 'secret-1-value'),
+            phone: ObfuscationService.obfuscateField('07711223344', 'secret-1-value'),
             ip_address: '100.100.100.100',
             session_id: 'c222c1ec',
             persistent_session_id: 'some session id',
@@ -52,8 +52,8 @@ export class TestHelper {
             xray_trace_id: '24727sda4192',
         },
         restricted: {
-            experian_ref: ObfuscationService.obfuscate('DSJJSEE29392', 'secret-1-value'),
-            passport_number: ObfuscationService.obfuscate(1040349934, 'secret-1-value'),
+            experian_ref: ObfuscationService.obfuscateField('DSJJSEE29392', 'secret-1-value'),
+            passport_number: ObfuscationService.obfuscateField(1040349934, 'secret-1-value'),
         },
         extensions: {
             response: 'Authentication successful',
