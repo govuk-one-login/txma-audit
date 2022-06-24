@@ -4,8 +4,9 @@ set -eu
 
 gradle -v
 
-echo "Current Environment $TEST_ENVIRONMENT"
-./gradlew clean test
+echo "Environment: $TEST_ENVIRONMENT"
+
+#./gradlew clean test
 
 cat <<EOF > "$TEST_REPORT_DIR/result.json"
 [
