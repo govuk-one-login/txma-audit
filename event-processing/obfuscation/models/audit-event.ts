@@ -13,6 +13,7 @@ export interface IAuditEvent {
 
 export interface IAuditEventUserMessage {
     transaction_id?: string;
+    user_id?: string;
     email?: string;
     phone?: string;
     ip_address: string;
@@ -81,6 +82,7 @@ export class AuditEvent {
 function createBaseAuditEventUserMessage(): IAuditEventUserMessage {
     return {
         transaction_id: '',
+        user_id: '',
         email: '',
         phone: '',
         ip_address: '',
@@ -97,6 +99,9 @@ export class AuditEventUserMessage {
             switch (value) {
                 case 'transaction_id':
                     user.transaction_id = object.transaction_id;
+                    break;
+                case 'user_id':
+                    user.user_id = object.user_id;
                     break;
                 case 'email':
                     user.email = object.email;
