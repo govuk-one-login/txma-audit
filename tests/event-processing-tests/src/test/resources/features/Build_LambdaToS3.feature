@@ -1,4 +1,5 @@
-Feature: Raw event data journey from the lambda to S3
+@build @dev
+Feature: Raw event data journey from the lambda to S3 for build (and dev) environment
 
   Scenario Outline: Check messages pass through lambda to S3
     Given the SQS file "LAMBDA_THROUGH_TO_S3.json" is available for the "<account>" team
@@ -57,7 +58,6 @@ Feature: Raw event data journey from the lambda to S3
     Then there should be a warn message in the lambda logs
     And the s3 below should have a new event matching the respective "<account>" output file "_S3_EXPECTED"
       | FRAUD    |
-    And this s3 event should not contain the "additional" field
 
     Examples:
       | account     |
