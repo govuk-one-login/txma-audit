@@ -35,8 +35,8 @@ Conditions:
           - !Ref CodeSigningConfigArn
           - "none"
   IsStagingOrIntegration: !Or
-  - !Equals [ !Ref Environment, integration ]
-  - !Equals [ !Ref Environment, staging ]
+    - !Equals [ !Ref Environment, integration ]
+    - !Equals [ !Ref Environment, staging ]
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
