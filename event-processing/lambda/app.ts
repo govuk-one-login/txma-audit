@@ -4,12 +4,42 @@ import {
     FirehoseTransformationEventRecord,
     FirehoseTransformationResult,
     FirehoseTransformationResultRecord,
+    SQSEvent,
+    SQSRecord,
 } from 'aws-lambda';
+import { ValidationService } from './services/validation-service';
+import { SnsService } from './services/sns-service';
+import { IRequiredFieldError } from './models/required-field-error.interface';
+import { ValidationException } from './exceptions/validation-exception';
+import { EnrichmentService } from './services/enrichment-service';
 import { AuditEvent, IAuditEvent } from './models/audit-event';
 import { KeyService } from './services/key-service';
 import { ObfuscationService } from './services/obfuscation-service';
 
-export const handler = async (event: FirehoseTransformationEvent): Promise<FirehoseTransformationResult> => {
+export const eventProcessorHandler = async (event: SQSEvent): Promise<void> => {
+    for (const record of event.Records) {
+        const validationResponse = await ValidationService.validateSQSRecord(record as SQSRecord);
+
+        if (!validationResponse.isValid) {
+            console.log(
+                '[ERROR] VALIDATION ERROR\n' +
+                    JSON.stringify(
+                        new ValidationException(
+                            'An event message failed validation.',
+                            validationResponse.error as IRequiredFieldError,
+                        ),
+                    ),
+            );
+        } else {
+            const message: IAuditEvent = await EnrichmentService.enrichValidationResponse(validationResponse);
+            await SnsService.publishMessageToSNS(message, process.env.topicArn);
+        }
+    }
+
+    return;
+};
+
+export const obfuscationHandler = async (event: FirehoseTransformationEvent): Promise<FirehoseTransformationResult> => {
     /* Process the list of records and transform them */
     let transformationResult: FirehoseRecordTransformationStatus = 'Ok';
     let hmacKey = '';

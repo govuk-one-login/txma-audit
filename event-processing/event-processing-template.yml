@@ -229,9 +229,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "EventProcessorFunction-KBV"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: app.eventProcessorHandler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVLambdaAccessRole.Arn
@@ -363,9 +363,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-KBVAddress"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: app.eventProcessorHandler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVAddressLambdaAccessRole.Arn
@@ -497,9 +497,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-KBVFraud"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: app.eventProcessorHandler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVFraudLambdaAccessRole.Arn
@@ -631,9 +631,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-IPV"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: app.eventProcessorHandler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVLambdaAccessRole.Arn
@@ -766,9 +766,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-IPVPass"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: app.eventProcessorHandler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVPassLambdaAccessRole.Arn
@@ -900,9 +900,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-SPOT"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: app.eventProcessorHandler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt SPOTLambdaAccessRole.Arn
@@ -1796,9 +1796,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "ObfuscationFunction"
-      CodeUri: ../event-processing/obfuscation
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: app.obfuscationHandler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt ObfuscationFunctionRole.Arn
@@ -1851,9 +1851,9 @@ Resources:
 #    Type: AWS::Serverless::Function
 #    Properties:
 #      FunctionName: "Re-IngestFunction"
-#      CodeUri: ../event-processing/re-ingest
+#      CodeUri: ../event-processing/lambda
 #      PackageType: Zip
-#      Handler: app.handler
+#      Handler: app.reIngestHandler
 #      Runtime: nodejs14.x
 #      Timeout: 30
 #      Events:

@@ -1,9 +1,10 @@
 /* eslint-disable */
-import { handler } from '../../app';
-import { TestHelper } from './test-helper';
+import { obfuscationHandler } from '../../app';
+import { TestHelper } from '../test-helpers/test-helper';
 import { FirehoseTransformationResult } from 'aws-lambda';
 import { AuditEvent, IAuditEvent } from '../../models/audit-event';
 import { ObfuscationService } from '../../services/obfuscation-service';
+import {ObfuscationHelper} from "../test-helpers/obfuscation-helper";
 
 jest.mock("aws-sdk");
 
@@ -76,12 +77,12 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
         
-        const result = await handler(firehoseEvent);
+        const result = await obfuscationHandler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });
 
     it('obfuscates all expected fields when receiving an array', async () => {
-        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
 
         const data : string = Buffer.from(TestHelper.encodeAuditEventArray(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -94,13 +95,13 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(TestHelper.exampleMessage));
         
-        const result = await handler(firehoseEvent);
+        const result = await obfuscationHandler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });
 
     it('obfuscates all expected fields when receiving an object in restricted fields', async () => {
-        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
 
         expectedData.restricted = {
             someField: ObfuscationService.obfuscateField('value', 'secret-1-value'),
@@ -171,13 +172,13 @@ describe('Unit test for app handler', function () {
 
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(message));
 
-        const result = await handler(firehoseEvent);
+        const result = await obfuscationHandler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });
 
     it('obfuscates expected fields when receiving a single event using the secret string', async () => {
-        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
 
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -190,14 +191,14 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
         
-        const result = await handler(firehoseEvent);
+        const result = await obfuscationHandler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });
 
     it('obfuscates all expected fields when receiving a single event using a secret binary', async () => {
         process.env.SECRET_ARN = "secret-binary";
-        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
 
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -210,7 +211,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
         
-        const result = await handler(firehoseEvent);
+        const result = await obfuscationHandler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });
@@ -220,7 +221,7 @@ describe('Unit test for app handler', function () {
 
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
         
-        const result = await handler(firehoseEvent);
+        const result = await obfuscationHandler(firehoseEvent);
 
         expect(result.records[0].result).toEqual('ProcessingFailed');
         expect(consoleWarningMock).toHaveBeenCalledTimes(2);
@@ -233,7 +234,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
         
-        const result = await handler(firehoseEvent);
+        const result = await obfuscationHandler(firehoseEvent);
 
         expect(result.records[0].result).toEqual('ProcessingFailed');
         expect(consoleWarningMock).toHaveBeenCalledTimes(2);
@@ -246,7 +247,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
         
-        const result = await handler(firehoseEvent);
+        const result = await obfuscationHandler(firehoseEvent);
 
         expect(result.records[0].result).toEqual('ProcessingFailed');
         expect(consoleWarningMock).toHaveBeenCalledTimes(2);
@@ -256,7 +257,7 @@ describe('Unit test for app handler', function () {
 
     it('has expected data in obfuscated result', async () => {
         process.env.SECRET_ARN = "secret-binary";
-        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
 
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -269,7 +270,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
         
-        const result = await handler(firehoseEvent);
+        const result = await obfuscationHandler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
 

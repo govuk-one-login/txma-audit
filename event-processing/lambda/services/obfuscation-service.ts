@@ -1,5 +1,5 @@
-import crypto from 'crypto';
 import { IAuditEvent } from '../models/audit-event';
+import { createHmac } from 'crypto';
 
 export class ObfuscationService {
     static async obfuscateEvent(auditEvent: IAuditEvent, hmacKey: string): Promise<IAuditEvent> {
@@ -40,6 +40,6 @@ export class ObfuscationService {
     public static obfuscateField(value: any, key: string): string {
         if (typeof value != 'string') value = JSON.stringify(value);
 
-        return crypto.createHmac('sha256', key).update(value).digest('hex');
+        return createHmac('sha256', key).update(value).digest('hex');
     }
 }

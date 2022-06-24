@@ -1,6 +1,6 @@
 /* eslint-disable */
-import { handler } from '../../app';
-import { TestHelper } from './test-helper';
+import { eventProcessorHandler } from '../../app';
+import { TestHelper } from '../test-helpers/test-helper';
 import { IAuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-events/unknown-audit-event';
 import {SNS} from "aws-sdk";
@@ -30,7 +30,7 @@ jest.mock('crypto', () => {
     };
 });
 
-describe('Unit test for app handler', function () {
+describe('Unit test for app eventProcessorHandler', function () {
     let consoleMock: jest.SpyInstance;
     let sns: SNS;
 
@@ -55,7 +55,7 @@ describe('Unit test for app handler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await handler(sqsEvent);
+        await eventProcessorHandler(sqsEvent);
 
         expect(sns.publish).toBeCalledTimes(0);
     });
@@ -67,7 +67,7 @@ describe('Unit test for app handler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage as IAuditEvent));
 
-        await handler(sqsEvent);
+        await eventProcessorHandler(sqsEvent);
 
         expect(sns.publish).toBeCalledTimes(0);
     });
@@ -87,7 +87,7 @@ describe('Unit test for app handler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await handler(sqsEvent);
+        await eventProcessorHandler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -142,7 +142,7 @@ describe('Unit test for app handler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await handler(sqsEvent);
+        await eventProcessorHandler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -197,7 +197,7 @@ describe('Unit test for app handler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
 
-        await handler(sqsEvent);
+        await eventProcessorHandler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -256,7 +256,7 @@ describe('Unit test for app handler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEventWithUnknownField(exampleMessage));
 
-        await handler(sqsEvent);
+        await eventProcessorHandler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -311,7 +311,7 @@ describe('Unit test for app handler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await handler(sqsEvent);
+        await eventProcessorHandler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -396,7 +396,7 @@ describe('Unit test for app handler', function () {
 
         sqsEvent.Records.push(...sqsEventWithInvalidMessage.Records)
 
-        await handler(sqsEvent);
+        await eventProcessorHandler(sqsEvent);
 
         expect(consoleMock).toHaveBeenCalledTimes(5);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
@@ -485,7 +485,7 @@ describe('Unit test for app handler', function () {
 
         sqsEvent.Records.push(...sqsEventWithInvalidMessage.Records)
 
-        await handler(sqsEvent);
+        await eventProcessorHandler(sqsEvent);
 
         expect(consoleMock).toHaveBeenCalledTimes(5);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
