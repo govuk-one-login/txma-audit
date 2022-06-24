@@ -326,7 +326,7 @@ Resources:
     DependsOn:
       - KBVEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
       FunctionName: !Ref KBVEventProcessorFunction
@@ -335,7 +335,7 @@ Resources:
     DependsOn:
       - KBVLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       Roles:
         - !Ref KBVLambdaAccessRole
@@ -594,7 +594,7 @@ Resources:
     DependsOn:
       - KBVFraudEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
       FunctionName: !Ref KBVFraudEventProcessorFunction
@@ -603,7 +603,7 @@ Resources:
     DependsOn:
       - KBVFraudLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsProductionOrStaging
+    Condition: IsStagingOrIntegration #Not Prod
     Properties:
       Roles:
         - !Ref KBVFraudLambdaAccessRole
