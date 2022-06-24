@@ -5,7 +5,7 @@ import {
     FirehoseTransformationResult,
     FirehoseTransformationResultRecord,
 } from 'aws-lambda';
-import { AuditEvent, IAuditEvent } from './models/audit-event';
+import { EnrichedAuditEvent, IEnrichedAuditEvent } from './models/enriched-audit-event';
 import { CleansingService } from './services/cleansing-service';
 import { ICleansedEvent } from './models/cleansed-event';
 
@@ -20,13 +20,13 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
         let data: string;
 
         if (events.length > 0) {
-            for (let i = 0; i < events.length; i++) {
-                const auditEvent: IAuditEvent = AuditEvent.fromJSONString(JSON.stringify(events[i]));
+            for (const k in events) {
+                const auditEvent: IEnrichedAuditEvent = EnrichedAuditEvent.fromJSONString(JSON.stringify(events[k]));
                 cleansedEvents.push(CleansingService.cleanseEvent(auditEvent));
             }
             data = Buffer.from(JSON.stringify(cleansedEvents)).toString('base64');
         } else {
-            const auditEvent: IAuditEvent = AuditEvent.fromJSONString(plaintextData);
+            const auditEvent: IEnrichedAuditEvent = EnrichedAuditEvent.fromJSONString(plaintextData);
             const cleansedEvent = CleansingService.cleanseEvent(auditEvent);
             data = Buffer.from(JSON.stringify(cleansedEvent)).toString('base64');
         }

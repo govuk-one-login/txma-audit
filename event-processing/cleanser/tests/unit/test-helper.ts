@@ -1,10 +1,10 @@
 /* istanbul ignore file */
 import { FirehoseTransformationEvent, FirehoseTransformationEventRecord } from 'aws-lambda';
-import { IAuditEvent } from '../../models/audit-event';
+import { IEnrichedAuditEvent } from '../../models/enriched-audit-event';
 import {ICleansedEvent} from "../../models/cleansed-event";
 
 export class TestHelper {
-    static exampleMessage: IAuditEvent = {
+    static exampleMessage: IEnrichedAuditEvent = {
         event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
         client_id: 'some-client',
         timestamp: 1609462861,
