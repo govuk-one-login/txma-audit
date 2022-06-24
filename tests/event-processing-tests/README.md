@@ -19,7 +19,7 @@ and setting the access key, secret access key, and session token in the terminal
 For Mac, simply copy the final three lines produced by the previous command and run them. <br>
 For Windows, set the environment variables to the values produced.
 
-Then, use the following gradle command
+Then, use the following gradle command.
 Mac:
 ```bash
 ./gradlew clean test

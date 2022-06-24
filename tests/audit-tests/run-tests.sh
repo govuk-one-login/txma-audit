@@ -3,7 +3,10 @@
 set -eu
 
 gradle -v
-#./gradlew clean test -Dcucumber.filter.tags="$environment"
+
+echo "Environment: $TEST_ENVIRONMENT"
+
+#./gradlew clean test
 
 cat <<EOF > "$TEST_REPORT_DIR/result.json"
 [
@@ -34,5 +37,7 @@ cat <<EOF > "$TEST_REPORT_DIR/result.json"
   }
 ]
 EOF
+
+echo "Successfully generated report"
 
 exit 0
