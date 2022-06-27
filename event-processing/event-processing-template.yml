@@ -31,8 +31,8 @@ Parameters:
 Conditions:
   UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
   UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
-  UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
-  IsTestStage: !And
+  UseTestRole: !And
+    - !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
     - !Not [ !Equals [ !Ref Environment, build ] ]
     - !Not [ !Equals [ !Ref Environment, staging ] ]
   IsProductionOrStaging: !And
@@ -1931,7 +1931,7 @@ Resources:
 
   TestRolePolicy:
     Type: AWS::IAM::Policy
-    Condition: IsTestStage
+    Condition: UseTestRole
     Properties:
       Roles:
         - !Select [ 1, !Split [ "/" , TestRoleArn ]]
