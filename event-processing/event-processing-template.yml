@@ -34,9 +34,6 @@ Conditions:
       - Fn::Equals:
           - !Ref CodeSigningConfigArn
           - "none"
-  IsStagingOrIntegration: !Or
-    - !Equals [ !Ref Environment, integration ]
-    - !Equals [ !Ref Environment, staging ]
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
@@ -326,7 +323,7 @@ Resources:
     DependsOn:
       - KBVEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVQueueARN}}"
       FunctionName: !Ref KBVEventProcessorFunction
@@ -335,7 +332,7 @@ Resources:
     DependsOn:
       - KBVLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       Roles:
         - !Ref KBVLambdaAccessRole
@@ -460,7 +457,7 @@ Resources:
     DependsOn:
       - KBVAddressEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVAddressQueueARN}}"
       FunctionName: !Ref KBVAddressEventProcessorFunction
@@ -469,7 +466,7 @@ Resources:
     DependsOn:
       - KBVAddressLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       Roles:
         - !Ref KBVAddressLambdaAccessRole
@@ -594,7 +591,7 @@ Resources:
     DependsOn:
       - KBVFraudEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       EventSourceArn: "{{resolve:ssm:KBVFraudQueueARN}}"
       FunctionName: !Ref KBVFraudEventProcessorFunction
@@ -603,7 +600,7 @@ Resources:
     DependsOn:
       - KBVFraudLambdaAccessRole
     Type: AWS::IAM::Policy
-    Condition: IsStagingOrIntegration #Not Prod
+    Condition: IsProductionOrStaging
     Properties:
       Roles:
         - !Ref KBVFraudLambdaAccessRole
@@ -1056,6 +1053,7 @@ Resources:
               ForAnyValue:ArnEquals:
                 "aws:PrincipalArn":
                   - !GetAtt ObfuscationFunction.Arn
+                  - !GetAtt CleanserFunction.Arn
 #                  - !GetAtt ReIngestFunction.Arn
 
   FireHoseKMSKeyAlias:
@@ -1429,7 +1427,7 @@ Resources:
               - 'lambda:InvokeFunction'
               - 'lambda:GetFunctionConfiguration'
             Resource:
-              - !Sub "${ObfuscationFunction.Arn}*"
+              - !Sub "${CleanserFunction.Arn}*"
           - Effect: Allow
             Action:
               - 'logs:CreateLogGroup'
@@ -1625,7 +1623,7 @@ Resources:
                 - Type: Lambda
                   Parameters:
                     - ParameterName: LambdaArn
-                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                      ParameterValue: !GetAtt CleanserFunction.Arn
                     - ParameterName: RoleArn
                       ParameterValue: !GetAtt PerformanceDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
@@ -1653,7 +1651,7 @@ Resources:
                 - Type: Lambda
                   Parameters:
                     - ParameterName: LambdaArn
-                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                      ParameterValue: !GetAtt CleanserFunction.Arn
                     - ParameterName: RoleArn
                       ParameterValue: !GetAtt PerformanceDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
@@ -1840,6 +1838,51 @@ Resources:
             Principal:
               AWS: !GetAtt ObfuscationFunctionRole.Arn
 
+  CleanserFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - SetPermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+
+  CleanserLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/CleanserFunction"
+      RetentionInDays: 7
+
+  CleanserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "CleanserFunction"
+      CodeUri: ../event-processing/cleanser
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt CleanserFunctionRole.Arn
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
 #    Properties:
