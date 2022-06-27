@@ -42,7 +42,7 @@ public class FirehoseToS3StepDefinitions {
     SdkBytes input;
     String SNSInput;
     JSONObject expectedS3;
-    String timestamp;
+    Long timestamp;
     Region region = Region.EU_WEST_2;
 
     /**
@@ -58,7 +58,7 @@ public class FirehoseToS3StepDefinitions {
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        SNSInput = addUniqueComponentID(json, account).toString();
+        SNSInput = addUniqueFields(json, account).toString();
     }
 
     /**
@@ -73,7 +73,7 @@ public class FirehoseToS3StepDefinitions {
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        expectedS3 = addUniqueComponentID(json, account);
+        expectedS3 = addUniqueFields(json, account);
     }
 
     /**
@@ -148,19 +148,24 @@ public class FirehoseToS3StepDefinitions {
     }
 
     /**
-     * This adds the current timestamp to a component_id for each team to ensure the message is unique
+     * This adds the current timestamp to the nearest millisecond (if timestamp was already present)
+     * and adds the component_id (if component_id was already present)
      *
-     * @param json      This is the json which the component_id is being amended
+     * @param json      This is the json which is to be changed
      * @param account   This is the account name to be added to the component_id
      * @return          Returns the amended json
      */
-    private JSONObject addUniqueComponentID(JSONObject json, String account){
+    private JSONObject addUniqueFields(JSONObject json, String account){
+        if (timestamp == null){
+            timestamp = Instant.now().toEpochMilli();
+        }
         // Only adds the new component_id if it's already in the file
         if (json.has("component_id")){
-            if (timestamp == null){
-                timestamp = Instant.now().toString();
-            }
-            json.put("component_id", account+" "+timestamp);
+            json.put("component_id", account);
+        }
+        // Only adds the new timestamp if it's already in the file
+        if (json.has("timestamp")){
+            json.put("timestamp", timestamp);
         }
         return json;
     }

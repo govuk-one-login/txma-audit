@@ -51,7 +51,7 @@ public class LambdaToS3StepDefinitions {
     Region region = Region.EU_WEST_2;
     String output = null;
     String input;
-    String timestamp;
+    Long timestamp;
     String log;
     boolean firstSearch = true;
 
@@ -68,7 +68,7 @@ public class LambdaToS3StepDefinitions {
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        JSONObject change = addUniqueComponentID(json, account);
+        JSONObject change = addUniqueFields(json, account);
         input = wrapJSON(change);
     }
 
@@ -202,19 +202,24 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
-     * This adds the current timestamp to a component_id for each team to ensure the message is unique
+     * This adds the current timestamp to the nearest millisecond (if timestamp was already present)
+     * and adds the component_id (if component_id was already present)
      *
-     * @param json      This is the json which the component_id is being amended
+     * @param json      This is the json which is to be changed
      * @param account   This is the account name to be added to the component_id
      * @return          Returns the amended json
      */
-    private JSONObject addUniqueComponentID(JSONObject json, String account){
+    private JSONObject addUniqueFields(JSONObject json, String account){
+        if (timestamp == null){
+            timestamp = Instant.now().toEpochMilli();
+        }
         // Only adds the new component_id if it's already in the file
         if (json.has("component_id")){
-            if (timestamp == null){
-                timestamp = Instant.now().toString();
-            }
-            json.put("component_id", account + " " + timestamp);
+            json.put("component_id", account);
+        }
+        // Only adds the new timestamp if it's already in the file
+        if (json.has("timestamp")){
+            json.put("timestamp", timestamp);
         }
         return json;
     }
@@ -356,7 +361,7 @@ public class LambdaToS3StepDefinitions {
             Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + filename+".json").getAbsolutePath());
             String file = Files.readString(filePath);
             JSONObject json = new JSONObject(file);
-            JSONObject expectedS3 = addUniqueComponentID(json, account);
+            JSONObject expectedS3 = addUniqueFields(json, account);
 
             // Compares all individual jsons with our test data
             for (JSONObject object : array) {
