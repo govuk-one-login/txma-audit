@@ -8,7 +8,7 @@ echo "Environment: $TEST_ENVIRONMENT"
 
 #./gradlew clean test
 
-cat <<EOF > "$TEST_REPORT_DIR/result.json"
+cat <<EOF > "$TEST_REPORT_ABSOLUTE_DIR/result.json"
 [
   {
     "uri": "test.sh",
