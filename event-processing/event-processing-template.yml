@@ -1843,7 +1843,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
