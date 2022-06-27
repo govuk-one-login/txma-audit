@@ -49,6 +49,7 @@ export class TestHelper {
         component_id: 'AUTH',
         user: {
             transaction_id: 'a52f6f87',
+            user_id: 'some_user_id',
             email: 'foo@bar.com',
             phone: '07711223344',
             ip_address: '100.100.100.100',

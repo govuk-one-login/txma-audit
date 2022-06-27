@@ -12,6 +12,7 @@ export class ObfuscationHelper {
         component_id: 'AUTH',
         user: {
             transaction_id: ObfuscationService.obfuscateField('a52f6f87', 'secret-1-value'),
+            user_id: 'some_user_id',
             email: ObfuscationService.obfuscateField('foo@bar.com', 'secret-1-value'),
             phone: ObfuscationService.obfuscateField('07711223344', 'secret-1-value'),
             ip_address: '100.100.100.100',
