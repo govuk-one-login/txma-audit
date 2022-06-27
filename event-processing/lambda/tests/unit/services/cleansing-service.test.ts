@@ -3,7 +3,6 @@ import { CleansingService } from "../../../services/cleansing-service";
 import { IEnrichedAuditEvent } from '../../../models/enriched-audit-event';
 import { ICleansedEvent } from "../../../models/cleansed-event";
 
-
 describe('Unit test for cleansing-service', function () {
 
   it('returns a cleansed event', async () => {

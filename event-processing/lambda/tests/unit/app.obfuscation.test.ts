@@ -5,6 +5,7 @@ import { FirehoseTransformationResult } from 'aws-lambda';
 import { AuditEvent, IAuditEvent } from '../../models/audit-event';
 import { ObfuscationService } from '../../services/obfuscation-service';
 import {ObfuscationHelper} from "../test-helpers/obfuscation-helper";
+import {EventProcessorHelper} from "../test-helpers/event-processor-helper";
 
 jest.mock("aws-sdk");
 
@@ -93,7 +94,7 @@ describe('Unit test for app handler', function () {
             }]
         }
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(TestHelper.exampleMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(EventProcessorHelper.exampleAuditMessage));
         
         const result = await obfuscationHandler(firehoseEvent);
 
@@ -140,7 +141,7 @@ describe('Unit test for app handler', function () {
             }]
         }
 
-        const message = TestHelper.exampleMessage;
+        const message = EventProcessorHelper.exampleAuditMessage;
 
         message.restricted = {
             someField: "value",
@@ -189,7 +190,7 @@ describe('Unit test for app handler', function () {
             }]
         }
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
         const result = await obfuscationHandler(firehoseEvent);
 
@@ -209,7 +210,7 @@ describe('Unit test for app handler', function () {
             }]
         }
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
         const result = await obfuscationHandler(firehoseEvent);
 
@@ -219,7 +220,7 @@ describe('Unit test for app handler', function () {
     it('Records marked as processing failed if no secret arn', async () => {
         delete process.env.SECRET_ARN;
 
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
         const result = await obfuscationHandler(firehoseEvent);
 
@@ -232,7 +233,7 @@ describe('Unit test for app handler', function () {
     it('marks records as processing failed if no secret arn is present in secret manager', async () => {
         process.env.SECRET_ARN = "unknown_arn";
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
         const result = await obfuscationHandler(firehoseEvent);
 
@@ -245,7 +246,7 @@ describe('Unit test for app handler', function () {
     it('marks records as processing failed if no data in response from secret manager', async () => {
         process.env.SECRET_ARN = "no-data-secret";
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
         const result = await obfuscationHandler(firehoseEvent);
 
@@ -268,7 +269,7 @@ describe('Unit test for app handler', function () {
             }]
         }
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(TestHelper.exampleMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
         const result = await obfuscationHandler(firehoseEvent);
 

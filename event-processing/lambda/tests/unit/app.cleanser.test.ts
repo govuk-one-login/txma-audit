@@ -1,9 +1,10 @@
 /* eslint-disable */
-import { handler } from '../../app';
-import { TestHelper } from './test-helper'
+import {cleanserHandler} from '../../app';
 import { FirehoseTransformationResult } from 'aws-lambda';
 import { IEnrichedAuditEvent, IAuditEventUserMessage } from '../../models/enriched-audit-event';
 import { ICleansedEvent } from "../../models/cleansed-event";
+import {TestHelper} from "../test-helpers/test-helper";
+import { CleanserHelper} from "../test-helpers/cleanser-helper";
 
 jest.mock("aws-sdk");
 
@@ -57,7 +58,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
         
-        const result = await handler(firehoseEvent);
+        const result = await cleanserHandler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });
 
@@ -65,6 +66,7 @@ describe('Unit test for app handler', function () {
 
         const user: IAuditEventUserMessage = {
             transaction_id: "aaaa-bbbb-cccc-dddd-1234",
+            user_id: 'some_user_id',
             email: "user@test.com",
             phone: "020 8888 8888",
             ip_address: "192.168.0.1",
@@ -102,13 +104,13 @@ describe('Unit test for app handler', function () {
 
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        const result = await handler(firehoseEvent);
+        const result = await cleanserHandler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });
 
     it('cleanses all messages when receiving an array', async () => {
 
-        const expectedData : string = Buffer.from(TestHelper.encodeAuditEventArray(TestHelper.exampleResultMessage)).toString('base64')
+        const expectedData : string = Buffer.from(TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessage)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
             records: [{
                 data: expectedData,
@@ -117,9 +119,9 @@ describe('Unit test for app handler', function () {
             }]
         }
 
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(TestHelper.exampleMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(CleanserHelper.exampleEnrichedMessage));
 
-        const result = await handler(firehoseEvent);
+        const result = await cleanserHandler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });
