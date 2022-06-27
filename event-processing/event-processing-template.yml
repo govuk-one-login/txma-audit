@@ -1871,9 +1871,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "CleanserFunction"
-      CodeUri: ../event-processing/cleanser
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: app.cleanserHandler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt CleanserFunctionRole.Arn
@@ -1886,6 +1886,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
+
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
 #    Properties:
