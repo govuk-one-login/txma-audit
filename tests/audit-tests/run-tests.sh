@@ -4,6 +4,8 @@ set -eu
 
 gradle -v
 
+cd /
+
 echo "Environment: $TEST_ENVIRONMENT"
 
 echo "$PWD"
