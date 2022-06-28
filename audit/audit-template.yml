@@ -315,24 +315,45 @@ Resources:
                   - 'kms:Decrypt'
                 Resource: '{{resolve:ssm:SNSKMSKeyARN}}'
 
-  TestRolePolicy:
-    Type: AWS::IAM::Policy
+  #
+  # Test Role Permissions
+  #
+
+  MessageBatchTestBucketPolicy:
+    Type: AWS::S3::BucketPolicy
     Condition: DeployTestPolicy
     Properties:
-      Roles:
-        - !Select [ 1, !Split [ "/" , TestRoleArn ]]
-      PolicyName: test_role_policy
+      Bucket: !Ref MessageBatchBucket
       PolicyDocument:
-        Version: 2012-10-17
+        Version: '2012-10-17'
         Statement:
-          - Effect: Allow
-            Action:
-              - 'firehose:PutRecord'
+          - Effect: 'Allow'
             Resource:
-              - !GetAtt AuditDeliveryStream.Arn
-          - Effect: Allow
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub '${MessageBatchBucket.Arn}/*'
+            Principal: TestRoleArn
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'
-            Resource:
-              - !GetAtt MessageBatchBucket.Arn
+
+#  TestRolePolicy:
+#    Type: AWS::IAM::Policy
+#    Condition: DeployTestPolicy
+#    Properties:
+#      Roles:
+#        - !Select [ 1, !Split [ "/" , TestRoleArn ]]
+#      PolicyName: test_role_policy
+#      PolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#          - Effect: Allow
+#            Action:
+#              - 'firehose:PutRecord'
+#            Resource:
+#              - !GetAtt AuditDeliveryStream.Arn
+#          - Effect: Allow
+#            Action:
+#              - 's3:GetObject'
+#              - 's3:ListBucket'
+#            Resource:
+#              - !GetAtt MessageBatchBucket.Arn
