@@ -21,6 +21,10 @@ export class EnrichmentService {
             eventMessage.event_id = randomUUID();
         }
 
+        if (!eventMessage.component_id && process.env.defaultComponentId) {
+            eventMessage.component_id = process.env.defaultComponentId;
+        }
+
         return eventMessage;
     }
 }

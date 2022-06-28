@@ -39,6 +39,7 @@ describe('Unit test for app handler', function () {
         sns = new SNS();
 
         process.env.topicArn = 'SOME-SNS-TOPIC';
+        process.env.defaultComponentId = 'SOME-COMPONENT-ID'
     });
 
     afterEach(() => {
@@ -74,13 +75,12 @@ describe('Unit test for app handler', function () {
 
     it('accepts a bare minimum payload and stringifies', async () => {
         const expectedResult =
-            '{"event_id":"58339721-64c9-486b-903f-ad7e63fc45de","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234"}';
+            '{"event_id":"58339721-64c9-486b-903f-ad7e63fc45de","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"SOME-COMPONENT-ID"}';
 
         const exampleMessage: IAuditEvent = {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            event_name: 'AUTHENTICATION_ATTEMPT',
-            component_id: '1234',
+            event_name: 'AUTHENTICATION_ATTEMPT'
         };
 
         (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
