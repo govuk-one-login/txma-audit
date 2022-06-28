@@ -325,15 +325,15 @@ Resources:
     Properties:
       Bucket: !Ref MessageBatchBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
+          - Effect: 'Allow'
             Resource:
               - !GetAtt MessageBatchBucket.Arn
-              - !Sub "${MessageBatchBucket.Arn}/*"
+              - !Sub '${MessageBatchBucket.Arn}/*'
             Principal: TestRoleArn
             Action:
-              - "s3:GetObject"
+              - 's3:GetObject'
               - 's3:ListBucket'
 
 #  TestRolePolicy:

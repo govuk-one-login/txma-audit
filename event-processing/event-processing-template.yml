@@ -1994,15 +1994,15 @@ Resources:
     Properties:
       Bucket: !Ref FraudSplunkDeliveryTestBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
+          - Effect: 'Allow'
             Resource:
               - !GetAtt FraudSplunkDeliveryTestBucket.Arn
-              - !Sub "${FraudSplunkDeliveryTestBucket.Arn}/*"
+              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
             Principal: TestRoleArn
             Action:
-              - "s3:GetObject"
+              - 's3:GetObject'
               - 's3:ListBucket'
 
   PerformanceSplunkTestBucketPolicy:
@@ -2011,13 +2011,13 @@ Resources:
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryTestBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
+          - Effect: 'Allow'
             Resource:
               - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
-              - !Sub "${PerformanceSplunkDeliveryTestBucket.Arn}/*"
+              - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
             Principal: TestRoleArn
             Action:
-              - "s3:GetObject"
+              - 's3:GetObject'
               - 's3:ListBucket'
