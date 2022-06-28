@@ -44,6 +44,10 @@ Conditions:
   DeployTestPolicy: !And
     - !Condition IsTestStage
     - !Condition UseTestRole
+  DeployTestPolicyForBucket: !And
+    - !Condition IsTestStage
+    - !Condition UseTestRole
+    - !Condition IsBuild
 
 Globals:
   Function:
@@ -1932,34 +1936,88 @@ Resources:
 #        EntryPoints:
 #          - app.ts
 
-  TestRolePolicy:
-    Type: AWS::IAM::Policy
+  #
+  # Test Role Permissions
+  #
+
+  KBVTestInvokePermission:
+    Type: AWS::Lambda::Permission
     Condition: DeployTestPolicy
     Properties:
-      Roles:
-        - !Select [ 1, !Split [ "/" , TestRoleArn ]]
-      PolicyName: test_role_policy
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref KBVEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  KBVAddressTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref KBVAddressEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  KBVFraudTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref KBVFraudEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  IPVTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref IPVEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  IPVPassTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref IPVPassEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  SPOTTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SPOTEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  FraudSplunkTestBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: DeployTestPolicyForBucket
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryTestBucket
       PolicyDocument:
-        Version: 2012-10-17
+        Version: "2012-10-17"
         Statement:
-          - Effect: Allow
-            Action:
-              - 'lambda:Invoke'
+          - Effect: "Allow"
             Resource:
-              - !GetAtt IPVEventProcessorFunction.Arn
-              - !GetAtt IPVPassEventProcessorFunction.Arn
-              - !GetAtt SPOTEventProcessorFunction.Arn
-              - !GetAtt KBVEventProcessorFunction.Arn
-              - !GetAtt KBVAddressEventProcessorFunction.Arn
-              - !GetAtt KBVFraudEventProcessorFunction.Arn
-          - !If
-            - IsBuild
-            -
-              Effect: Allow
-              Action:
-                - 's3:GetObject'
-                - 's3:ListBucket'
-              Resource:
-                - !GetAtt FraudSplunkDeliveryTestBucket.Arn
-                - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
-            - !Ref "AWS::NoValue"
+              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
+              - !Sub "${FraudSplunkDeliveryTestBucket.Arn}/*"
+            Principal: TestRoleArn
+            Action:
+              - "s3:GetObject"
+              - 's3:ListBucket'
+
+  PerformanceSplunkTestBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: DeployTestPolicyForBucket
+    Properties:
+      Bucket: !Ref PerformanceSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Resource:
+              - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
+              - !Sub "${PerformanceSplunkDeliveryTestBucket.Arn}/*"
+            Principal: TestRoleArn
+            Action:
+              - "s3:GetObject"
+              - 's3:ListBucket'
