@@ -16,9 +16,10 @@ export interface IAuditEvent {
 
 export interface IAuditEventUserMessage {
     transaction_id?: string;
+    user_id?: string;
     email?: string;
     phone?: string;
-    ip_address: string;
+    ip_address?: string;
     session_id?: string;
     persistent_session_id?: string;
     govuk_signin_journey_id?: string;
@@ -107,6 +108,7 @@ export class AuditEvent {
 function createBaseAuditEventUserMessage(): IAuditEventUserMessage {
     return {
         transaction_id: '',
+        user_id: '',
         email: '',
         phone: '',
         ip_address: '',
@@ -124,6 +126,9 @@ export class AuditEventUserMessage {
             switch (value) {
                 case 'transaction_id':
                     user.transaction_id = object.transaction_id;
+                    break;
+                case 'user_id':
+                    user.user_id = object.user_id;
                     break;
                 case 'email':
                     user.email = object.email;
@@ -157,6 +162,7 @@ export class AuditEventUserMessage {
     static toJSON(message: IAuditEventUserMessage): object {
         const obj: any = {};
         message.transaction_id !== undefined && (obj.transaction_id = message.transaction_id);
+        message.user_id !== undefined && (obj.user_id = message.user_id);
         message.email !== undefined && (obj.email = message.email);
         message.phone !== undefined && (obj.phone = message.phone);
         message.ip_address !== undefined && (obj.ip_address = message.ip_address);
