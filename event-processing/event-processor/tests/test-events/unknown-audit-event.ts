@@ -16,6 +16,7 @@ export interface AuditEvent {
 
 export interface IAuditEventUserMessage {
     transaction_id: string;
+    user_id: string;
     email: string;
     phone: string;
     ip_address: string;
@@ -67,6 +68,7 @@ export class AuditEventUserMessage {
     static fromJSON(object: any): IAuditEventUserMessage {
         return {
             transaction_id: isSet(object.transaction_id) ? String(object.transaction_id) : '',
+            user_id: isSet(object.user_id) ? String(object.user_id) : '',
             email: isSet(object.email) ? String(object.email) : '',
             phone: isSet(object.phone) ? String(object.phone) : '',
             ip_address: isSet(object.ip_address) ? String(object.ip_address) : '',
@@ -80,6 +82,7 @@ export class AuditEventUserMessage {
     static toJSON(message: IAuditEventUserMessage): unknown {
         const obj: any = {};
         message.transaction_id !== undefined && (obj.transaction_id = message.transaction_id);
+        message.user_id !== undefined && (obj.user_id = message.user_id);
         message.email !== undefined && (obj.email = message.email);
         message.phone !== undefined && (obj.phone = message.phone);
         message.ip_address !== undefined && (obj.ip_address = message.ip_address);
