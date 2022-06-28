@@ -6,7 +6,7 @@ gradle -v
 
 echo "Environment: $TEST_ENVIRONMENT"
 
-./gradlew clean test
+gradle -q test
 
 echo "Successfully generated report"
 
