@@ -331,7 +331,8 @@ Resources:
             Resource:
               - !GetAtt MessageBatchBucket.Arn
               - !Sub '${MessageBatchBucket.Arn}/*'
-            Principal: TestRoleArn
+            Principal:
+              AWS: !Ref TestRoleArn
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'

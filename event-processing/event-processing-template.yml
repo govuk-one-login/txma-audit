@@ -2001,7 +2001,8 @@ Resources:
             Resource:
               - !GetAtt FraudSplunkDeliveryTestBucket.Arn
               - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
-            Principal: !Ref TestRoleArn
+            Principal:
+              AWS: !Ref TestRoleArn
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'
@@ -2018,7 +2019,8 @@ Resources:
             Resource:
               - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
               - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
-            Principal: !Ref TestRoleArn
+            Principal:
+              AWS: !Ref TestRoleArn
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'
