@@ -1891,6 +1891,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - app.ts
+
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
 #    Properties:
@@ -2000,7 +2001,7 @@ Resources:
             Resource:
               - !GetAtt FraudSplunkDeliveryTestBucket.Arn
               - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
-            Principal: TestRoleArn
+            Principal: !Ref TestRoleArn
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'
@@ -2017,7 +2018,7 @@ Resources:
             Resource:
               - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
               - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
-            Principal: TestRoleArn
+            Principal: !Ref TestRoleArn
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'
