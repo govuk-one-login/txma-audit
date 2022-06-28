@@ -8,7 +8,7 @@ cd /
 
 echo "Environment: $TEST_ENVIRONMENT"
 
-echo "$PWD"
+echo "Current Working Directory: $PWD"
 
 gradle -q test
 
