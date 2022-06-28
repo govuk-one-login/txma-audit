@@ -6,6 +6,8 @@ gradle -v
 
 echo "Environment: $TEST_ENVIRONMENT"
 
+echo "$PWD"
+
 #gradle -q test
 
 cat <<EOF > "$TEST_REPORT_ABSOLUTE_DIR/result.json"
