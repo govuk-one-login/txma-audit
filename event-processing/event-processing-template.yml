@@ -243,6 +243,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "KBV"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -377,6 +378,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "KBV-Address"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -511,6 +513,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "KBV-Fraud"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -645,6 +648,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "IPV"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -780,6 +784,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "IPV-Pass"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -914,6 +919,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "SPOT"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild

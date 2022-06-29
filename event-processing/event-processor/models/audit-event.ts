@@ -7,7 +7,7 @@ export interface IAuditEvent {
     timestamp: number;
     timestamp_formatted?: string;
     event_name: string;
-    component_id: string;
+    component_id?: string;
     user?: IAuditEventUserMessage | undefined;
     platform?: unknown | undefined;
     restricted?: unknown | undefined;
