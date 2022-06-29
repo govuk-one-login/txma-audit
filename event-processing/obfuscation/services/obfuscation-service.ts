@@ -46,4 +46,19 @@ export class ObfuscationService {
 
         return crypto.createHmac('sha256', key).update(value).digest('hex');
     }
+
+    public static removeEmpty(obj : any) : unknown {
+        for (var propName in obj) {
+          if (obj[propName] === null || obj[propName] === undefined  || obj[propName] == "") {
+            delete obj[propName];
+          } else if(obj[propName] === typeof Array) {
+            obj[propName].forEach((value : Object, index: string | number) => {
+                obj[propName][index] = this.removeEmpty(value);
+            });
+          } else if(obj[propName] === typeof Object) {
+            obj[propName] = this.removeEmpty(obj[propName]);
+          }
+        }
+        return obj
+    }
 }
