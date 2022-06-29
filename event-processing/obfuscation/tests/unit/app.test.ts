@@ -99,6 +99,83 @@ describe('Unit test for app handler', function () {
         expect(result).toEqual(expectedResult);
     });
 
+    it('obfuscates all expected fields when receiving an object in restricted fields', async () => {
+        const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+
+        expectedData.restricted = {
+            someField: ObfuscationService.obfuscateField('value', 'secret-1-value'),
+            nestedObject: {
+                nestedObject2: {
+                    field: ObfuscationService.obfuscateField('field', 'secret-1-value'),
+                }
+            },
+            address: [
+                {
+                    buildingName: ObfuscationService.obfuscateField('some name', 'secret-1-value'),
+                    buildingNumber: ObfuscationService.obfuscateField('10', 'secret-1-value'),
+                    street: ObfuscationService.obfuscateField('Blue Avenue', 'secret-1-value'),
+                    postTown: ObfuscationService.obfuscateField('Leeds', 'secret-1-value'),
+                    postcode: ObfuscationService.obfuscateField('LS1 1BA', 'secret-1-value'),
+                    additionalProperties: {
+                        property1: ObfuscationService.obfuscateField('property value', 'secret-1-value')
+                    }
+                },
+                {
+                    buildingName: ObfuscationService.obfuscateField('some name 2', 'secret-1-value'),
+                    buildingNumber: ObfuscationService.obfuscateField('101', 'secret-1-value'),
+                    street: ObfuscationService.obfuscateField('Red Avenue', 'secret-1-value'),
+                    postTown: ObfuscationService.obfuscateField('Leeds', 'secret-1-value'),
+                    postcode: ObfuscationService.obfuscateField('LS1 2BA', 'secret-1-value')
+                }
+            ]
+        }
+
+        const data : string = Buffer.from(TestHelper.encodeAuditEventArray(expectedData)).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: data,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "Ok"
+            }]
+        }
+
+        const message = TestHelper.exampleMessage;
+
+        message.restricted = {
+            someField: "value",
+            nestedObject: {
+                nestedObject2: {
+                    field: "field"
+                }
+            },
+            address: [
+                {
+                    buildingName: "some name",
+                    buildingNumber: "10",
+                    street: "Blue Avenue",
+                    postTown: "Leeds",
+                    postcode: "LS1 1BA",
+                    additionalProperties: {
+                        property1: "property value"
+                    }
+                },
+                {
+                    buildingName: "some name 2",
+                    buildingNumber: "101",
+                    street: "Red Avenue",
+                    postTown: "Leeds",
+                    postcode: "LS1 2BA"
+                }
+            ]
+        }
+
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(message));
+
+        const result = await handler(firehoseEvent);
+
+        expect(result).toEqual(expectedResult);
+    });
+
     it('obfuscates expected fields when receiving a single event using the secret string', async () => {
         const expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
 
@@ -207,7 +284,7 @@ describe('Unit test for app handler', function () {
         const key : string = "My secret key";
         const expectedResult = "5d224b25388f72dc5e329dd68385680535f6d9bda65c5f830631d72e255b9f95"
 
-        const result: string = ObfuscationService.obfuscate(message, key);
+        const result: string = ObfuscationService.obfuscateField(message, key);
 
         expect(result).toEqual(expectedResult);
     });

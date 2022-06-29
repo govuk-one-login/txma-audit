@@ -9,6 +9,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cloudwatch.model.CloudWatchException;
+import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
+import software.amazon.awssdk.services.cloudwatchlogs.model.DescribeLogStreamsRequest;
+import software.amazon.awssdk.services.cloudwatchlogs.model.DescribeLogStreamsResponse;
+import software.amazon.awssdk.services.cloudwatchlogs.model.GetLogEventsRequest;
+import software.amazon.awssdk.services.cloudwatchlogs.model.LogStream;
+import software.amazon.awssdk.services.cloudwatchlogs.model.OutputLogEvent;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
@@ -32,17 +39,12 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.zip.GZIPInputStream;
-import java.util.Objects;
 
-import static java.util.Objects.isNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.core.IsNot.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,9 +53,10 @@ public class LambdaToS3StepDefinitions {
     Region region = Region.EU_WEST_2;
     String output = null;
     String input;
-    String timestamp;
+    Long timestamp;
     String log;
     boolean firstSearch = true;
+    String requestID;
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -68,7 +71,7 @@ public class LambdaToS3StepDefinitions {
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        JSONObject change = addUniqueComponentID(json, account);
+        JSONObject change = addUniqueFields(json, account);
         input = wrapJSON(change);
     }
 
@@ -115,6 +118,7 @@ public class LambdaToS3StepDefinitions {
             res = awsLambda.invoke(request);
             assertEquals(200, res.sdkHttpResponse().statusCode(), "A problem calling the lambda. HTTP response was incorrect.");
             log = new String (Base64.getDecoder().decode(res.logResult()), StandardCharsets.UTF_8);
+            requestID = res.responseMetadata().requestId();
 
 
         } catch (LambdaException e) {
@@ -124,28 +128,16 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
-     * Ensures that an error does not appear in cloudwatch log produced when the lambda was invoked
+     * Ensures that the provided string does appear in cloudwatch log produced when the lambda was invoked
      */
-    @Then("there shouldn't be an error message in the lambda logs")
-    public void there_shouldnt_be_an_error_message_in_the_lambda_cloudwatch() {
-        assertThat("A log from the lambda contained an [ERROR] message.", log, not(containsString("[ERROR]")));
-    }
+    @Then("there should be a {string} message in the {string} lambda logs")
+    public void there_should_be_a_message_in_the_lambda_cloudwatch(String message, String account) throws InterruptedException {
+        if (!log.contains(message)){
+            sendEmpty(account);
 
-    /**
-     * Ensures that an error does appear in cloudwatch log produced when the lambda was invoked
-     */
-    @Then("there should be an error message in the lambda logs")
-    public void there_should_be_an_error_message_in_the_lambda_cloudwatch() {
-        assertThat("No log from the lambda contained an [ERROR] message.", log, containsString("[ERROR]"));
-    }
-
-    /**
-     * Ensures that a warn error does appear in cloudwatch log produced when the lambda was invoked
-     */
-    @Then("there should be a warn message in the lambda logs")
-    public void there_should_be_a_warn_message_in_the_lambda_cloudwatch() {
-        assertThat("A log from the lambda contained an [ERROR] message.", log, not(containsString("[ERROR]")));
-        assertThat("No log from the lambda contained a [WARN] message.", log, containsString("[WARN]"));
+            String logGroup = "/aws/lambda/EventProcessorFunction-" + account;
+            assertTrue(searchCloudwatch(logGroup, requestID, message), "No log from the lambda contained a " + message + " message.");
+        }
     }
 
     /**
@@ -202,19 +194,24 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
-     * This adds the current timestamp to a component_id for each team to ensure the message is unique
+     * This adds the current timestamp to the nearest millisecond (if timestamp was already present)
+     * and adds the component_id (if component_id was already present)
      *
-     * @param json      This is the json which the component_id is being amended
+     * @param json      This is the json which is to be changed
      * @param account   This is the account name to be added to the component_id
      * @return          Returns the amended json
      */
-    private JSONObject addUniqueComponentID(JSONObject json, String account){
+    private JSONObject addUniqueFields(JSONObject json, String account){
+        if (timestamp == null){
+            timestamp = Instant.now().toEpochMilli();
+        }
         // Only adds the new component_id if it's already in the file
         if (json.has("component_id")){
-            if (timestamp == null){
-                timestamp = Instant.now().toString();
-            }
-            json.put("component_id", account + " " + timestamp);
+            json.put("component_id", account);
+        }
+        // Only adds the new timestamp if it's already in the file
+        if (json.has("timestamp")){
+            json.put("timestamp", timestamp);
         }
         return json;
     }
@@ -356,7 +353,7 @@ public class LambdaToS3StepDefinitions {
             Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + filename+".json").getAbsolutePath());
             String file = Files.readString(filePath);
             JSONObject json = new JSONObject(file);
-            JSONObject expectedS3 = addUniqueComponentID(json, account);
+            JSONObject expectedS3 = addUniqueFields(json, account);
 
             // Compares all individual jsons with our test data
             for (JSONObject object : array) {
@@ -370,5 +367,98 @@ public class LambdaToS3StepDefinitions {
         return foundInS3;
     }
 
-}
+    /**
+     * This sends an empty payload through the correct lambda to force any cloudwatch logs to be processed if they haven't already
+     *
+     * @param account   The account which is sending the payload
+     */
+    public void sendEmpty(String account) {
 
+        JSONObject json = new JSONObject();
+        String empty = wrapJSON(json);
+
+        String functionName = "EventProcessorFunction-" + account;
+
+        // Opens the lambda client
+        try (LambdaClient awsLambda = LambdaClient.builder()
+                .region(region)
+                .build()) {
+            // Invoke the lambda with the input data
+            SdkBytes payload = SdkBytes.fromUtf8String(empty);
+            InvokeRequest.builder()
+                    .functionName(functionName)
+                    .payload(payload)
+                    .build();
+
+        } catch (LambdaException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+    }
+
+    /**
+     * This waits for cloudwatch to update and searches the logs for the inputted string
+     * Note: it only searches the logs with the correct request id as found before
+     *
+     * @param logGroupName  The cloudwatch log to search
+     * @param toFind        The strings to be found
+     * @return              True or False depending on whether the string was found
+     * @throws InterruptedException
+     */
+    public boolean searchCloudwatch(String logGroupName, String... toFind) throws InterruptedException {
+        // Gives enough time for the cloudwatch logs to be processed
+        Thread.sleep(20000);
+        // This will track if the correct log has been found or not
+        boolean found;
+
+        // Opens the cloudwatch client
+        try (CloudWatchLogsClient cloudWatchLogsClient = CloudWatchLogsClient.builder()
+                .region(region)
+                .build()){
+
+            // Finds all log streams in Cloudwatch
+            DescribeLogStreamsRequest req = DescribeLogStreamsRequest.builder().logGroupName(logGroupName).orderBy("LastEventTime").descending(true).build();
+            DescribeLogStreamsResponse res2 = cloudWatchLogsClient.describeLogStreams(req);
+            List<LogStream> logStreams = res2.logStreams();
+
+            // Looks through all logs streams in the log group
+            for (LogStream logStream : logStreams) {
+                String logStreamName = logStream.logStreamName();
+                // Get the messages from the latest batch of cloudwatch messages
+                GetLogEventsRequest getLogEventsRequest = GetLogEventsRequest.builder()
+                        .logGroupName(logGroupName)
+                        .logStreamName(logStreamName)
+                        .startFromHead(false)
+                        .build();
+
+                // Loops through all logs in the stream
+                for (OutputLogEvent event : cloudWatchLogsClient.getLogEvents(getLogEventsRequest).events()) {
+                    // assumes found until it is not
+                    found = true;
+
+                    System.out.println(event.message() + Arrays.toString(toFind));
+
+                    // the log to be searched
+                    String message = event.message();
+                    // Loops through the inputs to be found
+                    for (String find : toFind){
+                        // If the messages does not contain the string, it has not been found
+                        if (!message.contains(find)) {
+                            found = false;
+                            break;
+                        }
+                    }
+                    // If all inputs were found, we return true
+                    if (found){
+                        return true;
+                    }
+                }
+            }
+        } catch (CloudWatchException e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            System.exit(1);
+        }
+
+        return false;
+    }
+}

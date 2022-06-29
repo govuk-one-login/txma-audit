@@ -1,8 +1,8 @@
-export interface IAuditEvent {
-    event_id?: string;
+export interface IEnrichedAuditEvent {
+    event_id: string;
     client_id?: string;
     timestamp: number;
-    timestamp_formatted?: string;
+    timestamp_formatted: string;
     event_name: string;
     component_id: string;
     user?: IAuditEventUserMessage | undefined;
@@ -22,7 +22,7 @@ export interface IAuditEventUserMessage {
     govuk_signin_journey_id?: string;
 }
 
-function createBaseAuditEvent(): IAuditEvent {
+function createBaseAuditEvent(): IEnrichedAuditEvent {
     return {
         event_id: '',
         client_id: '',
@@ -37,8 +37,8 @@ function createBaseAuditEvent(): IAuditEvent {
     };
 }
 
-export class AuditEvent {
-    static fromJSONString(object: string): IAuditEvent {
+export class EnrichedAuditEvent {
+    static fromJSONString(object: string): IEnrichedAuditEvent {
         const event = createBaseAuditEvent();
         const jsonObject = JSON.parse(object);
         for (const value in jsonObject) {

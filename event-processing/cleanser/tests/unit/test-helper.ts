@@ -1,10 +1,10 @@
 /* istanbul ignore file */
 import { FirehoseTransformationEvent, FirehoseTransformationEventRecord } from 'aws-lambda';
-import { IAuditEvent } from '../../models/audit-event';
-import { ObfuscationService } from '../../services/obfuscation-service';
+import { IEnrichedAuditEvent } from '../../models/enriched-audit-event';
+import {ICleansedEvent} from "../../models/cleansed-event";
 
 export class TestHelper {
-    static exampleMessage: IAuditEvent = {
+    static exampleMessage: IEnrichedAuditEvent = {
         event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
         client_id: 'some-client',
         timestamp: 1609462861,
@@ -13,7 +13,6 @@ export class TestHelper {
         component_id: 'AUTH',
         user: {
             transaction_id: 'a52f6f87',
-            user_id: 'user_id',
             email: 'foo@bar.com',
             phone: '07711223344',
             ip_address: '100.100.100.100',
@@ -33,34 +32,13 @@ export class TestHelper {
         },
     };
 
-    static exampleObfuscatedMessage: IAuditEvent = {
+    static exampleResultMessage: ICleansedEvent = {
         event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
-        client_id: 'some-client',
-        timestamp: 1609462861,
-        timestamp_formatted: '2021-01-23T15:43:21.842',
         event_name: 'AUTHENTICATION_ATTEMPT',
         component_id: 'AUTH',
-        user: {
-            transaction_id: ObfuscationService.obfuscateField('a52f6f87', 'secret-1-value'),
-            user_id: 'user_id',
-            email: ObfuscationService.obfuscateField('foo@bar.com', 'secret-1-value'),
-            phone: ObfuscationService.obfuscateField('07711223344', 'secret-1-value'),
-            ip_address: '100.100.100.100',
-            session_id: 'c222c1ec',
-            persistent_session_id: 'some session id',
-            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
-        },
-        platform: {
-            xray_trace_id: '24727sda4192',
-        },
-        restricted: {
-            experian_ref: ObfuscationService.obfuscateField('DSJJSEE29392', 'secret-1-value'),
-            passport_number: ObfuscationService.obfuscateField(1040349934, 'secret-1-value'),
-        },
-        extensions: {
-            response: 'Authentication successful',
-        },
-    };
+        timestamp: 1609462861,
+        timestamp_formatted: '2021-01-23T15:43:21.842'
+    }
 
     private static firehoseTransformationEvent: FirehoseTransformationEvent = {
         invocationId: 'bb5d7530-f7b7-44aa-bc0f-01b76248fbb8',

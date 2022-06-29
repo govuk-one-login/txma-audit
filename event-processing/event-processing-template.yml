@@ -22,24 +22,32 @@ Parameters:
       - "integration"
       - "production"
     ConstraintDescription: must be dev, build, staging, integration or production
+  TestRoleArn:
+    Type: "String"
+    Description: "The ARN of the role that will used for integration tests"
+    Default: "none"
+    AllowedPattern: "(none)|(arn:aws:iam::.*:role/.*)"
 
 Conditions:
-  SetPermissionsBoundary:
-    Fn::Not:
-      - Fn::Equals:
-          - !Ref PermissionsBoundary
-          - "none"
-  UseCodeSigning:
-    Fn::Not:
-      - Fn::Equals:
-          - !Ref CodeSigningConfigArn
-          - "none"
+  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
+  UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
+  UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
   IsBuild: !Or
     - !Equals [ !Ref Environment, dev ]
     - !Equals [ !Ref Environment, build ]
+  IsTestStage: !Or
+    - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
+  DeployTestPolicy: !And
+    - !Condition IsTestStage
+    - !Condition UseTestRole
+  DeployTestPolicyForBucket: !And
+    - !Condition IsTestStage
+    - !Condition UseTestRole
+    - !Condition IsBuild
 
 Globals:
   Function:
@@ -48,7 +56,7 @@ Globals:
       - !Ref CodeSigningConfigArn
       - !Ref AWS::NoValue
     PermissionsBoundary: !If
-      - SetPermissionsBoundary
+      - UsePermissionsBoundary
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
     Architectures:
@@ -235,6 +243,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "KBV"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -304,7 +313,7 @@ Resources:
     Properties:
       RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-KBV"
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -369,6 +378,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "KBV-Address"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -438,7 +448,7 @@ Resources:
     Properties:
       RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-KBVAddress"
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -503,6 +513,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "KBV-Fraud"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -572,7 +583,7 @@ Resources:
     Properties:
       RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-KBVFraud"
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -637,6 +648,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "IPV"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -707,7 +719,7 @@ Resources:
     Properties:
       RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-IPV"
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -772,6 +784,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "IPV-Pass"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -841,7 +854,7 @@ Resources:
     Properties:
       RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-IPVPass"
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -906,6 +919,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
+          defaultComponentId: "SPOT"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -975,7 +989,7 @@ Resources:
     Properties:
       RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-SPOT"
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -1053,6 +1067,7 @@ Resources:
               ForAnyValue:ArnEquals:
                 "aws:PrincipalArn":
                   - !GetAtt ObfuscationFunction.Arn
+                  - !GetAtt CleanserFunction.Arn
 #                  - !GetAtt ReIngestFunction.Arn
 
   FireHoseKMSKeyAlias:
@@ -1279,7 +1294,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -1373,7 +1388,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -1426,7 +1441,7 @@ Resources:
               - 'lambda:InvokeFunction'
               - 'lambda:GetFunctionConfiguration'
             Resource:
-              - !Sub "${ObfuscationFunction.Arn}*"
+              - !Sub "${CleanserFunction.Arn}*"
           - Effect: Allow
             Action:
               - 'logs:CreateLogGroup'
@@ -1467,7 +1482,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -1622,7 +1637,7 @@ Resources:
                 - Type: Lambda
                   Parameters:
                     - ParameterName: LambdaArn
-                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                      ParameterValue: !GetAtt CleanserFunction.Arn
                     - ParameterName: RoleArn
                       ParameterValue: !GetAtt PerformanceDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
@@ -1650,7 +1665,7 @@ Resources:
                 - Type: Lambda
                   Parameters:
                     - ParameterName: LambdaArn
-                      ParameterValue: !GetAtt ObfuscationFunction.Arn
+                      ParameterValue: !GetAtt CleanserFunction.Arn
                     - ParameterName: RoleArn
                       ParameterValue: !GetAtt PerformanceDeliveryStreamRole.Arn
           - !Ref "AWS::NoValue"
@@ -1751,7 +1766,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       PermissionsBoundary: !If
-        - SetPermissionsBoundary
+        - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
@@ -1837,6 +1852,52 @@ Resources:
             Principal:
               AWS: !GetAtt ObfuscationFunctionRole.Arn
 
+  CleanserFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+
+  CleanserLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/CleanserFunction"
+      RetentionInDays: 7
+
+  CleanserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "CleanserFunction"
+      CodeUri: ../event-processing/cleanser
+      PackageType: Zip
+      Handler: app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt CleanserFunctionRole.Arn
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - app.ts
+
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
 #    Properties:
@@ -1881,3 +1942,91 @@ Resources:
 #        Sourcemap: true
 #        EntryPoints:
 #          - app.ts
+
+  #
+  # Test Role Permissions
+  #
+
+  KBVTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref KBVEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  KBVAddressTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref KBVAddressEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  KBVFraudTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref KBVFraudEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  IPVTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref IPVEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  IPVPassTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref IPVPassEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  SPOTTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SPOTEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  FraudSplunkTestBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: DeployTestPolicyForBucket
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
+              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
+            Principal:
+              AWS: !Ref TestRoleArn
+            Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+
+  PerformanceSplunkTestBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: DeployTestPolicyForBucket
+    Properties:
+      Bucket: !Ref PerformanceSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
+              - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
+            Principal:
+              AWS: !Ref TestRoleArn
+            Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
