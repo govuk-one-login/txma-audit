@@ -7,9 +7,11 @@ export class SnsService {
         console.log(`Topic ARN: ${topicArn}`);
 
         config.update({ region: process.env.AWS_REGION });
+        
+        let cleanMessage = this.removeEmpty(message);
 
         const params: PublishInput = {
-            Message: JSON.stringify(message),
+            Message: JSON.stringify(cleanMessage),
             TopicArn: topicArn,
             MessageAttributes: {
                 eventName: {
@@ -32,5 +34,14 @@ export class SnsService {
             });
 
         return;
+    }
+
+    static removeEmpty(obj : any) : unknown {
+        return Object.fromEntries(
+          Object.entries(obj)
+            .filter(([_, v]) => v != null)
+            .filter(([_, v]) => v != "")
+            .map(([k, v]) => [k, v === Object(v) ? this.removeEmpty(v) : v])
+        );
     }
 }
