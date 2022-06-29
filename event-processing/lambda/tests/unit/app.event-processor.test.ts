@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { eventProcessorHandler } from '../../app';
+import { handler } from '../../event-processor-app';
 import { TestHelper } from '../test-helpers/test-helper';
 import { IAuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../../tests/test-events/unknown-audit-event';
@@ -56,7 +56,7 @@ describe('Unit test for app eventProcessorHandler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await eventProcessorHandler(sqsEvent);
+        await handler(sqsEvent);
 
         expect(sns.publish).toBeCalledTimes(0);
     });
@@ -68,7 +68,7 @@ describe('Unit test for app eventProcessorHandler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage as IAuditEvent));
 
-        await eventProcessorHandler(sqsEvent);
+        await handler(sqsEvent);
 
         expect(sns.publish).toBeCalledTimes(0);
     });
@@ -88,7 +88,7 @@ describe('Unit test for app eventProcessorHandler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await eventProcessorHandler(sqsEvent);
+        await handler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -118,7 +118,7 @@ describe('Unit test for app eventProcessorHandler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await eventProcessorHandler(sqsEvent);
+        await handler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -148,7 +148,7 @@ describe('Unit test for app eventProcessorHandler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage), 2);
 
-        await eventProcessorHandler(sqsEvent);
+        await handler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -208,7 +208,7 @@ describe('Unit test for app eventProcessorHandler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEventWithUnknownField(exampleMessage));
 
-        await eventProcessorHandler(sqsEvent);
+        await handler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -264,7 +264,7 @@ describe('Unit test for app eventProcessorHandler', function () {
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        await eventProcessorHandler(sqsEvent);
+        await handler(sqsEvent);
 
         expect(sns.publish).toHaveBeenCalledWith(
             {
@@ -325,7 +325,7 @@ describe('Unit test for app eventProcessorHandler', function () {
 
         sqsEvent.Records.push(...sqsEventWithInvalidMessage.Records)
 
-        await eventProcessorHandler(sqsEvent);
+        await handler(sqsEvent);
 
         expect(consoleMock).toHaveBeenCalledTimes(5);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
@@ -390,7 +390,7 @@ describe('Unit test for app eventProcessorHandler', function () {
 
         sqsEvent.Records.push(...sqsEventWithInvalidMessage.Records)
 
-        await eventProcessorHandler(sqsEvent);
+        await handler(sqsEvent);
 
         expect(consoleMock).toHaveBeenCalledTimes(5);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');

@@ -231,7 +231,7 @@ Resources:
       FunctionName: "EventProcessorFunction-KBV"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.eventProcessorHandler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVLambdaAccessRole.Arn
@@ -246,7 +246,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   KBVEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -365,7 +365,7 @@ Resources:
       FunctionName: "EventProcessorFunction-KBVAddress"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.eventProcessorHandler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVAddressLambdaAccessRole.Arn
@@ -380,7 +380,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   KBVAddressEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -499,7 +499,7 @@ Resources:
       FunctionName: "EventProcessorFunction-KBVFraud"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.eventProcessorHandler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVFraudLambdaAccessRole.Arn
@@ -514,7 +514,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   KBVFraudEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -633,7 +633,7 @@ Resources:
       FunctionName: "EventProcessorFunction-IPV"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.eventProcessorHandler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVLambdaAccessRole.Arn
@@ -648,7 +648,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
 
   IPVEventProcessorUnknownFieldsErrorMetric:
@@ -768,7 +768,7 @@ Resources:
       FunctionName: "EventProcessorFunction-IPVPass"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.eventProcessorHandler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVPassLambdaAccessRole.Arn
@@ -783,7 +783,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   IPVPassEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -902,7 +902,7 @@ Resources:
       FunctionName: "EventProcessorFunction-SPOT"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.eventProcessorHandler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt SPOTLambdaAccessRole.Arn
@@ -917,7 +917,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   SPOTEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -1799,7 +1799,7 @@ Resources:
       FunctionName: "ObfuscationFunction"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.obfuscationHandler
+      Handler: obfuscation-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt ObfuscationFunctionRole.Arn
@@ -1814,7 +1814,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - obfuscation-app.ts
 
   HMACSecretAuthAccessPolicy:
     DependsOn:
@@ -1873,7 +1873,7 @@ Resources:
       FunctionName: "CleanserFunction"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.cleanserHandler
+      Handler: cleanser-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt CleanserFunctionRole.Arn
@@ -1885,7 +1885,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - cleanser-app.ts
 
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup

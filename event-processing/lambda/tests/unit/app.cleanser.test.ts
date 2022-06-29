@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {cleanserHandler} from '../../app';
+import {handler} from '../../cleanser-app';
 import { FirehoseTransformationResult } from 'aws-lambda';
 import { IEnrichedAuditEvent, IAuditEventUserMessage } from '../../models/enriched-audit-event';
 import { ICleansedEvent } from "../../models/cleansed-event";
@@ -58,7 +58,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
         
-        const result = await cleanserHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });
 
@@ -104,7 +104,7 @@ describe('Unit test for app handler', function () {
 
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
 
-        const result = await cleanserHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });
 
@@ -121,7 +121,7 @@ describe('Unit test for app handler', function () {
 
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(CleanserHelper.exampleEnrichedMessage));
 
-        const result = await cleanserHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });

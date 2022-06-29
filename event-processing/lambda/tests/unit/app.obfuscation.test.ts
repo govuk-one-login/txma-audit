@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { obfuscationHandler } from '../../app';
+import { handler } from '../../obfuscation-app';
 import { TestHelper } from '../test-helpers/test-helper';
 import { FirehoseTransformationResult } from 'aws-lambda';
 import { AuditEvent, IAuditEvent } from '../../models/audit-event';
@@ -78,7 +78,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
         
-        const result = await obfuscationHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });
 
@@ -96,7 +96,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(EventProcessorHelper.exampleAuditMessage));
         
-        const result = await obfuscationHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });
@@ -173,7 +173,7 @@ describe('Unit test for app handler', function () {
 
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(message));
 
-        const result = await obfuscationHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });
@@ -192,7 +192,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
-        const result = await obfuscationHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });
@@ -212,7 +212,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
-        const result = await obfuscationHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
     });
@@ -222,7 +222,7 @@ describe('Unit test for app handler', function () {
 
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
-        const result = await obfuscationHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
 
         expect(result.records[0].result).toEqual('ProcessingFailed');
         expect(consoleWarningMock).toHaveBeenCalledTimes(2);
@@ -235,7 +235,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
-        const result = await obfuscationHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
 
         expect(result.records[0].result).toEqual('ProcessingFailed');
         expect(consoleWarningMock).toHaveBeenCalledTimes(2);
@@ -248,7 +248,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
-        const result = await obfuscationHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
 
         expect(result.records[0].result).toEqual('ProcessingFailed');
         expect(consoleWarningMock).toHaveBeenCalledTimes(2);
@@ -271,7 +271,7 @@ describe('Unit test for app handler', function () {
         
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
         
-        const result = await obfuscationHandler(firehoseEvent);
+        const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
 

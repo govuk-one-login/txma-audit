@@ -2,7 +2,7 @@
   "name": "event_processor",
   "version": "1.0.0",
   "description": "Event Processor for DI TxMA Audit",
-  "main": "app.js",
+  "main": "event-processor-app.js",
   "repository": "https://github.com/alphagov/di-txma-audit",
   "author": "GDS",
   "license": "MIT",
