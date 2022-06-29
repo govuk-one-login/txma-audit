@@ -337,24 +337,14 @@ Resources:
               - 's3:GetObject'
               - 's3:ListBucket'
 
-#  TestRolePolicy:
-#    Type: AWS::IAM::Policy
-#    Condition: DeployTestPolicy
-#    Properties:
-#      Roles:
-#        - !Select [ 1, !Split [ "/" , TestRoleArn ]]
-#      PolicyName: test_role_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'firehose:PutRecord'
-#            Resource:
-#              - !GetAtt AuditDeliveryStream.Arn
-#          - Effect: Allow
-#            Action:
-#              - 's3:GetObject'
-#              - 's3:ListBucket'
-#            Resource:
-#              - !GetAtt MessageBatchBucket.Arn
+  #
+  # CSLS
+  #
+
+  CSLSFireHoseLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/firehose"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"

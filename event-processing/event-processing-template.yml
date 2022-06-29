@@ -2024,3 +2024,79 @@ Resources:
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'
+
+  #
+  # CSLS
+  #
+
+  CSLSKBVLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/lambda/EventProcessorFunction-KBV"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSKBVAddressLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/lambda/EventProcessorFunction-KBVAddress"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSKBVFraudLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/lambda/EventProcessorFunction-KBVFraud"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSIPVLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/lambda/EventProcessorFunction-IPV"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSIPVPassLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/lambda/EventProcessorFunction-IPVPass"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSSPOTLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/lambda/EventProcessorFunction-SPOT"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSFireHoseLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/firehose"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSObfuscationLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/lambda/ObfuscationFunction"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSCleanserFunctionLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName:
+        Ref: "/aws/lambda/CleanserFunction"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
