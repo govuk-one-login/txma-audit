@@ -66,7 +66,7 @@ describe('Unit test for app handler', function () {
 
         const user: IAuditEventUserMessage = {
             transaction_id: "aaaa-bbbb-cccc-dddd-1234",
-            user_id: 'some_user_id',
+            user_id: "some_user_id",
             email: "user@test.com",
             phone: "020 8888 8888",
             ip_address: "192.168.0.1",

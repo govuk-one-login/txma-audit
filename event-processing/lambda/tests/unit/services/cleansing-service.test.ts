@@ -24,7 +24,7 @@ describe('Unit test for cleansing-service', function () {
       component_id: '1234',
     };
 
-    expect(CleansingService.cleanseEvent(inputMessage)).toEqual(expectedMessage)
+    expect(CleansingService.cleanseEvent(inputMessage)).toEqual(expectedMessage);
 
   });
 
