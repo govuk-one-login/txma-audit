@@ -55,8 +55,8 @@ public class LambdaToS3StepDefinitions {
     String input;
     Long timestamp;
     String log;
-    boolean firstSearch = true;
     String requestID;
+    int count = 0;
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -329,14 +329,12 @@ public class LambdaToS3StepDefinitions {
      */
     public boolean findInS3 (String endpoint, String filename, String account) throws IOException, InterruptedException {
         boolean foundInS3 = false;
-        // count will make sure it only searches for a finite time
-        int count = 0;
 
         // Has a retry loop in case it finds the wrong key on the first try
         // Count < 11 is enough time for it to be processed by the Firehose
         // If it is the first firehose being checked, it will wait the full time (or until it is found)
-        // If it is a later firehose, we know that enough time has already passed, so it only goes through the loop once
-        while (!foundInS3 && ((count < 11  && firstSearch) || (count < 1))) {
+        // The counter will continue for further checks to ensure messages have enough time to pass through
+        while (!foundInS3 && count < 11) {
             if (count > 0){
                 Thread.sleep(10000);
             }
@@ -363,7 +361,6 @@ public class LambdaToS3StepDefinitions {
                 }
             }
         }
-        firstSearch = false;
         return foundInS3;
     }
 
@@ -385,10 +382,12 @@ public class LambdaToS3StepDefinitions {
                 .build()) {
             // Invoke the lambda with the input data
             SdkBytes payload = SdkBytes.fromUtf8String(empty);
-            InvokeRequest.builder()
+            InvokeRequest request = InvokeRequest.builder()
                     .functionName(functionName)
                     .payload(payload)
                     .build();
+
+            awsLambda.invoke(request);
 
         } catch (LambdaException e) {
             System.err.println(e.getMessage());
@@ -435,8 +434,6 @@ public class LambdaToS3StepDefinitions {
                 for (OutputLogEvent event : cloudWatchLogsClient.getLogEvents(getLogEventsRequest).events()) {
                     // assumes found until it is not
                     found = true;
-
-                    System.out.println(event.message() + Arrays.toString(toFind));
 
                     // the log to be searched
                     String message = event.message();
