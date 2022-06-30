@@ -32,6 +32,7 @@ Conditions:
   UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
   UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
   UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
+  IsProduction: !Equals [ !Ref Environment, dev ]
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
@@ -2053,6 +2054,7 @@ Resources:
 
   CSLSKBVLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProduction
     Properties:
       LogGroupName:
         Ref: "/aws/lambda/EventProcessorFunction-KBV"
@@ -2061,6 +2063,7 @@ Resources:
 
   CSLSKBVAddressLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProduction
     Properties:
       LogGroupName:
         Ref: "/aws/lambda/EventProcessorFunction-KBVAddress"
@@ -2069,6 +2072,7 @@ Resources:
 
   CSLSKBVFraudLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProduction
     Properties:
       LogGroupName:
         Ref: "/aws/lambda/EventProcessorFunction-KBVFraud"
@@ -2077,6 +2081,7 @@ Resources:
 
   CSLSIPVLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProduction
     Properties:
       LogGroupName:
         Ref: "/aws/lambda/EventProcessorFunction-IPV"
@@ -2085,6 +2090,7 @@ Resources:
 
   CSLSIPVPassLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProduction
     Properties:
       LogGroupName:
         Ref: "/aws/lambda/EventProcessorFunction-IPVPass"
@@ -2093,6 +2099,7 @@ Resources:
 
   CSLSSPOTLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProduction
     Properties:
       LogGroupName:
         Ref: "/aws/lambda/EventProcessorFunction-SPOT"
@@ -2101,6 +2108,7 @@ Resources:
 
   CSLSFireHoseLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProduction
     Properties:
       LogGroupName:
         Ref: "/aws/firehose"
@@ -2109,6 +2117,7 @@ Resources:
 
   CSLSObfuscationLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProduction
     Properties:
       LogGroupName:
         Ref: "/aws/lambda/ObfuscationFunction"
@@ -2117,6 +2126,7 @@ Resources:
 
   CSLSCleanserFunctionLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProduction
     Properties:
       LogGroupName:
         Ref: "/aws/lambda/CleanserFunction"
