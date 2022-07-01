@@ -32,7 +32,9 @@ Conditions:
   UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
   UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
   UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
-  IsProduction: !Equals [ !Ref Environment, dev ]
+  IsProductionOrStaging: !And
+    - !Not [!Equals [ !Ref Environment, dev]]
+    - !Not [!Equals [ !Ref Environment, build]]
   IsBuild: !Or
     - !Equals [ !Ref Environment, dev ]
     - !Equals [ !Ref Environment, build ]
@@ -181,7 +183,7 @@ Resources:
                 StorageClass: GLACIER
       NotificationConfiguration:
         !If
-          - IsProduction
+          - IsProductionOrStaging
           -
             QueueConfigurations:
               - Event: "s3:ObjectCreated:*"
@@ -356,7 +358,7 @@ Resources:
 
   CSLSFireHoseLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProduction
+    Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
         Ref: "/aws/firehose"
@@ -365,7 +367,7 @@ Resources:
 
   MessageBatchBucketCSLSBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: IsProduction
+    Condition: IsProductionOrStaging
     Properties:
       Bucket: !Ref MessageBatchBucket
       PolicyDocument:
