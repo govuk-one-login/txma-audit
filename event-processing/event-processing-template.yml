@@ -1132,8 +1132,6 @@ Resources:
         - QueueConfigurations:
             - Event: "s3:ObjectCreated:*"
               Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - Event: "s3:ObjectRemoved:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
             - Event: "s3:ObjectRestore:*"
               Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
         - AWS::NoValue
@@ -1220,8 +1218,6 @@ Resources:
         - IsProductionOrStaging
         - QueueConfigurations:
             - Event: "s3:ObjectCreated:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - Event: "s3:ObjectRemoved:*"
               Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
             - Event: "s3:ObjectRestore:*"
               Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
