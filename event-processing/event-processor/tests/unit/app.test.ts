@@ -39,6 +39,7 @@ describe('Unit test for app handler', function () {
         sns = new SNS();
 
         process.env.topicArn = 'SOME-SNS-TOPIC';
+        process.env.defaultComponentId = 'SOME-COMPONENT-ID'
     });
 
     afterEach(() => {
@@ -74,13 +75,12 @@ describe('Unit test for app handler', function () {
 
     it('accepts a bare minimum payload and stringifies', async () => {
         const expectedResult =
-            '{"event_id":"58339721-64c9-486b-903f-ad7e63fc45de","client_id":"","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234"}';
+            '{"event_id":"58339721-64c9-486b-903f-ad7e63fc45de","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"SOME-COMPONENT-ID"}';
 
         const exampleMessage: IAuditEvent = {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            event_name: 'AUTHENTICATION_ATTEMPT',
-            component_id: '1234',
+            event_name: 'AUTHENTICATION_ATTEMPT'
         };
 
         (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
@@ -103,6 +103,56 @@ describe('Unit test for app handler', function () {
         );
         expect(consoleMock).toHaveBeenCalledTimes(2);
         expect(randomUUID).toHaveBeenCalledTimes(1);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
+    });
+
+    it('does not add empty fields', async () => {
+        const expectedResult =
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","user":{"transaction_id":"a52f6f87","email":"foo@bar.com","phone":"07711223344","ip_address":"100.100.100.100"},"platform":{"xray_trace_id":"24727sda4192"},"restricted":{"experian_ref":"DSJJSEE29392"},"extensions":{"response":"Authentication successful"}}';
+
+        const exampleMessage: IAuditEvent = {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            timestamp: 1609462861,
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
+            user: {
+                transaction_id: 'a52f6f87',
+                email: 'foo@bar.com',
+                phone: '07711223344',
+                ip_address: '100.100.100.100',
+            },
+            platform: {
+                xray_trace_id: '24727sda4192',
+            },
+            restricted: {
+                experian_ref: 'DSJJSEE29392',
+            },
+            extensions: {
+                response: 'Authentication successful',
+            },
+        };
+
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
+        const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
+
+        await handler(sqsEvent);
+
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
+            }
+        );
+        expect(consoleMock).toHaveBeenCalledTimes(2);
         expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
