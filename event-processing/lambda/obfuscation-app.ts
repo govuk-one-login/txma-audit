@@ -8,6 +8,7 @@ import {
 import { KeyService } from './services/key-service';
 import { AuditEvent, IAuditEvent } from './models/audit-event';
 import { ObfuscationService } from './services/obfuscation-service';
+import { ObjectHelper } from './utilities/object-helper';
 
 export const handler = async (event: FirehoseTransformationEvent): Promise<FirehoseTransformationResult> => {
     /* Process the list of records and transform them */
@@ -38,14 +39,14 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
             for (let i = 0; i < events.length; i++) {
                 const auditEvent: IAuditEvent = AuditEvent.fromJSONString(JSON.stringify(events[i]));
                 ObfuscationService.obfuscateEvent(auditEvent, hmacKey);
-                let cleanedEvent = ObfuscationService.removeEmpty(auditEvent)
+                const cleanedEvent = ObjectHelper.removeEmpty(auditEvent);
                 obfuscatedEvents.push(cleanedEvent);
             }
             data = Buffer.from(JSON.stringify(obfuscatedEvents)).toString('base64');
         } else {
             const auditEvent: IAuditEvent = AuditEvent.fromJSONString(plaintextData);
             ObfuscationService.obfuscateEvent(auditEvent, hmacKey);
-            let cleanedEvent = ObfuscationService.removeEmpty(auditEvent)
+            const cleanedEvent = ObjectHelper.removeEmpty(auditEvent);
             data = Buffer.from(JSON.stringify(cleanedEvent)).toString('base64');
         }
 

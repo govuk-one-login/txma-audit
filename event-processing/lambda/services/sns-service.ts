@@ -1,6 +1,7 @@
 import { config, SNS } from 'aws-sdk';
 import { IAuditEvent } from '../models/audit-event';
 import { PublishInput } from 'aws-sdk/clients/sns';
+import { ObjectHelper } from '../utilities/object-helper';
 
 export class SnsService {
     static async publishMessageToSNS(message: IAuditEvent, topicArn: string | undefined): Promise<void> {
@@ -8,7 +9,7 @@ export class SnsService {
 
         config.update({ region: process.env.AWS_REGION });
 
-        const cleanMessage = this.removeEmpty(message);
+        const cleanMessage = ObjectHelper.removeEmpty(message);
 
         const params: PublishInput = {
             Message: JSON.stringify(cleanMessage),
@@ -34,20 +35,5 @@ export class SnsService {
             });
 
         return;
-    }
-
-    public static removeEmpty(obj: any): unknown {
-        for (const propName in obj) {
-            if (obj[propName] === null || obj[propName] === undefined || obj[propName] == '') {
-                delete obj[propName];
-            } else if (Array.isArray(obj[propName])) {
-                obj[propName].forEach((value: unknown, index: string | number) => {
-                    obj[propName][index] = this.removeEmpty(value);
-                });
-            } else if (typeof obj[propName] === 'object') {
-                obj[propName] = this.removeEmpty(obj[propName]);
-            }
-        }
-        return obj;
     }
 }
