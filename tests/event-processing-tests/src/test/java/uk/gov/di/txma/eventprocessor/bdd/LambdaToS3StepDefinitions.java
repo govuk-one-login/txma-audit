@@ -61,13 +61,13 @@ public class LambdaToS3StepDefinitions {
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
      *
-     * @param filename      The name of the file which act as the SQS input from the service teams' accounts
+     * @param fileName      The name of the file which act as the SQS input from the service teams' accounts
      * @param account       The name of the team which the event if from
      * @throws IOException
      */
     @Given("the SQS file {string} is available for the {string} team")
-    public void the_SQS_file_is_available_for_the_team(String filename, String account) throws IOException {
-        Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename).getAbsolutePath());
+    public void theSQSFileIsAvailableForTheTeam(String fileName, String account) throws IOException {
+        Path filePath = Path.of(new File("src/test/resources/Test Data/" + fileName).getAbsolutePath());
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
@@ -78,15 +78,16 @@ public class LambdaToS3StepDefinitions {
     /**
      * Checks the expected S3 output file is present
      *
+     * @param fileName      The name of the file which act as the S3 output from the service teams' accounts
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
     @And("the output file {string} is available")
-    public void the_output_file_is_available(String filename,DataTable endpoints) throws IOException{
+    public void theOutputFileIsAvailable(String fileName, DataTable endpoints) throws IOException{
         // Loops through the possible endpoints
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + filename+".json").getAbsolutePath());
+            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_" + fileName+".json").getAbsolutePath());
             Files.readString(filePath);
         }
     }
@@ -97,9 +98,8 @@ public class LambdaToS3StepDefinitions {
      * @param account   The service team account name for their corresponding lambda
      */
     @When("the {string} lambda is invoked")
-    public void the_lambda_is_invoked(String account) {
+    public void theLambdaIsInvoked(String account) {
         String functionName = "EventProcessorFunction-" + account;
-        InvokeResponse res;
 
         // Opens the lambda client
         try (LambdaClient awsLambda = LambdaClient.builder()
@@ -113,13 +113,12 @@ public class LambdaToS3StepDefinitions {
                     .logType("Tail")
                     .payload(payload)
                     .build();
+            InvokeResponse res = awsLambda.invoke(request);
 
             // Checks the data is sent, and records the Request ID to track it
-            res = awsLambda.invoke(request);
             assertEquals(200, res.sdkHttpResponse().statusCode(), "A problem calling the lambda. HTTP response was incorrect.");
             log = new String (Base64.getDecoder().decode(res.logResult()), StandardCharsets.UTF_8);
             requestID = res.responseMetadata().requestId();
-
 
         } catch (LambdaException e) {
             System.err.println(e.getMessage());
@@ -131,10 +130,12 @@ public class LambdaToS3StepDefinitions {
      * Ensures that the provided string does appear in cloudwatch log produced when the lambda was invoked
      */
     @Then("there should be a {string} message in the {string} lambda logs")
-    public void there_should_be_a_message_in_the_lambda_cloudwatch(String message, String account) throws InterruptedException {
+    public void thereShouldBeAMessageInTheLambdaLambdaLogs(String message, String account) throws InterruptedException {
+        // Checks if the initial log from the lambda invoke contains the required message
         if (!log.contains(message)){
+            // If the log did not contain the message, we send an empty invoke to force the correct log through
             sendEmpty(account);
-
+            // We can then search for this message in the CloudWatch logs
             String logGroup = "/aws/lambda/EventProcessorFunction-" + account;
             assertTrue(searchCloudwatch(logGroup, requestID, message), "No log from the lambda contained a " + message + " message.");
         }
@@ -144,15 +145,17 @@ public class LambdaToS3StepDefinitions {
      * This searches the S3 bucket and checks that the new data contains the output file
      *
      * @param account       Which account inputted the message
+     * @param fileName      The name of the file which act as the S3 output from the service teams' accounts
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
     @And("the s3 below should have a new event matching the respective {string} output file {string}")
-    public void the_s3_below_should_have_a_new_event_matching_the_respective_output_file(String account, String filename, DataTable endpoints) throws IOException, InterruptedException {
+    public void theS3BelowShouldHaveANewEventMatchingTheRespectiveOutputFile(String account, String fileName, DataTable endpoints) throws IOException, InterruptedException {
         // Loops through the possible endpoints
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            assertTrue(findInS3(endpoint.get(0), filename, account),  "The message " + filename + " from " + account + " was not found in the " + endpoint.get(0) + " S3 bucket.");
+            // Checks that the output is present for each endpoint
+            assertTrue(findInS3(endpoint.get(0), fileName, account),  "The message " + fileName + " from " + account + " was not found in the " + endpoint.get(0) + " S3 bucket.");
         }
     }
 
@@ -160,15 +163,17 @@ public class LambdaToS3StepDefinitions {
      * This searches the S3 bucket and checks that any new data does not contain the output file
      *
      * @param account       Which account inputted the message
+     * @param fileName      The name of the file which act as the S3 output from the service teams' accounts
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the  S3 below should not have a new event matching the respective {string} output file {string}")
-    public void the_s3_below_should_not_have_a_new_event_matching_the_respective_output_file(String account,String filename, DataTable endpoints) throws IOException, InterruptedException {
+    @And("the S3 below should not have a new event matching the respective {string} output file {string}")
+    public void theS3BelowShouldNotHaveANewEventMatchingTheRespectiveOutputFile(String account, String fileName, DataTable endpoints) throws IOException, InterruptedException {
         // Loops through the possible outputs
         List<List<String>> data = endpoints.asLists(String.class);
         for (List<String> endpoint : data) {
-            assertFalse(findInS3(endpoint.get(0), filename, account), "The message " + filename + " from " + account + " incorrectly made it through to the " + endpoint.get(0) + " S3 bucket.");
+            // Checks that the output is not present for each endpoint
+            assertFalse(findInS3(endpoint.get(0), fileName, account), "The message " + fileName + " from " + account + " incorrectly made it through to the " + endpoint.get(0) + " S3 bucket.");
         }
     }
 
@@ -180,13 +185,17 @@ public class LambdaToS3StepDefinitions {
      */
     private String wrapJSON(JSONObject json){
         JSONObject record = new JSONObject();
+        // Adds a sample SQS attribute
         record.put("messageId", "059f36b4-87a3-44ab-83d2-661975830a7d");
 
+        // Adds the required message
         record.put("body", json.toString());
 
+        // Creates an array to store this SQS message
         JSONArray array = new JSONArray();
         array.put(record);
 
+        // Creates the SQS JSON
         JSONObject wrapped = new JSONObject();
         wrapped.put("Records", array);
 
@@ -202,6 +211,7 @@ public class LambdaToS3StepDefinitions {
      * @return          Returns the amended json
      */
     private JSONObject addUniqueFields(JSONObject json, String account){
+        // Sets the time for when it is first called
         if (timestamp == null){
             timestamp = Instant.now().toEpochMilli();
         }
@@ -229,7 +239,7 @@ public class LambdaToS3StepDefinitions {
                 .region(region)
                 .build()){
 
-            // This is used to get the current year, so that we can search the correct s3 files
+            // This is used to get the current year, so that we can search the correct s3 files by prefix
             ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
             // Lists all objects
             ListObjectsRequest listObjects = ListObjectsRequest
@@ -342,13 +352,13 @@ public class LambdaToS3StepDefinitions {
 
             // Checks for latest key and saves the contents in the output variable
             output = null;
-            findLatestKeys(endpoint.toLowerCase());
+            findLatestKeys(endpoint);
 
             // Splits the batched outputs into individual jsons
             List<JSONObject> array = separate(output);
 
             // Takes the input file, and adds a timestamp to the component_id
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + filename+".json").getAbsolutePath());
+            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + "_" + filename+".json").getAbsolutePath());
             String file = Files.readString(filePath);
             JSONObject json = new JSONObject(file);
             JSONObject expectedS3 = addUniqueFields(json, account);
