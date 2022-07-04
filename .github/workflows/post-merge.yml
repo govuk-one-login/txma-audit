@@ -38,11 +38,8 @@ jobs:
         uses: actions/setup-node@v3.0.0
         with:
           node-version: '14.x'
-      - name: Install Event Processor Dependencies
-        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: yarn install --immutable --immutable-cache --check-cache
-      - name: Install Obfuscation Dependencies
-        working-directory: ${{ env.eventProcessorDirectory }}/obfuscation
+      - name: Install Lambda Dependencies
+        working-directory: ${{ env.eventProcessorDirectory }}/lambda
         run: yarn install --immutable --immutable-cache --check-cache
       - name: SAM Validate
         run: |
@@ -50,11 +47,8 @@ jobs:
       - name: SAM Build
         run: |
           sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --use-container --beta-features
-      - name: Test Event Processor
-        working-directory: ${{ env.eventProcessorDirectory }}/event-processor
-        run: yarn test
-      - name: Test Obfuscation
-        working-directory: ${{ env.eventProcessorDirectory }}/obfuscation
+      - name: Test Lambdas
+        working-directory: ${{ env.eventProcessorDirectory }}/lambda
         run: yarn test
       - name: Login to Amazon ECR
         id: login-ecr
