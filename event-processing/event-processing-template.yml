@@ -234,9 +234,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "EventProcessorFunction-KBV"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVLambdaAccessRole.Arn
@@ -252,7 +252,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   KBVEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -369,9 +369,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-KBVAddress"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVAddressLambdaAccessRole.Arn
@@ -387,7 +387,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   KBVAddressEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -504,9 +504,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-KBVFraud"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVFraudLambdaAccessRole.Arn
@@ -522,7 +522,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   KBVFraudEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -639,9 +639,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-IPV"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVLambdaAccessRole.Arn
@@ -657,7 +657,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
 
   IPVEventProcessorUnknownFieldsErrorMetric:
@@ -775,9 +775,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-IPVPass"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVPassLambdaAccessRole.Arn
@@ -793,7 +793,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   IPVPassEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -910,9 +910,9 @@ Resources:
     Type: "AWS::Serverless::Function"
     Properties:
       FunctionName: "EventProcessorFunction-SPOT"
-      CodeUri: ../event-processing/event-processor
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt SPOTLambdaAccessRole.Arn
@@ -928,7 +928,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - event-processor-app.ts
 
   SPOTEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -1813,9 +1813,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "ObfuscationFunction"
-      CodeUri: ../event-processing/obfuscation
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: obfuscation-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt ObfuscationFunctionRole.Arn
@@ -1830,7 +1830,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - obfuscation-app.ts
 
   HMACSecretAuthAccessPolicy:
     DependsOn:
@@ -1887,9 +1887,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "CleanserFunction"
-      CodeUri: ../event-processing/cleanser
+      CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: app.handler
+      Handler: cleanser-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt CleanserFunctionRole.Arn
@@ -1901,7 +1901,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - app.ts
+          - cleanser-app.ts
 
 #  ReIngestLogGroup:
 #    Type: AWS::Logs::LogGroup
@@ -1914,9 +1914,9 @@ Resources:
 #    Type: AWS::Serverless::Function
 #    Properties:
 #      FunctionName: "Re-IngestFunction"
-#      CodeUri: ../event-processing/re-ingest
+#      CodeUri: ../event-processing/lambda
 #      PackageType: Zip
-#      Handler: app.handler
+#      Handler: re-ingest-app.handler
 #      Runtime: nodejs14.x
 #      Timeout: 30
 #      Events:
@@ -1946,7 +1946,7 @@ Resources:
 #        Target: "es2020"
 #        Sourcemap: true
 #        EntryPoints:
-#          - app.ts
+#          - re-ingest-app.ts
 
   #
   # Test Role Permissions
