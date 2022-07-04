@@ -27,7 +27,6 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +40,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 import java.util.zip.GZIPInputStream;
 
@@ -84,9 +84,9 @@ public class LambdaToS3StepDefinitions {
     @And("the output file {string} is available")
     public void theOutputFileIsAvailable(String fileName, DataTable endpoints) throws IOException{
         // Loops through the possible endpoints
-        List<List<String>> data = endpoints.asLists(String.class);
-        for (List<String> endpoint : data) {
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint.get(0) + "_" + fileName+".json").getAbsolutePath());
+        Set<String> data = endpoints.asMap().keySet();
+        for (String endpoint : data) {
+            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + "_" + fileName + ".json").getAbsolutePath());
             Files.readString(filePath);
         }
     }
@@ -127,13 +127,16 @@ public class LambdaToS3StepDefinitions {
 
     /**
      * Ensures that the provided string does appear in cloudwatch log produced when the lambda was invoked
+     *
+     * @param message   The message which should appear in the cloudwatch logs
+     * @param account   Which account inputted the message
      */
     @Then("there should be a {string} message in the {string} lambda logs")
     public void thereShouldBeAMessageInTheLambdaLambdaLogs(String message, String account) throws InterruptedException {
         // Checks if the initial log from the lambda invoke contains the required message
         if (!log.contains(message)){
             // If the log did not contain the message, we send an empty invoke to force the correct log through
-            sendEmpty(account);
+            sendEmptyPayloadToLambda(account);
             // We can then search for this message in the CloudWatch logs
             String logGroup = "/aws/lambda/EventProcessorFunction-" + account;
             assertTrue(searchCloudwatch(logGroup, requestID, message), "No log from the lambda contained a " + message + " message.");
@@ -151,10 +154,10 @@ public class LambdaToS3StepDefinitions {
     @And("the s3 below should have a new event matching the respective {string} output file {string}")
     public void theS3BelowShouldHaveANewEventMatchingTheRespectiveOutputFile(String account, String fileName, DataTable endpoints) throws IOException, InterruptedException {
         // Loops through the possible endpoints
-        List<List<String>> data = endpoints.asLists(String.class);
-        for (List<String> endpoint : data) {
+        Set<String> data = endpoints.asMap().keySet();
+        for (String endpoint : data) {
             // Checks that the output is present for each endpoint
-            assertTrue(findInS3(endpoint.get(0), fileName, account),  "The message " + fileName + " from " + account + " was not found in the " + endpoint.get(0) + " S3 bucket.");
+            assertTrue(isFoundInS3(endpoint, fileName, account),  "The message " + fileName + " from " + account + " was not found in the " + endpoint + " S3 bucket.");
         }
     }
 
@@ -169,10 +172,10 @@ public class LambdaToS3StepDefinitions {
     @And("the S3 below should not have a new event matching the respective {string} output file {string}")
     public void theS3BelowShouldNotHaveANewEventMatchingTheRespectiveOutputFile(String account, String fileName, DataTable endpoints) throws IOException, InterruptedException {
         // Loops through the possible outputs
-        List<List<String>> data = endpoints.asLists(String.class);
-        for (List<String> endpoint : data) {
+        Set<String> data = endpoints.asMap().keySet();
+        for (String endpoint : data) {
             // Checks that the output is not present for each endpoint
-            assertFalse(findInS3(endpoint.get(0), fileName, account), "The message " + fileName + " from " + account + " incorrectly made it through to the " + endpoint.get(0) + " S3 bucket.");
+            assertFalse(isFoundInS3(endpoint, fileName, account), "The message " + fileName + " from " + account + " incorrectly made it through to the " + endpoint + " S3 bucket.");
         }
     }
 
@@ -336,19 +339,12 @@ public class LambdaToS3StepDefinitions {
      * @throws IOException
      * @throws InterruptedException
      */
-    public boolean findInS3 (String endpoint, String filename, String account) throws IOException, InterruptedException {
-        boolean foundInS3 = false;
-
+    public boolean isFoundInS3(String endpoint, String filename, String account) throws IOException, InterruptedException {
         // Has a retry loop in case it finds the wrong key on the first try
         // Count < 11 is enough time for it to be processed by the Firehose
         // If it is the first firehose being checked, it will wait the full time (or until it is found)
         // The counter will continue for further checks to ensure messages have enough time to pass through
-        while (!foundInS3 && count < 11) {
-            if (count > 0){
-                Thread.sleep(10000);
-            }
-            count ++;
-
+        while (count < 11) {
             // Checks for latest key and saves the contents in the output variable
             output = null;
             findLatestKeys(endpoint);
@@ -365,12 +361,14 @@ public class LambdaToS3StepDefinitions {
             // Compares all individual jsons with our test data
             for (JSONObject object : array) {
                 if (object.similar(expectedS3)) {
-                    foundInS3 = true;
-                    break;
+                    return true;
                 }
             }
+
+            Thread.sleep(10000);
+            count ++;
         }
-        return foundInS3;
+        return false;
     }
 
     /**
@@ -378,7 +376,7 @@ public class LambdaToS3StepDefinitions {
      *
      * @param account   The account which is sending the payload
      */
-    public void sendEmpty(String account) {
+    public void sendEmptyPayloadToLambda(String account) {
 
         JSONObject json = new JSONObject();
         String empty = wrapJSON(json);
@@ -405,19 +403,16 @@ public class LambdaToS3StepDefinitions {
     }
 
     /**
-     * This waits for cloudwatch to update and searches the logs for the inputted string
-     * Note: it only searches the logs with the correct request id as found before
+     * This waits for cloudwatch to update and searches the logs for the inputted string(s)
      *
      * @param logGroupName  The cloudwatch log to search
-     * @param toFind        The strings to be found
-     * @return              True or False depending on whether the string was found
+     * @param toFind        The string(s) to be found
+     * @return              True of false depending on whether all strings are found
      * @throws InterruptedException
      */
     public boolean searchCloudwatch(String logGroupName, String... toFind) throws InterruptedException {
         // Gives enough time for the cloudwatch logs to be processed
         Thread.sleep(20000);
-        // This will track if the correct log has been found or not
-        boolean found;
 
         // Opens the cloudwatch client
         try (CloudWatchLogsClient cloudWatchLogsClient = CloudWatchLogsClient.builder()
@@ -426,8 +421,8 @@ public class LambdaToS3StepDefinitions {
 
             // Finds all log streams in Cloudwatch
             DescribeLogStreamsRequest req = DescribeLogStreamsRequest.builder().logGroupName(logGroupName).orderBy("LastEventTime").descending(true).build();
-            DescribeLogStreamsResponse res2 = cloudWatchLogsClient.describeLogStreams(req);
-            List<LogStream> logStreams = res2.logStreams();
+            DescribeLogStreamsResponse res = cloudWatchLogsClient.describeLogStreams(req);
+            List<LogStream> logStreams = res.logStreams();
 
             // Looks through all logs streams in the log group
             for (LogStream logStream : logStreams) {
@@ -439,25 +434,9 @@ public class LambdaToS3StepDefinitions {
                         .startFromHead(false)
                         .build();
 
-                // Loops through all logs in the stream
-                for (OutputLogEvent event : cloudWatchLogsClient.getLogEvents(getLogEventsRequest).events()) {
-                    // assumes found until it is not
-                    found = true;
-
-                    // the log to be searched
-                    String message = event.message();
-                    // Loops through the inputs to be found
-                    for (String find : toFind){
-                        // If the messages does not contain the string, it has not been found
-                        if (!message.contains(find)) {
-                            found = false;
-                            break;
-                        }
-                    }
-                    // If all inputs were found, we return true
-                    if (found){
-                        return true;
-                    }
+                // Checks the cloudwatch log events for the inputs
+                if(searchEventsInCloudwatchLogs(cloudWatchLogsClient, getLogEventsRequest, toFind)){
+                    return true;
                 }
             }
         } catch (CloudWatchException e) {
@@ -466,5 +445,46 @@ public class LambdaToS3StepDefinitions {
         }
 
         return false;
+    }
+
+    /**
+     * Searches the events in the provided Cloudwatch Logs for the inputted string(s)
+     *
+     * @param cloudWatchLogsClient  The client we are using for Cloudwatch
+     * @param getLogEventsRequest   The logs to search through
+     * @param toFind                The string(s) to find
+     * @return                      True of false depending on whether all strings are found
+     */
+    public Boolean searchEventsInCloudwatchLogs(CloudWatchLogsClient cloudWatchLogsClient, GetLogEventsRequest getLogEventsRequest, String... toFind){
+        // Loops through all logs in the stream
+        for (OutputLogEvent event : cloudWatchLogsClient.getLogEvents(getLogEventsRequest).events()) {
+
+            // the log to be searched
+            String message = event.message();
+
+            // If all inputs were found, return true
+            if (searchEventForStrings(message, toFind)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Searches the event for all strings
+     *
+     * @param message   The event to be searched
+     * @param toFind    The string(s) to be found
+     * @return          True of false depending on whether all strings are found
+     */
+    public Boolean searchEventForStrings(String message, String... toFind){
+        // Loops through the inputs to be found
+        for (String find : toFind){
+            // If the messages does not contain the string, it has not been found
+            if (!message.contains(find)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
