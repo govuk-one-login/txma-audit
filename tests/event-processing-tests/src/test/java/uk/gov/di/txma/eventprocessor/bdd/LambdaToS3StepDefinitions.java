@@ -65,13 +65,13 @@ public class LambdaToS3StepDefinitions {
      * @throws IOException
      */
     @Given("the SQS file {string} is available for the {string} team")
-    public void theSQSFileIsAvailableForTheTeam(String fileName, String account) throws IOException {
+    public void checkTheSQSInputFileIsAvailableForTheSpecifiedAccount(String fileName, String account) throws IOException {
         Path filePath = Path.of(new File("src/test/resources/Test Data/" + fileName).getAbsolutePath());
         String file = Files.readString(filePath);
 
         JSONObject json = new JSONObject(file);
-        JSONObject change = addUniqueFields(json, account);
-        input = wrapJSON(change);
+        JSONObject change = addComponentIdAndTimestampFields(json, account);
+        input = wrapJSONObjectAsAnSQSMessage(change);
     }
 
     /**
@@ -82,7 +82,7 @@ public class LambdaToS3StepDefinitions {
      * @throws IOException
      */
     @And("the output file {string} is available")
-    public void theOutputFileIsAvailable(String fileName, DataTable endpoints) throws IOException{
+    public void checkTheSQSOutputFileIsAvailableForTheSpecifiedAccount(String fileName, DataTable endpoints) throws IOException{
         // Loops through the possible endpoints
         Set<String> data = endpoints.asMap().keySet();
         for (String endpoint : data) {
@@ -97,7 +97,7 @@ public class LambdaToS3StepDefinitions {
      * @param account   The service team account name for their corresponding lambda
      */
     @When("the {string} lambda is invoked")
-    public void theLambdaIsInvoked(String account) {
+    public void invokeTheLambdaForTheSpecifiedAccount(String account) {
         String functionName = "EventProcessorFunction-" + account;
 
         // Opens the lambda client
@@ -132,7 +132,7 @@ public class LambdaToS3StepDefinitions {
      * @param account   Which account inputted the message
      */
     @Then("there should be a {string} message in the {string} lambda logs")
-    public void thereShouldBeAMessageInTheLambdaLambdaLogs(String message, String account) throws InterruptedException {
+    public void checkASpecificAccountsLambdaLogInCloudwatch(String message, String account) throws InterruptedException {
         // Checks if the initial log from the lambda invoke contains the required message
         if (!log.contains(message)){
             // If the log did not contain the message, we send an empty invoke to force the correct log through
@@ -152,7 +152,7 @@ public class LambdaToS3StepDefinitions {
      * @throws IOException
      */
     @And("the s3 below should have a new event matching the respective {string} output file {string}")
-    public void theS3BelowShouldHaveANewEventMatchingTheRespectiveOutputFile(String account, String fileName, DataTable endpoints) throws IOException, InterruptedException {
+    public void isTheObjectInS3TheSameAsTheExpectedOutputFile(String account, String fileName, DataTable endpoints) throws IOException, InterruptedException {
         // Loops through the possible endpoints
         Set<String> data = endpoints.asMap().keySet();
         for (String endpoint : data) {
@@ -185,7 +185,7 @@ public class LambdaToS3StepDefinitions {
      * @param json  The json to be wrapped
      * @return      The wrapped json
      */
-    private String wrapJSON(JSONObject json){
+    private String wrapJSONObjectAsAnSQSMessage(JSONObject json){
         JSONObject record = new JSONObject();
         // Adds a sample SQS attribute
         record.put("messageId", "059f36b4-87a3-44ab-83d2-661975830a7d");
@@ -212,7 +212,7 @@ public class LambdaToS3StepDefinitions {
      * @param account   This is the account name to be added to the component_id
      * @return          Returns the amended json
      */
-    private JSONObject addUniqueFields(JSONObject json, String account){
+    private JSONObject addComponentIdAndTimestampFields(JSONObject json, String account){
         // Sets the time for when it is first called
         if (timestamp == null){
             timestamp = Instant.now().toEpochMilli();
@@ -233,7 +233,7 @@ public class LambdaToS3StepDefinitions {
      *
      * @param endpoint  What S3 bucket to look at
      */
-    private void findLatestKeys(String endpoint){
+    private void findLatestKeysFromEventProcessingS3(String endpoint){
         String bucketName = "event-processing-build-"+endpoint+"-splunk-test";
 
         // Opens an S3 client
@@ -347,7 +347,7 @@ public class LambdaToS3StepDefinitions {
         while (count < 11) {
             // Checks for latest key and saves the contents in the output variable
             output = null;
-            findLatestKeys(endpoint);
+            findLatestKeysFromEventProcessingS3(endpoint);
 
             // Splits the batched outputs into individual jsons
             List<JSONObject> array = separate(output);
@@ -356,7 +356,7 @@ public class LambdaToS3StepDefinitions {
             Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + "_" + filename+".json").getAbsolutePath());
             String file = Files.readString(filePath);
             JSONObject json = new JSONObject(file);
-            JSONObject expectedS3 = addUniqueFields(json, account);
+            JSONObject expectedS3 = addComponentIdAndTimestampFields(json, account);
 
             // Compares all individual jsons with our test data
             for (JSONObject object : array) {
@@ -379,7 +379,7 @@ public class LambdaToS3StepDefinitions {
     public void sendEmptyPayloadToLambda(String account) {
 
         JSONObject json = new JSONObject();
-        String empty = wrapJSON(json);
+        String empty = wrapJSONObjectAsAnSQSMessage(json);
 
         String functionName = "EventProcessorFunction-" + account;
 
