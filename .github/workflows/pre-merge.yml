@@ -64,6 +64,16 @@ jobs:
         with:
           role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_AUDIT }}
           aws-region: ${{ env.awsRegion }}
+      - name: Use Node.js 14
+        uses: actions/setup-node@v3.0.0
+        with:
+          node-version: '14.x'
+      - name: Install Lambda Dependencies
+        working-directory: ${{ env.auditDirectory }}/lambda
+        run: yarn install --immutable --immutable-cache --check-cache
+      - name: Test Lambdas
+        working-directory: ${{ env.auditDirectory }}/lambda
+        run: yarn test
       - name: SAM Validate
         run: |
           sam validate --template-file audit-template.yml --config-env ${{ env.environment }}
