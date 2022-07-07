@@ -288,4 +288,28 @@ describe('Unit test for app handler', function () {
 
         expect(result).toEqual(expectedResult);
     });
+
+    it('does not obfuscate empty fields', async () => {
+        var expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+        delete expectedData.user!.email;
+        const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: data,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "Ok"
+            }]
+        }
+
+        var event = TestHelper.exampleMessage;
+        event.user!.email = "";
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(event));
+        
+        const result = await handler(firehoseEvent);
+
+        expect(result).toEqual(expectedResult);
+        const resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
+        const resultAuditEvent: unknown = JSON.parse(resultData);
+        expect(resultAuditEvent).toEqual(expectedData);
+    });
 });
