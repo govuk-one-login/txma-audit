@@ -290,7 +290,7 @@ describe('Unit test for app handler', function () {
     });
 
     it('does not obfuscate empty fields', async () => {
-        var expectedData: IAuditEvent = TestHelper.exampleObfuscatedMessage;
+        var expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
         delete expectedData.user!.email;
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -301,7 +301,7 @@ describe('Unit test for app handler', function () {
             }]
         }
 
-        var event = TestHelper.exampleMessage;
+        var event = EventProcessorHelper.exampleAuditMessage;
         event.user!.email = "";
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(event));
         
