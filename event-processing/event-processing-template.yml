@@ -1141,6 +1141,9 @@ Resources:
             - Event: "s3:ObjectRestore:*"
               Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
           - - !Ref AWS::NoValue
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
 
   FraudTestS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -1228,6 +1231,9 @@ Resources:
             - Event: "s3:ObjectRestore:*"
               Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
           - - !Ref AWS::NoValue
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
 
   PerformanceTestS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
