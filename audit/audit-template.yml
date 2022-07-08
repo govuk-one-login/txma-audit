@@ -190,6 +190,9 @@ Resources:
               - Event: "s3:ObjectRestore:*"
                 Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
             - - !Ref AWS::NoValue
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
