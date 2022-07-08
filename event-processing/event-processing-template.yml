@@ -2063,7 +2063,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/lambda/EventProcessorFunction-KBV"
+        Ref: "KBVEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
@@ -2072,7 +2072,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/lambda/EventProcessorFunction-KBVAddress"
+        Ref: "KBVAddressEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
@@ -2081,7 +2081,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/lambda/EventProcessorFunction-KBVFraud"
+        Ref: "KBVFraudEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
@@ -2090,7 +2090,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/lambda/EventProcessorFunction-IPV"
+        Ref: "IPVEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
@@ -2099,7 +2099,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/lambda/EventProcessorFunction-IPVPass"
+        Ref: "IPVPassEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
@@ -2108,7 +2108,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/lambda/EventProcessorFunction-SPOT"
+        Ref: "SPOTEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
@@ -2117,7 +2117,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/firehose"
+        Ref: "FirehoseLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
@@ -2126,7 +2126,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/lambda/ObfuscationFunction"
+        Ref: "ObfuscationLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
@@ -2135,7 +2135,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/lambda/CleanserFunction"
+        Ref: "CleanserLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 

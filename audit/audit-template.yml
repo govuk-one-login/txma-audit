@@ -451,7 +451,16 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "/aws/firehose"
+        Ref: "FirehoseLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSDelimiterLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "DelimiterLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
