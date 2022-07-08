@@ -32,6 +32,9 @@ Conditions:
   UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
   UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
   UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
+  IsProductionOrStaging: !And
+    - !Not [!Equals [ !Ref Environment, dev]]
+    - !Not [!Equals [ !Ref Environment, build]]
   IsBuild: !Or
     - !Equals [ !Ref Environment, dev ]
     - !Equals [ !Ref Environment, build ]
@@ -178,6 +181,16 @@ Resources:
             Transitions:
               - TransitionInDays: 90
                 StorageClass: GLACIER
+      NotificationConfiguration:
+        !If
+          - IsProductionOrStaging
+          -
+            QueueConfigurations:
+              - Event: "s3:ObjectCreated:*"
+                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+              - Event: "s3:ObjectRestore:*"
+                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - AWS::NoValue
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
@@ -428,3 +441,34 @@ Resources:
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'
+
+  #
+  # CSLS
+  #
+
+  CSLSFireHoseLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "/aws/firehose"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  MessageBatchBucketCSLSBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsProductionOrStaging
+    Properties:
+      Bucket: !Ref MessageBatchBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub '${MessageBatchBucket.Arn}/*'
+            Principal:
+              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+            Action:
+              - 's3:Get*'
+              - 's3:List*'
