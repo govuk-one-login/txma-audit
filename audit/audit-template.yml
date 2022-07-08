@@ -182,14 +182,13 @@ Resources:
               - TransitionInDays: 90
                 StorageClass: GLACIER
       NotificationConfiguration:
-        !If
+        QueueConfigurations: !If
           - IsProductionOrStaging
           -
-            QueueConfigurations:
-              - Event: "s3:ObjectCreated:*"
-                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-              - Event: "s3:ObjectRestore:*"
-                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectCreated:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectRestore:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
           - AWS::NoValue
 
   FirehoseLogGroup:
