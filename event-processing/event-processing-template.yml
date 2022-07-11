@@ -1132,15 +1132,15 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/fraud-splunk-delivery-failure-bucket/"
-      NotificationConfiguration:
-        QueueConfigurations:
-          !If
-          - IsProductionOrStaging
-          - - Event: "s3:ObjectCreated:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - Event: "s3:ObjectRestore:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-          - - !Ref AWS::NoValue
+#      NotificationConfiguration:
+#        QueueConfigurations:
+#          !If
+#          - IsProductionOrStaging
+#          - - Event: "s3:ObjectCreated:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#            - Event: "s3:ObjectRestore:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -1222,15 +1222,15 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/performance-splunk-delivery-failure-bucket/"
-      NotificationConfiguration:
-        QueueConfigurations:
-          !If
-          - IsProductionOrStaging
-          - - Event: "s3:ObjectCreated:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - Event: "s3:ObjectRestore:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-          - - !Ref AWS::NoValue
+#      NotificationConfiguration:
+#        QueueConfigurations:
+#          !If
+#          - IsProductionOrStaging
+#          - - Event: "s3:ObjectCreated:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#            - Event: "s3:ObjectRestore:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -2145,38 +2145,38 @@ Resources:
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
-  FraudBucketCSLSPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: IsProductionOrStaging
-    Properties:
-      Bucket: !Ref FraudSplunkDeliveryFailureBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
-              - !Sub '${FraudSplunkDeliveryFailureBucket.Arn}/*'
-            Principal:
-              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-            Action:
-              - 's3:Get*'
-              - 's3:List*'
-
-  PerformanceBucketCSLSPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: IsProductionOrStaging
-    Properties:
-      Bucket: !Ref PerformanceSplunkDeliveryFailureBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
-              - !Sub '${PerformanceSplunkDeliveryFailureBucket.Arn}/*'
-            Principal:
-              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-            Action:
-              - 's3:Get*'
-              - 's3:List*'
+#  FraudBucketCSLSPolicy:
+#    Type: AWS::S3::BucketPolicy
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      Bucket: !Ref FraudSplunkDeliveryFailureBucket
+#      PolicyDocument:
+#        Version: '2012-10-17'
+#        Statement:
+#          - Effect: 'Allow'
+#            Resource:
+#              - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
+#              - !Sub '${FraudSplunkDeliveryFailureBucket.Arn}/*'
+#            Principal:
+#              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+#            Action:
+#              - 's3:Get*'
+#              - 's3:List*'
+#
+#  PerformanceBucketCSLSPolicy:
+#    Type: AWS::S3::BucketPolicy
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      Bucket: !Ref PerformanceSplunkDeliveryFailureBucket
+#      PolicyDocument:
+#        Version: '2012-10-17'
+#        Statement:
+#          - Effect: 'Allow'
+#            Resource:
+#              - !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
+#              - !Sub '${PerformanceSplunkDeliveryFailureBucket.Arn}/*'
+#            Principal:
+#              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+#            Action:
+#              - 's3:Get*'
+#              - 's3:List*'

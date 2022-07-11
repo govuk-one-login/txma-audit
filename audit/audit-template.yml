@@ -181,15 +181,15 @@ Resources:
             Transitions:
               - TransitionInDays: 90
                 StorageClass: GLACIER
-      NotificationConfiguration:
-        QueueConfigurations:
-          !If
-            - IsProductionOrStaging
-            - - Event: "s3:ObjectCreated:*"
-                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-              - Event: "s3:ObjectRestore:*"
-                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - - !Ref AWS::NoValue
+#      NotificationConfiguration:
+#        QueueConfigurations:
+#          !If
+#            - IsProductionOrStaging
+#            - - Event: "s3:ObjectCreated:*"
+#                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#              - Event: "s3:ObjectRestore:*"
+#                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#            - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -466,20 +466,20 @@ Resources:
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
-  MessageBatchBucketCSLSBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: IsProductionOrStaging
-    Properties:
-      Bucket: !Ref MessageBatchBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt MessageBatchBucket.Arn
-              - !Sub '${MessageBatchBucket.Arn}/*'
-            Principal:
-              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-            Action:
-              - 's3:Get*'
-              - 's3:List*'
+#  MessageBatchBucketCSLSBucketPolicy:
+#    Type: AWS::S3::BucketPolicy
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      Bucket: !Ref MessageBatchBucket
+#      PolicyDocument:
+#        Version: '2012-10-17'
+#        Statement:
+#          - Effect: 'Allow'
+#            Resource:
+#              - !GetAtt MessageBatchBucket.Arn
+#              - !Sub '${MessageBatchBucket.Arn}/*'
+#            Principal:
+#              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+#            Action:
+#              - 's3:Get*'
+#              - 's3:List*'
