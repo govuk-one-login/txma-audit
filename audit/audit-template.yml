@@ -448,23 +448,23 @@ Resources:
   # CSLS
   #
 
-  CSLSFireHoseLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "FirehoseLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-
-  CSLSDelimiterLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "DelimiterLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+#  CSLSFireHoseLogsSubscription:
+#    Type: AWS::Logs::SubscriptionFilter
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      LogGroupName:
+#        Ref: "FirehoseLogGroup"
+#      FilterPattern: ""
+#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+#
+#  CSLSDelimiterLogsSubscription:
+#    Type: AWS::Logs::SubscriptionFilter
+#    Condition: IsProductionOrStaging
+#    Properties:
+#      LogGroupName:
+#        Ref: "DelimiterLogGroup"
+#      FilterPattern: ""
+#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
 #  MessageBatchBucketCSLSBucketPolicy:
 #    Type: AWS::S3::BucketPolicy
