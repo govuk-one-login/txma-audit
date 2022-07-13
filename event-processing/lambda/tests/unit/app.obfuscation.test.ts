@@ -81,7 +81,7 @@ describe('Unit test for app handler', function () {
     });
 
     it('obfuscates all expected fields when receiving an array', async () => {
-        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
 
         const data : string = Buffer.from(TestHelper.encodeAuditEventArray(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -92,7 +92,7 @@ describe('Unit test for app handler', function () {
             }]
         }
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(EventProcessorHelper.exampleAuditMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(EventProcessorHelper.exampleAuditMessage()));
         
         const result = await handler(firehoseEvent);
 
@@ -100,7 +100,7 @@ describe('Unit test for app handler', function () {
     });
 
     it('obfuscates all expected fields when receiving an object in restricted fields', async () => {
-        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
 
         expectedData.restricted = {
             someField: ObfuscationService.obfuscateField('value', 'secret-1-value'),
@@ -139,7 +139,7 @@ describe('Unit test for app handler', function () {
             }]
         }
 
-        const message = EventProcessorHelper.exampleAuditMessage;
+        const message = EventProcessorHelper.exampleAuditMessage();
 
         message.restricted = {
             someField: "value",
@@ -177,7 +177,7 @@ describe('Unit test for app handler', function () {
     });
 
     it('obfuscates expected fields when receiving a single event using the secret string', async () => {
-        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
 
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -188,7 +188,7 @@ describe('Unit test for app handler', function () {
             }]
         }
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage()));
         
         const result = await handler(firehoseEvent);
 
@@ -197,7 +197,7 @@ describe('Unit test for app handler', function () {
 
     it('obfuscates all expected fields when receiving a single event using a secret binary', async () => {
         process.env.SECRET_ARN = "secret-binary";
-        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
 
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -208,7 +208,7 @@ describe('Unit test for app handler', function () {
             }]
         }
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage()));
         
         const result = await handler(firehoseEvent);
 
@@ -218,7 +218,7 @@ describe('Unit test for app handler', function () {
     it('Records marked as processing failed if no secret arn', async () => {
         delete process.env.SECRET_ARN;
 
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage()));
         
         const result = await handler(firehoseEvent);
 
@@ -231,7 +231,7 @@ describe('Unit test for app handler', function () {
     it('marks records as processing failed if no secret arn is present in secret manager', async () => {
         process.env.SECRET_ARN = "unknown_arn";
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage()));
         
         const result = await handler(firehoseEvent);
 
@@ -244,7 +244,7 @@ describe('Unit test for app handler', function () {
     it('marks records as processing failed if no data in response from secret manager', async () => {
         process.env.SECRET_ARN = "no-data-secret";
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage()));
         
         const result = await handler(firehoseEvent);
 
@@ -256,7 +256,7 @@ describe('Unit test for app handler', function () {
 
     it('has expected data in obfuscated result', async () => {
         process.env.SECRET_ARN = "secret-binary";
-        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
 
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -267,7 +267,7 @@ describe('Unit test for app handler', function () {
             }]
         }
         
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(EventProcessorHelper.exampleAuditMessage()));
         
         const result = await handler(firehoseEvent);
 
@@ -290,7 +290,7 @@ describe('Unit test for app handler', function () {
     });
 
     it('does not obfuscate empty fields', async () => {
-        var expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage;
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
         delete expectedData.user!.email;
         const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
@@ -301,10 +301,60 @@ describe('Unit test for app handler', function () {
             }]
         }
 
-        var event = EventProcessorHelper.exampleAuditMessage;
+        const event = EventProcessorHelper.exampleAuditMessage();
         event.user!.email = "";
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(event));
-        
+
+        const result = await handler(firehoseEvent);
+
+        expect(result).toEqual(expectedResult);
+        const resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
+        const resultAuditEvent: unknown = JSON.parse(resultData);
+        expect(resultAuditEvent).toEqual(expectedData);
+    });
+
+    it('does not obfuscate undefined fields', async () => {
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
+        expectedData.user!.email = undefined;
+        const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: data,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "Ok"
+            }]
+        }
+
+        const event = EventProcessorHelper.exampleAuditMessage();
+        event.user!.email = undefined;
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(event));
+
+        const result = await handler(firehoseEvent);
+
+        expect(result).toEqual(expectedResult);
+        const resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
+        const resultAuditEvent: unknown = JSON.parse(resultData);
+        expect(resultAuditEvent).toEqual(expectedData);
+    });
+
+    it('handles obfuscating boolean fields', async () => {
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
+        // @ts-ignore
+        expectedData.user!.email = ObfuscationService.obfuscateField(false, 'secret-1-value');
+        const data : string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: data,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "Ok"
+            }]
+        }
+
+        const event = EventProcessorHelper.exampleAuditMessage();
+        // @ts-ignore
+        event.user!.email = false;
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(event));
+
         const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
