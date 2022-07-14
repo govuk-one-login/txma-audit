@@ -197,6 +197,7 @@ Resources:
       - IPVLambdaAccessRole
       - IPVPassLambdaAccessRole
       - SPOTLambdaAccessRole
+      - AuthLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
@@ -206,6 +207,7 @@ Resources:
         - !Ref IPVLambdaAccessRole
         - !Ref IPVPassLambdaAccessRole
         - !Ref SPOTLambdaAccessRole
+        - !Ref AuthLambdaAccessRole
       PolicyName: sns_publish_policy
       PolicyDocument:
         Version: 2012-10-17
@@ -1053,7 +1055,7 @@ Resources:
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
-          defaultComponentId: "IPV"
+          defaultComponentId: "Auth"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -2185,6 +2187,14 @@ Resources:
       FunctionName: !Ref SPOTEventProcessorFunction
       Principal: !Ref TestRoleArn
 
+  AuthTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuthEventProcessorFunction
+      Principal: !Ref TestRoleArn
+      
   FraudSplunkTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Condition: DeployTestPolicyForBucket
