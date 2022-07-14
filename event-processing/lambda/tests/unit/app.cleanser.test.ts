@@ -110,7 +110,7 @@ describe('Unit test for app handler', function () {
 
     it('cleanses all messages when receiving an array', async () => {
 
-        const expectedData : string = Buffer.from(TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessage)).toString('base64')
+        const expectedData : string = Buffer.from(TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessage())).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
             records: [{
                 data: expectedData,
@@ -119,7 +119,7 @@ describe('Unit test for app handler', function () {
             }]
         }
 
-        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(CleanserHelper.exampleEnrichedMessage));
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(CleanserHelper.exampleEnrichedMessage()));
 
         const result = await handler(firehoseEvent);
 
