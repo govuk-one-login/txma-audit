@@ -1113,7 +1113,7 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          !If
+          Fn::If:
             - IsProductionOrStaging
             - Effect: 'Allow'
               Resource:
@@ -1176,7 +1176,7 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          !If
+          Fn::If:
             - DeployTestPolicyForBucket
             - Effect: 'Allow'
               Resource:
@@ -1227,7 +1227,7 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          !If
+          Fn::If:
             - IsProductionOrStaging
             - Effect: 'Allow'
               Resource:
@@ -1290,7 +1290,7 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          !If
+          Fn::If:
             - DeployTestPolicyForBucket
             - Effect: 'Allow'
               Resource:

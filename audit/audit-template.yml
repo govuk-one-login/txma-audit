@@ -443,18 +443,18 @@ Resources:
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'
-          !If
-          - IsProductionOrStaging
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt MessageBatchBucket.Arn
-              - !Sub '${MessageBatchBucket.Arn}/*'
-            Principal:
-              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-            Action:
-              - 's3:Get*'
-              - 's3:List*'
-          - !Ref AWS::NoValue
+          Fn::If:
+            - IsProductionOrStaging
+            - Effect: 'Allow'
+              Resource:
+                - !GetAtt MessageBatchBucket.Arn
+                - !Sub '${MessageBatchBucket.Arn}/*'
+              Principal:
+                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+              Action:
+                - 's3:Get*'
+                - 's3:List*'
+            - !Ref AWS::NoValue
 
   #
   # CSLS
