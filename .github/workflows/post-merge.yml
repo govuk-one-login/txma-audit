@@ -97,12 +97,22 @@ jobs:
         with:
           role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_AUDIT }}
           aws-region:  ${{ env.awsRegion }}
+      - name: Use Node.js 14
+        uses: actions/setup-node@v3.0.0
+        with:
+          node-version: '14.x'
+      - name: Install Lambda Dependencies
+        working-directory: ${{ env.auditDirectory }}/lambda
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: SAM Validate
         run: |
           sam validate --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }}
       - name: SAM Build
         run: |
           sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
+      - name: Test Lambdas
+        working-directory: ${{ env.auditDirectory }}/lambda
+        run: yarn test
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1

@@ -42,8 +42,8 @@ export class ObfuscationService {
     }
 
     public static obfuscateField(value: any, key: string): string {
+        if (value.length < 1) return value;
         if (typeof value != 'string') value = JSON.stringify(value);
-
         return createHmac('sha256', key).update(value).digest('hex');
     }
 }
