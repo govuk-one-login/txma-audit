@@ -2090,86 +2090,86 @@ Resources:
   # CSLS
   #
 
-#  CSLSKBVLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "KBVEventProcessorLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-#
-#  CSLSKBVAddressLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "KBVAddressEventProcessorLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-#
-#  CSLSKBVFraudLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "KBVFraudEventProcessorLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-#
-#  CSLSIPVLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "IPVEventProcessorLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-#
-#  CSLSIPVPassLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "IPVPassEventProcessorLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-#
-#  CSLSSPOTLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "SPOTEventProcessorLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-#
-#  CSLSFireHoseLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "FirehoseLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-#
-#  CSLSObfuscationLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "ObfuscationLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-#
-#  CSLSCleanserFunctionLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "CleanserLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+  CSLSKBVLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "KBVEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSKBVAddressLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "KBVAddressEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSKBVFraudLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "KBVFraudEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSIPVLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "IPVEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSIPVPassLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "IPVPassEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSSPOTLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "SPOTEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSFireHoseLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "FirehoseLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSObfuscationLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "ObfuscationLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSCleanserFunctionLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "CleanserLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
 #  FraudBucketCSLSPolicy:
 #    Type: AWS::S3::BucketPolicy
