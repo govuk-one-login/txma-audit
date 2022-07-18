@@ -1128,6 +1128,8 @@ Resources:
 
   FraudSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
+    DependsOn:
+      - FraudS3AccessLogsBucketPolicy
     Properties:
       BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
       VersioningConfiguration:
@@ -1242,6 +1244,8 @@ Resources:
 
   PerformanceSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
+    DependsOn:
+      - PerformanceS3AccessLogsBucketPolicy
     Properties:
       BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
       VersioningConfiguration:
