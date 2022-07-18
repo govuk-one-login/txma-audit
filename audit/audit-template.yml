@@ -179,8 +179,6 @@ Resources:
 
   MessageBatchBucket:
     Type: AWS::S3::Bucket
-    DependsOn:
-      - S3AccessLogsBucketPolicy
     Properties:
       BucketName: !Sub "${AWS::StackName}-${Environment}-message-batch"
       BucketEncryption:
