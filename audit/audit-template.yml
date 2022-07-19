@@ -246,8 +246,8 @@ Resources:
         Prefix: "firehose/"
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
-          UseTestingInterval: !If
-            - IsBuild
+          IntervalInSeconds: !If
+            - UseTestingInterval
             - 60
             - 900
           SizeInMBs: 128
