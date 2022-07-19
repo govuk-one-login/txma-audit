@@ -38,9 +38,9 @@ Conditions:
   IsTestStage: !Or
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
-  UseTestingInterval: !OR
+  UseTestingInterval: !Or
     - !Condition IsTestStage
-    - !Condition !Equals [ !Ref Environment, dev ]
+    - !Equals [ !Ref Environment, dev ]
   DeployTestPolicy: !And
     - !Condition IsTestStage
     - !Condition UseTestRole
