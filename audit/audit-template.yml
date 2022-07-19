@@ -35,12 +35,12 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
-  IsBuild: !Or
-    - !Equals [ !Ref Environment, dev ]
-    - !Equals [ !Ref Environment, build ]
   IsTestStage: !Or
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
+  UseTestingInterval: !OR
+    - !Condition IsTestStage
+    - !Condition !Equals [ !Ref Environment, dev ]
   DeployTestPolicy: !And
     - !Condition IsTestStage
     - !Condition UseTestRole
@@ -246,7 +246,7 @@ Resources:
         Prefix: "firehose/"
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
-          IntervalInSeconds: !If
+          UseTestingInterval: !If
             - IsBuild
             - 60
             - 900
