@@ -32,7 +32,7 @@ task cucumber(type: Test) {
 
 task cleanup(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    mainClass.set('Cleanup')
+    mainClass.set('uk.gov.di.txma.eventprocessor.Cleanup')
 }
 
 cleanup.configure {

@@ -1,3 +1,5 @@
+package uk.gov.di.txma.eventprocessor;
+
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
