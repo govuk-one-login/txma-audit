@@ -214,6 +214,27 @@ Resources:
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  S3NoReceivedObjectsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Audit S3 Received No Objects Alarm"
+      AlarmName: "S3NoReceivedObjectsAlarmAlarm"
+      ComparisonOperator: LessThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      Period: 86400
+      Threshold: 1
+      TreatMissingData: breaching
+      MetricName: "PutRequests"
+      Namespace: "AWS/S3"
+      Dimensions:
+      - Name: BucketName
+        Value: !Ref MessageBatchBucket
+      - Name: FilterId
+        Value: EntireBucket
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
