@@ -2,7 +2,7 @@
 Feature: Raw event data journey from the lambda to S3 for build (and dev) environment
 
   Scenario Outline: Check messages pass through lambda to S3
-    Given the SQS file "lambda_through_to_s3.json" is available for the "<account>" team
+    Given the SQS file "lambda_through_to_s3" is available for the "<account>" team
     And the output file "s3_expected" is available
       | fraud    |
       | perf     |
