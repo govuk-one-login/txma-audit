@@ -35,12 +35,12 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
-  IsBuild: !Or
-    - !Equals [ !Ref Environment, dev ]
-    - !Equals [ !Ref Environment, build ]
   IsTestStage: !Or
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
+  UseTestingInterval: !Or
+    - !Condition IsTestStage
+    - !Equals [ !Ref Environment, dev ]
   DeployTestPolicy: !And
     - !Condition IsTestStage
     - !Condition UseTestRole
@@ -155,6 +155,27 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub '${MessageBatchBucket.Arn}/*'
+            Principal:
+              AWS: !Ref TestRoleArn
+            Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+          - !If
+            - IsProductionOrStaging
+            - Effect: 'Allow'
+              Resource:
+                - !GetAtt MessageBatchBucket.Arn
+                - !Sub '${MessageBatchBucket.Arn}/*'
+              Principal:
+                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+              Action:
+                - 's3:Get*'
+                - 's3:List*'
+            - !Ref AWS::NoValue
 
   MessageBatchBucket:
     Type: AWS::S3::Bucket
@@ -181,18 +202,39 @@ Resources:
             Transitions:
               - TransitionInDays: 90
                 StorageClass: GLACIER
-#      NotificationConfiguration:
-#        QueueConfigurations:
-#          !If
-#            - IsProductionOrStaging
-#            - - Event: "s3:ObjectCreated:*"
-#                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-#              - Event: "s3:ObjectRestore:*"
-#                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-#            - - !Ref AWS::NoValue
+      NotificationConfiguration:
+        QueueConfigurations:
+          !If
+            - IsProductionOrStaging
+            - - Event: "s3:ObjectCreated:*"
+                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+              - Event: "s3:ObjectRestore:*"
+                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  S3NoReceivedObjectsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Audit S3 Received No Objects Alarm"
+      AlarmName: "S3NoReceivedObjectsAlarmAlarm"
+      ComparisonOperator: LessThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      Period: 86400
+      Threshold: 1
+      TreatMissingData: breaching
+      MetricName: "PutRequests"
+      Namespace: "AWS/S3"
+      Dimensions:
+      - Name: BucketName
+        Value: !Ref MessageBatchBucket
+      - Name: FilterId
+        Value: EntireBucket
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
@@ -226,7 +268,7 @@ Resources:
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
           IntervalInSeconds: !If
-            - IsBuild
+            - UseTestingInterval
             - 60
             - 900
           SizeInMBs: 128
@@ -423,63 +465,23 @@ Resources:
           - delimiter-app.ts
 
   #
-  # Test Role Permissions
-  #
-
-  MessageBatchTestBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: DeployTestPolicy
-    Properties:
-      Bucket: !Ref MessageBatchBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt MessageBatchBucket.Arn
-              - !Sub '${MessageBatchBucket.Arn}/*'
-            Principal:
-              AWS: !Ref TestRoleArn
-            Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-
-  #
   # CSLS
   #
 
-#  CSLSFireHoseLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "FirehoseLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-#
-#  CSLSDelimiterLogsSubscription:
-#    Type: AWS::Logs::SubscriptionFilter
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      LogGroupName:
-#        Ref: "DelimiterLogGroup"
-#      FilterPattern: ""
-#      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+  CSLSFireHoseLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "FirehoseLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
-#  MessageBatchBucketCSLSBucketPolicy:
-#    Type: AWS::S3::BucketPolicy
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      Bucket: !Ref MessageBatchBucket
-#      PolicyDocument:
-#        Version: '2012-10-17'
-#        Statement:
-#          - Effect: 'Allow'
-#            Resource:
-#              - !GetAtt MessageBatchBucket.Arn
-#              - !Sub '${MessageBatchBucket.Arn}/*'
-#            Principal:
-#              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-#            Action:
-#              - 's3:Get*'
-#              - 's3:List*'
+  CSLSDelimiterLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "DelimiterLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
