@@ -22,7 +22,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 
 
   Scenario Outline: Check messages don't pass through lambda if missing event_name
-    Given the SQS file "lambda_missing_event_name.json" is available for the "<account>" team
+    Given the SQS file "lambda_missing_event_name" is available for the "<account>" team
     When the "<account>" lambda is invoked
     Then there should be a "[ERROR]" message in the "<account>" lambda logs
 
@@ -36,7 +36,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | SPOT        |
 
   Scenario Outline: Check messages don't pass through lambda if missing timestamp
-    Given the SQS file "lambda_missing_timestamp.json" is available for the "<account>" team
+    Given the SQS file "lambda_missing_timestamp" is available for the "<account>" team
     When the "<account>" lambda is invoked
     Then there should be a "[ERROR]" message in the "<account>" lambda logs
 
@@ -50,7 +50,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | SPOT        |
 
   Scenario Outline: Check messages receive a warning in Cloudwatch if addition fields are present
-    Given the SQS file "lambda_additional_field.json" is available for the "<account>" team
+    Given the SQS file "lambda_additional_field" is available for the "<account>" team
     And the output file "s3_expected" is available
       | fraud    |
     When the "<account>" lambda is invoked
@@ -69,7 +69,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 
 
   Scenario Outline: Checking the filter sends "AUTH_UPDATE_CLIENT_REQUEST_ERROR" only to Fraud
-    Given the SQS file "auth_update_client_request_error.json" is available for the "<account>" team
+    Given the SQS file "auth_update_client_request_error" is available for the "<account>" team
     And the output file "expected" is available
       | fraud    |
       | perf     |
@@ -85,7 +85,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 
 
   Scenario Outline: Checking the filter sends "RANDOM_EVENT" to neither Fraud, nor Performance
-    Given the SQS file "random_event.json" is available for the "<account>" team
+    Given the SQS file "random_event" is available for the "<account>" team
     And the output file "expected_random" is available
       | fraud    |
       | perf     |
