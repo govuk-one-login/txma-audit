@@ -1132,6 +1132,18 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/fraud-splunk-delivery-failure-bucket/"
+      NotificationConfiguration:
+        QueueConfigurations:
+          !If
+          - IsProductionOrStaging
+          - - Event: "s3:ObjectCreated:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectRestore:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - - !Ref AWS::NoValue
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
 
   FraudTestS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -1210,6 +1222,18 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/performance-splunk-delivery-failure-bucket/"
+      NotificationConfiguration:
+        QueueConfigurations:
+          !If
+          - IsProductionOrStaging
+          - - Event: "s3:ObjectCreated:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectRestore:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - - !Ref AWS::NoValue
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
 
   PerformanceTestS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -1765,7 +1789,33 @@ Resources:
       FilterPolicy:
         eventName:
           - IPV_JOURNEY_START
+          - IPV_REDIRECT_TO_CRI
+          - IPV_PASSPORT_CRI_START
+          - IPV_PASSPORT_CRI_RESPONSE_RECEIVED
+          - IPV_PASSPORT_CRI_REQUEST_SENT
+          - IPV_PASSPORT_CRI_END
+          - IPV_PASSPORT_CRI_VC_ISSUED
+          - IPV_ADDRESS_CRI_START
+          - IPV_ADDRESS_CRI_REQUEST_SENT
+          - IPV_ADDRESS_CRI_VC_ISSUED
+          - IPV_ADDRESS_CRI_END
+          - IPV_FRAUD_CRI_START
+          - IPV_FRAUD_CRI_REQUEST_SENT
+          - IPV_FRAUD_CRI_VC_ISSUED
+          - IPV_FRAUD_CRI_THIRD_PARTY_REQUEST_ENDED
+          - IPV_FRAUD_CRI_END
+          - IPV_KBV_CRI_START
+          - IPV_KBV_CRI_REQUEST_SENT
+          - IPV_KBV_CRI_VC_ISSUED
+          - IPV_KBV_CRI_THIRD_PARTY_REQUEST_ENDED
+          - IPV_KBV_CRI_END
+          - IPV_CRI_AUTH_RESPONSE_RECEIVED
+          - IPV_VC_RECEIVED
           - IPV_JOURNEY_END
+          - IPV_IDENTITY_ISSUED
+          - IPV_SPOT_REQUEST_RECEIVED
+          - IPV_SPOT_RESPONSE_APPROVED
+          - IPV_SPOT_RESPONSE_REJECTED
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
@@ -2035,3 +2085,124 @@ Resources:
             Action:
               - 's3:GetObject'
               - 's3:ListBucket'
+
+  #
+  # CSLS
+  #
+
+  CSLSKBVLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "KBVEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSKBVAddressLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "KBVAddressEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSKBVFraudLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "KBVFraudEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSIPVLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "IPVEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSIPVPassLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "IPVPassEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSSPOTLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "SPOTEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSFireHoseLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "FirehoseLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSObfuscationLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "ObfuscationLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSCleanserFunctionLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "CleanserLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  FraudBucketCSLSPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsProductionOrStaging
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryFailureBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
+              - !Sub '${FraudSplunkDeliveryFailureBucket.Arn}/*'
+            Principal:
+              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+            Action:
+              - 's3:Get*'
+              - 's3:List*'
+
+  PerformanceBucketCSLSPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsProductionOrStaging
+    Properties:
+      Bucket: !Ref PerformanceSplunkDeliveryFailureBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
+              - !Sub '${PerformanceSplunkDeliveryFailureBucket.Arn}/*'
+            Principal:
+              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+            Action:
+              - 's3:Get*'
+              - 's3:List*'

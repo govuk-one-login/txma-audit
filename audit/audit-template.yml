@@ -32,6 +32,9 @@ Conditions:
   UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
   UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
   UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
+  IsProductionOrStaging: !And
+    - !Not [!Equals [ !Ref Environment, dev]]
+    - !Not [!Equals [ !Ref Environment, build]]
   IsBuild: !Or
     - !Equals [ !Ref Environment, dev ]
     - !Equals [ !Ref Environment, build ]
@@ -178,6 +181,18 @@ Resources:
             Transitions:
               - TransitionInDays: 90
                 StorageClass: GLACIER
+      NotificationConfiguration:
+        QueueConfigurations:
+          !If
+            - IsProductionOrStaging
+            - - Event: "s3:ObjectCreated:*"
+                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+              - Event: "s3:ObjectRestore:*"
+                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - - !Ref AWS::NoValue
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
@@ -221,6 +236,15 @@ Resources:
           Enabled: true
           LogGroupName: !Ref FirehoseLogGroup
           LogStreamName: !Ref FirehoseLogStream
+        ProcessingConfiguration:
+          Enabled: true
+          Processors:
+            - Type: Lambda
+              Parameters:
+                - ParameterName: LambdaArn
+                  ParameterValue: !GetAtt DelimiterFunction.Arn
+                - ParameterName: RoleArn
+                  ParameterValue: !GetAtt DeliveryStreamRole.Arn
 
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -274,6 +298,12 @@ Resources:
                   - '*'
           - Effect: Allow
             Action:
+              - 'lambda:InvokeFunction'
+              - 'lambda:GetFunctionConfiguration'
+            Resource:
+              - !Sub "${DelimiterFunction.Arn}*"
+          - Effect: Allow
+            Action:
               - 'logs:CreateLogGroup'
               - 'logs:PutLogEvents'
               - 'logs:CreateLogStream'
@@ -315,6 +345,83 @@ Resources:
                   - 'kms:Decrypt'
                 Resource: '{{resolve:ssm:SNSKMSKeyARN}}'
 
+  LambdaKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action:
+              - 'kms:Decrypt'
+            Resource: '*'
+
+  LambdaKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/LambdaKMSKey"
+      TargetKeyId: !Ref LambdaKMSKey
+
+  DelimiterLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/DelimiterFunction"
+      RetentionInDays: 7
+
+  DelimiterLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-Delimiter"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+
+  DelimiterFunction:
+    DependsOn:
+      - DelimiterLogGroup
+      - DelimiterLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "DelimiterFunction"
+      CodeUri: ../audit/lambda
+      PackageType: Zip
+      Handler: delimiter-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt DelimiterLambdaAccessRole.Arn
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - delimiter-app.ts
+
   #
   # Test Role Permissions
   #
@@ -337,24 +444,42 @@ Resources:
               - 's3:GetObject'
               - 's3:ListBucket'
 
-#  TestRolePolicy:
-#    Type: AWS::IAM::Policy
-#    Condition: DeployTestPolicy
-#    Properties:
-#      Roles:
-#        - !Select [ 1, !Split [ "/" , TestRoleArn ]]
-#      PolicyName: test_role_policy
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Action:
-#              - 'firehose:PutRecord'
-#            Resource:
-#              - !GetAtt AuditDeliveryStream.Arn
-#          - Effect: Allow
-#            Action:
-#              - 's3:GetObject'
-#              - 's3:ListBucket'
-#            Resource:
-#              - !GetAtt MessageBatchBucket.Arn
+  #
+  # CSLS
+  #
+
+  CSLSFireHoseLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "FirehoseLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSDelimiterLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "DelimiterLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  MessageBatchBucketCSLSBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsProductionOrStaging
+    Properties:
+      Bucket: !Ref MessageBatchBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub '${MessageBatchBucket.Arn}/*'
+            Principal:
+              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+            Action:
+              - 's3:Get*'
+              - 's3:List*'
