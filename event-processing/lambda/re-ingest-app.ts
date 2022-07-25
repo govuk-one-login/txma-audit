@@ -1,16 +1,20 @@
 import AWS from 'aws-sdk';
-import {FirehoseService} from "./services/firehose-service";
+import { FirehoseService } from './services/firehose-service';
+import { Context } from 'aws-lambda';
+import { S3Event } from 'aws-lambda/trigger/s3';
+import { DestinationEnum } from './enums/destination.enum';
+import { AuditEvent } from './models/audit-event';
 
-export const handler = async (event: any, context: any): Promise<void> => {
-    const bucket = event['Records'][0]['s3']['bucket']['name'];
-    const key = decodeURI(event['Records'][0]['s3']['object']['key']);
+export const handler = async (event: S3Event, context: Context): Promise<void> => {
+    const bucket = event.Records[0].s3.bucket.name;
+    const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
 
     const streamName = ''; //Environment var stream name
-    const maxIngest = 9;
+    const maxIngest = 5;
     const firehose = new AWS.Firehose({ region: 'eu-west-2' }); //Environment variable region
     const s3 = new AWS.S3({ region: 'eu-west-2' }); //Environment variable region
 
-    try{
+    try {
         //get s3 object
         const s3Response = await s3
             .getObject({
@@ -28,7 +32,7 @@ export const handler = async (event: any, context: any): Promise<void> => {
             const s3Payload = {};
 
             for (const line in eventRecord.split('\n')) {
-                let dest = 'FH';
+                let destination = DestinationEnum.fireHose;
                 if (line.length <= 0) {
                     continue;
                 }
@@ -40,81 +44,95 @@ export const handler = async (event: any, context: any): Promise<void> => {
                         continue;
                     }
 
-                    const jsonData = JSON.parse(messageLine);
-                    let fieldsToReIngest: any;
-                    let reIngestCount = 1;
-                    let messageBucket = '';
-                    let source = 'aws:reingested';
-                    let sourceType = 'aws:firehose';
+                    const jsonData = AuditEvent.fromJSONString(JSON.parse(messageLine));
+                    const reIngestCount = 1;
                     let s3Payload = {}; //Type?
-                    let reIngestJson = {};
 
-                    try {
-
-                        //Get the metadata
-                        if (jsonData['source'] && jsonData['source'] != 'None') {
-                            source = jsonData['source'];
-                        }
-                        if (jsonData['sourcetype'] && jsonData['sourcetype'] != 'None') {
-                            sourceType = jsonData['sourcetype'];
-                        }
-
-                        if (jsonData['fields'] && jsonData['fields'] != 'None') {
-
-                            fieldsToReIngest = jsonData['fields'] //get reingest fields
-                            reIngestCount = parseInt(fieldsToReIngest['reingest']) + 1 //advance counter
-
-                            fieldsToReIngest['reingest'] = String(reIngestCount);
-                            messageBucket = fieldsToReIngest["frombucket"]
-                        } else {
-                            fieldsToReIngest['reingest'] = '1';
-                            fieldsToReIngest['frombucket'] = bucket;
-                            messageBucket = bucket;
-                            reIngestCount = 1;
-                        }
-
-                        if (reIngestCount > maxIngest) {
-                            destinationS3 += 1;
-
-                            if (s3Payload['messageBucket'] === '' || s3Payload['messageBucket'] === undefined){
-                                s3Payload['messageBucket'] = JSON.stringify(jsonData['event']) + '\n'
-                            } else {
-                                s3Payload['messageBucket'] = s3Payload['messageBucket'] + JSON.stringify(jsonData['event']) + '\n'
-                            }
-
-                            dest = 's3'
-                        } else {
-                            if (jsonData['time'] === '' || jsonData['time'] === undefined){
-                                reIngestJson = {'sourcetype':sourceType, 'source':source, 'event':jsonData['event'], 'fields': fieldsToReIngest}
-                            } else {
-                                reIngestJson = {'sourcetype':sourceType, 'source':source, 'event':jsonData['event'], 'fields': fieldsToReIngest, 'time':jsonData['time']}
-                            }
-                        }
-                    }catch(e){
-                        console.log(e);
-                        reIngestJson = {'reingest':jsonData['fields'], 'sourcetype':sourceType, 'source':'reingest'+reIngestCount, 'event':jsonData['event'], 'detail-type':'Reingested Firehose Message', 'fields': fieldsToReIngest, 'time':jsonData['time']}
+                    if (!jsonData.hasBeenProcessed) {
+                        jsonData.hasBeenProcessed = true;
                     }
 
-                    if (dest=='FH') {
-                        messageLine = JSON.stringify(reIngestJson);
+                    if (jsonData.reIngestCount) {
+                        jsonData.reIngestCount++;
+                    } else {
+                        jsonData.reIngestCount = 1;
+                    }
+
+                    if (reIngestCount > maxIngest) {
+                        destinationS3 += 1;
+                        destination = DestinationEnum.s3;
+                        s3Payload = s3Payload + JSON.stringify(jsonData) + '\n';
+                    }
+
+                    if (destination === DestinationEnum.fireHose) {
+                        messageLine = JSON.stringify(jsonData);
                         const encoder = new TextEncoder();
                         const messageBytes = encoder.encode(messageLine);
-                        recordBatch.push({'Data': messageBytes})
-                        destinationFH += 1
+                        recordBatch.push({ Data: messageBytes });
+                        destinationFH += 1;
                         if (destinationFH > 499) {
                             //flush max batch
-                            await FirehoseService.putRecordsToFirehoseStream(streamName, recordBatch, firehose, 0, 20)
-                            destinationFH = 0
-                            recordBatch = []
+                            await FirehoseService.putRecordsToFirehoseStream(streamName, recordBatch, firehose, 0, 20);
+                            destinationFH = 0;
+                            recordBatch = [];
                         }
                     }
                 }
             }
+
+            if (destinationFH > 0) {
+                await FirehoseService.putRecordsToFirehoseStream(streamName, recordBatch, firehose, 0, 20);
+            }
+            if (destinationS3 > 0) {
+                console.log(
+                    '[WARN] MAXIMUM RE-INGEST LIMIT REACHED\n' +
+                        'One or more event records has been unsuccessfully delivered to splunk: ',
+                );
+
+                try {
+                    const destparams = {
+                        Bucket: 'bucketforfailures', //rename
+                        Key: 'reIngest-failure-' + key,
+                        Body: s3Payload,
+                    };
+
+                    const putResult = await s3.putObject(destparams).promise();
+
+                    if (putResult.$response.error) {
+                        console.log(
+                            `[ERROR] UPLOAD TO S3 ERROR:\n Response Error: ${putResult.$response.error}`,
+                            putResult.$response.error.stack,
+                        );
+                    } else {
+                        console.log(putResult.$response.data);
+                    }
+
+                    //How do we handle errors pushing to S3? Or deleting? We dont want duplicate deliveries and we dont want to delete if it hasn't reached maximum retries.
+                    if (putResult.$response.httpResponse.statusCode === 200) {
+                        const deleteParams = {
+                            Bucket: bucket,
+                            Key: key,
+                        };
+
+                        const deleteResult = await s3.deleteObject(deleteParams).promise();
+
+                        if (deleteResult.$response.error) {
+                            console.log(
+                                `[ERROR] DELETE FROM S3 ERROR:\n Response Error: ${deleteResult.$response.error}`,
+                                deleteResult.$response.error.stack,
+                            );
+                        } else {
+                            console.log(deleteResult.$response.data);
+                        }
+                    }
+                } catch (error) {
+                    console.log(error);
+                    return;
+                }
+            }
         }
-    }catch(e){
+    } catch (e) {
         console.log(e);
-        throw;
+        throw e;
     }
 };
-
-

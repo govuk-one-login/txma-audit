@@ -12,7 +12,8 @@ export interface IAuditEvent {
     platform?: unknown | undefined;
     restricted?: unknown | undefined;
     extensions?: unknown | undefined;
-    isProcessed?: boolean;
+    hasBeenProcessed?: boolean;
+    reIngestCount?: number;
 }
 
 export interface IAuditEventUserMessage {
@@ -38,7 +39,8 @@ function createBaseAuditEvent(): IAuditEvent {
         platform: undefined,
         restricted: undefined,
         extensions: undefined,
-        isProcessed: false,
+        hasBeenProcessed: false,
+        reIngestCount: 0,
     };
 }
 
@@ -79,8 +81,12 @@ export class AuditEvent {
                 case 'extensions':
                     event.extensions = jsonObject[value];
                     break;
-                case 'isProcessed':
-                    event.isProcessed = jsonObject[value];
+                case 'hasBeenProcessed':
+                    event.hasBeenProcessed = jsonObject[value];
+                    break;
+                case 'reIngestCount':
+                    event.reIngestCount = jsonObject[value];
+                    break;
                 default:
                     unknown_fields.set(value, jsonObject[value]);
                     break;
@@ -105,7 +111,10 @@ export class AuditEvent {
         message.platform !== undefined && (obj.platform = message.platform ? message.platform : undefined);
         message.restricted !== undefined && (obj.restricted = message.restricted ? message.restricted : undefined);
         message.extensions !== undefined && (obj.extensions = message.extensions ? message.extensions : undefined);
-        message.isProcessed !== undefined && (obj.isProcessed = message.isProcessed ? message.isProcessed : false);
+        message.hasBeenProcessed !== undefined &&
+            (obj.hasBeenProcessed = message.hasBeenProcessed ? message.hasBeenProcessed : false);
+        message.reIngestCount !== undefined &&
+            (obj.reIngestCount = message.reIngestCount ? message.reIngestCount : false);
         return obj;
     }
 }
