@@ -21,8 +21,8 @@ import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
 import software.amazon.awssdk.services.lambda.model.LambdaException;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -229,6 +229,9 @@ public class LambdaToS3StepDefinitions {
     private void findLatestKeysFromEventProcessingS3(String endpoint){
         String bucketName = "event-processing-"+System.getenv("TEST_ENVIRONMENT")+"-"+endpoint+"-splunk-test";
 
+        // The list of the latest two keys
+        List<String> keys = new ArrayList<>();
+
         // Opens an S3 client
         try (S3Client s3 = S3Client.builder()
                 .region(region)
@@ -236,41 +239,72 @@ public class LambdaToS3StepDefinitions {
 
             // This is used to get the current year, so that we can search the correct s3 files by prefix
             ZonedDateTime currentDateTime = Instant.now().atZone(ZoneOffset.UTC);
-            // Lists all objects
-            ListObjectsRequest listObjects = ListObjectsRequest
+            // Lists latest 1000 objects
+            ListObjectsV2Request listObjects = ListObjectsV2Request
                     .builder()
                     .bucket(bucketName)
                     .prefix("firehose/"+currentDateTime.getYear()+"/")
                     .build();
 
-            // Finds the latest object
-            ListObjectsResponse s3Objects = s3.listObjects(listObjects);
+            // Stored the objects
+            ListObjectsV2Response s3Objects = s3.listObjectsV2(listObjects);
             List<S3Object> listOfS3Objects = s3Objects.contents();
 
-            // This makes sure that there are at least two logs
-            if (listOfS3Objects.size() > 1) {
-                // This is the latest keys
-                String latestKey = listOfS3Objects.get(listOfS3Objects.size() - 1).key();
-                String previousKey = listOfS3Objects.get(listOfS3Objects.size() - 2).key();
-
-                output = "";
-                StringBuilder str = new StringBuilder(output);
-                for (String key : new String[]{latestKey, previousKey}){
-                    // Gets the new object
-                    GetObjectRequest objectRequest = GetObjectRequest
-                            .builder()
-                            .key(key)
-                            .bucket(bucketName)
-                            .build();
-
-                    // Reads the new object
-                    GZIPInputStream gzinpstr = new GZIPInputStream(s3.getObject(objectRequest));
-                    InputStreamReader inpstr = new InputStreamReader(gzinpstr);
-                    BufferedReader read = new BufferedReader(inpstr);
-                    str.append(read.readLine());
-                }
-                output = str.toString();
+            // If no objects were found, returns
+            if (s3Objects.keyCount()==0){
+                return;
             }
+
+            // Stores the most recent two keys
+            keys.add(listOfS3Objects.get(listOfS3Objects.size() - 1).key());
+            if (s3Objects.keyCount() > 1){
+                keys.add(listOfS3Objects.get(listOfS3Objects.size() - 2).key());
+            }
+
+            // If more than 1000 objects, cycles through the rest
+            while (s3Objects.isTruncated()){
+                // Gets the next batch
+                listObjects = ListObjectsV2Request
+                        .builder()
+                        .bucket(bucketName)
+                        .prefix("firehose/"+currentDateTime.getYear()+"/")
+                        .continuationToken(s3Objects.nextContinuationToken())
+                        .build();
+
+                // Stores the batch
+                s3Objects = s3.listObjectsV2(listObjects);
+                listOfS3Objects = s3Objects.contents();
+
+                // If there's more than one object, we store the most recent two keys
+                // If there is only one object, we keep the latest key from the previous batch,
+                // and store the most recent from this one
+                if (s3Objects.keyCount() > 1){
+                    keys.set(0, listOfS3Objects.get(listOfS3Objects.size() - 1).key());
+                    keys.set(1, listOfS3Objects.get(listOfS3Objects.size() - 2).key());
+                } else {
+                    keys.set(1, listOfS3Objects.get(0).key());
+                }
+            }
+
+            output = "";
+            StringBuilder str = new StringBuilder(output);
+            // Loops through the latest two keys
+            for (String key : keys){
+                // Gets the new object
+                GetObjectRequest objectRequest = GetObjectRequest
+                        .builder()
+                        .key(key)
+                        .bucket(bucketName)
+                        .build();
+
+                // Reads the new object
+                GZIPInputStream gzinpstr = new GZIPInputStream(s3.getObject(objectRequest));
+                InputStreamReader inpstr = new InputStreamReader(gzinpstr);
+                BufferedReader read = new BufferedReader(inpstr);
+                str.append(read.readLine());
+            }
+            // Stores the messages in output
+            output = str.toString();
 
         } catch (S3Exception e) {
             System.err.println(e.awsErrorDetails().errorMessage());
@@ -342,24 +376,27 @@ public class LambdaToS3StepDefinitions {
             output = null;
             findLatestKeysFromEventProcessingS3(endpoint);
 
-            // Splits the batched outputs into individual jsons
-            List<JSONObject> array = separate(output);
+            // If an object was found
+            if (output != null) {
+                // Splits the batched outputs into individual jsons
+                List<JSONObject> array = separate(output);
 
-            // Takes the input file, and adds a timestamp to the component_id
-            Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + "_" + filename+".json").getAbsolutePath());
-            String file = Files.readString(filePath);
-            JSONObject json = new JSONObject(file);
-            JSONObject expectedS3 = addComponentIdAndTimestampFields(json, account);
+                // Takes the input file, and adds a timestamp to the component_id
+                Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + "_" + filename + ".json").getAbsolutePath());
+                String file = Files.readString(filePath);
+                JSONObject json = new JSONObject(file);
+                JSONObject expectedS3 = addComponentIdAndTimestampFields(json, account);
 
-            // Compares all individual jsons with our test data
-            for (JSONObject object : array) {
-                if (object.similar(expectedS3)) {
-                    return true;
+                // Compares all individual jsons with our test data
+                for (JSONObject object : array) {
+                    if (object.similar(expectedS3)) {
+                        return true;
+                    }
                 }
-            }
 
-            Thread.sleep(10000);
-            count ++;
+                Thread.sleep(10000);
+                count++;
+            }
         }
         return false;
     }

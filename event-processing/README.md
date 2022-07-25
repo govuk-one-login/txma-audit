@@ -5,7 +5,7 @@ This project contains source code and supporting files for creating the Event Pr
 ### Event Processor
 - event-processing/event-processor - Code for the application's Lambda function written in TypeScript.
 - event-processing/events - Invocation events that you can use to invoke the function using SAM CLI (See below).
-- event-processing/event-processor/tests - Unit tests for the application code. 
+- event-processing/event-processor/tests - Unit tests for the application code.
 - event-processing/event-processor-template.yaml - A template that defines the Event Processor AWS resources.
 
 The application uses several AWS resources, including Lambda functions, SNS, Kinesis FireHose and S3. These resources are defined in the template files located in the event-processing and audit sub-folders. You can update the template to add AWS resources through the same deployment process that updates your application code.
@@ -56,24 +56,24 @@ To use the SAM CLI, you need the following tools.
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 * Yarn - [Install Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
 
-To build and deploy your application for the first time, run the following in your shell whilst in the event-processing folder:
+To build and deploy your application for the first time, create an S3 bucket to store the code, and run the following in your shell whilst in the event-processing folder:
 
 ```bash
 sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "<environment name>"
-sam deploy --config-file config/samconfig-event-processing.toml --config-env "<environment name>"
+sam deploy --config-file config/samconfig-event-processing.toml --config-env "<environment name>" --s3-bucket "<bucket name>"
 ```
 *Note*: When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket of the lambda zip.
 
 *Deploying Locally*: When deploying locally you can specify the profile to be used for deployment by adding the profile argument e.g.
 
 ```bash
-sam deploy --config-file config/samconfig-event-processing.toml --config-env "<environment name>" --profile <aws profile name>
+sam deploy --config-file config/samconfig-event-processing.toml --config-env "<environment name>" --s3-bucket "<bucket name>" --profile <aws profile name>
 ```
 
 You can also provide overrides directly when calling sam deploy if you need to provide different parameters to the stacks:
 
 ```bash
-sam deploy --config-file config/samconfig-event-processing.toml --config-env "develop" --profile di-dev-admin --resolve-s3 --parameter-overrides ParameterKey=AuditAccountARN,ParameterValue=<ARN of account IAM root> ParameterKey=Environment,ParameterValue=<Environment>
+sam deploy --config-file config/samconfig-event-processing.toml --config-env "<environment name>" --s3-bucket "<bucket name>" --profile <aws profile name> --resolve-s3 --parameter-overrides ParameterKey=AuditAccountARN,ParameterValue=<ARN of account IAM root> ParameterKey=Environment,ParameterValue=<Environment>
 ```
 
 *Note*: When calling SAM deploy against a template containing a Lambda function make sure to omit the template name argument. If this is not done, the source files will be deployed instead of the compiled files located in .aws-sam.
