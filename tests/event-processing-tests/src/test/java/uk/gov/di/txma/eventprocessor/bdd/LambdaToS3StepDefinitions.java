@@ -79,7 +79,7 @@ public class LambdaToS3StepDefinitions {
      * @throws IOException
      */
     @And("the output file {string} is available")
-    public void checkEndpointJSONIsAvailableInTestDataFolder(String fileName, DataTable endpoints) throws IOException{
+    public void checkEndpointJSONIsAvailable(String fileName, DataTable endpoints) throws IOException{
         // Loops through the possible endpoints
         Set<String> extractedKeys = endpoints.asMap().keySet();
         for (String teamName : extractedKeys) {
@@ -239,18 +239,17 @@ public class LambdaToS3StepDefinitions {
 
             // This is used to get the current year, so that we can search the correct s3 files by prefix
             ZonedDateTime currentDateTime = Instant.now().atZone(ZoneOffset.UTC);
-            // Lists latest 1000 objects
+
+            // Lists 1000 objects
             ListObjectsV2Request listObjects = ListObjectsV2Request
                     .builder()
                     .bucket(bucketName)
                     .prefix("firehose/"+currentDateTime.getYear()+"/")
                     .build();
-
-            // Stored the objects
             ListObjectsV2Response s3Objects = s3.listObjectsV2(listObjects);
             List<S3Object> listOfS3Objects = s3Objects.contents();
 
-            // If no objects were found, returns
+            // If no objects were found, returns nothing
             if (s3Objects.keyCount()==0){
                 return;
             }
