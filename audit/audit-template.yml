@@ -159,30 +159,6 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          - !If
-            - DeployTestPolicyForBucket
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt MessageBatchBucket.Arn
-                - !Sub '${MessageBatchBucket.Arn}/*'
-              Principal:
-                AWS: !Ref TestRoleArn
-              Action:
-                - 's3:GetObject'
-                - 's3:ListBucket'
-            - !Ref AWS::NoValue
-          - !If
-            - IsProductionOrStaging
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt MessageBatchBucket.Arn
-                - !Sub '${MessageBatchBucket.Arn}/*'
-              Principal:
-                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-              Action:
-                - 's3:Get*'
-                - 's3:List*'
-            - !Ref AWS::NoValue
 
   MessageBatchBucket:
     Type: AWS::S3::Bucket
@@ -223,6 +199,38 @@ Resources:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
+
+  MessageBatchBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref MessageBatchBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - !If
+            - DeployTestPolicyForBucket
+            - Effect: 'Allow'
+              Resource:
+                - !GetAtt MessageBatchBucket.Arn
+                - !Sub '${MessageBatchBucket.Arn}/*'
+              Principal:
+                AWS: !Ref TestRoleArn
+              Action:
+                - 's3:GetObject'
+                - 's3:ListBucket'
+            - !Ref AWS::NoValue
+          - !If
+            - IsProductionOrStaging
+            - Effect: 'Allow'
+              Resource:
+                - !GetAtt MessageBatchBucket.Arn
+                - !Sub '${MessageBatchBucket.Arn}/*'
+              Principal:
+                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+              Action:
+                - 's3:Get*'
+                - 's3:List*'
+            - !Ref AWS::NoValue
 
   S3NoReceivedObjectsAlarm:
     Type: AWS::CloudWatch::Alarm
