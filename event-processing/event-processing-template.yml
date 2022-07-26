@@ -2312,6 +2312,15 @@ Resources:
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
+  CSLSAppLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "AppEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
   CSLSFireHoseLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProductionOrStaging
