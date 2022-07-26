@@ -141,17 +141,17 @@ Resources:
         - Key: CheckovRulesToSkip
           Value: CKV_AWS_18
 
-  S3AccessLogsBucketPolicy:
+  MessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref MessageBucketLogsBucket
+      Bucket: !Ref MessageBatchBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Sid: "EnableS3Logging"
             Effect: "Allow"
             Resource:
-              - !Sub "${MessageBucketLogsBucket.Arn}/*"
+              - !Sub "${MessageBatchBucket.Arn}/*"
             Principal:
               Service: "logging.s3.amazonaws.com"
             Action:
