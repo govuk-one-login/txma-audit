@@ -1253,23 +1253,21 @@ Resources:
 
   FraudS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: IsProductionOrStaging
     Properties:
       Bucket: !Ref FraudSplunkDeliveryFailureBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - !If
-            - IsProductionOrStaging
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
-                - !Sub '${FraudSplunkDeliveryFailureBucket.Arn}/*'
-              Principal:
-                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-              Action:
-                - 's3:Get*'
-                - 's3:List*'
-            - !Ref AWS::NoValue
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
+              - !Sub '${FraudSplunkDeliveryFailureBucket.Arn}/*'
+            Principal:
+              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+            Action:
+              - 's3:Get*'
+              - 's3:List*'
 
   FraudSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
@@ -1304,25 +1302,22 @@ Resources:
 
   FraudTestS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: IsBuild
+    Condition: DeployTestPolicyForBucket
     Properties:
       Bucket: !Ref FraudSplunkDeliveryTestBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - !If
-            - DeployTestPolicyForBucket
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt FraudSplunkDeliveryTestBucket.Arn
-                - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
-              Principal:
-                AWS: !Ref TestRoleArn
-              Action:
-                - 's3:GetObject'
-                - 's3:ListBucket'
-                - 's3:DeleteObject'
-            - !Ref AWS::NoValue
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
+              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
+            Principal:
+              AWS: !Ref TestRoleArn
+            Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:DeleteObject'
 
   FraudSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
@@ -1346,23 +1341,21 @@ Resources:
 
   PerformanceS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: IsProductionOrStaging
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryFailureBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - !If
-            - IsProductionOrStaging
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
-                - !Sub '${PerformanceSplunkDeliveryFailureBucket.Arn}/*'
-              Principal:
-                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-              Action:
-                - 's3:Get*'
-                - 's3:List*'
-            - !Ref AWS::NoValue
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
+              - !Sub '${PerformanceSplunkDeliveryFailureBucket.Arn}/*'
+            Principal:
+              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+            Action:
+              - 's3:Get*'
+              - 's3:List*'
 
   PerformanceSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
@@ -1397,25 +1390,22 @@ Resources:
 
   PerformanceTestS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: IsBuild
+    Condition: DeployTestPolicyForBucket
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryTestBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - !If
-            - DeployTestPolicyForBucket
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
-                - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
-              Principal:
-                AWS: !Ref TestRoleArn
-              Action:
-                - 's3:GetObject'
-                - 's3:ListBucket'
-                - 's3:DeleteObject'
-            - !Ref AWS::NoValue
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
+              - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
+            Principal:
+              AWS: !Ref TestRoleArn
+            Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:DeleteObject'
 
   PerformanceSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket

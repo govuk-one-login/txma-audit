@@ -48,6 +48,9 @@ Conditions:
     - !Condition IsTestStage
     - !Condition UseTestRole
     - !Condition IsBuild
+  DeployMessageBucketPolicy: !Or
+    - !Condition DeployTestPolicyForBucket
+    - !Condition IsProductionOrStaging
 
 Globals:
   Function:
@@ -202,6 +205,7 @@ Resources:
 
   MessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: DeployMessageBucketPolicy
     Properties:
       Bucket: !Ref MessageBatchBucket
       PolicyDocument:
