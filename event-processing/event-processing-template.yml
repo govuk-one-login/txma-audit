@@ -1146,7 +1146,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: "{{resolve:ssm:AppQueueARN}}"
+      EventSourceArn: "{{resolve:ssm:AppQueueArn}}"
       FunctionName: !Ref AppEventProcessorFunction
 
   AppKMSPolicy:
