@@ -1095,17 +1095,17 @@ Resources:
         - Key: CheckovRulesToSkip
           Value: CKV_AWS_18
 
-  FraudS3AccessLogsBucketPolicy:
+  SplunkDeliveryBucketLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref FraudSplunkDeliveryFailureBucket
+      Bucket: !Ref SplunkDeliveryBucketLogsBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Sid: "EnableS3Logging"
             Effect: "Allow"
             Resource:
-              - !Sub "${FraudSplunkDeliveryFailureBucket.Arn}/*"
+              - !Sub "${SplunkDeliveryBucketLogsBucket.Arn}/*"
             Principal:
               Service: "logging.s3.amazonaws.com"
             Action:
@@ -1113,6 +1113,14 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
+  FraudS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryFailureBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
           - !If
             - IsProductionOrStaging
             - Effect: 'Allow'
@@ -1165,17 +1173,6 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
-            Resource:
-              - !Sub "${FraudSplunkDeliveryTestBucket.Arn}/*"
-            Principal:
-              Service: "logging.s3.amazonaws.com"
-            Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
           - !If
             - DeployTestPolicyForBucket
             - Effect: 'Allow'
@@ -1217,17 +1214,6 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
-            Resource:
-              - !Sub "${PerformanceSplunkDeliveryFailureBucket.Arn}/*"
-            Principal:
-              Service: "logging.s3.amazonaws.com"
-            Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
           - !If
             - IsProductionOrStaging
             - Effect: 'Allow'
@@ -1280,17 +1266,6 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
-            Resource:
-              - !Sub "${PerformanceSplunkDeliveryTestBucket.Arn}/*"
-            Principal:
-              Service: "logging.s3.amazonaws.com"
-            Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
           - !If
             - DeployTestPolicyForBucket
             - Effect: 'Allow'
