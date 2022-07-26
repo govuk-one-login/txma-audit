@@ -35,15 +35,19 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
+  IsBuild: !Or
+    - !Equals [ !Ref Environment, dev ]
+    - !Equals [ !Ref Environment, build ]
   IsTestStage: !Or
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
   UseTestingInterval: !Or
     - !Condition IsTestStage
     - !Equals [ !Ref Environment, dev ]
-  DeployTestPolicy: !And
+  DeployTestPolicyForBucket: !And
     - !Condition IsTestStage
     - !Condition UseTestRole
+    - !Condition IsBuild
 
 Globals:
   Function:
@@ -155,15 +159,18 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt MessageBatchBucket.Arn
-              - !Sub '${MessageBatchBucket.Arn}/*'
-            Principal:
-              AWS: !Ref TestRoleArn
-            Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
+          - !If
+            - DeployTestPolicyForBucket
+            - Effect: 'Allow'
+              Resource:
+                - !GetAtt MessageBatchBucket.Arn
+                - !Sub '${MessageBatchBucket.Arn}/*'
+              Principal:
+                AWS: !Ref TestRoleArn
+              Action:
+                - 's3:GetObject'
+                - 's3:ListBucket'
+            - !Ref AWS::NoValue
           - !If
             - IsProductionOrStaging
             - Effect: 'Allow'
@@ -205,12 +212,12 @@ Resources:
       NotificationConfiguration:
         QueueConfigurations:
           !If
-            - IsProductionOrStaging
-            - - Event: "s3:ObjectCreated:*"
-                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-              - Event: "s3:ObjectRestore:*"
-                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - - !Ref AWS::NoValue
+          - IsProductionOrStaging
+          - - Event: "s3:ObjectCreated:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectRestore:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
