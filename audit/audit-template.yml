@@ -483,6 +483,48 @@ Resources:
         EntryPoints:
           - delimiter-app.ts
 
+  ToFirehoseTesterLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-ToFirehoseTester"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+
+  ToFirehoseTesterFunction:
+    DependsOn:
+      - ToFirehoseTesterLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "ToFirehoseTester"
+      CodeUri: ../audit/lambda
+      PackageType: Zip
+      Handler: toFirehoseTester-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt toFirehoseTesterLambdaAccessRole.Arn
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - toFirehoseTester-app.ts
+
   #
   # CSLS
   #
