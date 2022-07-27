@@ -197,6 +197,7 @@ Resources:
       - IPVLambdaAccessRole
       - IPVPassLambdaAccessRole
       - SPOTLambdaAccessRole
+      - AppLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
@@ -206,6 +207,7 @@ Resources:
         - !Ref IPVLambdaAccessRole
         - !Ref IPVPassLambdaAccessRole
         - !Ref SPOTLambdaAccessRole
+        - !Ref AppLambdaAccessRole
       PolicyName: sns_publish_policy
       PolicyDocument:
         Version: 2012-10-17
@@ -1030,6 +1032,141 @@ Resources:
               - 'kms:Decrypt'
             Resource: '{{resolve:ssm:SPOTKmsArn}}'
 
+  AppEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-App"
+      RetentionInDays: 7
+
+  AppEventProcessorFunction:
+    DependsOn:
+      - AppEventProcessorLogGroup
+      - AppLambdaAccessRole
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "EventProcessorFunction-App"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: event-processor-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt AppLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+          defaultComponentId: "App"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - event-processor-app.ts
+
+  AppEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - AppEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-App"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields App"
+
+  AppEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - AppEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "App Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-App"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields App"
+      Namespace: "lambda/di/txma/errors"
+
+  AppEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - AppEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-App"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors App"
+
+  AppEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - AppEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "App Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-App"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors App"
+      Namespace: "lambda/di/txma/errors"
+
+  AppLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-App"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  AppLambdaEventSourceMapping:
+    DependsOn:
+      - AppEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:AppQueueArn}}"
+      FunctionName: !Ref AppEventProcessorFunction
+
+  AppKMSPolicy:
+    DependsOn:
+      - AppLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref AppLambdaAccessRole
+      PolicyName: app_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:AppKmsArn}}"
+
   FireHoseKMSKey:
     Type: AWS::KMS::Key
     Properties:
@@ -1095,17 +1232,17 @@ Resources:
         - Key: CheckovRulesToSkip
           Value: CKV_AWS_18
 
-  FraudS3AccessLogsBucketPolicy:
+  SplunkDeliveryBucketLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref FraudSplunkDeliveryFailureBucket
+      Bucket: !Ref SplunkDeliveryBucketLogsBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Sid: "EnableS3Logging"
             Effect: "Allow"
             Resource:
-              - !Sub "${FraudSplunkDeliveryFailureBucket.Arn}/*"
+              - !Sub "${SplunkDeliveryBucketLogsBucket.Arn}/*"
             Principal:
               Service: "logging.s3.amazonaws.com"
             Action:
@@ -1113,18 +1250,24 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          - !If
-            - IsProductionOrStaging
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
-                - !Sub '${FraudSplunkDeliveryFailureBucket.Arn}/*'
-              Principal:
-                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-              Action:
-                - 's3:Get*'
-                - 's3:List*'
-            - !Ref AWS::NoValue
+
+  FraudS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsProductionOrStaging
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryFailureBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
+              - !Sub '${FraudSplunkDeliveryFailureBucket.Arn}/*'
+            Principal:
+              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+            Action:
+              - 's3:Get*'
+              - 's3:List*'
 
   FraudSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
@@ -1159,36 +1302,22 @@ Resources:
 
   FraudTestS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: IsBuild
+    Condition: DeployTestPolicyForBucket
     Properties:
       Bucket: !Ref FraudSplunkDeliveryTestBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
+          - Effect: 'Allow'
             Resource:
-              - !Sub "${FraudSplunkDeliveryTestBucket.Arn}/*"
+              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
+              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
             Principal:
-              Service: "logging.s3.amazonaws.com"
+              AWS: !Ref TestRoleArn
             Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          - !If
-            - DeployTestPolicyForBucket
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt FraudSplunkDeliveryTestBucket.Arn
-                - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
-              Principal:
-                AWS: !Ref TestRoleArn
-              Action:
-                - 's3:GetObject'
-                - 's3:ListBucket'
-                - 's3:DeleteObject'
-            - !Ref AWS::NoValue
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:DeleteObject'
 
   FraudSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
@@ -1212,34 +1341,21 @@ Resources:
 
   PerformanceS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: IsProductionOrStaging
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryFailureBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
+          - Effect: 'Allow'
             Resource:
-              - !Sub "${PerformanceSplunkDeliveryFailureBucket.Arn}/*"
+              - !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
+              - !Sub '${PerformanceSplunkDeliveryFailureBucket.Arn}/*'
             Principal:
-              Service: "logging.s3.amazonaws.com"
+              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
             Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          - !If
-            - IsProductionOrStaging
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
-                - !Sub '${PerformanceSplunkDeliveryFailureBucket.Arn}/*'
-              Principal:
-                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-              Action:
-                - 's3:Get*'
-                - 's3:List*'
-            - !Ref AWS::NoValue
+              - 's3:Get*'
+              - 's3:List*'
 
   PerformanceSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
@@ -1274,36 +1390,22 @@ Resources:
 
   PerformanceTestS3AccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: IsBuild
+    Condition: DeployTestPolicyForBucket
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryTestBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
+          - Effect: 'Allow'
             Resource:
-              - !Sub "${PerformanceSplunkDeliveryTestBucket.Arn}/*"
+              - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
+              - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
             Principal:
-              Service: "logging.s3.amazonaws.com"
+              AWS: !Ref TestRoleArn
             Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          - !If
-            - DeployTestPolicyForBucket
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
-                - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
-              Principal:
-                AWS: !Ref TestRoleArn
-              Action:
-                - 's3:GetObject'
-                - 's3:ListBucket'
-                - 's3:DeleteObject'
-            - !Ref AWS::NoValue
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:DeleteObject'
 
   PerformanceSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
@@ -1827,6 +1929,12 @@ Resources:
           - AUTH_REGISTER_CLIENT_REQUEST_ERROR
           - AUTH_UPDATE_CLIENT_REQUEST_RECEIVED
           - AUTH_UPDATE_CLIENT_REQUEST_ERROR
+          - DCMAW_CRI_START
+          - DCMAW_CRI_VC_ISSUED
+          - DCMAW_CRI_END
+          - DCMAW_CRI_ABORT
+          - DCMAW_CRI_4XXERROR
+          - DCMAW_CRI_5XXERROR
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -1866,6 +1974,11 @@ Resources:
           - IPV_SPOT_REQUEST_RECEIVED
           - IPV_SPOT_RESPONSE_APPROVED
           - IPV_SPOT_RESPONSE_REJECTED
+          - DCMAW_CRI_START
+          - DCMAW_CRI_END
+          - DCMAW_CRI_ABORT
+          - DCMAW_CRI_4XXERROR
+          - DCMAW_CRI_5XXERROR
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
@@ -2100,6 +2213,14 @@ Resources:
       FunctionName: !Ref SPOTEventProcessorFunction
       Principal: !Ref TestRoleArn
 
+  AppTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AppEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
   #
   # CSLS
   #
@@ -2155,6 +2276,15 @@ Resources:
     Properties:
       LogGroupName:
         Ref: "SPOTEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSAppLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "AppEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
