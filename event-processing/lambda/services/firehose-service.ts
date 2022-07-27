@@ -1,41 +1,43 @@
 import { Firehose } from 'aws-sdk';
+import { PutRecordBatchOutput } from 'aws-sdk/clients/firehose';
+import { IReIngestRecordInterface } from '../models/re-ingest-record.interface';
 
 export class FirehoseService {
     static async putRecordsToFirehoseStream(
-        streamName,
-        records,
+        streamName: string,
+        records: Array<IReIngestRecordInterface>,
         client: Firehose,
-        attemptsMade,
-        maxAttempts,
+        attemptsMade: number,
+        maxAttempts: number,
     ): Promise<void> {
-        let failedRecords = [];
+        let failedRecords: Array<IReIngestRecordInterface> = [];
         const codes = [];
         let errMsg = '';
-        // if put_record_batch throws for whatever reason, response['xx'] will error out, adding a check for a valid
+        // if putRecordBatch throws for whatever reason, response['xx'] will error out, adding a check for a valid
         // response will prevent this
-        let response;
+        let response: PutRecordBatchOutput = { FailedPutCount: 0, RequestResponses: [] };
         try {
-            response = client.putRecordBatch({
-                DeliveryStreamName: streamName,
-                Records: records,
-            });
+            response = await client
+                .putRecordBatch({
+                    DeliveryStreamName: streamName,
+                    Records: records,
+                })
+                .promise();
         } catch (e) {
             failedRecords = records;
             errMsg = String(e);
         }
 
-        // if there are no failedRecords (put_record_batch succeeded), iterate over the response to gather results
-        if (failedRecords.length <= 0 && response && response['FailedPutCount'] > 0) {
-            response['RequestResponses'].forEach();
+        // if there are no failedRecords (putRecordBatch succeeded), iterate over the response to gather results
+        if (failedRecords.length <= 0 && response && response.FailedPutCount > 0) {
+            for (let idx = 0; idx < response.RequestResponses.length; idx++) {
+                const res = response.RequestResponses[idx];
 
-            for (let idx = 0; idx < response['RequestResponses'].length; idx++) {
-                const res = response['RequestResponses'][idx];
-
-                if (!res['ErrorCode'] || res['ErrorCode'] == undefined || res['ErrorCode'] == '') {
+                if (!res.ErrorCode || res.ErrorCode == undefined || res.ErrorCode == '') {
                     continue;
                 }
 
-                codes.push(res['ErrorCode']);
+                codes.push(res.ErrorCode);
                 failedRecords.push(records[idx]);
             }
 

@@ -4,29 +4,31 @@ import { Context } from 'aws-lambda';
 import { S3Event } from 'aws-lambda/trigger/s3';
 import { DestinationEnum } from './enums/destination.enum';
 import { AuditEvent } from './models/audit-event';
+import { IReIngestRecordInterface } from './models/re-ingest-record.interface';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
-export const handler = async (event: S3Event, context: Context): Promise<void> => {
+export const handler = async (event: S3Event, context?: Context): Promise<void> => {
     const bucket = event.Records[0].s3.bucket.name;
     const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
 
     const streamName = ''; //Environment var stream name
     const maxIngest = 5;
     const firehose = new AWS.Firehose({ region: 'eu-west-2' }); //Environment variable region
-    const s3 = new AWS.S3({ region: 'eu-west-2' }); //Environment variable region
+    const s3 = new S3Client({ region: 'eu-west-2' });
 
     try {
         //get s3 object
-        const s3Response = await s3
-            .getObject({
+        const s3Response = await s3.send(
+            new GetObjectCommand({
                 Bucket: bucket,
                 Key: key,
-            })
-            .promise();
+            }),
+        );
 
         const eventRecord = s3Response.Body?.toString('utf-8');
 
         if (eventRecord) {
-            let recordBatch = [];
+            let recordBatch: Array<IReIngestRecordInterface> = [];
             let destinationS3 = 0;
             let destinationFH = 0;
             const s3Payload = {};
@@ -47,10 +49,6 @@ export const handler = async (event: S3Event, context: Context): Promise<void> =
                     const jsonData = AuditEvent.fromJSONString(JSON.parse(messageLine));
                     const reIngestCount = 1;
                     let s3Payload = {}; //Type?
-
-                    if (!jsonData.hasBeenProcessed) {
-                        jsonData.hasBeenProcessed = true;
-                    }
 
                     if (jsonData.reIngestCount) {
                         jsonData.reIngestCount++;
@@ -90,13 +88,13 @@ export const handler = async (event: S3Event, context: Context): Promise<void> =
                 );
 
                 try {
-                    const destparams = {
+                    const destParams = {
                         Bucket: 'bucketforfailures', //rename
                         Key: 'reIngest-failure-' + key,
                         Body: s3Payload,
                     };
 
-                    const putResult = await s3.putObject(destparams).promise();
+                    const putResult = await s3.putObject(destParams).promise();
 
                     if (putResult.$response.error) {
                         console.log(
@@ -107,7 +105,6 @@ export const handler = async (event: S3Event, context: Context): Promise<void> =
                         console.log(putResult.$response.data);
                     }
 
-                    //How do we handle errors pushing to S3? Or deleting? We dont want duplicate deliveries and we dont want to delete if it hasn't reached maximum retries.
                     if (putResult.$response.httpResponse.statusCode === 200) {
                         const deleteParams = {
                             Bucket: bucket,
