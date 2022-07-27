@@ -102,7 +102,7 @@ public class FirehoseToS3StepDefinitions {
     /**
      * This searches the S3 bucket and checks that the new data contains the output file
      */
-    @Then("the s3 below should have a new event matching the output file")
+    @Then("the audit s3 should have a new event matching the output file")
     public void checkTheObjectInS3IsAsExpected() throws InterruptedException {
         assertTrue(isFoundInS3(), "The message was not found in the S3 bucket.");
     }
