@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { handler } from '../../toFirehoseTester-app';
+import { handler } from '../../firehoseTester-app';
 import { Firehose } from "aws-sdk";
 import {MockedFunction} from "ts-jest";
 
@@ -18,7 +18,7 @@ jest.mock('aws-sdk', () => {
     };
 });
 
-describe('Unit test for app toFirehoseTesterHandler', function () {
+describe('Unit test for app firehoseTesterHandler', function () {
     let consoleMock: jest.SpyInstance;
     let errorMock: jest.SpyInstance;
     let firehose: Firehose;
