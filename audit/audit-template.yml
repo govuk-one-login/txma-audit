@@ -44,6 +44,9 @@ Conditions:
   UseTestingInterval: !Or
     - !Condition IsTestStage
     - !Equals [ !Ref Environment, dev ]
+  DeployTestPolicy: !And
+    - !Condition IsTestStage
+    - !Condition UseTestRole
   DeployTestPolicyForBucket: !And
     - !Condition IsTestStage
     - !Condition UseTestRole
@@ -507,6 +510,7 @@ Resources:
     DependsOn:
       - ToFirehoseTesterLambdaAccessRole
     Type: "AWS::Serverless::Function"
+    Condition: IsTestStage
     Properties:
       FunctionName: "ToFirehoseTester"
       CodeUri: ../audit/lambda
@@ -524,6 +528,14 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - toFirehoseTester-app.ts
+
+  ToFirehoseTesterInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ToFirehoseTesterFunction
+      Principal: !Ref TestRoleArn
 
   #
   # CSLS
