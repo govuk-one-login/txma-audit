@@ -1,6 +1,7 @@
 import { config, Firehose } from "aws-sdk";
+import { IAuditEvent } from './models/audit-event';
 
-export const handler = async (record: String): Promise<void> => {
+export const handler = async (record: IAuditEvent): Promise<void> => {
 
   config.update({ region: process.env.AWS_REGION });
 
@@ -9,7 +10,7 @@ export const handler = async (record: String): Promise<void> => {
   if (process.env.firehoseName){
     var params: Firehose.PutRecordInput = {
         DeliveryStreamName: process.env.firehoseName,
-        Record: { Data: record },
+        Record: { Data: JSON.stringify(record) },
     };
   } else {
     console.error("[ERROR] ENV VAR MISSING: \n missing firehose name enironment variable");
