@@ -488,6 +488,7 @@ Resources:
 
   firehoseTesterLambdaAccessRole:
     Type: AWS::IAM::Role
+    Condition: IsTestStage
     Properties:
       RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-firehoseTester"
       PermissionsBoundary: !If
@@ -503,6 +504,17 @@ Resources:
               Service:
                 - lambda.amazonaws.com
             Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: lambda_kinesis_firehose_PutRecord_policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'firehose:PutRecord'
+                Resource:
+                  - !GetAtt AuditDeliveryStream.Arn
+
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
 
