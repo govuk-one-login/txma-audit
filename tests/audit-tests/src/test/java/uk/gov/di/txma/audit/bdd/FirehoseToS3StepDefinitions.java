@@ -9,10 +9,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Stack;
 import java.util.zip.GZIPInputStream;
@@ -20,11 +24,10 @@ import java.util.zip.GZIPInputStream;
 import org.json.JSONObject;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.firehose.FirehoseClient;
-import software.amazon.awssdk.services.firehose.model.FirehoseException;
-import software.amazon.awssdk.services.firehose.model.PutRecordRequest;
-import software.amazon.awssdk.services.firehose.model.PutRecordResponse;
-import software.amazon.awssdk.services.firehose.model.Record;
+import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.lambda.model.InvokeRequest;
+import software.amazon.awssdk.services.lambda.model.InvokeResponse;
+import software.amazon.awssdk.services.lambda.model.LambdaException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -33,6 +36,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -71,30 +75,29 @@ public class FirehoseToS3StepDefinitions {
      */
     @When("the message is sent to firehose")
     public void sendMessageToFirehose() {
-        String firehoseName = "AuditFireHose-" + System.getenv("TEST_ENVIRONMENT");
+        String functionName = "firehoseTester";
 
-        // Opens a firehose client
-        try (FirehoseClient firehoseClient = FirehoseClient.builder()
+        // Opens the lambda client
+        try (LambdaClient awsLambda = LambdaClient.builder()
                 .region(region)
-                .build()) {
+                .build()){
 
-            // Creates a record readable by Firehose
-            SdkBytes input = SdkBytes.fromUtf8String(SNSInput);
-            Record record = Record.builder()
-                    .data(input)
+            // Invoke the lambda with the input data
+            SdkBytes payload = SdkBytes.fromUtf8String(SNSInput);
+            InvokeRequest request = InvokeRequest.builder()
+                    .functionName(functionName)
+                    .logType("Tail")
+                    .payload(payload)
                     .build();
+            InvokeResponse invokedResponse = awsLambda.invoke(request);
 
-            // Writes to firehose
-            PutRecordRequest recordRequest = PutRecordRequest.builder()
-                    .deliveryStreamName(firehoseName)
-                    .record(record)
-                    .build();
+            // Checks the data is sent, and records the Request ID to track it
+            assertEquals(200, invokedResponse.sdkHttpResponse().statusCode(), "A problem calling the lambda. HTTP response was incorrect.");
+            String invokedLambdasLog = new String (Base64.getDecoder().decode(invokedResponse.logResult()), StandardCharsets.UTF_8);
 
-            // Checks the response
-            PutRecordResponse firehoseRecordResponse = firehoseClient.putRecord(recordRequest);
-            assertEquals(200, firehoseRecordResponse.sdkHttpResponse().statusCode(), "A problem calling the lambda. HTTP response was incorrect.");
-        } catch (FirehoseException e) {
-            System.out.println(e.getLocalizedMessage());
+            assertFalse(invokedLambdasLog.contains("[ERROR]"), "An error occurred when invoking the Lambda");
+        } catch (LambdaException e) {
+            System.err.println(e.getMessage());
             System.exit(1);
         }
     }
@@ -178,10 +181,14 @@ public class FirehoseToS3StepDefinitions {
                 .region(region)
                 .build()){
 
+            // This is used to get the current year, so that we can search the correct s3 files by prefix
+            ZonedDateTime currentDateTime = Instant.now().atZone(ZoneOffset.UTC);
+
             // Lists 1000 objects
             ListObjectsV2Request listObjects = ListObjectsV2Request
                     .builder()
                     .bucket(bucketName)
+                    .prefix("firehose/"+currentDateTime.getYear()+"/")
                     .build();
             ListObjectsV2Response res = s3.listObjectsV2(listObjects);
             List<S3Object> objects = res.contents();
@@ -203,6 +210,7 @@ public class FirehoseToS3StepDefinitions {
                 listObjects = ListObjectsV2Request
                         .builder()
                         .bucket(bucketName)
+                        .prefix("firehose/"+currentDateTime.getYear()+"/")
                         .continuationToken(res.nextContinuationToken())
                         .build();
 
