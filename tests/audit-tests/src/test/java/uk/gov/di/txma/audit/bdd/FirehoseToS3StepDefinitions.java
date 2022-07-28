@@ -18,7 +18,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Stack;
 import java.util.zip.GZIPInputStream;
 
 import org.json.JSONObject;
@@ -41,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class FirehoseToS3StepDefinitions {
-    String output;
+    List<JSONObject> output = new ArrayList<>();
     String SNSInput;
     JSONObject expectedS3;
     Long timestamp = Instant.now().toEpochMilli();
@@ -125,49 +124,6 @@ public class FirehoseToS3StepDefinitions {
     }
 
     /**
-     * This separates the batched jsons into a json array
-     *
-     * @param input The batched jsons
-     * @return      The array of jsons
-     */
-    private List<JSONObject> separate(String input){
-        List<JSONObject> output = new ArrayList<>();
-        for (int index = 0; index < input.length(); ) {
-            if (input.charAt(index) == '{') {
-                int close = findBracket(input, index);
-                output.add(new JSONObject(input.substring(index, close + 1)));
-                index = close + 1;
-            } else {
-                index++;
-            }
-        }
-        return output;
-    }
-
-    /**
-     * This find where the corresponding `}` bracket is for the current json
-     *
-     * @param input The batch of jsons to be separated
-     * @param start The index of the opening `{` for the current within the batched jsons
-     * @return      The index of the corresponding `}` bracket
-     */
-    private static int findBracket(String input, int start) {
-        Stack<Integer> stack = new Stack<>();
-        for (int index = start; index < input.length(); index++) {
-            if (input.charAt(index) == '{') {
-                stack.push(index);
-            } else if (input.charAt(index) == '}') {
-                stack.pop();
-                if (stack.isEmpty()) {
-                    return index;
-                }
-            }
-        }
-        return 0;
-    }
-
-
-    /**
      * Finds the latest 2 keys in the S3 bucket and saves the contents in the output variable
      */
     private void findLatestKeysFromAuditS3(){
@@ -229,8 +185,6 @@ public class FirehoseToS3StepDefinitions {
                 }
             }
 
-            output = "";
-            StringBuilder str = new StringBuilder(output);
             // Loops through the latest two keys
             for (String key : keys){
                 // Gets the new object
@@ -244,10 +198,11 @@ public class FirehoseToS3StepDefinitions {
                 GZIPInputStream gzinpstr = new GZIPInputStream(s3.getObject(objectRequest));
                 InputStreamReader inpstr = new InputStreamReader(gzinpstr);
                 BufferedReader read = new BufferedReader(inpstr);
-                str.append(read.readLine());
+                String line;
+                while ((line = read.readLine()) != null) {
+                    output.add(new JSONObject(line));
+                }
             }
-            // Stores the messages in output
-            output = str.toString();
 
         } catch (S3Exception e) {
             System.err.println(e.awsErrorDetails().errorMessage());
@@ -270,16 +225,14 @@ public class FirehoseToS3StepDefinitions {
         // Count < 11 is enough time for it to be processed by the Firehose
         while (count < 11) {
             // Checks for latest key and saves the contents in the output variable
-            output = null;
+            output = new ArrayList<>();
             findLatestKeysFromAuditS3();
 
             // If an object was found
             if (output != null) {
-                // Splits the batched outputs into individual jsons
-                List<JSONObject> array = separate(output);
 
                 // Compares all individual jsons with our test data
-                for (JSONObject object : array) {
+                for (JSONObject object : output) {
                     if (object.similar(expectedS3)) {
                         return true;
                     }
