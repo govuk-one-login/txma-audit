@@ -532,6 +532,9 @@ Resources:
       Timeout: 30
       Role: !GetAtt firehoseTesterLambdaAccessRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+      Environment:
+        Variables:
+          firehoseName: !Ref AuditDeliveryStream
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
