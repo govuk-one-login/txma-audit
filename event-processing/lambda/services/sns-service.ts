@@ -11,17 +11,6 @@ export class SnsService {
 
         const cleanMessage = ObjectHelper.removeEmpty(message);
 
-        const params: PublishCommandInput = {
-            Message: JSON.stringify(cleanMessage),
-            TopicArn: topicArn,
-            MessageAttributes: {
-                eventName: {
-                    DataType: 'String',
-                    StringValue: message.event_name,
-                },
-            },
-        };
-
         try {
             const publishResponse: PublishCommandOutput = await this.client.send(
                 new PublishCommand({

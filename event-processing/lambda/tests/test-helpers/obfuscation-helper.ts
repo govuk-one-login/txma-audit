@@ -30,6 +30,7 @@ export class ObfuscationHelper {
             extensions: {
                 response: 'Authentication successful',
             },
+            reIngestCount: 0,
         };
     }
 }

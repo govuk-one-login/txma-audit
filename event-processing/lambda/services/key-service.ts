@@ -1,23 +1,18 @@
-import AWS from 'aws-sdk';
-import { AWSError } from 'aws-sdk';
-import { PromiseResult } from 'aws-sdk/lib/request';
-import { GetSecretValueResponse } from 'aws-sdk/clients/secretsmanager';
 import { HmacException } from '../exceptions/hmac-exception';
+import { GetSecretValueCommand, GetSecretValueResponse, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
 
 export class KeyService {
+    static client = new SecretsManagerClient({ region: 'eu-west-2' });
+
     static async getHmacKey(): Promise<string> {
-        // Load the AWS SDK
-        const region = 'eu-west-2';
         const secretArn: string | undefined = process.env.SECRET_ARN;
         let secret: string;
-        let data: PromiseResult<GetSecretValueResponse, AWSError>;
+        let data: GetSecretValueResponse;
 
         if (secretArn == undefined) throw new HmacException('Unable to load secret ARN from environment');
 
-        const secretManager = new AWS.SecretsManager({ region: region });
-
         try {
-            data = await secretManager.getSecretValue({ SecretId: secretArn }).promise();
+            data = await this.client.send(new GetSecretValueCommand({ SecretId: secretArn }));
         } catch (e) {
             throw new HmacException('Unable to load secret from secret manager', e as Error);
         }

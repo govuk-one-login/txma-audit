@@ -52,7 +52,6 @@ export const handler = async (event: S3Event, context?: Context): Promise<void> 
                 }
 
                 const jsonData = AuditEvent.fromJSONString(event);
-                const reIngestCount = 1;
                 let s3Payload = {}; //Type?
 
                 if (jsonData.reIngestCount) {
@@ -61,7 +60,7 @@ export const handler = async (event: S3Event, context?: Context): Promise<void> 
                     jsonData.reIngestCount = 1;
                 }
 
-                if (reIngestCount > maxIngest) {
+                if (jsonData.reIngestCount > maxIngest) {
                     deleteFromS3 += 1;
                     destination = DestinationEnum.s3;
                     s3Payload = s3Payload + JSON.stringify(jsonData) + '\n';

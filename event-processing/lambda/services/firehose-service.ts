@@ -1,7 +1,5 @@
 import { IReIngestRecordInterface } from '../models/re-ingest-record.interface';
 import { FirehoseClient, PutRecordBatchCommand, PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose';
-import { DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { ErrorService } from './error-service';
 
 export class FirehoseService {
     static client = new FirehoseClient({ region: 'eu-west-2' });
@@ -63,6 +61,7 @@ export class FirehoseService {
                         await this.putRecordsToFirehoseStream(streamName, failedRecords, attemptsMade + 1, maxAttempts);
                     } catch (error) {
                         console.log(`Error sending records to firehose. ${error}`);
+                        reject(`Error sending records to firehose. ${error}`);
                     }
                 } else {
                     reject(`Could not put records after ${maxAttempts} attempts. ${errMsg}`);
