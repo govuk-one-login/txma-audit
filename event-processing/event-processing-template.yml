@@ -1296,24 +1296,24 @@ Resources:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
 
-    FraudSplunkDeliveryTestBucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Condition: IsBuildOrDev
-      Properties:
-        Bucket: !Ref FraudSplunkDeliveryTestBucket
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt FraudSplunkDeliveryTestBucket.Arn
-                - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
-              Principal:
-                AWS: !Ref TestRoleArn
-              Action:
-                - 's3:GetObject'
-                - 's3:ListBucket'
-                - 's3:DeleteObject'
+  FraudSplunkDeliveryTestBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsBuildOrDev
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
+              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
+            Principal:
+              AWS: !Ref TestRoleArn
+            Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:DeleteObject'
 
   FraudSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
