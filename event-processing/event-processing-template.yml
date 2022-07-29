@@ -2350,42 +2350,6 @@ Resources:
       FunctionName: !Ref AuthEventProcessorFunction
       Principal: !Ref TestRoleArn
 
-  FraudSplunkTestBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: DeployTestPolicyForBucket
-    Properties:
-      Bucket: !Ref FraudSplunkDeliveryTestBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
-              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
-            Principal:
-              AWS: !Ref TestRoleArn
-            Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-
-  PerformanceSplunkTestBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: DeployTestPolicyForBucket
-    Properties:
-      Bucket: !Ref PerformanceSplunkDeliveryTestBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
-              - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
-            Principal:
-              AWS: !Ref TestRoleArn
-            Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-
   #
   # CSLS
   #
