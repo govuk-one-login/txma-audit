@@ -6,7 +6,7 @@ beta_features = true
 beta_features = true
 
 [default.deploy.parameters]
-stack_name = "di-txma-audit-develop"
+stack_name = "audit"
 region = "eu-west-2"
 capabilities = "CAPABILITY_NAMED_IAM"
 tags = "project=\"di-txma-audit\" stage=\"develop\""
@@ -17,7 +17,7 @@ parameter_overrides=[
 ]
 
 [dev.deploy.parameters]
-stack_name = "di-txma-audit-develop"
+stack_name = "audit"
 region = "eu-west-2"
 capabilities = "CAPABILITY_NAMED_IAM"
 tags = "project=\"di-txma-audit\" stage=\"develop\""
@@ -28,7 +28,7 @@ parameter_overrides=[
 ]
 
 [build.deploy.parameters]
-stack_name = "di-txma-audit-build"
+stack_name = "audit"
 region = "eu-west-2"
 capabilities = "CAPABILITY_NAMED_IAM"
 tags = "project=\"di-txma-audit\" stage=\"build\""
@@ -37,7 +37,7 @@ parameter_overrides=[
 ]
 
 [staging.deploy.parameters]
-stack_name = "di-txma-audit-staging"
+stack_name = "audit"
 region = "eu-west-2"
 capabilities = "CAPABILITY_NAMED_IAM"
 tags = "project=\"di-txma-audit\" stage=\"staging\""
@@ -46,7 +46,7 @@ parameter_overrides=[
 ]
 
 [production.deploy.parameters]
-stack_name = "di-txma-audit-production"
+stack_name = "audit"
 region = "eu-west-2"
 capabilities = "CAPABILITY_NAMED_IAM"
 tags = "project=\"di-txma-audit\" stage=\"production\""
@@ -55,7 +55,7 @@ parameter_overrides=[
 ]
 
 [integration.deploy.parameters]
-stack_name = "di-txma-audit-integration"
+stack_name = "audit"
 region = "eu-west-2"
 capabilities = "CAPABILITY_NAMED_IAM"
 tags = "project=\"di-txma-audit\" stage=\"integration\""
