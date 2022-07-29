@@ -1,17 +1,17 @@
-import { config, SNS } from 'aws-sdk';
 import { IAuditEvent } from '../models/audit-event';
-import { PublishInput } from 'aws-sdk/clients/sns';
 import { ObjectHelper } from '../utilities/object-helper';
+import { PublishCommand, PublishCommandInput, PublishCommandOutput, SNSClient } from '@aws-sdk/client-sns';
+import { ErrorService } from './error-service';
 
 export class SnsService {
+    static client = new SNSClient({ region: 'eu-west-2' });
+
     static async publishMessageToSNS(message: IAuditEvent, topicArn: string | undefined): Promise<void> {
         console.log(`Topic ARN: ${topicArn}`);
 
-        config.update({ region: process.env.AWS_REGION });
-
         const cleanMessage = ObjectHelper.removeEmpty(message);
 
-        const params: PublishInput = {
+        const params: PublishCommandInput = {
             Message: JSON.stringify(cleanMessage),
             TopicArn: topicArn,
             MessageAttributes: {
@@ -22,17 +22,28 @@ export class SnsService {
             },
         };
 
-        const sns = new SNS({ apiVersion: '2010-03-31' });
+        try {
+            const publishResponse: PublishCommandOutput = await this.client.send(
+                new PublishCommand({
+                    Message: JSON.stringify(cleanMessage),
+                    TopicArn: topicArn,
+                    MessageAttributes: {
+                        eventName: {
+                            DataType: 'String',
+                            StringValue: message.event_name,
+                        },
+                    },
+                }),
+            );
 
-        const publishTextPromise = sns.publish(params).promise();
-
-        await publishTextPromise
-            .then((data) => {
-                console.log('MessageID is ' + data.MessageId);
-            })
-            .catch((err) => {
-                console.error(err, err.stack);
-            });
+            if (publishResponse.MessageId) {
+                console.log('MessageID is ' + publishResponse.MessageId);
+            }
+        } catch (error) {
+            const errorWithMessage = ErrorService.toErrorWithMessage(error);
+            console.log(`[ERROR] Publish to SNS error:\n Error: ${errorWithMessage.message}`, errorWithMessage.stack);
+            throw error;
+        }
 
         return;
     }

@@ -1,5 +1,6 @@
 /* istanbul ignore file */
 import { S3Event } from 'aws-lambda/trigger/s3';
+import stream, { Readable } from 'stream';
 
 export class ReIngestHelper {
     static exampleS3Event(): S3Event {
@@ -42,5 +43,14 @@ export class ReIngestHelper {
                 },
             ],
         };
+    }
+
+    static createReadableStream(message: string): Readable {
+        const rs = new stream.Readable({ objectMode: true });
+        rs.push(Buffer.from(message));
+        rs.push(null);
+        rs.pipe(process.stdout);
+
+        return rs;
     }
 }
