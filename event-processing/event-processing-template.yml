@@ -35,19 +35,15 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
-  IsBuild: !Or
+  IsBuildOrDevOrDev: !Or
     - !Equals [ !Ref Environment, dev ]
     - !Equals [ !Ref Environment, build ]
-  IsTestStage: !Or
+  IsPipelineTestStage: !Or
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
-  DeployTestPolicy: !And
-    - !Condition IsTestStage
+  DeployTestRolePolicy: !And
+    - !Condition IsPipelineTestStage
     - !Condition UseTestRole
-  DeployTestPolicyForBucket: !And
-    - !Condition IsTestStage
-    - !Condition UseTestRole
-    - !Condition IsBuild
 
 Globals:
   Function:
@@ -1300,28 +1296,9 @@ Resources:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
 
-  FraudTestS3AccessLogsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: DeployTestPolicyForBucket
-    Properties:
-      Bucket: !Ref FraudSplunkDeliveryTestBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
-              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
-            Principal:
-              AWS: !Ref TestRoleArn
-            Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:DeleteObject'
-
   FraudSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
-    Condition: IsBuild
+    Condition: IsBuildOrDev
     Properties:
       BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-test"
       VersioningConfiguration:
@@ -1388,28 +1365,9 @@ Resources:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
 
-  PerformanceTestS3AccessLogsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: DeployTestPolicyForBucket
-    Properties:
-      Bucket: !Ref PerformanceSplunkDeliveryTestBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
-              - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
-            Principal:
-              AWS: !Ref TestRoleArn
-            Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:DeleteObject'
-
   PerformanceSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
-    Condition: IsBuild
+    Condition: IsBuildOrDev
     Properties:
       BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-test"
       VersioningConfiguration:
@@ -1536,7 +1494,7 @@ Resources:
     DependsOn:
       - FraudDeliveryStreamRole
     Type: AWS::IAM::Policy
-    Condition: IsBuild
+    Condition: IsBuildOrDev
     Properties:
       Roles:
         - !Ref FraudDeliveryStreamRole
@@ -1630,7 +1588,7 @@ Resources:
     DependsOn:
       - PerformanceDeliveryStreamRole
     Type: AWS::IAM::Policy
-    Condition: IsBuild
+    Condition: IsBuildOrDev
     Properties:
       Roles:
         - !Ref PerformanceDeliveryStreamRole
@@ -1715,10 +1673,7 @@ Resources:
             S3Configuration:
               BucketARN: !GetAtt FraudSplunkDeliveryFailureBucket.Arn
               BufferingHints:
-                IntervalInSeconds: !If
-                  - IsBuild
-                  - 60
-                  - 900
+                IntervalInSeconds: 900
                 SizeInMBs: 128
               CloudWatchLoggingOptions:
                 Enabled: true
@@ -1739,15 +1694,12 @@ Resources:
           - !Ref "AWS::NoValue"
       ExtendedS3DestinationConfiguration:
         Fn::If:
-          - IsBuild
+          - IsBuildOrDev
           -
             Prefix: "firehose/"
             BucketARN: !GetAtt FraudSplunkDeliveryTestBucket.Arn
             BufferingHints:
-              IntervalInSeconds: !If
-                - IsBuild
-                - 60
-                - 900
+              IntervalInSeconds: 60
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt FraudDeliveryStreamRole.Arn
@@ -1795,10 +1747,7 @@ Resources:
             S3Configuration:
               BucketARN: !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
               BufferingHints:
-                IntervalInSeconds: !If
-                  - IsBuild
-                  - 60
-                  - 900
+                IntervalInSeconds: 900
                 SizeInMBs: 128
               CloudWatchLoggingOptions:
                 Enabled: true
@@ -1819,15 +1768,12 @@ Resources:
           - !Ref "AWS::NoValue"
       ExtendedS3DestinationConfiguration:
         Fn::If:
-          - IsBuild
+          - IsBuildOrDev
           -
             Prefix: "firehose/"
             BucketARN: !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
             BufferingHints:
-              IntervalInSeconds: !If
-                - IsBuild
-                - 60
-                - 900
+              IntervalInSeconds: 60
               SizeInMBs: 128
             CompressionFormat: "GZIP"
             RoleARN: !GetAtt PerformanceDeliveryStreamRole.Arn
@@ -2167,7 +2113,7 @@ Resources:
 
   KBVTestInvokePermission:
     Type: AWS::Lambda::Permission
-    Condition: DeployTestPolicy
+    Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref KBVEventProcessorFunction
@@ -2175,7 +2121,7 @@ Resources:
 
   KBVAddressTestInvokePermission:
     Type: AWS::Lambda::Permission
-    Condition: DeployTestPolicy
+    Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref KBVAddressEventProcessorFunction
@@ -2183,7 +2129,7 @@ Resources:
 
   KBVFraudTestInvokePermission:
     Type: AWS::Lambda::Permission
-    Condition: DeployTestPolicy
+    Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref KBVFraudEventProcessorFunction
@@ -2191,7 +2137,7 @@ Resources:
 
   IPVTestInvokePermission:
     Type: AWS::Lambda::Permission
-    Condition: DeployTestPolicy
+    Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref IPVEventProcessorFunction
@@ -2199,7 +2145,7 @@ Resources:
 
   IPVPassTestInvokePermission:
     Type: AWS::Lambda::Permission
-    Condition: DeployTestPolicy
+    Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref IPVPassEventProcessorFunction
@@ -2207,7 +2153,7 @@ Resources:
 
   SPOTTestInvokePermission:
     Type: AWS::Lambda::Permission
-    Condition: DeployTestPolicy
+    Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref SPOTEventProcessorFunction
@@ -2215,7 +2161,7 @@ Resources:
 
   AppTestInvokePermission:
     Type: AWS::Lambda::Permission
-    Condition: DeployTestPolicy
+    Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref AppEventProcessorFunction

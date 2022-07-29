@@ -35,24 +35,17 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
-  IsBuild: !Or
-    - !Equals [ !Ref Environment, dev ]
-    - !Equals [ !Ref Environment, build ]
-  IsTestStage: !Or
+  IsPipelineTestStage: !Or
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
-  UseTestingInterval: !Or
-    - !Condition IsTestStage
+  IsTestableEnv: !Or
+    - !Condition IsPipelineTestStage
     - !Equals [ !Ref Environment, dev ]
-  DeployTestPolicy: !And
-    - !Condition IsTestStage
+  DeployTestRolePolicy: !And
+    - !Condition IsPipelineTestStage
     - !Condition UseTestRole
-  DeployTestPolicyForBucket: !And
-    - !Condition IsTestStage
-    - !Condition UseTestRole
-    - !Condition IsBuild
   DeployMessageBucketPolicy: !Or
-    - !Condition DeployTestPolicyForBucket
+    - !Condition DeployTestRolePolicy
     - !Condition IsProductionOrStaging
 
 Globals:
@@ -215,7 +208,7 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - !If
-            - DeployTestPolicyForBucket
+            - DeployTestRolePolicy
             - Effect: 'Allow'
               Resource:
                 - !GetAtt MessageBatchBucket.Arn
@@ -290,7 +283,7 @@ Resources:
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
           IntervalInSeconds: !If
-            - UseTestingInterval
+            - IsTestableEnv
             - 60
             - 900
           SizeInMBs: 128
@@ -488,7 +481,7 @@ Resources:
 
   firehoseTesterLambdaAccessRole:
     Type: AWS::IAM::Role
-    Condition: IsTestStage
+    Condition: IsTestableEnv
     Properties:
       RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-firehoseTester"
       PermissionsBoundary: !If
@@ -522,7 +515,7 @@ Resources:
     DependsOn:
       - firehoseTesterLambdaAccessRole
     Type: "AWS::Serverless::Function"
-    Condition: IsTestStage
+    Condition: IsTestableEnv
     Properties:
       FunctionName: "firehoseTester"
       CodeUri: ../audit/lambda
@@ -546,7 +539,7 @@ Resources:
 
   firehoseTesterInvokePermission:
     Type: AWS::Lambda::Permission
-    Condition: DeployTestPolicy
+    Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref firehoseTesterFunction
