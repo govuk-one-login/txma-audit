@@ -6,7 +6,7 @@ beta_features = true
 beta_features = true
 
 [default.deploy.parameters]
-stack_name = "di-txma-event-processing-develop"
+stack_name = "event-processing"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"develop\""
 capabilities = "CAPABILITY_NAMED_IAM"
@@ -17,7 +17,7 @@ parameter_overrides=[
 ]
 
 [dev.deploy.parameters]
-stack_name = "di-txma-event-processing-develop"
+stack_name = "event-processing"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"develop\""
 capabilities = "CAPABILITY_NAMED_IAM"
@@ -28,7 +28,7 @@ parameter_overrides=[
 ]
 
 [build.deploy.parameters]
-stack_name = "di-txma-event-processing-build"
+stack_name = "event-processing"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"build\""
 capabilities = "CAPABILITY_NAMED_IAM"
@@ -37,7 +37,7 @@ parameter_overrides=[
 ]
 
 [staging.deploy.parameters]
-stack_name = "di-txma-event-processing-staging"
+stack_name = "event-processing"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"staging\""
 capabilities = "CAPABILITY_NAMED_IAM"
@@ -46,7 +46,7 @@ parameter_overrides=[
 ]
 
 [production.deploy.parameters]
-stack_name = "di-txma-event-processing-production"
+stack_name = "event-processing"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"production\""
 capabilities = "CAPABILITY_NAMED_IAM"
@@ -55,7 +55,7 @@ parameter_overrides=[
 ]
 
 [integration.deploy.parameters]
-stack_name = "di-txma-event-processing-integration"
+stack_name = "event-processing"
 region = "eu-west-2"
 tags = "project=\"di-txma-event_processor\" stage=\"integration\""
 capabilities = "CAPABILITY_NAMED_IAM"

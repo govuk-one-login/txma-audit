@@ -36,23 +36,23 @@ To use the SAM CLI, you need the following tools.
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 * Yarn - [Install Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
 
-To build and deploy your application for the first time, run the following in your shell whilst in the audit folder:
+To build and deploy your application for the first time, create an S3 bucket to store the code, and run the following in your shell whilst in the audit folder:
 
 ```bash
 sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env "<environment name>"
-sam deploy --config-file config/samconfig-audit.toml --config-env "<environment name>"
+sam deploy --config-file config/samconfig-audit.toml --config-env "<environment name>" --s3-bucket "<bucket name>"
 ```
 
 *Deploying Locally*: When deploying locally you can specify the profile to be used for deployment by adding the profile argument e.g.
 
 ```bash
-sam deploy --config-file config/samconfig-audit.toml --config-env "<environment name>" --profile <aws profile name>
+sam deploy --config-file config/samconfig-audit.toml --config-env "<environment name>" --s3-bucket "<bucket name>" --profile <aws profile name>
 ```
 
 You can also provide overrides directly when calling sam deploy if you need to provide different parameters to the stacks:
 
 ```bash
-sam deploy --config-file config/samconfig-event-processing.toml --config-env "develop" --profile <aws profile name> --resolve-s3 --parameter-overrides ParameterKey=AuditAccountARN,ParameterValue=<ARN of account IAM root> ParameterKey=Environment,ParameterValue=<Environment>
+sam deploy --config-file config/samconfig-event-processing.toml --config-env "<environment name>" --s3-bucket "<bucket name>" --profile <aws profile name> --resolve-s3 --parameter-overrides ParameterKey=AuditAccountARN,ParameterValue=<ARN of account IAM root> ParameterKey=Environment,ParameterValue=<Environment>
 ```
 
 #### Available Environments
