@@ -1959,6 +1959,7 @@ Resources:
           - IPV_SPOT_RESPONSE_APPROVED
           - IPV_SPOT_RESPONSE_REJECTED
           - DCMAW_CRI_START
+          - DCMAW_CRI_VC_ISSUED
           - DCMAW_CRI_END
           - DCMAW_CRI_ABORT
           - DCMAW_CRI_4XXERROR
