@@ -2120,6 +2120,7 @@ Resources:
           - AUTH_DELETE_ACCOUNT
           - AUTH_SEND_OTP
           - DCMAW_CRI_START
+          - DCMAW_CRI_VC_ISSUED
           - DCMAW_CRI_END
           - DCMAW_CRI_ABORT
           - DCMAW_CRI_4XXERROR
