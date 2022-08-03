@@ -2068,6 +2068,7 @@ Resources:
       SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
       FilterPolicy:
         eventName:
+          - AUTH_IPV_AUTHORISATION_REQUESTED
           - IPV_JOURNEY_START
           - IPV_REDIRECT_TO_CRI
           - IPV_PASSPORT_CRI_START
