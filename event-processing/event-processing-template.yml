@@ -194,6 +194,7 @@ Resources:
       - IPVPassLambdaAccessRole
       - SPOTLambdaAccessRole
       - AppLambdaAccessRole
+      - AuthLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
@@ -204,6 +205,7 @@ Resources:
         - !Ref IPVPassLambdaAccessRole
         - !Ref SPOTLambdaAccessRole
         - !Ref AppLambdaAccessRole
+        - !Ref AuthLambdaAccessRole
       PolicyName: sns_publish_policy
       PolicyDocument:
         Version: 2012-10-17
@@ -1163,6 +1165,141 @@ Resources:
             Resource:
               - "{{resolve:ssm:AppKmsArn}}"
 
+  AuthEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-Auth"
+      RetentionInDays: 7
+
+  AuthEventProcessorFunction:
+    DependsOn:
+      - AuthEventProcessorLogGroup
+      - AuthLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-Auth"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: event-processor-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt AuthLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+          defaultComponentId: "Auth"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - event-processor-app.ts
+
+  AuthEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - AuthEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-Auth"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields Auth"
+
+  AuthEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - AuthEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Auth Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-Auth"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields Auth"
+      Namespace: "lambda/di/txma/errors"
+
+  AuthEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - AuthEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-Auth"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors Auth"
+
+  AuthEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - AuthEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Auth Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-Auth"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors Auth"
+      Namespace: "lambda/di/txma/errors"
+
+  AuthLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-Auth"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  AuthLambdaEventSourceMapping:
+    DependsOn:
+      - AuthEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:AuthQueueARN}}"
+      FunctionName: !Ref AuthEventProcessorFunction
+
+  AuthKMSPolicy:
+    DependsOn:
+      - AuthLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref AuthLambdaAccessRole
+      PolicyName: auth_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:AuthKmsArn}}"
+
   FireHoseKMSKey:
     Type: AWS::KMS::Key
     Properties:
@@ -1898,6 +2035,7 @@ Resources:
           - AUTH_UPDATE_PROFILE_PHONE_NUMBER
           - AUTH_UPDATE_PROFILE_CONSENT_UPDATED
           - AUTH_UPDATE_PROFILE_TERMS_CONDS_ACCEPTANCE
+          - AUTH_PROFILE_AUTH_APP
           - AUTH_MFA_INVALID_CODE_REQUEST
           - AUTH_MFA_MISMATCHED_EMAIL
           - AUTH_MFA_MISSING_PHONE_NUMBER
@@ -1930,6 +2068,7 @@ Resources:
       SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
       FilterPolicy:
         eventName:
+          - AUTH_IPV_AUTHORISATION_REQUESTED
           - IPV_JOURNEY_START
           - IPV_REDIRECT_TO_CRI
           - IPV_PASSPORT_CRI_START
@@ -1958,6 +2097,28 @@ Resources:
           - IPV_SPOT_REQUEST_RECEIVED
           - IPV_SPOT_RESPONSE_APPROVED
           - IPV_SPOT_RESPONSE_REJECTED
+          - AUTH_AUTH_CODE_ISSUED
+          - AUTH_LOG_OUT_SUCCESS
+          - AUTH_ACCOUNT_TEMPORARILY_LOCKED
+          - AUTH_INVALID_CREDENTIALS
+          - AUTH_NO_ACCOUNT_WITH_EMAIL
+          - AUTH_CODE_MAX_RETRIES_REACHED
+          - AUTH_CODE_VERIFIED
+          - AUTH_LOG_IN_SUCCESS
+          - AUTH_CHECK_USER_INVALID_EMAIL
+          - AUTH_CHECK_USER_NO_ACCOUNT_WITH_EMAIL
+          - AUTH_CHECK_USER_KNOWN_EMAIL
+          - AUTH_CREATE_ACCOUNT_EMAIL_ALREADY_EXISTS
+          - AUTH_CREATE_ACCOUNT
+          - AUTH_CLIENT_INFO_FOUND
+          - AUTH_UPDATE_PROFILE_REQUEST_RECEIVED
+          - AUTH_UPDATE_PROFILE_REQUEST_ERROR
+          - AUTH_MFA_MISMATCHED_EMAIL
+          - AUTH_MFA_MISSING_PHONE_NUMBER
+          - AUTH_MFA_CODE_SENT
+          - AUTH_MFA_CODE_SENT_FOR_TEST_CLIENT
+          - AUTH_DELETE_ACCOUNT
+          - AUTH_SEND_OTP
           - DCMAW_CRI_START
           - DCMAW_CRI_VC_ISSUED
           - DCMAW_CRI_END
@@ -2206,6 +2367,14 @@ Resources:
       FunctionName: !Ref AppEventProcessorFunction
       Principal: !Ref TestRoleArn
 
+  AuthTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestPolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuthEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
   #
   # CSLS
   #
@@ -2270,6 +2439,15 @@ Resources:
     Properties:
       LogGroupName:
         Ref: "AppEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSAuthLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "AuthEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
