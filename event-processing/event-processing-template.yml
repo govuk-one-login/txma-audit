@@ -2369,7 +2369,7 @@ Resources:
 
   AuthTestInvokePermission:
     Type: AWS::Lambda::Permission
-    Condition: DeployTestPolicy
+    Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref AuthEventProcessorFunction
