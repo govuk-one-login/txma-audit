@@ -13,6 +13,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 
     Examples:
     | account     |
+    | App         |
     | IPV         |
     | IPVPass     |
     | KBV         |
@@ -28,6 +29,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 
     Examples:
       | account     |
+      | App         |
       | IPV         |
       | IPVPass     |
       | KBV         |
@@ -42,6 +44,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 
     Examples:
       | account     |
+      | App         |
       | IPV         |
       | IPVPass     |
       | KBV         |
@@ -60,6 +63,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 
     Examples:
       | account     |
+      | App         |
       | IPV         |
       | IPVPass     |
       | KBV         |
