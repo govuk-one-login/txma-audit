@@ -97,17 +97,3 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
     Examples:
       | account     |
       | IPV         |
-
-  Scenario Outline: Check APP messages pass through lambda to S3
-    Given the SQS file "APP_event_lambda_to_s3" is available for the "<account>" team
-    And the output file "APP_event_expected" is available
-      | fraud    |
-      | perf     |
-    When the "<account>" lambda is invoked
-    And the s3 below should have a new event matching the respective "<account>" output file "APP_event_expected"
-      | fraud    |
-      | perf     |
-
-    Examples:
-      | account     |
-      | App         |
