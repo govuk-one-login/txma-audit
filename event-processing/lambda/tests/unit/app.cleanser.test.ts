@@ -20,7 +20,7 @@ jest.mock("aws-sdk", () => {
 
 describe('Unit test for app handler', function () {
     let consoleWarningMock: jest.SpyInstance;
-    
+
     beforeEach(() => {
         consoleWarningMock = jest.spyOn(global.console, 'log');
     });
@@ -55,9 +55,9 @@ describe('Unit test for app handler', function () {
                 result: "Ok"
             }]
         }
-        
+
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
-        
+
         const result = await handler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });
@@ -108,7 +108,7 @@ describe('Unit test for app handler', function () {
         expect(result).toEqual(expectedResult);
     });
 
-    it('cleanses all messages when receiving an array', async () => {
+    it('cleanses all messages when receiving an array including evidence to be kept in the extensions field', async () => {
 
         const expectedData : string = Buffer.from(TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessage())).toString('base64')
         const expectedResult : FirehoseTransformationResult = {
