@@ -1,5 +1,4 @@
 import { FirehoseService } from './services/firehose-service';
-import { Context } from 'aws-lambda';
 import { S3Event } from 'aws-lambda/trigger/s3';
 import { DestinationEnum } from './enums/destination.enum';
 import { AuditEvent } from './models/audit-event';
@@ -7,16 +6,16 @@ import { IReIngestRecordInterface } from './models/re-ingest-record.interface';
 import { S3Service } from './services/s3-service';
 import { ErrorService } from './services/error-service';
 
-export const handler = async (event: S3Event, context?: Context): Promise<void> => {
+export const handler = async (event: S3Event): Promise<void> => {
     const bucket = event.Records[0].s3.bucket.name;
     const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
 
     //validate env vars
     const missingEnvironmentVariables: Array<string> = [];
-    if (!process.env.fireHoseStreamName) {
+    if (!('fireHoseStreamName' in process.env)) {
         missingEnvironmentVariables.push('fireHoseStreamName');
     }
-    if (!process.env.maxIngestion) {
+    if (!('maxIngestion' in process.env)) {
         missingEnvironmentVariables.push('maxIngestion');
     }
     if (missingEnvironmentVariables.length > 0) {
@@ -37,21 +36,18 @@ export const handler = async (event: S3Event, context?: Context): Promise<void> 
             let recordBatch: Array<IReIngestRecordInterface> = [];
             let deleteFromS3 = 0;
             let destinationFH = 0;
-            const eventMessages = s3Object.split('\n');
+            const s3ObjectLines = s3Object.split('\n');
 
-            for (let lineIndex = 0; lineIndex < eventMessages.length; lineIndex++) {
+            for (let lineIndex = 0; lineIndex < s3ObjectLines.length; lineIndex++) {
                 let destination = DestinationEnum.fireHose;
-                if (eventMessages.length <= 0) {
+
+                const currentLine = s3ObjectLines[lineIndex];
+
+                if (currentLine.length <= 0) {
                     continue;
                 }
 
-                const event = eventMessages[lineIndex];
-
-                if (event.length <= 0) {
-                    continue;
-                }
-
-                const jsonData = AuditEvent.fromJSONString(event);
+                const jsonData = AuditEvent.fromJSONString(currentLine);
                 let s3Payload = {}; //Type?
 
                 if (jsonData.reIngestCount) {
@@ -79,7 +75,6 @@ export const handler = async (event: S3Event, context?: Context): Promise<void> 
                         recordBatch = [];
                     }
                 }
-                // }
             }
 
             if (destinationFH > 0) {
@@ -93,6 +88,7 @@ export const handler = async (event: S3Event, context?: Context): Promise<void> 
                 //only delete if sent or limit reached
                 await S3Service.deleteObject(bucket, key);
             }
+
             if (deleteFromS3 > 0) {
                 console.log(
                     '[WARN] MAXIMUM RE-INGEST LIMIT REACHED\n' +
@@ -101,6 +97,8 @@ export const handler = async (event: S3Event, context?: Context): Promise<void> 
 
                 await S3Service.deleteObject(bucket, key);
             }
+        } else {
+            await S3Service.deleteObject(bucket, key);
         }
     } catch (error) {
         const errorWithMessage = ErrorService.toErrorWithMessage(error);

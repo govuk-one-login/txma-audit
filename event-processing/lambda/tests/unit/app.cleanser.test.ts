@@ -3,12 +3,12 @@ import {handler} from '../../cleanser-app';
 import { FirehoseTransformationResult } from 'aws-lambda';
 import { IEnrichedAuditEvent, IAuditEventUserMessage } from '../../models/enriched-audit-event';
 import { ICleansedEvent } from "../../models/cleansed-event";
-import {TestHelper} from "../test-helpers/test-helper";
+import { TestHelper } from "../test-helpers/test-helper";
 import { CleanserHelper} from "../test-helpers/cleanser-helper";
 
 describe('Unit test for app handler', function () {
     let consoleWarningMock: jest.SpyInstance;
-    
+
     beforeEach(() => {
         consoleWarningMock = jest.spyOn(global.console, 'log');
     });

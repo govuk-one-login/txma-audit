@@ -107,8 +107,7 @@ export class AuditEvent {
         message.platform !== undefined && (obj.platform = message.platform ? message.platform : undefined);
         message.restricted !== undefined && (obj.restricted = message.restricted ? message.restricted : undefined);
         message.extensions !== undefined && (obj.extensions = message.extensions ? message.extensions : undefined);
-        message.reIngestCount !== undefined &&
-            (obj.reIngestCount = message.reIngestCount ? message.reIngestCount : false);
+        message.reIngestCount !== undefined && (obj.reIngestCount = message.reIngestCount ? message.reIngestCount : 0);
         return obj;
     }
 }

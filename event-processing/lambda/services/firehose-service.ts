@@ -1,5 +1,6 @@
 import { IReIngestRecordInterface } from '../models/re-ingest-record.interface';
 import { FirehoseClient, PutRecordBatchCommand, PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose';
+import { ErrorService } from './error-service';
 
 export class FirehoseService {
     static client = new FirehoseClient({ region: 'eu-west-2' });
@@ -40,7 +41,7 @@ export class FirehoseService {
                 for (let idx = 0; idx < response.RequestResponses.length; idx++) {
                     const res = response.RequestResponses[idx];
 
-                    if (!res.ErrorCode || res.ErrorCode == undefined || res.ErrorCode == '') {
+                    if (!res.ErrorCode || res.ErrorCode == '') {
                         continue;
                     }
 
@@ -60,8 +61,12 @@ export class FirehoseService {
                     try {
                         await this.putRecordsToFirehoseStream(streamName, failedRecords, attemptsMade + 1, maxAttempts);
                     } catch (error) {
-                        console.log(`Error sending records to firehose. ${error}`);
-                        reject(`Error sending records to firehose. ${error}`);
+                        const errorWithMessage = ErrorService.toErrorWithMessage(error);
+                        console.log(
+                            `[ERROR] FIREHOSE DELIVERY ERROR:\n Error: ${errorWithMessage.message}`,
+                            errorWithMessage.stack,
+                        );
+                        return reject(error);
                     }
                 } else {
                     reject(`Could not put records after ${maxAttempts} attempts. ${errMsg}`);

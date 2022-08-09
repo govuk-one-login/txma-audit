@@ -1,6 +1,6 @@
 import { IAuditEvent } from '../models/audit-event';
 import { ObjectHelper } from '../utilities/object-helper';
-import { PublishCommand, PublishCommandInput, PublishCommandOutput, SNSClient } from '@aws-sdk/client-sns';
+import { PublishCommand, PublishCommandOutput, SNSClient } from '@aws-sdk/client-sns';
 import { ErrorService } from './error-service';
 
 export class SnsService {

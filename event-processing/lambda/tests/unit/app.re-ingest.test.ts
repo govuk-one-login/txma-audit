@@ -162,8 +162,8 @@ describe('Unit test for re-ingest app handler', function () {
             DeliveryStreamName: 'TestStreamName',
             Records: recordsArray
         });
-        expect(consoleMock).toHaveBeenCalledWith('Error sending records to firehose. Could not put records after 20 attempts. Error');
-        expect(consoleMock).toHaveBeenCalledWith( expect.stringContaining('[ERROR] REINGEST ERROR:\n Error: \"Error sending records to firehose.'), expect.anything());
+        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('[ERROR] FIREHOSE DELIVERY ERROR:\n Error: "Could not put records after 20 attempts.'), expect.anything());
+        expect(consoleMock).toHaveBeenCalledWith( expect.stringContaining('[ERROR] REINGEST ERROR:\n Error: "Could not put records after 20 attempts.'), expect.anything());
     });
 
     it('pick up a previously re-ingested message and correctly adjusts the reIngest count', async () => {
@@ -290,5 +290,430 @@ describe('Unit test for re-ingest app handler', function () {
             Key: 'Happy Face.jpg',
         });
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
+    });
+
+    it('rejects when an error occurs when getting an object via the s3 service', async () => {
+        const exampleMessage = EventProcessorHelper.exampleAuditMessage();
+
+        exampleMessage.reIngestCount = 1;
+
+        s3Mock.on(GetObjectCommand).rejects({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            }
+        });
+
+        s3Mock.on(DeleteObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            }
+        });
+
+        fireHoseMock.on(PutRecordBatchCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            }
+        });
+
+        const s3Event: S3Event = ReIngestHelper.exampleS3Event();
+
+        await handler(s3Event);
+
+        expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
+        expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
+        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("[ERROR] GET FROM S3 ERROR:\n Error: "), expect.anything())
+        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("[ERROR] REINGEST ERROR:\n Error: "), expect.anything())
+    });
+
+    it('rejects when an error occurs when deleting an object via the s3 service', async () => {
+        const exampleMessage = EventProcessorHelper.exampleAuditMessage();
+
+        const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
+        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+
+        exampleMessage.reIngestCount = 1;
+        const encoder = new TextEncoder();
+        const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
+        const recordsArray: Array<IReIngestRecordInterface> = [
+            {
+                Data: messageBytes
+            },
+            {
+                Data: messageBytes
+            },
+        ];
+
+        s3Mock.on(GetObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            },
+            Body: readableStream
+        });
+
+        s3Mock.on(DeleteObjectCommand).rejects({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            }
+        });
+
+        fireHoseMock.on(PutRecordBatchCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            }
+        });
+
+        const s3Event: S3Event = ReIngestHelper.exampleS3Event();
+
+        await handler(s3Event);
+
+        expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(DeleteObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(1);
+        expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
+            DeliveryStreamName: 'TestStreamName',
+            Records: recordsArray
+        });
+        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("[ERROR] DELETE FROM S3 ERROR:\n Error: "), expect.anything())
+        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("[ERROR] REINGEST ERROR:\n Error: "), expect.anything())
+    });
+
+    it('will handle response errors from firehose service', async () => {
+        const exampleMessage = EventProcessorHelper.exampleAuditMessage();
+
+        const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
+        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+
+        exampleMessage.reIngestCount = 1;
+        const encoder = new TextEncoder();
+        const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
+        const recordsArray: Array<IReIngestRecordInterface> = [
+            {
+                Data: messageBytes
+            },
+            {
+                Data: messageBytes
+            },
+        ];
+
+        s3Mock.on(GetObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            },
+            Body: readableStream
+        });
+
+        s3Mock.on(DeleteObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            }
+        });
+
+        fireHoseMock.on(PutRecordBatchCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            },
+            FailedPutCount: 1,
+            RequestResponses: [{
+                RecordId: '1',
+                ErrorCode: '1234',
+                ErrorMessage: 'some error occurred',
+            }]
+        });
+
+        const s3Event: S3Event = ReIngestHelper.exampleS3Event();
+
+        await handler(s3Event);
+
+        expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
+        expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(20);
+        expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
+            DeliveryStreamName: 'TestStreamName',
+            Records: recordsArray
+        });
+        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('[ERROR] FIREHOSE DELIVERY ERROR:\n Error: "Could not put records after 20 attempts. Individual error codes: 1234"'), expect.anything());
+        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('[ERROR] REINGEST ERROR:\n Error: "Could not put records after 20 attempts. Individual error codes: 1234"'), expect.anything());
+    });
+
+    it('will handle response errors from firehose where the error code is not defined', async () => {
+        const exampleMessage = EventProcessorHelper.exampleAuditMessage();
+
+        const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
+        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+
+        exampleMessage.reIngestCount = 1;
+        const encoder = new TextEncoder();
+        const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
+        const recordsArray: Array<IReIngestRecordInterface> = [
+            {
+                Data: messageBytes
+            },
+            {
+                Data: messageBytes
+            },
+        ];
+
+        s3Mock.on(GetObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            },
+            Body: readableStream
+        });
+
+        s3Mock.on(DeleteObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            }
+        });
+
+        fireHoseMock.on(PutRecordBatchCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            },
+            FailedPutCount: 1,
+            RequestResponses: [{
+                RecordId: '1',
+                ErrorCode: undefined,
+                ErrorMessage: 'some error occurred',
+            }]
+        });
+
+        const s3Event: S3Event = ReIngestHelper.exampleS3Event();
+
+        await handler(s3Event);
+
+        expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(DeleteObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(1);
+        expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
+            DeliveryStreamName: 'TestStreamName',
+            Records: recordsArray
+        });
+    });
+
+    it('throws an error when "fireHoseStreamName" is empty', async () => {
+        delete process.env.fireHoseStreamName;
+
+        const s3Event: S3Event = ReIngestHelper.exampleS3Event();
+
+        await expect(handler(s3Event)).rejects.toThrow(expect.objectContaining({
+            message: expect.stringContaining('[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: fireHoseStreamName')
+        }));
+
+        expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(0);
+        expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
+        expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
+    });
+
+    it('throws an error when "maxIngestion" is empty', async () => {
+        delete process.env.maxIngestion;
+
+        const s3Event: S3Event = ReIngestHelper.exampleS3Event();
+
+        await expect(handler(s3Event)).rejects.toThrow(expect.objectContaining({
+            message: expect.stringContaining('[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: maxIngestion')
+        }));
+
+        expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(0);
+        expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
+        expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
+    });
+
+    it('picks up an s3 object with no messages within and does not fail', async () => {
+        const readableStream = ReIngestHelper.createReadableStream('');
+
+        s3Mock.on(GetObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            },
+            Body: readableStream
+        });
+
+        s3Mock.on(DeleteObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            }
+        });
+
+        const s3Event: S3Event = ReIngestHelper.exampleS3Event();
+
+        await handler(s3Event);
+
+        expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(DeleteObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
+    });
+
+    it('correctly flushes batches when nearing the 500 max limit', async () => {
+        const exampleMessage = EventProcessorHelper.exampleAuditMessage();
+        let s3ObjectString = '';
+
+        for(let i = 0; i < 505; i++){
+            s3ObjectString += JSON.stringify(exampleMessage) + '\n';
+        }
+
+        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+
+        exampleMessage.reIngestCount = 1;
+        const encoder = new TextEncoder();
+        const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
+        const firstRecordsArray: Array<IReIngestRecordInterface> = [];
+        const secondRecordsArray: Array<IReIngestRecordInterface> = [];
+
+        for(let i = 0; i < 500; i++){
+            firstRecordsArray.push({
+                Data: messageBytes
+            });
+        }
+
+        for(let i = 0; i < 5; i++){
+            secondRecordsArray.push({
+                Data: messageBytes
+            });
+        }
+
+        s3Mock.on(GetObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            },
+            Body: readableStream
+        });
+
+        s3Mock.on(DeleteObjectCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            }
+        });
+
+        fireHoseMock.on(PutRecordBatchCommand).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '2',
+                extendedRequestId: '2',
+                cfId: '2',
+                attempts: 1,
+            }
+        });
+
+        const s3Event: S3Event = ReIngestHelper.exampleS3Event();
+
+        await handler(s3Event);
+
+        expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(1);
+        expect(s3Mock).toHaveReceivedCommandWith(DeleteObjectCommand, {
+            Bucket: 'sourcebucket',
+            Key: 'Happy Face.jpg',
+        });
+        expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(2);
+        expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
+            DeliveryStreamName: 'TestStreamName',
+            Records: firstRecordsArray
+        });
+        expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
+            DeliveryStreamName: 'TestStreamName',
+            Records: secondRecordsArray
+        });
     });
 });
