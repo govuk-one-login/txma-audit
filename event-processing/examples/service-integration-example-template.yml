@@ -37,6 +37,22 @@ Mappings:
       integration: "arn:aws:iam::<account number>:root"
       production: "arn:aws:iam::<account number>:root"
 
+Conditions:
+  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
+
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    Architectures:
+      - x86_64
+
 Resources:
   AuditEventQueue:
     Type: AWS::SQS::Queue
@@ -133,7 +149,10 @@ Resources:
   AuditEventQueueConsumerRole:
     Type: AWS::IAM::Role
     Properties:
-      PermissionsBoundary: !Ref PermissionsBoundary
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
