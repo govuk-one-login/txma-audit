@@ -27,7 +27,6 @@ function CleanseEvidenceEvent(evidence: ICleansedEvidenceEvent) {
         }
     }
 
-
     return evidence
 }
 
