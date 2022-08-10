@@ -1,3 +1,7 @@
+export interface ICleansedEvidenceEvent {
+    validityScore?: number;
+}
+
 export interface ICleansedExtensionsEvent {
     evidence?: unknown | undefined;
 }
@@ -11,18 +15,20 @@ export interface ICleansedEvent {
     extensions?: unknown | undefined;
 }
 
-function CleanseEvidenceEvent(evidence: any) {
+function CleanseEvidenceEvent(evidence: ICleansedEvidenceEvent) {
 
-    let cleansedEvidence = {} as any;
     let fraudKeys = ['validityScore']
+    
+    for (let key in evidence) {
+        const k = key as keyof ICleansedEvidenceEvent;
 
-    for (const key of fraudKeys){
-      if (evidence[key]){
-          cleansedEvidence[key] = evidence[key];
-      }
+        if (!keys.includes(k)) {
+            delete evidence[k]
+        }
     }
 
-    return cleansedEvidence
+
+    return evidence
 }
 
 export class CleansedEvent implements ICleansedEvent {
@@ -47,8 +53,8 @@ export class CleansedEvent implements ICleansedEvent {
         this.timestamp = timestamp;
         this.timestamp_formatted = timestamp_formatted;
 
-        if (extensions != undefined && Object.keys((extensions as ICleansedExtensionsEvent).evidence as any).length > 0) {
-            let evidence = CleanseEvidenceEvent((extensions as ICleansedExtensionsEvent).evidence as any)
+        if (extensions != undefined && Object.keys((extensions as ICleansedExtensionsEvent).evidence as ICleansedEvidenceEvent).length > 0) {
+            let evidence = CleanseEvidenceEvent((extensions as ICleansedExtensionsEvent).evidence as ICleansedEvidenceEvent)
             if (Object.keys(evidence).length){
               this.extensions = { evidence: evidence };
             }
