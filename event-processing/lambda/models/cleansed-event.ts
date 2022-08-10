@@ -18,11 +18,11 @@ export interface ICleansedEvent {
 function CleanseEvidenceEvent(evidence: ICleansedEvidenceEvent) {
 
     let fraudKeys = ['validityScore']
-    
+
     for (let key in evidence) {
         const k = key as keyof ICleansedEvidenceEvent;
 
-        if (!keys.includes(k)) {
+        if (!fraudKeys.includes(k)) {
             delete evidence[k]
         }
     }
