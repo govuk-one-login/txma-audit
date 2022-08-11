@@ -1,3 +1,5 @@
+const fraudKeys = ['validityScore'];
+
 export interface ICleansedEvidenceEvent {
     validityScore?: number;
 }
@@ -16,8 +18,6 @@ export interface ICleansedEvent {
 }
 
 function CleanseEvidenceEvent(evidence: ICleansedEvidenceEvent) {
-
-    let fraudKeys = ['validityScore']
 
     for (let key in evidence) {
         const k = key as keyof ICleansedEvidenceEvent;
