@@ -52,7 +52,7 @@ export class CleansedEvent implements ICleansedEvent {
         this.timestamp = timestamp;
         this.timestamp_formatted = timestamp_formatted;
 
-        if (extensions != undefined && Object.keys((extensions as ICleansedExtensionsEvent).evidence as ICleansedEvidenceEvent).length > 0) {
+        if (extensions != undefined && (extensions as ICleansedExtensionsEvent).evidence != undefined) {
             let evidence = CleanseEvidenceEvent((extensions as ICleansedExtensionsEvent).evidence as ICleansedEvidenceEvent)
             if (Object.keys(evidence).length){
               this.extensions = { evidence: evidence };
