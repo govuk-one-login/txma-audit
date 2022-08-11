@@ -1,0 +1,27 @@
+{
+  "event_id": "529f-dece-615e-ADDR",
+  "client_id": "NO_ADDRESS_CLIENT_ID_YET",
+  "timestamp": 1647969131,
+  "timestamp_formatted": "2022-03-22T17:12:11.000Z",
+  "event_name": "IPV_ADDRESS_CRI_START",
+  "component_id": "https://review-a.staging.account.gov.uk",
+  "user": {
+    "transaction_id": "e190264c-7ab6-4f13-97bc-251f1b59dfd9",
+    "email": "m.thompson@randatmail.com",
+    "phone": "33600182839",
+    "ip_address": "181.246.129.108",
+    "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd",
+    "session_id": "ca554782-8189-4a13-93da-9009244e06e9",
+    "persistent_session_id": "...",
+    "user_id": "urn:fdc:gov.uk:2022:12fc7ff6-5ef2-48ee-b42d-908768fe328f"
+  },
+  "platform": {
+    "xray_trace_id": "24727sda4192"
+  },
+  "restricted": {
+    "experian_ref": "DSJJSEE29392"
+  },
+  "extensions": {
+    "response": "Authentification successful"
+  }
+}
