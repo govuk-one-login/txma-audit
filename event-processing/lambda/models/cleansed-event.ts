@@ -3,7 +3,7 @@ export interface ICleansedEvidenceEvent {
 }
 
 export interface ICleansedExtensionsEvent {
-    evidence?: unknown | undefined;
+    evidence?: ICleansedEvidenceEvent | undefined;
 }
 
 export interface ICleansedEvent {
