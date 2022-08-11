@@ -71,6 +71,13 @@ public class LambdaToS3StepDefinitions {
         lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
     }
 
+    @Given("the SQS file {string} is available in the {string} folder")
+    public void checkSQSInputFileIsAvailableInFolder(String fileName, String account) throws IOException {
+        JSONObject rawJSON = new JSONObject(readJSONFile(account + "/" + fileName));
+        JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
+    }
+
     /**
      * Checks the expected S3 output file is present
      *
@@ -78,12 +85,12 @@ public class LambdaToS3StepDefinitions {
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the output file {string} is available")
-    public void checkEndpointJSONIsAvailable(String fileName, DataTable endpoints) throws IOException{
+    @And("the output file {string} in the {string} folder is available")
+    public void checkEndpointJSONIsAvailable(String fileName, String account, DataTable endpoints) throws IOException{
         // Loops through the possible endpoints
         Set<String> extractedKeys = endpoints.asMap().keySet();
         for (String teamName : extractedKeys) {
-            readJSONFile(teamName + "_" + fileName);
+            readJSONFile(account + "/" + teamName + "_" + fileName);
         }
     }
 
@@ -147,13 +154,23 @@ public class LambdaToS3StepDefinitions {
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the s3 below should have a new event matching the respective {string} output file {string}")
-    public void checkTheObjectInS3IsAsExpected(String account, String fileName, DataTable endpoints) throws IOException, InterruptedException {
+    @And("the s3 below should have a new event matching the respective {string} output file {string} in the {string} folder")
+    public void checkTheObjectInS3IsAsExpected(String account, String fileName, String folderName, DataTable endpoints) throws IOException, InterruptedException {
         // Loops through the possible endpoints
         Set<String> extractedKeys = endpoints.asMap().keySet();
         for (String teamName : extractedKeys){
             // Checks that the output is present for each endpoint
-            assertTrue(isFoundInS3(teamName, fileName, account),  "The message " + fileName + " from " + account + " was not found in the " + teamName + " S3 bucket.");
+            assertTrue(isFoundInS3(teamName, folderName + "/" + teamName + "_" + fileName, account),  "The message " + fileName + " from " + account + " was not found in the " + teamName + " S3 bucket.");
+        }
+    }
+
+    @And("the s3 below should have a new event matching the output file {string} in the {string} folder")
+    public void checkTheObjectInTheFileIsInS3IsAsExpected(String fileName, String account, DataTable endpoints) throws IOException, InterruptedException {
+        // Loops through the possible endpoints
+        Set<String> extractedKeys = endpoints.asMap().keySet();
+        for (String teamName : extractedKeys){
+            // Checks that the output is present for each endpoint
+            assertTrue(isFoundInS3(teamName, account + "/" + teamName + "_" + fileName, account),  "The message " + fileName + " from " + account + " was not found in the " + teamName + " S3 bucket.");
         }
     }
 
@@ -165,13 +182,13 @@ public class LambdaToS3StepDefinitions {
      * @param endpoints     The endpoints we're checking against
      * @throws IOException
      */
-    @And("the S3 below should not have a new event matching the respective {string} output file {string}")
-    public void checkTheObjectIsNotInS3(String account, String fileName, DataTable endpoints) throws IOException, InterruptedException {
+    @And("the S3 below should not have a new event matching the respective {string} output file {string} in the {string} folder")
+    public void checkTheObjectIsNotInS3(String account, String fileName, String folderName, DataTable endpoints) throws IOException, InterruptedException {
         // Loops through the possible outputs
         Set<String> extractedKeys = endpoints.asMap().keySet();
         for (String teamName : extractedKeys){
             // Checks that the output is present for each endpoint
-            assertFalse(isFoundInS3(teamName, fileName, account),  "The message " + fileName + " from " + account + " was found in the " + teamName + " S3 bucket.");
+            assertFalse(isFoundInS3(teamName,folderName + "/" + teamName + "_" + fileName, account),  "The message " + fileName + " from " + account + " was found in the " + teamName + " S3 bucket.");
         }
     }
 
@@ -210,9 +227,11 @@ public class LambdaToS3StepDefinitions {
      */
     private JSONObject addComponentIdAndTimestampFields(JSONObject messageAsJSON, String account){
 
-        // Only adds the new component_id if it's already in the file
+        // Only adds the new component_id if it's already in the file and empty
         if (messageAsJSON.has("component_id")){
-            messageAsJSON.put("component_id", account);
+            if (messageAsJSON.get("component_id") == ""){
+                messageAsJSON.put("component_id", account);
+            }
         }
         // Only adds the new timestamp if it's already in the file
         if (messageAsJSON.has("timestamp")){
@@ -381,7 +400,7 @@ public class LambdaToS3StepDefinitions {
                 List<JSONObject> array = separate(output);
 
                 // Takes the input file, and adds a timestamp to the component_id
-                Path filePath = Path.of(new File("src/test/resources/Test Data/" + endpoint + "_" + filename + ".json").getAbsolutePath());
+                Path filePath = Path.of(new File("src/test/resources/Test Data/" + filename + ".json").getAbsolutePath());
                 String file = Files.readString(filePath);
                 JSONObject json = new JSONObject(file);
                 JSONObject expectedS3 = addComponentIdAndTimestampFields(json, account);
