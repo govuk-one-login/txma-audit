@@ -1,0 +1,215 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: "A template to create all the Analysis infrastructure."
+
+Parameters:
+  CodeSigningConfigArn:
+    Type: String
+    Default: "none"
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
+  Environment:
+    Description: "The environment type"
+    Type: "String"
+    AllowedValues:
+      - "dev"
+      - "build"
+      - "staging"
+      - "integration"
+      - "production"
+    ConstraintDescription: must be dev, build, staging, integration or production
+  TestRoleArn:
+    Type: "String"
+    Description: "The ARN of the role that will used for integration tests"
+    Default: "none"
+    AllowedPattern: "(none)|(arn:aws:iam::.*:role/.*)"
+
+Conditions:
+  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
+  UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
+  UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
+
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    Architectures:
+      - x86_64
+
+Resources:
+  AuditEventDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Description: "TxMA - Event Message Database"
+        Name: "txma-audit"
+
+  AuditEventCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Configuration: "{\"Version\": 1.0,\"Grouping\":{\"TableGroupingPolicy\":\"CombineCompatibleSchemas\"},\"CrawlerOutput\":{\"Partitions\":{\"AddOrUpdateBehavior\":\"InheritFromTable\"}}}"
+      CrawlerSecurityConfiguration: !Ref AuditGlueSecurityConfiguration
+      DatabaseName: !Ref AuditEventDatabase
+      Description: "Crawler for message-batch bucket stored in S3"
+      Name: "AuditEventCrawler"
+      RecrawlPolicy:
+        RecrawlBehavior: "CRAWL_EVERYTHING"
+      Role: !Ref AuditCrawlerRole
+      Schedule:
+        ScheduleExpression: cron(0 3 * * ? *)
+      SchemaChangePolicy:
+        DeleteBehavior: "DEPRECATE_IN_DATABASE"
+        UpdateBehavior: "UPDATE_IN_DATABASE"
+      TablePrefix: "txma_"
+      Targets:
+        S3Targets:
+          - Path: !Sub "s3://audit-${Environment}-message-batch/"
+            Exclusions:
+              - "**/processing-failed/**"
+      Tags:
+        Name: !Join
+          - "-"
+          - - !Ref AWS::StackName
+            - "auditEventCrawler"
+        Service: "ci/cd"
+        Source: "https://github.com/alphagov/di-txma-audit/blob/main/analysis/analysis-template.yaml"
+
+  AuditGlueSecurityConfiguration:
+    Type: AWS::Glue::SecurityConfiguration
+    Properties:
+      EncryptionConfiguration:
+        CloudWatchEncryption:
+          CloudWatchEncryptionMode: 'SSE-KMS'
+          KmsKeyArn: !GetAtt AuditSecurityConfigurationEncryptionKey.Arn
+        JobBookmarksEncryption:
+          JobBookmarksEncryptionMode: 'DISABLED'
+        S3Encryptions:
+          - S3EncryptionMode: 'DISABLED'
+      Name: "Audit Security Configuration"
+
+  AuditCrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "glue.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+      Tags:
+        - Key: Name
+          Value: !Join
+            - "-"
+            - - !Ref AWS::StackName
+              - "auditEventQueueConsumerRole"
+        - Key: Service
+          Value: "ci/cd"
+        - Key: Source
+          Value: "https://github.com/alphagov/di-txma-audit/blob/main/analysis/analysis-template.yaml"
+
+  AuditCrawlerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref AuditCrawlerRole
+      PolicyName: glue_crawler_bucket_access
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Sid: "AllowS3Access"
+            Action:
+              - "s3:GetObject"
+              - "s3:ListBucket"
+            Resource:
+              - !Sub "arn:aws:s3:::audit-${Environment}-message-batch/*"
+          - Effect: Allow
+            Sid: "GlueEncryptionKeyPermissions"
+            Action:
+              - "kms:Encrypt"
+            Resource:
+              - !GetAtt AuditSecurityConfigurationEncryptionKey.Arn
+          - Effect: Allow
+            Sid: "LogPermissions"
+            Action:
+              - "logs:AssociateKmsKey"
+            Resource:
+              - "*"
+
+  AuditSecurityConfigurationEncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "Symmetric key used to encrypt AWS Glue CloudWatch logs at rest"
+      EnableKeyRotation: true
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableRootAccess"
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Sid: "AllowLogsKMSAccess"
+            Effect: Allow
+            Principal:
+              Service: "logs.eu-west-2.amazonaws.com"
+            Action:
+              - "kms:Decrypt*"
+              - "kms:Encrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource:
+              - "*"
+            Condition:
+              ForAnyValue:ArnEquals:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Sid: "AllowCrawlerKMSAccess"
+            Effect: Allow
+            Principal:
+              AWS: !GetAtt AuditCrawlerRole.Arn
+            Action:
+              - "kms:Decrypt*"
+              - "kms:Encrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource:
+              - "*"
+            Condition:
+              ForAnyValue:ArnEquals:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+      Tags:
+        - Key: Name
+          Value: !Join
+            - "-"
+            - - !Ref AWS::StackName
+              - "auditCrawlerEncryptionKey"
+        - Key: Service
+          Value: "ci/cd"
+        - Key: Source
+          Value: "https://github.com/alphagov/di-txma-audit/blob/main/analysis/analysis-template.yaml"
