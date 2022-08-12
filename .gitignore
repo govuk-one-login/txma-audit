@@ -1,2 +1,4 @@
 # IntelliJ
 *.iml
+
+**/.aws-sam
