@@ -7,7 +7,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | fraud    |
       | perf     |
     When the "<account>" lambda is invoked
-    And the s3 below should have a new event matching the output file "s3_expected" in the "<account>" folder
+    Then the s3 below should have a new event matching the output file "s3_expected" in the "<account>" folder
       | fraud    |
       | perf     |
 
@@ -78,7 +78,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | fraud    |
       | perf     |
     When the "<account>" lambda is invoked
-    And the s3 below should have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
+    Then the s3 below should have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
       | fraud    |
     And the S3 below should not have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
       | perf     |
@@ -94,7 +94,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | fraud    |
       | perf     |
     When the "<account>" lambda is invoked
-    And the S3 below should not have a new event matching the respective "<account>" output file "expected_random" in the "SNSFilterTests" folder
+    Then the S3 below should not have a new event matching the respective "<account>" output file "expected_random" in the "SNSFilterTests" folder
       | fraud    |
       | perf     |
 
