@@ -40,7 +40,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
   Scenario Outline: Check messages don't pass through lambda if missing timestamp
     Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "<account>" team
     When the "<account>" lambda is invoked
-    Then there should be a "[ERROR]" message in the "lambdaToCloudwatchTests" lambda logs
+    Then there should be a "[ERROR]" message in the "<account>" lambda logs
 
     Examples:
       | account     |
