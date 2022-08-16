@@ -1427,7 +1427,7 @@ Resources:
     Properties:
       Roles:
         - !Ref AuthAccountMgmtLambdaAccessRole
-      PolicyName: authAccountMgmt_kms_policy
+      PolicyName: auth_kms_policy
       PolicyDocument:
         Version: 2012-10-17
         Statement:
