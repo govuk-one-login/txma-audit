@@ -194,7 +194,7 @@ Resources:
       - IPVPassLambdaAccessRole
       - SPOTLambdaAccessRole
       - AppLambdaAccessRole
-      - AuthLambdaAccessRole
+      - AuthOIDCLambdaAccessRole
       - AuthAccountMgmtLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
@@ -206,7 +206,7 @@ Resources:
         - !Ref IPVPassLambdaAccessRole
         - !Ref SPOTLambdaAccessRole
         - !Ref AppLambdaAccessRole
-        - !Ref AuthLambdaAccessRole
+        - !Ref AuthOIDCLambdaAccessRole
         - !Ref AuthAccountMgmtLambdaAccessRole
       PolicyName: sns_publish_policy
       PolicyDocument:
@@ -1167,30 +1167,30 @@ Resources:
             Resource:
               - "{{resolve:ssm:AppKmsArn}}"
 
-  AuthEventProcessorLogGroup:
+  AuthOIDCEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: "/aws/lambda/EventProcessorFunction-Auth"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-AuthOIDC"
       RetentionInDays: 7
 
-  AuthEventProcessorFunction:
+  AuthOIDCEventProcessorFunction:
     DependsOn:
-      - AuthEventProcessorLogGroup
-      - AuthLambdaAccessRole
+      - AuthOIDCEventProcessorLogGroup
+      - AuthOIDCLambdaAccessRole
     Type: "AWS::Serverless::Function"
     Properties:
-      FunctionName: "EventProcessorFunction-Auth"
+      FunctionName: "EventProcessorFunction-AuthOIDC"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
       Runtime: nodejs14.x
       Timeout: 30
-      Role: !GetAtt AuthLambdaAccessRole.Arn
+      Role: !GetAtt AuthOIDCLambdaAccessRole.Arn
       Environment:
         Variables:
           topicArn: !Ref epSNSTopic
-          defaultComponentId: "Auth"
+          defaultComponentId: "AuthOIDC"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -1201,64 +1201,64 @@ Resources:
         EntryPoints:
           - event-processor-app.ts
 
-  AuthEventProcessorUnknownFieldsErrorMetric:
+  AuthOIDCEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
-      - AuthEventProcessorFunction
+      - AuthOIDCEventProcessorFunction
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterPattern: "WARN UNKNOWN FIELDS"
-      LogGroupName: "/aws/lambda/EventProcessorFunction-Auth"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-AuthOIDC"
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: "lambda/di/txma/errors"
-          MetricName: "Unknown Fields Auth"
+          MetricName: "Unknown Fields AuthOIDC"
 
-  AuthEventProcessorUnknownFieldsAlarm:
+  AuthOIDCEventProcessorUnknownFieldsAlarm:
     DependsOn:
-      - AuthEventProcessorUnknownFieldsErrorMetric
+      - AuthOIDCEventProcessorUnknownFieldsErrorMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "Auth Event Processor Unknown Fields Alarm"
-      AlarmName: "UnknownFieldsAlarm-Auth"
+      AlarmDescription: "AuthOIDC Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-AuthOIDC"
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       Statistic: Sum
       Period: 86400
       Threshold: 1
-      MetricName: "Unknown Fields Auth"
+      MetricName: "Unknown Fields AuthOIDC"
       Namespace: "lambda/di/txma/errors"
 
-  AuthEventProcessorRequiredFieldsErrorMetric:
+  AuthOIDCEventProcessorRequiredFieldsErrorMetric:
     DependsOn:
-      - AuthEventProcessorFunction
+      - AuthOIDCEventProcessorFunction
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterPattern: "ERROR VALIDATION ERROR"
-      LogGroupName: "/aws/lambda/EventProcessorFunction-Auth"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-AuthOIDC"
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: "lambda/di/txma/errors"
-          MetricName: "Validation Errors Auth"
+          MetricName: "Validation Errors AuthOIDC"
 
-  AuthEventProcessorRequiredFieldsAlarm:
+  AuthOIDCEventProcessorRequiredFieldsAlarm:
     DependsOn:
-      - AuthEventProcessorRequiredFieldsErrorMetric
+      - AuthOIDCEventProcessorRequiredFieldsErrorMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "Auth Event Processor Required Fields Alarm"
-      AlarmName: "RequiredFieldsAlarm-Auth"
+      AlarmDescription: "AuthOIDC Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-AuthOIDC"
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       Statistic: Sum
       Period: 86400
       Threshold: 1
-      MetricName: "Validation Errors Auth"
+      MetricName: "Validation Errors AuthOIDC"
       Namespace: "lambda/di/txma/errors"
 
-  AuthLambdaAccessRole:
+  AuthOIDCLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-Auth"
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-AuthOIDC"
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -1275,23 +1275,23 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
-  AuthLambdaEventSourceMapping:
+  AuthOIDCLambdaEventSourceMapping:
     DependsOn:
-      - AuthEventProcessorFunction
+      - AuthOIDCEventProcessorFunction
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
       EventSourceArn: "{{resolve:ssm:AuthOIDCQueueARN}}"
-      FunctionName: !Ref AuthEventProcessorFunction
+      FunctionName: !Ref AuthOIDCEventProcessorFunction
 
-  AuthKMSPolicy:
+  AuthOIDCKMSPolicy:
     DependsOn:
-      - AuthLambdaAccessRole
+      - AuthOIDCLambdaAccessRole
     Type: AWS::IAM::Policy
     Condition: IsProductionOrStaging
     Properties:
       Roles:
-        - !Ref AuthLambdaAccessRole
+        - !Ref AuthOIDCLambdaAccessRole
       PolicyName: auth_kms_policy
       PolicyDocument:
         Version: 2012-10-17
@@ -2504,12 +2504,12 @@ Resources:
       FunctionName: !Ref AppEventProcessorFunction
       Principal: !Ref TestRoleArn
 
-  AuthTestInvokePermission:
+  AuthOIDCTestInvokePermission:
     Type: AWS::Lambda::Permission
     Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref AuthEventProcessorFunction
+      FunctionName: !Ref AuthOIDCEventProcessorFunction
       Principal: !Ref TestRoleArn
 
   AuthAccountMgmtTestInvokePermission:
@@ -2587,12 +2587,12 @@ Resources:
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
-  CSLSAuthLogsSubscription:
+  CSLSAuthOIDCLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "AuthEventProcessorLogGroup"
+        Ref: "AuthOIDCEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
