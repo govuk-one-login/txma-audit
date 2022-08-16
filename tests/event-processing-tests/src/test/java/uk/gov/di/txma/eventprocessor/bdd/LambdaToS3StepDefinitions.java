@@ -228,7 +228,7 @@ public class LambdaToS3StepDefinitions {
     private JSONObject addComponentIdAndTimestampFields(JSONObject messageAsJSON, String account){
 
         // Only adds the new component_id if it's already in the file and empty
-        if (messageAsJSON.has("component_id") && messageAsJSON.get("component_id") == ""){
+        if (messageAsJSON.has("component_id") && messageAsJSON.get("component_id").toString().isEmpty()){
             messageAsJSON.put("component_id", account);
         }
         // Only adds the new timestamp if it's already in the file
