@@ -32,7 +32,8 @@ export class CleanserHelper {
             extensions: {
                 response: 'Authentication successful',
                 evidence: {
-                  validityScore: 2,
+                    validityScore: 2,
+                    other_evidence: 'evidence'
                 }
             },
         };
@@ -47,7 +48,7 @@ export class CleanserHelper {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             extensions: {
                 evidence: {
-                  validityScore: 2,
+                    validityScore: 2,
                 }
             },
         };
