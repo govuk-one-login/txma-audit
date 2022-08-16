@@ -1279,7 +1279,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Condition: IsProductionOrStaging
     Properties:
-      EventSourceArn: "{{resolve:ssm:AuthQueueARN}}"
+      EventSourceArn: "{{resolve:ssm:AuthOIDCQueueARN}}"
       FunctionName: !Ref AuthEventProcessorFunction
 
   AuthKMSPolicy:
@@ -1298,7 +1298,7 @@ Resources:
             Action:
               - 'kms:Decrypt'
             Resource:
-              - "{{resolve:ssm:AuthKmsArn}}"
+              - "{{resolve:ssm:AuthOIDCKmsArn}}"
 
   FireHoseKMSKey:
     Type: AWS::KMS::Key
