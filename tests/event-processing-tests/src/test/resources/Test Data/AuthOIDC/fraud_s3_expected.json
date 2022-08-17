@@ -3,7 +3,7 @@
   "client_id": "f4b55862-1d5e-4508-a7a8-ee8e3ac2f3c2",
   "timestamp": 1647969131,
   "timestamp_formatted": "2022-03-22T17:12:11.000Z",
-  "event_name": "AUTH_AUTHORISATION_INITIATED",
+  "event_name": "AUTH_LOG_OUT_SUCCESS",
   "component_id": "https://oidc.staging.account.gov.uk",
   "user": {
     "transaction_id": "34055c0e53c26f892c187b128c3d8508e85d0ee927bad3fb4945d27b06dc7027",
