@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<testsuite errors="0" failures="0" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="38" time="248.107">
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages pass through lambda to S3" time="87.257">
+        <system-out><![CDATA[Given the SQS file "lambda_through_to_s3" is available in the "App" folder..passed
+And the output file "s3_expected" in the "App" folder is available..........passed
+When the "App" lambda is invoked............................................passed
+Then the s3 below should have a new event matching the output file "s3_expected" in the "App" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages pass through lambda to S3 2" time="87.539">
+        <system-out><![CDATA[Given the SQS file "lambda_through_to_s3" is available in the "AuthAccountMgmt" folder.passed
+And the output file "s3_expected" in the "AuthAccountMgmt" folder is available.passed
+When the "AuthAccountMgmt" lambda is invoked................................passed
+Then the s3 below should have a new event matching the output file "s3_expected" in the "AuthAccountMgmt" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages pass through lambda to S3 3" time="76.322">
+        <system-out><![CDATA[Given the SQS file "lambda_through_to_s3" is available in the "AuthOIDC" folder.passed
+And the output file "s3_expected" in the "AuthOIDC" folder is available.....passed
+When the "AuthOIDC" lambda is invoked.......................................passed
+Then the s3 below should have a new event matching the output file "s3_expected" in the "AuthOIDC" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages pass through lambda to S3 4" time="85.889">
+        <system-out><![CDATA[Given the SQS file "lambda_through_to_s3" is available in the "IPV" folder..passed
+And the output file "s3_expected" in the "IPV" folder is available..........passed
+When the "IPV" lambda is invoked............................................passed
+Then the s3 below should have a new event matching the output file "s3_expected" in the "IPV" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages pass through lambda to S3 5" time="76.152">
+        <system-out><![CDATA[Given the SQS file "lambda_through_to_s3" is available in the "IPVPass" folder.passed
+And the output file "s3_expected" in the "IPVPass" folder is available......passed
+When the "IPVPass" lambda is invoked........................................passed
+Then the s3 below should have a new event matching the output file "s3_expected" in the "IPVPass" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages pass through lambda to S3 6" time="75.362">
+        <system-out><![CDATA[Given the SQS file "lambda_through_to_s3" is available in the "KBV" folder..passed
+And the output file "s3_expected" in the "KBV" folder is available..........passed
+When the "KBV" lambda is invoked............................................passed
+Then the s3 below should have a new event matching the output file "s3_expected" in the "KBV" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages pass through lambda to S3 7" time="43.86">
+        <system-out><![CDATA[Given the SQS file "lambda_through_to_s3" is available in the "KBVAddress" folder.passed
+And the output file "s3_expected" in the "KBVAddress" folder is available...passed
+When the "KBVAddress" lambda is invoked.....................................passed
+Then the s3 below should have a new event matching the output file "s3_expected" in the "KBVAddress" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages pass through lambda to S3 8" time="75.806">
+        <system-out><![CDATA[Given the SQS file "lambda_through_to_s3" is available in the "KBVFraud" folder.passed
+And the output file "s3_expected" in the "KBVFraud" folder is available.....passed
+When the "KBVFraud" lambda is invoked.......................................passed
+Then the s3 below should have a new event matching the output file "s3_expected" in the "KBVFraud" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages pass through lambda to S3 9" time="87.35">
+        <system-out><![CDATA[Given the SQS file "lambda_through_to_s3" is available in the "SPOT" folder.passed
+And the output file "s3_expected" in the "SPOT" folder is available.........passed
+When the "SPOT" lambda is invoked...........................................passed
+Then the s3 below should have a new event matching the output file "s3_expected" in the "SPOT" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing event_name" time="0.42">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "App" team.passed
+When the "App" lambda is invoked............................................passed
+Then there should be a "[ERROR]" message in the "App" lambda logs...........passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing event_name 2" time="0.357">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "AuthAccountMgmt" team.passed
+When the "AuthAccountMgmt" lambda is invoked................................passed
+Then there should be a "[ERROR]" message in the "AuthAccountMgmt" lambda logs.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing event_name 3" time="0.29">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "AuthOIDC" team.passed
+When the "AuthOIDC" lambda is invoked.......................................passed
+Then there should be a "[ERROR]" message in the "AuthOIDC" lambda logs......passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing event_name 4" time="0.312">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "IPV" team.passed
+When the "IPV" lambda is invoked............................................passed
+Then there should be a "[ERROR]" message in the "IPV" lambda logs...........passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing event_name 5" time="0.46">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "IPVPass" team.passed
+When the "IPVPass" lambda is invoked........................................passed
+Then there should be a "[ERROR]" message in the "IPVPass" lambda logs.......passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing event_name 6" time="0.322">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "KBV" team.passed
+When the "KBV" lambda is invoked............................................passed
+Then there should be a "[ERROR]" message in the "KBV" lambda logs...........passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing event_name 7" time="0.322">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "KBVAddress" team.passed
+When the "KBVAddress" lambda is invoked.....................................passed
+Then there should be a "[ERROR]" message in the "KBVAddress" lambda logs....passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing event_name 8" time="0.258">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "KBVFraud" team.passed
+When the "KBVFraud" lambda is invoked.......................................passed
+Then there should be a "[ERROR]" message in the "KBVFraud" lambda logs......passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing event_name 9" time="2.086">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "SPOT" team.passed
+When the "SPOT" lambda is invoked...........................................passed
+Then there should be a "[ERROR]" message in the "SPOT" lambda logs..........passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing timestamp" time="2.13">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "App" team.passed
+When the "App" lambda is invoked............................................passed
+Then there should be a "[ERROR]" message in the "App" lambda logs...........passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing timestamp 2" time="0.469">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "AuthAccountMgmt" team.passed
+When the "AuthAccountMgmt" lambda is invoked................................passed
+Then there should be a "[ERROR]" message in the "AuthAccountMgmt" lambda logs.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing timestamp 3" time="0.297">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "AuthOIDC" team.passed
+When the "AuthOIDC" lambda is invoked.......................................passed
+Then there should be a "[ERROR]" message in the "AuthOIDC" lambda logs......passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing timestamp 4" time="0.302">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "IPV" team.passed
+When the "IPV" lambda is invoked............................................passed
+Then there should be a "[ERROR]" message in the "IPV" lambda logs...........passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing timestamp 5" time="0.288">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "IPVPass" team.passed
+When the "IPVPass" lambda is invoked........................................passed
+Then there should be a "[ERROR]" message in the "IPVPass" lambda logs.......passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing timestamp 6" time="0.328">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "KBV" team.passed
+When the "KBV" lambda is invoked............................................passed
+Then there should be a "[ERROR]" message in the "KBV" lambda logs...........passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing timestamp 7" time="0.277">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "KBVAddress" team.passed
+When the "KBVAddress" lambda is invoked.....................................passed
+Then there should be a "[ERROR]" message in the "KBVAddress" lambda logs....passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing timestamp 8" time="0.344">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "KBVFraud" team.passed
+When the "KBVFraud" lambda is invoked.......................................passed
+Then there should be a "[ERROR]" message in the "KBVFraud" lambda logs......passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages don't pass through lambda if missing timestamp 9" time="1.271">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_missing_timestamp" is available for the "SPOT" team.passed
+When the "SPOT" lambda is invoked...........................................passed
+Then there should be a "[ERROR]" message in the "SPOT" lambda logs..........passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages receive a warning in Cloudwatch if addition fields are present" time="76.838">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_additional_field" is available for the "App" team.passed
+And the output file "s3_expected" in the "lambdaToCloudwatchTests" folder is available.passed
+When the "App" lambda is invoked............................................passed
+Then there should be a "[WARN]" message in the "App" lambda logs............passed
+And the s3 below should have a new event matching the respective "App" output file "s3_expected" in the "lambdaToCloudwatchTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages receive a warning in Cloudwatch if addition fields are present 2" time="75.8">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_additional_field" is available for the "AuthAccountMgmt" team.passed
+And the output file "s3_expected" in the "lambdaToCloudwatchTests" folder is available.passed
+When the "AuthAccountMgmt" lambda is invoked................................passed
+Then there should be a "[WARN]" message in the "AuthAccountMgmt" lambda logs.passed
+And the s3 below should have a new event matching the respective "AuthAccountMgmt" output file "s3_expected" in the "lambdaToCloudwatchTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages receive a warning in Cloudwatch if addition fields are present 3" time="86.454">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_additional_field" is available for the "AuthOIDC" team.passed
+And the output file "s3_expected" in the "lambdaToCloudwatchTests" folder is available.passed
+When the "AuthOIDC" lambda is invoked.......................................passed
+Then there should be a "[WARN]" message in the "AuthOIDC" lambda logs.......passed
+And the s3 below should have a new event matching the respective "AuthOIDC" output file "s3_expected" in the "lambdaToCloudwatchTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages receive a warning in Cloudwatch if addition fields are present 4" time="85.437">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_additional_field" is available for the "IPV" team.passed
+And the output file "s3_expected" in the "lambdaToCloudwatchTests" folder is available.passed
+When the "IPV" lambda is invoked............................................passed
+Then there should be a "[WARN]" message in the "IPV" lambda logs............passed
+And the s3 below should have a new event matching the respective "IPV" output file "s3_expected" in the "lambdaToCloudwatchTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages receive a warning in Cloudwatch if addition fields are present 5" time="43.515">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_additional_field" is available for the "IPVPass" team.passed
+And the output file "s3_expected" in the "lambdaToCloudwatchTests" folder is available.passed
+When the "IPVPass" lambda is invoked........................................passed
+Then there should be a "[WARN]" message in the "IPVPass" lambda logs........passed
+And the s3 below should have a new event matching the respective "IPVPass" output file "s3_expected" in the "lambdaToCloudwatchTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages receive a warning in Cloudwatch if addition fields are present 6" time="86.147">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_additional_field" is available for the "KBV" team.passed
+And the output file "s3_expected" in the "lambdaToCloudwatchTests" folder is available.passed
+When the "KBV" lambda is invoked............................................passed
+Then there should be a "[WARN]" message in the "KBV" lambda logs............passed
+And the s3 below should have a new event matching the respective "KBV" output file "s3_expected" in the "lambdaToCloudwatchTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages receive a warning in Cloudwatch if addition fields are present 7" time="85.774">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_additional_field" is available for the "KBVAddress" team.passed
+And the output file "s3_expected" in the "lambdaToCloudwatchTests" folder is available.passed
+When the "KBVAddress" lambda is invoked.....................................passed
+Then there should be a "[WARN]" message in the "KBVAddress" lambda logs.....passed
+And the s3 below should have a new event matching the respective "KBVAddress" output file "s3_expected" in the "lambdaToCloudwatchTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages receive a warning in Cloudwatch if addition fields are present 8" time="75.26">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_additional_field" is available for the "KBVFraud" team.passed
+And the output file "s3_expected" in the "lambdaToCloudwatchTests" folder is available.passed
+When the "KBVFraud" lambda is invoked.......................................passed
+Then there should be a "[WARN]" message in the "KBVFraud" lambda logs.......passed
+And the s3 below should have a new event matching the respective "KBVFraud" output file "s3_expected" in the "lambdaToCloudwatchTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check messages receive a warning in Cloudwatch if addition fields are present 9" time="86.703">
+        <system-out><![CDATA[Given the SQS file "lambdaToCloudwatchTests/lambda_additional_field" is available for the "SPOT" team.passed
+And the output file "s3_expected" in the "lambdaToCloudwatchTests" folder is available.passed
+When the "SPOT" lambda is invoked...........................................passed
+Then there should be a "[WARN]" message in the "SPOT" lambda logs...........passed
+And the s3 below should have a new event matching the respective "SPOT" output file "s3_expected" in the "lambdaToCloudwatchTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Checking the filter sends &quot;AUTH_UPDATE_CLIENT_REQUEST_ERROR&quot; only to Fraud" time="118.418">
+        <system-out><![CDATA[Given the SQS file "SNSFilterTests/auth_update_client_request_error" is available for the "IPV" team.passed
+And the output file "expected" in the "SNSFilterTests" folder is available..passed
+When the "IPV" lambda is invoked............................................passed
+Then the s3 below should have a new event matching the respective "IPV" output file "expected" in the "SNSFilterTests" folder.passed
+And the S3 below should not have a new event matching the respective "IPV" output file "expected" in the "SNSFilterTests" folder.passed
+]]></system-out>
+    </testcase>
+    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Checking the filter sends &quot;RANDOM_EVENT&quot; to neither Fraud, nor Performance" time="117.916">
+        <system-out><![CDATA[Given the SQS file "SNSFilterTests/random_event" is available for the "IPV" team.passed
+And the output file "expected_random" in the "SNSFilterTests" folder is available.passed
+When the "IPV" lambda is invoked............................................passed
+Then the S3 below should not have a new event matching the respective "IPV" output file "expected_random" in the "SNSFilterTests" folder.passed
+]]></system-out>
+    </testcase>
+</testsuite>

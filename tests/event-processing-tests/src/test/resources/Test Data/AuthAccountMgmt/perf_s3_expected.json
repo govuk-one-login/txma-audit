@@ -1,7 +1,7 @@
 {
-  "event_id": "529f-dece-615e-AuthOIDC",
+  "event_id": "529f-dece-615e-AuthAccMgmt",
   "timestamp": 1647969131,
   "timestamp_formatted": "2022-03-22T17:12:11.000Z",
-  "event_name": "AUTH_AUTHORISATION_INITIATED",
-  "component_id": "https://oidc.staging.account.gov.uk"
+  "event_name": "AUTH_LOG_IN_SUCCESS",
+  "component_id": "https://auth.staging.account.gov.uk"
 }
