@@ -279,7 +279,10 @@ Resources:
         KeyARN: !GetAtt FireHoseKMSKey.Arn
         KeyType: "CUSTOMER_MANAGED_CMK"
       ExtendedS3DestinationConfiguration:
-        Prefix: "firehose/"
+        Prefix: "firehose/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/event_id=!{partitionKeyFromQuery:event_id}/"
+        ErrorOutputPrefix: "firehose/errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/!{firehose:error-output-type}/"
+        DynamicPartitioningConfiguration:
+          Enabled: true
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
           IntervalInSeconds: !If
@@ -302,6 +305,12 @@ Resources:
                   ParameterValue: !GetAtt DelimiterFunction.Arn
                 - ParameterName: RoleArn
                   ParameterValue: !GetAtt DeliveryStreamRole.Arn
+            - Type: MetadataExtraction
+              Parameters:
+                - ParameterName: MetadataExtractionQuery
+                  ParameterValue: "{event_id:.event_id}"
+                - ParameterName: JsonParsingEngine
+                  ParameterValue: JQ-1.6
 
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
