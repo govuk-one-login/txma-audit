@@ -14,8 +14,8 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
     Examples:
     | account     |
     | App         |
-    | AuthAccountMgmt |
-    | AuthOIDC    |
+#    | AuthAccountMgmt |
+#    | AuthOIDC    |
     | IPV         |
     | IPVPass     |
     | KBV         |
