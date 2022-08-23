@@ -71,7 +71,7 @@ Resources:
           projection.datetime.format: 'yyyy/MM/dd/HH'
           projection.datetime.interval: 1
           projection.datetime.interval.unit: HOURS
-          storage.location.template: 's3://audit-dev-message-batch/firehose/${datetime}/'
+          storage.location.template: 's3://audit-${Environment}-message-batch/firehose/${datetime}/'
         PartitionKeys:
           - {Name: "datetime", Type: string}
         StorageDescriptor:
@@ -88,7 +88,7 @@ Resources:
             - {Name: "extensions", Type: string}
           Compressed: true
           InputFormat: "org.apache.hadoop.mapred.TextInputFormat"
-          Location: "s3://audit-dev-message-batch/firehose/"
+          Location: "s3://audit-${Environment}-message-batch/firehose/"
           OutputFormat: "org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat"
           SerdeInfo:
             Parameters: {"ignore.malformed.json": true,"serialization.format": 1,"field.delim":""}
@@ -108,4 +108,4 @@ Resources:
           # EncryptionConfiguration:
           #   EncryptionOption: "SSE_KMS"
           #   KmsKey: ?
-          OutputLocation: "s3://athena-example-bucket-dev/"
+          OutputLocation: "s3://athena-example-bucket-${Environment}/"
