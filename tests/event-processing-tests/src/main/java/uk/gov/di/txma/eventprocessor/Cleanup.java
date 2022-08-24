@@ -29,7 +29,7 @@ public class Cleanup {
 
             while (true) {
                 ListObjectsV2Response res = s3.listObjectsV2(listObjects);
-                for (S3Object object : res.contents()){
+                for (S3Object object : res.contents().subList(1, res.contents().size())){
                     DeleteObjectRequest request = DeleteObjectRequest.builder()
                             .bucket(bucketName)
                             .key(object.key())
