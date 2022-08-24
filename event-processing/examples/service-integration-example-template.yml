@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: SQS queues for audit events
+
+Parameters:
+  CodeSigningConfigArn:
+    Type: String
+    Default: "none"
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
+  Environment:
+    Description: "The environment type"
+    Type: "String"
+    AllowedValues:
+      - "dev"
+      - "build"
+      - "staging"
+      - "integration"
+      - "production"
+    ConstraintDescription: must be dev, build, staging, integration or production
+  TestRoleArn:
+    Type: "String"
+    Description: "The ARN of the role that will used for integration tests"
+    Default: "none"
+    AllowedPattern: "(none)|(arn:aws:iam::.*:role/.*)"
+
+Mappings:
+  TxMAAccountARN:
+    Environment:
+      dev: "unused"
+      build: "unused"
+      staging: "arn:aws:iam::<account number>:root"
+      integration: "arn:aws:iam::<account number>:root"
+      production: "arn:aws:iam::<account number>:root"
+
+Conditions:
+  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
+
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    Architectures:
+      - x86_64
+
+Resources:
+  AuditEventQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref AuditEventQueueEncryptionKeyAlias
+      RedriveAllowPolicy:
+        redrivePermission: denyAll
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AuditEventDeadLetterQueue.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: Name
+          Value: !Join
+            - "-"
+            - - !Ref AWS::StackName
+              - "auditEventQueue"
+        - Key: Service
+          Value: "ci/cd"
+        - Key: Source
+          Value: "alphagov/path/to/your/template.yaml"
+
+  AuditEventQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref AuditEventQueue
+      PolicyDocument:
+        Statement:
+          - Sid: "AllowReadByTXMAAccount"
+            Effect: Allow
+            Principal:
+              AWS: !FindInMap [TxMAAccountARN, Environment, !Ref 'Environment']
+            Action:
+              - "sqs:ReceiveMessage"
+              - "sqs:DeleteMessage"
+              - "sqs:GetQueueAttributes"
+            Resource: !GetAtt AuditEventQueue.Arn
+
+  AuditEventDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref AuditEventQueueEncryptionKeyAlias
+      Tags:
+        - Key: Name
+          Value: !Join
+            - "-"
+            - - !Ref AWS::StackName
+              - "auditEventDeadLetterQueue"
+        - Key: Service
+          Value: "ci/cd"
+        - Key: Source
+          Value: "alphagov/path/to/your/template.yaml"
+
+  AuditEventQueueEncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Symmetric key used to encrypt audit messages at rest in SQS
+      EnableKeyRotation: true
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: 'Enable Root access'
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - 'kms:*'
+            Resource: '*'
+          - Sid: 'Allow decryption of events by TXMA'
+            Effect: Allow
+            Principal:
+              AWS: !FindInMap [TxMAAccountARN, Environment, !Ref 'Environment']
+            Action:
+              - 'kms:decrypt'
+            Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Join
+            - "-"
+            - - !Ref AWS::StackName
+              - "auditEventQueueEncryptionKey"
+        - Key: Service
+          Value: "ci/cd"
+        - Key: Source
+          Value: "alphagov/path/to/your/template.yaml"
+
+  AuditEventQueueEncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${AWS::StackName}/auditEventQueueEncryptionKey
+      TargetKeyId: !Ref AuditEventQueueEncryptionKey
+
+  AuditEventQueueConsumerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: AWSLambdaBasicExecutionRole
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Join
+            - "-"
+            - - !Ref AWS::StackName
+              - "auditEventQueueConsumerRole"
+        - Key: Service
+          Value: "ci/cd"
+        - Key: Source
+          Value: "alphagov/path/to/your/template.yaml"

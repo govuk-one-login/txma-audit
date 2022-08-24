@@ -194,6 +194,8 @@ Resources:
       - IPVPassLambdaAccessRole
       - SPOTLambdaAccessRole
       - AppLambdaAccessRole
+      - AuthOIDCLambdaAccessRole
+      - AuthAccountMgmtLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
@@ -204,6 +206,8 @@ Resources:
         - !Ref IPVPassLambdaAccessRole
         - !Ref SPOTLambdaAccessRole
         - !Ref AppLambdaAccessRole
+        - !Ref AuthOIDCLambdaAccessRole
+        - !Ref AuthAccountMgmtLambdaAccessRole
       PolicyName: sns_publish_policy
       PolicyDocument:
         Version: 2012-10-17
@@ -1163,6 +1167,276 @@ Resources:
             Resource:
               - "{{resolve:ssm:AppKmsArn}}"
 
+  AuthOIDCEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-AuthOIDC"
+      RetentionInDays: 7
+
+  AuthOIDCEventProcessorFunction:
+    DependsOn:
+      - AuthOIDCEventProcessorLogGroup
+      - AuthOIDCLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-AuthOIDC"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: event-processor-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt AuthOIDCLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+          defaultComponentId: "AuthOIDC"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - event-processor-app.ts
+
+  AuthOIDCEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - AuthOIDCEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-AuthOIDC"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields AuthOIDC"
+
+  AuthOIDCEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - AuthOIDCEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "AuthOIDC Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-AuthOIDC"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields AuthOIDC"
+      Namespace: "lambda/di/txma/errors"
+
+  AuthOIDCEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - AuthOIDCEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-AuthOIDC"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors AuthOIDC"
+
+  AuthOIDCEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - AuthOIDCEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "AuthOIDC Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-AuthOIDC"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors AuthOIDC"
+      Namespace: "lambda/di/txma/errors"
+
+  AuthOIDCLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-AuthOIDC"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  AuthOIDCLambdaEventSourceMapping:
+    DependsOn:
+      - AuthOIDCEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:AuthOIDCQueueARN}}"
+      FunctionName: !Ref AuthOIDCEventProcessorFunction
+
+  AuthOIDCKMSPolicy:
+    DependsOn:
+      - AuthOIDCLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref AuthOIDCLambdaAccessRole
+      PolicyName: auth_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:AuthOIDCKmsArn}}"
+
+  AuthAccountMgmtEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-AuthAccountMgmt"
+      RetentionInDays: 7
+
+  AuthAccountMgmtEventProcessorFunction:
+    DependsOn:
+      - AuthAccountMgmtEventProcessorLogGroup
+      - AuthAccountMgmtLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-AuthAccountMgmt"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: event-processor-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt AuthAccountMgmtLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+          defaultComponentId: "AuthAccountMgmt"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - event-processor-app.ts
+
+  AuthAccountMgmtEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - AuthAccountMgmtEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-AuthAccountMgmt"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields Auth Account Management"
+
+  AuthAccountMgmtEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - AuthAccountMgmtEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "AuthAccountMgmt Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-AuthAccountMgmt"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields Auth Account Management"
+      Namespace: "lambda/di/txma/errors"
+
+  AuthAccountMgmtEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - AuthAccountMgmtEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-AuthAccountMgmt"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors Auth Account Management"
+
+  AuthAccountMgmtEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - AuthAccountMgmtEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Auth Account Management Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-AuthAccountMgmt"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors Auth Account Management"
+      Namespace: "lambda/di/txma/errors"
+
+  AuthAccountMgmtLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-AuthAccountMgmt"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  AuthAccountMgmtLambdaEventSourceMapping:
+    DependsOn:
+      - AuthAccountMgmtEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:AuthAccountMgmtQueueARN}}"
+      FunctionName: !Ref AuthAccountMgmtEventProcessorFunction
+
+  AuthAccountMgmtKMSPolicy:
+    DependsOn:
+      - AuthAccountMgmtLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref AuthAccountMgmtLambdaAccessRole
+      PolicyName: auth_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:AuthAccountMgmtKmsArn}}"
+
   FireHoseKMSKey:
     Type: AWS::KMS::Key
     Properties:
@@ -1265,25 +1539,6 @@ Resources:
               - 's3:Get*'
               - 's3:List*'
 
-  FraudSplunkDeliveryFailureBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: DeployTestRolePolicy
-    Properties:
-      Bucket: !Ref FraudSplunkDeliveryTestBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
-              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
-            Principal:
-              AWS: !Ref TestRoleArn
-            Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:DeleteObject'
-
   FraudSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -1314,6 +1569,25 @@ Resources:
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
+
+  FraudSplunkDeliveryTestBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsBuildOrDev
+    Properties:
+      Bucket: !Ref FraudSplunkDeliveryTestBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt FraudSplunkDeliveryTestBucket.Arn
+              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
+            Principal:
+              AWS: !Ref TestRoleArn
+            Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:DeleteObject'
 
   FraudSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
@@ -1386,7 +1660,7 @@ Resources:
 
   PerformanceSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: DeployTestRolePolicy
+    Condition: IsBuildOrDev
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryTestBucket
       PolicyDocument:
@@ -1840,7 +2114,6 @@ Resources:
       SubscriptionRoleArn: !GetAtt FireHoseSNSSubscriptionRole.Arn
       FilterPolicy:
         eventName:
-          - AUTH_SUITABLE_FOR_SERVICE
           - AUTH_IPV_CAPACITY_REQUESTED
           - AUTH_IPV_AUTHORISATION_REQUESTED
           - IPV_JOURNEY_START
@@ -1868,21 +2141,28 @@ Resources:
           - IPV_VC_RECEIVED
           - IPV_JOURNEY_END
           - IPV_IDENTITY_ISSUED
-          - AUTH_SIGNED_VC_RECEIVED
-          - AUTH_REQUEST_SPOT_CHECK
-          - AUTH_SPOT_CHECK_RECEIVED
+          - AUTH_PROCESSING_IDENTITY_REQUEST
+          - AUTH_IPV_AUTHORISATION_RESPONSE_RECEIVED
+          - AUTH_IPV_SUCCESSFUL_IDENTITY_RESPONSE_RECEIVED
+          - AUTH_IPV_SUCCESSFUL_TOKEN_RESPONSE_RECEIVED
+          - AUTH_IPV_UNSUCCESSFUL_TOKEN_RESPONSE_RECEIVED
+          - AUTH_IPV_SPOT_REQUESTED
           - IPV_SPOT_REQUEST_RECEIVED
           - IPV_SPOT_RESPONSE_APPROVED
           - IPV_SPOT_RESPONSE_REJECTED
+          - AUTH_IPV_SUCCESSFUL_SPOT_RESPONSE_RECEIVED
+          - AUTH_IPV_UNSUCCESSFUL_SPOT_RESPONSE_RECEIVED
           - AUTH_AUTHORISATION_REQUEST_ERROR
           - AUTH_AUTHORISATION_INITIATED
           - AUTH_AUTHORISATION_REQUEST_RECEIVED
           - AUTH_AUTH_CODE_ISSUED
           - AUTH_LOG_OUT_SUCCESS
+          - AUTH_USER_INFO_RETURNED
           - AUTH_ACCOUNT_TEMPORARILY_LOCKED
           - AUTH_INVALID_CREDENTIALS
           - AUTH_NO_ACCOUNT_WITH_EMAIL
           - AUTH_CODE_MAX_RETRIES_REACHED
+          - AUTH_INVALID_CODE_SENT
           - AUTH_CODE_VERIFIED
           - AUTH_PASSWORD_RESET_REQUESTED
           - AUTH_PASSWORD_RESET_SUCCESSFUL
@@ -1898,6 +2178,7 @@ Resources:
           - AUTH_UPDATE_PROFILE_PHONE_NUMBER
           - AUTH_UPDATE_PROFILE_CONSENT_UPDATED
           - AUTH_UPDATE_PROFILE_TERMS_CONDS_ACCEPTANCE
+          - AUTH_PROFILE_AUTH_APP
           - AUTH_MFA_INVALID_CODE_REQUEST
           - AUTH_MFA_MISMATCHED_EMAIL
           - AUTH_MFA_MISSING_PHONE_NUMBER
@@ -1913,6 +2194,12 @@ Resources:
           - AUTH_REGISTER_CLIENT_REQUEST_ERROR
           - AUTH_UPDATE_CLIENT_REQUEST_RECEIVED
           - AUTH_UPDATE_CLIENT_REQUEST_ERROR
+          - AUTH_DOC_APP_AUTHORISATION_REQUESTED
+          - AUTH_DOC_APP_AUTHORISATION_RESPONSE_RECEIVED
+          - AUTH_DOC_APP_SUCCESSFUL_TOKEN_RESPONSE_RECEIVED
+          - AUTH_DOC_APP_UNSUCCESSFUL_TOKEN_RESPONSE_RECEIVED
+          - AUTH_DOC_APP_SUCCESSFUL_CREDENTIAL_RESPONSE_RECEIVED
+          - AUTH_DOC_APP_UNSUCCESSFUL_CREDENTIAL_RESPONSE_RECEIVED
           - DCMAW_CRI_START
           - DCMAW_CRI_VC_ISSUED
           - DCMAW_CRI_END
@@ -1959,6 +2246,7 @@ Resources:
           - IPV_SPOT_RESPONSE_APPROVED
           - IPV_SPOT_RESPONSE_REJECTED
           - DCMAW_CRI_START
+          - DCMAW_CRI_VC_ISSUED
           - DCMAW_CRI_END
           - DCMAW_CRI_ABORT
           - DCMAW_CRI_4XXERROR
@@ -2205,6 +2493,22 @@ Resources:
       FunctionName: !Ref AppEventProcessorFunction
       Principal: !Ref TestRoleArn
 
+  AuthOIDCTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuthOIDCEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  AuthAccountMgmtTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuthAccountMgmtEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
   #
   # CSLS
   #
@@ -2269,6 +2573,24 @@ Resources:
     Properties:
       LogGroupName:
         Ref: "AppEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSAuthOIDCLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "AuthOIDCEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSAuthAccountMgmtLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "AuthAccountMgmtEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
