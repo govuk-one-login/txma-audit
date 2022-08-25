@@ -44,6 +44,7 @@ Conditions:
   DeployTestRolePolicy: !And
     - !Condition IsPipelineTestStage
     - !Condition UseTestRole
+  IsStaging: !Equals [ !Ref Environment, staging ]
 
 Globals:
   Function:
@@ -123,6 +124,13 @@ Resources:
             Action:
               - 'kms:Decrypt'
             Resource: '*'
+          - Effect: "Allow"
+            Principal:
+              AWS: "{{resolve:ssm:TxMASandboxAuditAccountARN}}"
+            Action:
+              - 'kms:Decrypt'
+            Resource: '*'
+            Condition: IsStaging
 
   SNSKMSKeyAlias:
     Type: AWS::KMS::Alias
@@ -181,6 +189,16 @@ Resources:
                 - "{{resolve:ssm:AuditAccountARN}}"
                 - !Sub "${AWS::AccountId}"
             Resource: !Ref epSNSTopic
+          - Sid: SNSSubscribePolicy-TxMASandbox
+            Effect: Allow
+            Action:
+              - 'sns:Subscribe'
+            Principal:
+              AWS:
+                - "{{resolve:ssm:TxMASandboxAuditAccountARN}}"
+                - !Sub "${AWS::AccountId}"
+            Resource: !Ref epSNSTopic
+            Condition: IsStaging
       Topics:
         - !Ref epSNSTopic
 
