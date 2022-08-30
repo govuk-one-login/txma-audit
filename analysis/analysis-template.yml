@@ -62,7 +62,7 @@ Resources:
       DatabaseName: !Ref AuditEventDatabase
       TableInput:
         Description: "Table contain event message raw data"
-        Name: !Sub "txma-audit-${Environment}-message-batch-test"
+        Name: !Sub "txma-audit-${Environment}-message-batch"
         Parameters:
           # has_encrypted_data: false
           projection.enabled: true
