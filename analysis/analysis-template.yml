@@ -64,7 +64,7 @@ Resources:
         Description: "Table contain event message raw data"
         Name: !Sub "txma-audit-${Environment}-message-batch-table"
         Parameters:
-          # has_encrypted_data: false
+          has_encrypted_data: true
           projection.enabled: true
           projection.datetime.type: date
           projection.datetime.range: '2022/08/01/00,NOW'
@@ -105,7 +105,25 @@ Resources:
         EnforceWorkGroupConfiguration: true
         PublishCloudWatchMetricsEnabled: false
         ResultConfiguration:
-          # EncryptionConfiguration:
-          #   EncryptionOption: "SSE_KMS"
-          #   KmsKey: ?
-          OutputLocation: "s3://athena-example-bucket-${Environment}/"
+          EncryptionConfiguration:
+            EncryptionOption: "SSE_S3"
+          OutputLocation:
+            !Join
+            - ''
+            - - 's3://'
+              - !Ref AthenaQueryResultsBucket
+              - '/'
+
+  AthenaQueryResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-athena-query-results"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
