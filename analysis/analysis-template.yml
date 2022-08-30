@@ -62,7 +62,7 @@ Resources:
       DatabaseName: !Ref AuditEventDatabase
       TableInput:
         Description: "Table contain event message raw data"
-        Name: !Sub "txma-audit-${Environment}-message-batch"
+        Name: !Sub "txma-audit-${Environment}-message-batch-table"
         Parameters:
           # has_encrypted_data: false
           projection.enabled: true
@@ -71,7 +71,7 @@ Resources:
           projection.datetime.format: 'yyyy/MM/dd/HH'
           projection.datetime.interval: 1
           projection.datetime.interval.unit: HOURS
-          storage.location.template: 's3://audit-${Environment}-message-batch/firehose/${datetime}/'
+          storage.location.template: 's3://audit-dev-message-batch/firehose/${datetime}/'
         PartitionKeys:
           - {Name: "datetime", Type: string}
         StorageDescriptor:
@@ -88,7 +88,7 @@ Resources:
             - {Name: "extensions", Type: string}
           Compressed: true
           InputFormat: "org.apache.hadoop.mapred.TextInputFormat"
-          Location: "s3://audit-${Environment}-message-batch/firehose/"
+          Location: !Sub "s3://audit-${Environment}-message-batch/firehose/"
           OutputFormat: "org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat"
           SerdeInfo:
             Parameters: {"ignore.malformed.json": true,"serialization.format": 1,"field.delim":""}
