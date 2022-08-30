@@ -14,8 +14,8 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
     Examples:
     | account     |
     | App         |
-#    | AuthAccountMgmt |
-#    | AuthOIDC    |
+    | AuthAccountMgmt |
+    | AuthOIDC    |
     | IPV         |
     | IPVPass     |
     | KBV         |
@@ -80,20 +80,20 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | SPOT        |
 
 
-  Scenario Outline: Checking the filter sends "AUTH_UPDATE_CLIENT_REQUEST_ERROR" only to Fraud
-    Given the SQS file "SNSFilterTests/auth_update_client_request_error" is available for the "<account>" team
-    And the output file "expected" in the "SNSFilterTests" folder is available
-      | fraud    |
-      | perf     |
-    When the "<account>" lambda is invoked
-    Then the s3 below should have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
-      | fraud    |
-    And the S3 below should not have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
-      | perf     |
-
-    Examples:
-      | account     |
-      | IPV         |
+#  Scenario Outline: Checking the filter sends "AUTH_UPDATE_CLIENT_REQUEST_ERROR" only to Fraud
+#    Given the SQS file "SNSFilterTests/auth_update_client_request_error" is available for the "<account>" team
+#    And the output file "expected" in the "SNSFilterTests" folder is available
+#      | fraud    |
+#      | perf     |
+#    When the "<account>" lambda is invoked
+#    Then the s3 below should have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
+#      | fraud    |
+#    And the S3 below should not have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
+#      | perf     |
+#
+#    Examples:
+#      | account     |
+#      | IPV         |
 
 
   Scenario Outline: Checking the filter sends "RANDOM_EVENT" to neither Fraud, nor Performance
