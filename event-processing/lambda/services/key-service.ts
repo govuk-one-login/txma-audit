@@ -23,7 +23,7 @@ export class KeyService {
         }
 
         if (data.SecretBinary) {
-            secret = Buffer.from(data.SecretBinary.toString(), 'base64').toString('ascii');
+            secret = Buffer.from(data.SecretBinary.toString(), 'base64').toString('utf-8');
         } else if (data.SecretString) {
             secret = data.SecretString;
         } else {

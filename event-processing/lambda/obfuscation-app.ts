@@ -23,7 +23,7 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
     }
 
     const output = event.records.map((record: FirehoseTransformationEventRecord) => {
-        const plaintextData: string = Buffer.from(record.data, 'base64').toString('ascii');
+        const plaintextData: string = Buffer.from(record.data, 'base64').toString('utf-8');
         const events: unknown[] = JSON.parse(plaintextData);
         const obfuscatedEvents: unknown[] = [];
         let data: string;
