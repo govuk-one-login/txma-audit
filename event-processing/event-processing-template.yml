@@ -1553,7 +1553,7 @@ Resources:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
-        RestrictPublicBuckets: false
+        RestrictPublicBuckets: true
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/fraud-splunk-delivery-failure-bucket/"
@@ -1641,7 +1641,7 @@ Resources:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
-        RestrictPublicBuckets: false
+        RestrictPublicBuckets: true
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/performance-splunk-delivery-failure-bucket/"
