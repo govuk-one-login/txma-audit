@@ -9,6 +9,7 @@ export class CleansingService {
             auditEvent.component_id,
             auditEvent.timestamp,
             auditEvent.timestamp_formatted,
+            auditEvent.extensions,
         );
     }
 }

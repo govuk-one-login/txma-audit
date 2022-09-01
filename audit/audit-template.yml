@@ -35,15 +35,18 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
-  IsBuild: !Or
-    - !Equals [ !Ref Environment, dev ]
-    - !Equals [ !Ref Environment, build ]
-  IsTestStage: !Or
+  IsPipelineTestStage: !Or
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
-  DeployTestPolicy: !And
-    - !Condition IsTestStage
+  IsTestableEnv: !Or
+    - !Condition IsPipelineTestStage
+    - !Equals [ !Ref Environment, dev ]
+  DeployTestRolePolicy: !And
+    - !Condition IsPipelineTestStage
     - !Condition UseTestRole
+  DeployMessageBucketPolicy: !Or
+    - !Condition DeployTestRolePolicy
+    - !Condition IsProductionOrStaging
 
 Globals:
   Function:
@@ -155,27 +158,6 @@ Resources:
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
-          - Effect: 'Allow'
-            Resource:
-              - !GetAtt MessageBatchBucket.Arn
-              - !Sub '${MessageBatchBucket.Arn}/*'
-            Principal:
-              AWS: !Ref TestRoleArn
-            Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-          - !If
-            - IsProductionOrStaging
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt MessageBatchBucket.Arn
-                - !Sub '${MessageBatchBucket.Arn}/*'
-              Principal:
-                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-              Action:
-                - 's3:Get*'
-                - 's3:List*'
-            - !Ref AWS::NoValue
 
   MessageBatchBucket:
     Type: AWS::S3::Bucket
@@ -205,15 +187,69 @@ Resources:
       NotificationConfiguration:
         QueueConfigurations:
           !If
-            - IsProductionOrStaging
-            - - Event: "s3:ObjectCreated:*"
-                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-              - Event: "s3:ObjectRestore:*"
-                Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - - !Ref AWS::NoValue
+          - IsProductionOrStaging
+          - - Event: "s3:ObjectCreated:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectRestore:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  MessageBatchBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: DeployMessageBucketPolicy
+    Properties:
+      Bucket: !Ref MessageBatchBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - !If
+            - DeployTestRolePolicy
+            - Effect: 'Allow'
+              Resource:
+                - !GetAtt MessageBatchBucket.Arn
+                - !Sub '${MessageBatchBucket.Arn}/*'
+              Principal:
+                AWS: !Ref TestRoleArn
+              Action:
+                - 's3:GetObject'
+                - 's3:ListBucket'
+            - !Ref AWS::NoValue
+          - !If
+            - IsProductionOrStaging
+            - Effect: 'Allow'
+              Resource:
+                - !GetAtt MessageBatchBucket.Arn
+                - !Sub '${MessageBatchBucket.Arn}/*'
+              Principal:
+                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+              Action:
+                - 's3:Get*'
+                - 's3:List*'
+            - !Ref AWS::NoValue
+
+  S3NoReceivedObjectsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Audit S3 Received No Objects Alarm"
+      AlarmName: "S3NoReceivedObjectsAlarmAlarm"
+      ComparisonOperator: LessThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      Period: 86400
+      Threshold: 1
+      TreatMissingData: breaching
+      MetricName: "PutRequests"
+      Namespace: "AWS/S3"
+      Dimensions:
+      - Name: BucketName
+        Value: !Ref MessageBatchBucket
+      - Name: FilterId
+        Value: EntireBucket
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
@@ -247,7 +283,7 @@ Resources:
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
           IntervalInSeconds: !If
-            - IsBuild
+            - IsTestableEnv
             - 60
             - 900
           SizeInMBs: 128
@@ -442,6 +478,72 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - delimiter-app.ts
+
+  firehoseTesterLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Condition: IsTestableEnv
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-firehoseTester"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: lambda_kinesis_firehose_PutRecord_policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'firehose:PutRecord'
+                Resource:
+                  - !GetAtt AuditDeliveryStream.Arn
+
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+
+  firehoseTesterFunction:
+    DependsOn:
+      - firehoseTesterLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Condition: IsTestableEnv
+    Properties:
+      FunctionName: "firehoseTester"
+      CodeUri: ../audit/lambda
+      PackageType: Zip
+      Handler: firehoseTester-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt firehoseTesterLambdaAccessRole.Arn
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+      Environment:
+        Variables:
+          firehoseName: !Ref AuditDeliveryStream
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - firehoseTester-app.ts
+
+  firehoseTesterInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref firehoseTesterFunction
+      Principal: !Ref TestRoleArn
 
   #
   # CSLS
