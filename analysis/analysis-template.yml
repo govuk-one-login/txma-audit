@@ -118,6 +118,8 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "${AWS::StackName}-${Environment}-athena-query-results"
+      VersioningConfiguration:
+        Status: "Enabled"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -127,3 +129,25 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
+
+  AthenaQueryResultsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AthenaQueryResultsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${AthenaQueryResultsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
