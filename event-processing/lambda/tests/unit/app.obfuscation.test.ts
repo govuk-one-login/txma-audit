@@ -273,7 +273,7 @@ describe('Unit test for app handler', function () {
 
         expect(result).toEqual(expectedResult);
 
-        const resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
+        const resultData = Buffer.from(result.records[0].data, 'base64').toString('utf-8');
         const resultAuditEvent: IAuditEvent = AuditEvent.fromJSONString(resultData);
 
         expect(resultAuditEvent).toEqual(expectedData);
@@ -308,7 +308,7 @@ describe('Unit test for app handler', function () {
         const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
-        const resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
+        const resultData = Buffer.from(result.records[0].data, 'base64').toString('utf-8');
         const resultAuditEvent: unknown = JSON.parse(resultData);
         expect(resultAuditEvent).toEqual(expectedData);
     });
@@ -332,7 +332,7 @@ describe('Unit test for app handler', function () {
         const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
-        const resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
+        const resultData = Buffer.from(result.records[0].data, 'base64').toString('utf-8');
         const resultAuditEvent: unknown = JSON.parse(resultData);
         expect(resultAuditEvent).toEqual(expectedData);
     });
@@ -358,7 +358,7 @@ describe('Unit test for app handler', function () {
         const result = await handler(firehoseEvent);
 
         expect(result).toEqual(expectedResult);
-        const resultData = Buffer.from(result.records[0].data, 'base64').toString('ascii');
+        const resultData = Buffer.from(result.records[0].data, 'base64').toString('utf-8');
         const resultAuditEvent: unknown = JSON.parse(resultData);
         expect(resultAuditEvent).toEqual(expectedData);
     });
