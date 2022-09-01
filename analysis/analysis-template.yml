@@ -71,7 +71,7 @@ Resources:
           projection.datetime.format: 'yyyy/MM/dd/HH'
           projection.datetime.interval: 1
           projection.datetime.interval.unit: HOURS
-          storage.location.template: 's3://audit-dev-message-batch/firehose/${datetime}/'
+          storage.location.template: !Sub 's3://audit-${Environment}-message-batch/firehose/${datetime}/'
         PartitionKeys:
           - {Name: "datetime", Type: string}
         StorageDescriptor:
