@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<testsuite errors="0" failures="0" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="1" time="85.67">
+    <testcase classname="Whenever user creates an event on Address CRI UI, TxMA S3 bucket should how a log of this event within a minute." name="Testing Address CRI TxMA integration" time="85.519">
+        <system-out>
+            <![CDATA[Given the user is on Address CRI............................................passed
+When the user enters their postcode and click `Find address`................passed
+When the user chooses their address from dropdown and click `Choose address`.passed
+When the user enters the date they moved into their current address.........passed
+When the user clicks `I confirm my details are correct`.....................passed
+Then Response from Address CRI Integration displays the user's address in JSON.passed
+When the user clicks on summaryTest and reads the sub value from JSON.......passed
+Then the audit S3 should have a new event with the postcode provided........passed
+]]>
+        </system-out>
+    </testcase>
+</testsuite>

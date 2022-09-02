@@ -10,6 +10,7 @@ public class VerifiableCredentialsPage {
         PageFactory.initElements(Driver.get(), this);
     }
 
+
     @FindBy(xpath = "//*[@id=\"main-content\"]/div/details/summary/span")
     public WebElement ResponseFromAddressCRIDev;
 
