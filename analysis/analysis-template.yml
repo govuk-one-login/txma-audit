@@ -129,21 +129,77 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AthenaQueryResultsBucketAccessLogsBucket
+        LogFilePrefix: "analysis/athena-query-results/"
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 7
+            Status: Enabled
+      NotificationConfiguration:
+        QueueConfigurations:
+          !If
+          - IsProductionOrStaging
+          - - Event: "s3:ObjectCreated:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectRestore:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - - !Ref AWS::NoValue
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+
+  AthenaQueryResultsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: DeployMessageBucketPolicy
+    Properties:
+      Bucket: !Ref AthenaQueryResultsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - !If
+            - IsProductionOrStaging
+            - Effect: 'Allow'
+              Resource:
+                - !GetAtt AthenaQueryResultsBucket.Arn
+                - !Sub '${AthenaQueryResultsBucket.Arn}/*'
+              Principal:
+                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+              Action:
+                - 's3:Get*'
+                - 's3:List*'
+            - !Ref AWS::NoValue
+
+  AthenaQueryResultsBucketAccessLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-athena-access-bucket-logs"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       Tags:
         - Key: CheckovRulesToSkip
           Value: CKV_AWS_18
 
-  AthenaQueryResultsBucketPolicy:
+  AthenaQueryResultsBucketAccessLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref AthenaQueryResultsBucket
+      Bucket: !Ref AthenaQueryResultsBucketAccessLogsBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Sid: "EnableS3Logging"
             Effect: "Allow"
             Resource:
-              - !Sub "${AthenaQueryResultsBucket.Arn}/*"
+              - !Sub "${AthenaQueryResultsBucketAccessLogsBucket.Arn}/*"
             Principal:
               Service: "logging.s3.amazonaws.com"
             Action:
