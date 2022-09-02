@@ -26,7 +26,7 @@ export const handler = async (event: S3Event): Promise<void> => {
         );
     }
 
-    const streamName = String(process.env.fireHoseStreamName); //Environment var stream name
+    const streamName = String(process.env.fireHoseStreamName);
     const maxIngest = Number(process.env.maxIngestion);
 
     try {
