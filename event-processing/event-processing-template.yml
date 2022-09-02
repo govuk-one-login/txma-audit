@@ -191,6 +191,7 @@ Resources:
       - KBVAddressLambdaAccessRole
       - KBVFraudLambdaAccessRole
       - IPVLambdaAccessRole
+      - IPVCILambdaAccessRole
       - IPVPassLambdaAccessRole
       - SPOTLambdaAccessRole
       - AppLambdaAccessRole
@@ -203,6 +204,7 @@ Resources:
         - !Ref KBVAddressLambdaAccessRole
         - !Ref KBVFraudLambdaAccessRole
         - !Ref IPVLambdaAccessRole
+        - !Ref IPVCILambdaAccessRole
         - !Ref IPVPassLambdaAccessRole
         - !Ref SPOTLambdaAccessRole
         - !Ref AppLambdaAccessRole
