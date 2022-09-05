@@ -17,6 +17,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
     | AuthAccountMgmt |
     | AuthOIDC    |
     | IPV         |
+    | IPVCI       |
     | IPVPass     |
     | KBV         |
     | KBVAddress  |
@@ -35,6 +36,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | AuthAccountMgmt |
       | AuthOIDC    |
       | IPV         |
+      | IPVCI       |
       | IPVPass     |
       | KBV         |
       | KBVAddress  |
@@ -52,6 +54,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | AuthAccountMgmt |
       | AuthOIDC    |
       | IPV         |
+      | IPVCI       |
       | IPVPass     |
       | KBV         |
       | KBVAddress  |
@@ -73,6 +76,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | AuthAccountMgmt |
       | AuthOIDC    |
       | IPV         |
+      | IPVCI       |
       | IPVPass     |
       | KBV         |
       | KBVAddress  |
