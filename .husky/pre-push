@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+cd "event-processing\\lambda\\" || exit
+
+yarn test
+
+cd ..\\.. || exit
+cd "audit\\lambda\\" || exit
+
+yarn test
