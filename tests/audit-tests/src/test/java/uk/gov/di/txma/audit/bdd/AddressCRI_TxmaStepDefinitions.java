@@ -28,11 +28,8 @@ import utilities.ConfigurationReader;
 import utilities.Driver;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -46,14 +43,8 @@ public class AddressCRI_TxmaStepDefinitions {
 
     String KennethPostcode = "BA2 5AA";
     String KennethMoveYear = "2014";
-    String KennethBuildingNumber = "8";
-    String KennethStreetName = "HADLEY ROAD";
-    String KennethAddressLocality = "BATH";
-    String KennethAddressCountry = "GB";
-
     List<JSONObject> output = new ArrayList<>();
     Region region = Region.EU_WEST_2;
-
     String sub = null;
 
 
@@ -66,11 +57,9 @@ public class AddressCRI_TxmaStepDefinitions {
         BrowserUtils.waitForPageToLoad(100);
 
     }
-
     @When("the user enters their postcode and click `Find address`")
     public void the_user_enters_their_postcode_and_click_Find_address() {
         new FindYourAddressPage().EnterYourPostcode.sendKeys(KennethPostcode);
-//        new FindYourAddressPage().EnterYourPostcode.sendKeys(postcode);
         new FindYourAddressPage().FindAddress.click();
         BrowserUtils.waitForPageToLoad(100);
     }
@@ -90,7 +79,6 @@ public class AddressCRI_TxmaStepDefinitions {
         BrowserUtils.waitForPageToLoad(100);
 
     }
-
     @When("the user clicks `I confirm my details are correct`")
     public void the_user_clicks_I_confirm_my_details_are_correct() {
         new ConfirmYourDetailsPage().IConfirmMyDetailsAreCorrect.click();
@@ -104,9 +92,18 @@ public class AddressCRI_TxmaStepDefinitions {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(AddressCRIJSONResponse);
         sub = jsonNode.get("sub").asText();
-        System.out.println(sub);
-        JsonNode vcNode = jsonNode.get("vc");
         System.out.println("sub =" +sub);
+
+    }
+
+    @Then("the audit S3 should have a new event with the postcode provided")
+    public void the_Audit_S3_Should_Have_A_New_Event_With_The_Postcode_Provided() throws InterruptedException {
+        assertTrue(isFoundInS3());
+    }
+
+    @When("the user clicks on summaryTest and reads the sub value from JSON")
+    public void the_User_Clicks_On_Summary_Test_And_Reads_The_Sub_Value_From_JSON() {
+        new VerifiableCredentialsPage().ResponseFromAddressCRIDev.click();
 
     }
 
@@ -196,11 +193,6 @@ public class AddressCRI_TxmaStepDefinitions {
         }
     }
 
-    public String readJSONFile(String fileName) throws IOException {
-        Path filePath = Path.of(new File("src/test/resources/Test Data/" + fileName + ".json").getAbsolutePath());
-        return Files.readString(filePath);
-    }
-
     public boolean isFoundInS3() throws InterruptedException {
         // count will make sure it only searches for a finite time
         int count = 0;
@@ -229,17 +221,6 @@ public class AddressCRI_TxmaStepDefinitions {
         return false;
     }
 
-    @Then("the audit S3 should have a new event with the postcode provided")
-    public void the_Audit_S3_Should_Have_A_New_Event_With_The_Postcode_Provided() throws InterruptedException {
-        assertTrue(isFoundInS3());
-    }
-
-
-    @When("the user clicks on summaryTest and reads the sub value from JSON")
-    public void the_User_Clicks_On_Summary_Test_And_Reads_The_Sub_Value_From_JSON() {
-        new VerifiableCredentialsPage().ResponseFromAddressCRIDev.click();
-
-    }
 
 }
 

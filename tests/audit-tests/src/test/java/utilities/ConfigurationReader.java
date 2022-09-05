@@ -32,22 +32,6 @@ public class ConfigurationReader {
         return Optional.ofNullable(System.getenv("BROWSER")).orElse("chrome-headless");
     }
 
-    public static String getVisitCredentialIssuersUrl() {
-        String visitCredentialIssuersStubUrl = System.getenv("VISIT_CREDENTIAL_ISSUER_STUB_URL");
-        if (visitCredentialIssuersStubUrl == null) {
-            throw new IllegalArgumentException("Environment variable VISIT_CREDENTIAL_ISSUER_STUB_URL is not set");
-        }
-        return visitCredentialIssuersStubUrl;
-    }
-
-    public static String getOrchestratorUrl() {
-        String orchestratorStubUrl = System.getenv("ORCHESTRATOR_STUB_URL");
-        if (orchestratorStubUrl == null) {
-            throw new IllegalArgumentException("Environment variable ORCHESTRATOR_STUB_URL is not set");
-        }
-        return orchestratorStubUrl;
-    }
-
     public static String getIPVCoreStubUrl() {
         String orchestratorStubUrl = System.getenv("IPV_CORE_STUB_URL");
         if (orchestratorStubUrl == null) {

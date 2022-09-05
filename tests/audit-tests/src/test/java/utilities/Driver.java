@@ -74,8 +74,6 @@ public class Driver {
                 case "safari":
                     if (!System.getProperty("os.name").toLowerCase().contains("mac"))
                         throw new WebDriverException("Your OS doesn't support Safari");
-//                        WebDriverManager.safaridriver().setup();
-//                        driverPool.set(new SafariDriver());
                     WebDriverManager.getInstance(SafariDriver.class).setup();
                     driverPool.set(new SafariDriver());
                     break;
