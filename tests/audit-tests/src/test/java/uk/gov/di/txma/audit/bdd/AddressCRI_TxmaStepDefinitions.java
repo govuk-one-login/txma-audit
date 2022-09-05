@@ -92,7 +92,6 @@ public class AddressCRI_TxmaStepDefinitions {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(AddressCRIJSONResponse);
         sub = jsonNode.get("sub").asText();
-        System.out.println("sub =" +sub);
 
     }
 
