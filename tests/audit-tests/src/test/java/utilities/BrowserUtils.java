@@ -3,10 +3,7 @@ package utilities;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedCondition;
@@ -15,10 +12,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 
 public class BrowserUtils {
@@ -156,85 +149,6 @@ public class BrowserUtils {
             wait.until(expectation);
         } catch (Throwable error) {
             error.printStackTrace();
-        }
-    }
-
-    /**
-     * Verifies whether the element matching the provided locator is displayed on page
-     *
-     * @param by
-     * @throws AssertionError if the element matching the provided locator is not found or not displayed
-     */
-    public static void verifyElementDisplayed(By by) {
-        try {
-            assertTrue(Driver.get().findElement(by).isDisplayed(),"Element not visible: " + by);
-        } catch (NoSuchElementException e) {
-            e.printStackTrace();
-            fail("Element not found: " + by);
-
-        }
-    }
-
-    /**
-     * Verifies whether the element matching the provided locator is NOT displayed on page
-     *
-     * @param by
-     * @throws AssertionError the element matching the provided locator is displayed
-     */
-    public static void verifyElementNotDisplayed(By by) {
-        try {
-            assertFalse(Driver.get().findElement(by).isDisplayed(),"Element should not be visible: " + by);
-        } catch (NoSuchElementException e) {
-            e.printStackTrace();
-
-        }
-    }
-
-
-    /**
-     * Verifies whether the element is displayed on page
-     *
-     * @param element
-     * @throws AssertionError if the element is not found or not displayed
-     */
-    public static void verifyElementDisplayed(WebElement element) {
-        try {
-            assertTrue(element.isDisplayed(),"Element not visible: " + element);
-        } catch (NoSuchElementException e) {
-            e.printStackTrace();
-            fail("Element not found: " + element);
-
-        }
-    }
-
-
-    /**
-     * Waits for element to be not stale
-     *
-     * @param element
-     */
-    public static void waitForStaleElement(WebElement element) {
-        int y = 0;
-        while (y <= 15) {
-            if (y == 1)
-                try {
-                    element.isDisplayed();
-                    break;
-                } catch (StaleElementReferenceException st) {
-                    y++;
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                } catch (WebDriverException we) {
-                    y++;
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
         }
     }
 
