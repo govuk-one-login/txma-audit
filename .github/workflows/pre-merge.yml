@@ -10,6 +10,7 @@ env:
   awsRegion: "eu-west-2"
   eventProcessorDirectory: "event-processing"
   auditDirectory: "audit"
+  analysisDirectory: "analysis"
 
 jobs:
   run_event_processor_tests_and_validation:
@@ -77,3 +78,24 @@ jobs:
       - name: SAM Validate
         run: |
           sam validate --template-file audit-template.yml --config-env ${{ env.environment }}
+
+  run_analysis_validation:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: ${{ env.analysisDirectory }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v1
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_ANALYSIS }}
+          aws-region: ${{ env.awsRegion }}
+      - name: SAM Validate
+        run: |
+          sam validate --template-file analysis-template.yml --config-env ${{ env.environment }}

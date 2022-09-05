@@ -1,0 +1,209 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: "A template to create all the Analysis infrastructure."
+
+Parameters:
+  CodeSigningConfigArn:
+    Type: String
+    Default: "none"
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
+  Environment:
+    Description: "The environment type"
+    Type: "String"
+    AllowedValues:
+      - "dev"
+      - "build"
+      - "staging"
+      - "integration"
+      - "production"
+    ConstraintDescription: must be dev, build, staging, integration or production
+  TestRoleArn:
+    Type: "String"
+    Description: "The ARN of the role that will used for integration tests"
+    Default: "none"
+    AllowedPattern: "(none)|(arn:aws:iam::.*:role/.*)"
+
+Conditions:
+  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
+  UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
+  UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
+  IsProductionOrStaging: !And
+    - !Not [ !Equals [ !Ref Environment, dev ] ]
+    - !Not [ !Equals [ !Ref Environment, build ] ]
+
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+    Architectures:
+      - x86_64
+
+Resources:
+  AuditEventDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Description: "TxMA - Event Message Database"
+        Name: "txma-audit"
+
+  AuditEventTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref AuditEventDatabase
+      TableInput:
+        Description: "Table contain event message raw data"
+        Name: !Sub "txma-audit-${Environment}-message-batch-table"
+        Parameters:
+          has_encrypted_data: true
+          projection.enabled: true
+          projection.datetime.type: date
+          projection.datetime.range: '2022/08/01/00,NOW'
+          projection.datetime.format: 'yyyy/MM/dd/HH'
+          projection.datetime.interval: 1
+          projection.datetime.interval.unit: HOURS
+          storage.location.template: !Join [ "", [ "s3://audit-", !Ref Environment, "-message-batch/firehose/${datetime}/" ]]
+        PartitionKeys:
+          - {Name: "datetime", Type: string}
+        StorageDescriptor:
+          Columns:
+            - {Name: "event_id", Type: string}
+            - {Name: "client_id", Type: string}
+            - {Name: "timestamp", Type: bigint}
+            - {Name: "timestamp_formatted", Type: string}
+            - {Name: "event_name", Type: string}
+            - {Name: "component_id", Type: string}
+            - {Name: "user", Type: string}
+            - {Name: "platform", Type: string}
+            - {Name: "restricted", Type: string}
+            - {Name: "extensions", Type: string}
+          Compressed: true
+          InputFormat: "org.apache.hadoop.mapred.TextInputFormat"
+          Location: !Sub "s3://audit-${Environment}-message-batch/firehose/"
+          OutputFormat: "org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat"
+          SerdeInfo:
+            Parameters: {"ignore.malformed.json": true,"serialization.format": 1,"field.delim":""}
+            SerializationLibrary: "org.openx.data.jsonserde.JsonSerDe"
+          StoredAsSubDirectories: false
+        TableType: EXTERNAL_TABLE
+
+  AthenaEventWorkgroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Description: The workgroup for TxMA queries
+      Name: TxMAAuditQueries
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        PublishCloudWatchMetricsEnabled: false
+        ResultConfiguration:
+          EncryptionConfiguration:
+            EncryptionOption: "SSE_S3"
+          OutputLocation:
+            !Join
+            - ''
+            - - 's3://'
+              - !Ref AthenaQueryResultsBucket
+              - '/'
+
+  AthenaQueryResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-athena-query-results"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AthenaQueryResultsBucketAccessLogsBucket
+        LogFilePrefix: "analysis/athena-query-results/"
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 7
+            Status: Enabled
+      NotificationConfiguration:
+        QueueConfigurations:
+          !If
+          - IsProductionOrStaging
+          - - Event: "s3:ObjectCreated:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectRestore:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - - !Ref AWS::NoValue
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+
+  AthenaQueryResultsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsProductionOrStaging
+    Properties:
+      Bucket: !Ref AthenaQueryResultsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: 'Allow'
+            Resource:
+              - !GetAtt AthenaQueryResultsBucket.Arn
+              - !Sub '${AthenaQueryResultsBucket.Arn}/*'
+            Principal:
+              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+            Action:
+              - 's3:Get*'
+              - 's3:List*'
+
+  AthenaQueryResultsBucketAccessLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-athena-access-bucket-logs"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
+
+  AthenaQueryResultsBucketAccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AthenaQueryResultsBucketAccessLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${AthenaQueryResultsBucketAccessLogsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
