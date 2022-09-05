@@ -94,7 +94,7 @@ jobs:
       - name: Assume AWS role
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_AUDIT }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_ANALYSIS }}
           aws-region: ${{ env.awsRegion }}
       - name: SAM Validate
         run: |
