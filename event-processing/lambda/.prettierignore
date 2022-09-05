@@ -1,0 +1,14 @@
+*.sh
+*.toml
+.editorconfig
+.eslintignore
+.gitignore
+.husky
+.prettierignore
+.pnp.*
+.yarn
+CODEOWNERS
+coverage/
+dist/
+event-processor-template.yaml
+yarn.lock

@@ -40,23 +40,24 @@ export class CleansedEvent implements ICleansedEvent {
         this.timestamp_formatted = timestamp_formatted;
 
         if (extensions != undefined && (extensions as ICleansedExtensionsEvent).evidence != undefined) {
-            let evidence = CleansedEvent.CleanseEvidenceEvent((extensions as ICleansedExtensionsEvent).evidence as ICleansedEvidenceEvent)
-            if (Object.keys(evidence).length){
-              this.extensions = { evidence: evidence };
+            const evidence = CleansedEvent.CleanseEvidenceEvent(
+                (extensions as ICleansedExtensionsEvent).evidence as ICleansedEvidenceEvent,
+            );
+            if (Object.keys(evidence).length) {
+                this.extensions = { evidence: evidence };
             }
         }
     }
 
     private static CleanseEvidenceEvent(evidence: ICleansedEvidenceEvent) {
-
-        for (let key in evidence) {
+        for (const key in evidence) {
             const k = key as keyof ICleansedEvidenceEvent;
 
             if (!fraudKeys.includes(k)) {
-                delete evidence[k]
+                delete evidence[k];
             }
         }
 
-        return evidence
+        return evidence;
     }
 }

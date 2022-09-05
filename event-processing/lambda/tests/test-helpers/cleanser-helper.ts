@@ -33,8 +33,8 @@ export class CleanserHelper {
                 response: 'Authentication successful',
                 evidence: {
                     validityScore: 2,
-                    other_evidence: 'evidence'
-                }
+                    other_evidence: 'evidence',
+                },
             },
         };
     }
@@ -49,7 +49,7 @@ export class CleanserHelper {
             extensions: {
                 evidence: {
                     validityScore: 2,
-                }
+                },
             },
         };
     }
