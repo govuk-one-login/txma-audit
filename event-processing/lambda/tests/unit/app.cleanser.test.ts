@@ -126,6 +126,42 @@ describe('Unit test for app handler', function () {
         expect(result).toEqual(expectedResult);
     });
 
+    it('cleanses all messages when receiving an array including one piece evidence to be kept in the extensions field and one to be removed', async () => {
+
+        const expectedData : string = Buffer.from(TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessage())).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: expectedData,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "Ok"
+            }]
+        }
+
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(CleanserHelper.exampleEnrichedMessageWithValidityScoreInOneEvidence()));
+
+        const result = await handler(firehoseEvent);
+
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('cleanses all messages when receiving an array including two pieces of evidence to be kept in the extensions field', async () => {
+
+        const expectedData : string = Buffer.from(TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessageWithTwoEvidence())).toString('base64')
+        const expectedResult : FirehoseTransformationResult = {
+            records: [{
+                data: expectedData,
+                recordId: "7041e12f-c772-41e4-a05f-8bf25cc6f4bb",
+                result: "Ok"
+            }]
+        }
+
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(TestHelper.encodeAuditEventArray(CleanserHelper.exampleEnrichedMessageWithTwoEvidence()));
+
+        const result = await handler(firehoseEvent);
+
+        expect(result).toEqual(expectedResult);
+    });
+
     it('cleanses an event with only additional evidence', async () => {
 
         const exampleMessage: IEnrichedAuditEvent = {
@@ -136,9 +172,10 @@ describe('Unit test for app handler', function () {
             event_name: "AUTHENTICATION_ATTEMPT",
             component_id: "AUTH",
             extensions: {
-                evidence: {
+                evidence: [{
                     additional_evidence: 'evidence'
                 }
+              ]
             }
         }
 
