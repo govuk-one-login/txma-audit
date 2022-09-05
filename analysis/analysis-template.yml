@@ -151,7 +151,6 @@ Resources:
 
   AthenaQueryResultsBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: DeployMessageBucketPolicy
     Properties:
       Bucket: !Ref AthenaQueryResultsBucket
       PolicyDocument:
