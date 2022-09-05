@@ -7,7 +7,7 @@ yarn lint-staged
 
 cd .. || exit
 
-git diff --cached --name-only | if grep --quiet template.yaml
+git diff --cached --name-only | if grep --quiet audit-template.yaml
 then
   echo "\nRunning Checkov hook...\n"
   checkov -f audit-template.yaml --framework cloudformation --quiet
@@ -20,7 +20,7 @@ yarn lint-staged
 
 cd .. || exit
 
-git diff --cached --name-only | if grep --quiet template.yaml
+git diff --cached --name-only | if grep --quiet event-processing-template.yaml
 then
   echo "\nRunning Checkov hook...\n"
   checkov -f event-processing-template.yaml --framework cloudformation --quiet
@@ -29,7 +29,7 @@ fi
 cd .. || exit
 cd "analysis\\" || exit
 
-git diff --cached --name-only | if grep --quiet template.yaml
+git diff --cached --name-only | if grep --quiet analysis-template.yaml
 then
   echo "\nRunning Checkov hook...\n"
   checkov -f analysis-template.yaml --framework cloudformation --quiet
