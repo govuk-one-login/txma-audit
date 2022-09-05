@@ -90,7 +90,7 @@ sam deploy --config-file config/samconfig-event-processing.toml --config-env "de
 
 *Note*: When calling SAM deploy against a template containing a Lambda function make sure to omit the template name argument. If this is not done, the source files will be deployed instead of the compiled files located in .aws-sam.
 
-####Available Environments
+#### Available Environments
 
 - build
 - staging
