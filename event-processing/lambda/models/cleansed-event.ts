@@ -40,15 +40,26 @@ export class CleansedEvent implements ICleansedEvent {
         this.timestamp_formatted = timestamp_formatted;
 
         if (extensions != undefined && (extensions as ICleansedExtensionsEvent).evidence != undefined) {
-            let evidence = CleansedEvent.CleanseEvidenceEvent((extensions as ICleansedExtensionsEvent).evidence as ICleansedEvidenceEvent)
+            let evidence = CleansedEvent.CleanseEvidenceArrayEvent((extensions as ICleansedExtensionsEvent).evidence as Array<ICleansedEvidenceEvent>)
             if (Object.keys(evidence).length){
               this.extensions = { evidence: evidence };
             }
         }
     }
 
-    private static CleanseEvidenceEvent(evidence: ICleansedEvidenceEvent) {
+    private static CleanseEvidenceArrayEvent(evidenceArray: Array<ICleansedEvidenceEvent>) {
+        let cleansedEvidence: Array<ICleansedEvidenceEvent> = []
+        for (let evidence of evidenceArray){
+            evidence = CleansedEvent.CleanseEvidenceEvent(evidence as ICleansedEvidenceEvent)
+            if (Object.keys(evidence).length){
+                cleansedEvidence.push(evidence)
+            }
+        }
 
+        return cleansedEvidence
+    }
+
+    private static CleanseEvidenceEvent(evidence: ICleansedEvidenceEvent) {
         for (let key in evidence) {
             const k = key as keyof ICleansedEvidenceEvent;
 
