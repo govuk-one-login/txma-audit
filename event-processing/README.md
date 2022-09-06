@@ -12,6 +12,12 @@ The application uses several AWS resources, including Lambda functions, SNS, Kin
 
 ## Pre-requisites
 
+- [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) - Used to build and deploy the application
+- [Node.js](https://nodejs.org/en/) version 14 - Recommended way to install is via [NVM](https://github.com/nvm-sh/nvm)
+- [Docker](https://docs.docker.com/get-docker/) - Required to run SAM locally and run integration tests
+- [Yarn](https://yarnpkg.com/getting-started/install) version 3 - The package manager for the project
+- [Checkov](https://www.checkov.io/) - Scans cloud infrastructure configurations to find misconfigurations before they're deployed. Added as a Husky pre-commit hook.
+
 The deployment of the resources contained here rely on the following AWS System Manager Parameters being available in the event processing account:
 
 * AuthAccountARN - Auth Root Account
