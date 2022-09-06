@@ -88,7 +88,7 @@ jobs:
       - name: Run checkov on SAM template
         uses: bridgecrewio/checkov-action@master
         with:
-          file: audit-template.yml
+          file: ${{ env.auditDirectory }}/audit-template.yml
           quiet: true
           framework: cloudformation
           skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
@@ -116,7 +116,7 @@ jobs:
       - name: Run checkov on SAM template
         uses: bridgecrewio/checkov-action@master
         with:
-          file: analysis-template.yml
+          file: ${{ env.analysisDirectory }}/analysis-template.yml
           quiet: true
           framework: cloudformation
           skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
