@@ -51,6 +51,7 @@ jobs:
           file: event-processing-template.yml
           quiet: true
           framework: cloudformation
+          skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
 
   run_audit_validation:
     runs-on: ubuntu-latest
@@ -90,6 +91,7 @@ jobs:
           file: audit-template.yml
           quiet: true
           framework: cloudformation
+          skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
 
   run_analysis_validation:
     runs-on: ubuntu-latest
@@ -117,3 +119,4 @@ jobs:
           file: analysis-template.yml
           quiet: true
           framework: cloudformation
+          skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
