@@ -211,9 +211,10 @@ $RECYCLE.BIN/
 
 # Yarn files
 **/.yarn/*
-!.yarn/patches
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions
+!**/.yarn/cache
+!**/.yarn/patches
+!**/.yarn/releases
+!**/.yarn/plugins
+!**/.yarn/sdks
+!**/.yarn/versions
 **/.pnp.*
