@@ -10,9 +10,7 @@
         "unit": "jest",
         "lint": "prettier . --write ; eslint . --fix",
         "compile": "tsc",
-        "test": "yarn run compile && yarn run unit",
-        "postinstall": "cd ..\\..\\ && husky install",
-        "prepare": "cd ..\\..\\ && node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\""
+        "test": "yarn run compile && yarn run unit"
     },
     "babel": {
         "presets": [
