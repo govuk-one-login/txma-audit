@@ -40,6 +40,7 @@ jobs:
         with:
           node-version: '14.x'
       - name: Update Yarn
+        working-directory: ${{ env.eventProcessorDirectory }}/lambda
         run: |
           yarn set-version 3.2.3
       - name: Install Lambda Dependencies
@@ -106,6 +107,7 @@ jobs:
         with:
           node-version: '14.x'
       - name: Update Yarn
+        working-directory: ${{ env.auditDirectory }}/lambda
         run: |
           yarn set-version 3.2.3
       - name: Install Lambda Dependencies
