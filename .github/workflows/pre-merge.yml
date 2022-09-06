@@ -45,6 +45,12 @@ jobs:
       - name: SAM Validate
         run: |
           sam validate --template-file event-processing-template.yml --config-env ${{ env.environment }}
+      - name: Run checkov on SAM template
+        uses: bridgecrewio/checkov-action@master
+        with:
+          file: event-processing-template.yml
+          quiet: true
+          framework: cloudformation
 
   run_audit_validation:
     runs-on: ubuntu-latest
@@ -78,6 +84,12 @@ jobs:
       - name: SAM Validate
         run: |
           sam validate --template-file audit-template.yml --config-env ${{ env.environment }}
+      - name: Run checkov on SAM template
+        uses: bridgecrewio/checkov-action@master
+        with:
+          file: audit-template.yml
+          quiet: true
+          framework: cloudformation
 
   run_analysis_validation:
     runs-on: ubuntu-latest
@@ -99,3 +111,9 @@ jobs:
       - name: SAM Validate
         run: |
           sam validate --template-file analysis-template.yml --config-env ${{ env.environment }}
+      - name: Run checkov on SAM template
+        uses: bridgecrewio/checkov-action@master
+        with:
+          file: analysis-template.yml
+          quiet: true
+          framework: cloudformation
