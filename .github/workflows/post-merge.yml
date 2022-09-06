@@ -42,7 +42,7 @@ jobs:
       - name: Update Yarn
         working-directory: ${{ env.eventProcessorDirectory }}/lambda
         run: |
-          yarn set-version 3.2.3
+          yarn policies set-version 3.2.3
       - name: Install Lambda Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/lambda
         run: yarn install --immutable --immutable-cache --check-cache
@@ -109,7 +109,7 @@ jobs:
       - name: Update Yarn
         working-directory: ${{ env.auditDirectory }}/lambda
         run: |
-          yarn set-version 3.2.3
+          yarn policies set-version 3.2.3
       - name: Install Lambda Dependencies
         working-directory: ${{ env.auditDirectory }}/lambda
         run: yarn install --immutable --immutable-cache --check-cache
