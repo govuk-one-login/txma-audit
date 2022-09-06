@@ -10,7 +10,9 @@
         "unit": "jest",
         "lint": "eslint '*.ts' --quiet --fix",
         "compile": "tsc",
-        "test": "yarn run compile && yarn run unit"
+        "test": "yarn run compile && yarn run unit",
+        "postinstall": "cd ..\\..\\ && husky install",
+        "prepare": "cd ..\\..\\ && node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\""
     },
     "babel": {
         "presets": [
