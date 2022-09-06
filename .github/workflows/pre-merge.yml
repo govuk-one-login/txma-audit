@@ -48,7 +48,7 @@ jobs:
       - name: Run checkov on SAM template
         uses: bridgecrewio/checkov-action@master
         with:
-          file: event-processing-template.yml
+          file: ${{ env.eventProcessorDirectory }}/event-processing-template.yml
           quiet: true
           framework: cloudformation
           skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
