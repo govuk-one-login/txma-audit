@@ -31,10 +31,51 @@ export class CleanserHelper {
             },
             extensions: {
                 response: 'Authentication successful',
-                evidence: {
-                    validityScore: 2,
-                    other_evidence: 'evidence',
-                },
+                evidence: [
+                    {
+                        validityScore: 2,
+                        other_evidence: 'evidence',
+                    },
+                ],
+            },
+        };
+    }
+
+    static exampleEnrichedMessageWithValidityScoreInOneEvidence(): IEnrichedAuditEvent {
+        return {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            client_id: 'some-client',
+            timestamp: 1609462861,
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: 'AUTH',
+            user: {
+                transaction_id: 'a52f6f87',
+                user_id: 'some_user_id',
+                email: 'foo@bar.com',
+                phone: '07711223344',
+                ip_address: '100.100.100.100',
+                session_id: 'c222c1ec',
+                persistent_session_id: 'some session id',
+                govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+            },
+            platform: {
+                xray_trace_id: '24727sda4192',
+            },
+            restricted: {
+                experian_ref: 'DSJJSEE29392',
+                passport_number: 1040349934,
+            },
+            extensions: {
+                response: 'Authentication successful',
+                evidence: [
+                    {
+                        validityScore: 2,
+                    },
+                    {
+                        other_evidence: 'evidence',
+                    },
+                ],
             },
         };
     }
@@ -47,9 +88,71 @@ export class CleanserHelper {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             extensions: {
-                evidence: {
-                    validityScore: 2,
-                },
+                evidence: [
+                    {
+                        validityScore: 2,
+                    },
+                ],
+            },
+        };
+    }
+
+    static exampleEnrichedMessageWithTwoEvidence(): IEnrichedAuditEvent {
+        return {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            client_id: 'some-client',
+            timestamp: 1609462861,
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: 'AUTH',
+            user: {
+                transaction_id: 'a52f6f87',
+                user_id: 'some_user_id',
+                email: 'foo@bar.com',
+                phone: '07711223344',
+                ip_address: '100.100.100.100',
+                session_id: 'c222c1ec',
+                persistent_session_id: 'some session id',
+                govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+            },
+            platform: {
+                xray_trace_id: '24727sda4192',
+            },
+            restricted: {
+                experian_ref: 'DSJJSEE29392',
+                passport_number: 1040349934,
+            },
+            extensions: {
+                response: 'Authentication successful',
+                evidence: [
+                    {
+                        validityScore: 2,
+                        other_evidence: 'evidence',
+                    },
+                    {
+                        validityScore: 2,
+                    },
+                ],
+            },
+        };
+    }
+
+    static exampleCleansedMessageWithTwoEvidence(): ICleansedEvent {
+        return {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: 'AUTH',
+            timestamp: 1609462861,
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            extensions: {
+                evidence: [
+                    {
+                        validityScore: 2,
+                    },
+                    {
+                        validityScore: 2,
+                    },
+                ],
             },
         };
     }
