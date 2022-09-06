@@ -39,6 +39,9 @@ jobs:
         uses: actions/setup-node@v3.0.0
         with:
           node-version: '14.x'
+      - name: Update Yarn
+        run: |
+          yarn set-version 3.2.3
       - name: Install Lambda Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/lambda
         run: yarn install --immutable --immutable-cache --check-cache
@@ -102,6 +105,9 @@ jobs:
         uses: actions/setup-node@v3.0.0
         with:
           node-version: '14.x'
+      - name: Update Yarn
+        run: |
+          yarn set-version 3.2.3
       - name: Install Lambda Dependencies
         working-directory: ${{ env.auditDirectory }}/lambda
         run: yarn install --immutable --immutable-cache --check-cache
