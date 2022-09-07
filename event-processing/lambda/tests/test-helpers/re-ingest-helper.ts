@@ -10,7 +10,7 @@ export class ReIngestHelper {
                     s3: {
                         bucket: {
                             arn: 'arn:aws:s3:::mybucket',
-                            name: 'sourcebucket',
+                            name: 'perfBucket',
                             ownerIdentity: {
                                 principalId: 'EXAMPLE',
                             },

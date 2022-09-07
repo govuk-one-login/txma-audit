@@ -105,6 +105,11 @@ function getStreamName(bucketName: string): string {
         [performanceBucketName]: () => {
             stream = String(process.env.performanceStreamName);
         },
+        default: () => {
+            throw new Error(
+                `[ERROR] NO MATCHING BUCKET FOUND:\n We could not match the S3 object bucket name to an expected value: ${bucketName}`,
+            );
+        },
     };
 
     (streams[bucketName] || streams['default'])();

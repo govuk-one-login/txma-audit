@@ -1475,7 +1475,7 @@ Resources:
                 "aws:PrincipalArn":
                   - !GetAtt ObfuscationFunction.Arn
                   - !GetAtt CleanserFunction.Arn
-#                  - !GetAtt ReIngestFunction.Arn
+                  - !GetAtt ReIngestFunction.Arn
 
   FireHoseKMSKeyAlias:
     Type: AWS::KMS::Alias
