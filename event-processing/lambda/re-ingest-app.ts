@@ -11,22 +11,9 @@ export const handler = async (event: S3Event): Promise<void> => {
     const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
 
     //validate env vars
-    const missingEnvironmentVariables: Array<string> = [];
-    if (!('fireHoseStreamName' in process.env)) {
-        missingEnvironmentVariables.push('fireHoseStreamName');
-    }
-    if (!('maxIngestion' in process.env)) {
-        missingEnvironmentVariables.push('maxIngestion');
-    }
-    if (missingEnvironmentVariables.length > 0) {
-        throw new Error(
-            `[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: ${missingEnvironmentVariables.join(
-                '\n',
-            )}`,
-        );
-    }
+    validateEnvironmentVariables();
 
-    const streamName = String(process.env.fireHoseStreamName);
+    const streamName = getStreamName(bucket);
     const maxIngest = Number(process.env.maxIngestion);
 
     try {
@@ -105,3 +92,48 @@ export const handler = async (event: S3Event): Promise<void> => {
         console.log(`[ERROR] REINGEST ERROR:\n Error: ${errorWithMessage.message}`, errorWithMessage.stack);
     }
 };
+
+function getStreamName(bucketName: string): string {
+    const fraudBucketName = String(process.env.fraudBucketName);
+    const performanceBucketName = String(process.env.performanceBucketName);
+
+    let stream = '';
+    const streams = {
+        [fraudBucketName]: () => {
+            stream = String(process.env.fraudStreamName);
+        },
+        [performanceBucketName]: () => {
+            stream = String(process.env.performanceStreamName);
+        },
+    };
+
+    (streams[bucketName] || streams['default'])();
+
+    return stream;
+}
+
+function validateEnvironmentVariables(): void {
+    const missingEnvironmentVariables: Array<string> = [];
+    if (!('performanceBucketName' in process.env)) {
+        missingEnvironmentVariables.push('performanceBucketName');
+    }
+    if (!('fraudBucketName' in process.env)) {
+        missingEnvironmentVariables.push('fraudBucketName');
+    }
+    if (!('maxIngestion' in process.env)) {
+        missingEnvironmentVariables.push('maxIngestion');
+    }
+    if (!('performanceStreamName' in process.env)) {
+        missingEnvironmentVariables.push('performanceStreamName');
+    }
+    if (!('fraudStreamName' in process.env)) {
+        missingEnvironmentVariables.push('fraudStreamName');
+    }
+    if (missingEnvironmentVariables.length > 0) {
+        throw new Error(
+            `[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: ${missingEnvironmentVariables.join(
+                '\n',
+            )}`,
+        );
+    }
+}

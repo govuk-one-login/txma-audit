@@ -1572,7 +1572,7 @@ Resources:
 
   FraudSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: IsBuildOrDev
+    Condition: DeployTestRolePolicy
     Properties:
       Bucket: !Ref FraudSplunkDeliveryTestBucket
       PolicyDocument:
@@ -1660,7 +1660,7 @@ Resources:
 
   PerformanceSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: IsBuildOrDev
+    Condition: DeployTestRolePolicy
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryTestBucket
       PolicyDocument:
@@ -2462,6 +2462,14 @@ Resources:
       Handler: re-ingest-app.handler
       Runtime: nodejs14.x
       Timeout: 30
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+      Environment:
+        Variables:
+          performanceBucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
+          fraudBucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
+          performanceStreamName: !Sub "PerformanceFireHose-${Environment}"
+          fraudStreamName: !Sub "FraudFireHose-${Environment}"
+          maxIngestion: "10"
       Events:
         FraudBucket:
           Type: S3
@@ -2479,9 +2487,9 @@ Resources:
         - S3ReadPolicy:
             BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
         - FirehoseWritePolicy:
-            DeliveryStreamName: !Ref FraudDeliveryStream
+            DeliveryStreamName: !Sub "FraudFireHose-${Environment}"
         - FirehoseWritePolicy:
-            DeliveryStreamName: !Ref PerformanceDeliveryStream
+            DeliveryStreamName: !Sub "PerformanceFireHose-${Environment}"
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
