@@ -2482,9 +2482,9 @@ Resources:
             Bucket: !Ref PerformanceSplunkDeliveryFailureBucket
             Events: 's3:ObjectCreated:*'
       Policies:
-        - S3ReadPolicy:
+        - S3CrudPolicy:
             BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
-        - S3ReadPolicy:
+        - S3CrudPolicy:
             BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
         - FirehoseWritePolicy:
             DeliveryStreamName: !Sub "FraudFireHose-${Environment}"
