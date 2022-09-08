@@ -158,7 +158,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
-    it('does remove fields with value of 0', async () => {
+    it('does not remove fields with value of 0', async () => {
         const expectedResult =
             '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","extensions":{"evidence":[{"validityScore":0}]}}';
 
