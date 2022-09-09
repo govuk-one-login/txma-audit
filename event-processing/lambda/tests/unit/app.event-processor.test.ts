@@ -233,6 +233,86 @@ describe('Unit test for app eventProcessorHandler', function () {
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
     });
 
+    it('does not remove fields with value of 0', async () => {
+        const expectedResult =
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","extensions":{"evidence":[{"validityScore":0}]}}';
+
+        const exampleMessage: IAuditEvent = {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            timestamp: 1609462861,
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
+            extensions: {
+                evidence: [
+                    {
+                      validityScore: 0
+                    }
+                ]
+            },
+        };
+
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
+        const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
+
+        await handler(sqsEvent);
+
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
+            }
+        );
+        expect(consoleMock).toHaveBeenCalledTimes(2);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
+    });
+
+    it('does not remove fields with value of false', async () => {
+        const expectedResult =
+            '{"event_id":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","timestamp":1609462861,"timestamp_formatted":"2021-01-23T15:43:21.842","event_name":"AUTHENTICATION_ATTEMPT","component_id":"1234","extensions":{"booleanValue":false}}';
+
+        const exampleMessage: IAuditEvent = {
+            event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
+            timestamp: 1609462861,
+            timestamp_formatted: '2021-01-23T15:43:21.842',
+            event_name: 'AUTHENTICATION_ATTEMPT',
+            component_id: '1234',
+            extensions: {
+                booleanValue: false
+            },
+        };
+
+        (sns.publish().promise as MockedFunction<any>).mockResolvedValueOnce({Success: 'OK', MessageId: "1" });
+
+        const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));
+
+        await handler(sqsEvent);
+
+        expect(sns.publish).toHaveBeenCalledWith(
+            {
+                Message: expectedResult,
+                TopicArn: 'SOME-SNS-TOPIC',
+                MessageAttributes: {
+                    eventName: {
+                        DataType: 'String',
+                        StringValue: 'AUTHENTICATION_ATTEMPT',
+                    },
+                },
+            }
+        );
+        expect(consoleMock).toHaveBeenCalledTimes(2);
+        expect(consoleMock).toHaveBeenNthCalledWith(1, 'Topic ARN: SOME-SNS-TOPIC');
+        expect(consoleMock).toHaveBeenNthCalledWith(2, 'MessageID is 1');
+    });
+
     it('successfully stringifies an SQS event', async () => {
         const expectedResult: IAuditEvent = {
             event_id:"66258f3e-82fc-4f61-9ba0-62424e1f06b4",

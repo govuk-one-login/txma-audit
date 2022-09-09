@@ -191,6 +191,7 @@ Resources:
       - KBVAddressLambdaAccessRole
       - KBVFraudLambdaAccessRole
       - IPVLambdaAccessRole
+      - IPVCILambdaAccessRole
       - IPVPassLambdaAccessRole
       - SPOTLambdaAccessRole
       - AppLambdaAccessRole
@@ -203,6 +204,7 @@ Resources:
         - !Ref KBVAddressLambdaAccessRole
         - !Ref KBVFraudLambdaAccessRole
         - !Ref IPVLambdaAccessRole
+        - !Ref IPVCILambdaAccessRole
         - !Ref IPVPassLambdaAccessRole
         - !Ref SPOTLambdaAccessRole
         - !Ref AppLambdaAccessRole
@@ -897,6 +899,141 @@ Resources:
               - 'kms:Decrypt'
             Resource:
               - "{{resolve:ssm:IPVPassportKmsArn}}"
+
+  IPVCIEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-IPVCI"
+      RetentionInDays: 7
+
+  IPVCIEventProcessorFunction:
+    DependsOn:
+      - IPVCIEventProcessorLogGroup
+      - IPVCILambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-IPVCI"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: event-processor-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt IPVCILambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+          defaultComponentId: "IPV-CI"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - event-processor-app.ts
+
+  IPVCIEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - IPVCIEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-IPVCI"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields IPV Contra Indicator"
+
+  IPVCIEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - IPVEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "IPV Contra Indicator Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-IPVCI"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields IPV Contra Indicator"
+      Namespace: "lambda/di/txma/errors"
+
+  IPVCIEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - IPVCIEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-IPVCI"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors IPV Contra Indicator"
+
+  IPVCIEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - IPVCIEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "IPV Contra Indicator Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-IPVCI"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors IPV Contra Indicator"
+      Namespace: "lambda/di/txma/errors"
+
+  IPVCILambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-IPVCI"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  IPVCILambdaEventSourceMapping:
+    DependsOn:
+      - IPVCIEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:IPVCIQueueARN}}"
+      FunctionName: !Ref IPVCIEventProcessorFunction
+
+  IPVCIKMSPolicy:
+    DependsOn:
+      - IPVCILambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref IPVCILambdaAccessRole
+      PolicyName: ipv_contra_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:IPVCIKmsArn}}"
 
   SPOTEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -2141,6 +2278,12 @@ Resources:
           - IPV_VC_RECEIVED
           - IPV_JOURNEY_END
           - IPV_IDENTITY_ISSUED
+          - IPV_CONTRA_INDICATOR_STORAGE_GET_START
+          - IPV_CONTRA_INDICATOR_STORAGE_GET_QUERY
+          - IPV_CONTRA_INDICATOR_STORAGE_GET_END
+          - IPV_CONTRA_INDICATOR_STORAGE_PUT_START
+          - IPV_CONTRA_INDICATOR_STORAGE_PUT_NEW_CIS
+          - IPV_CONTRA_INDICATOR_STORAGE_PUT_END
           - AUTH_PROCESSING_IDENTITY_REQUEST
           - AUTH_IPV_AUTHORISATION_RESPONSE_RECEIVED
           - AUTH_IPV_SUCCESSFUL_IDENTITY_RESPONSE_RECEIVED
@@ -2244,6 +2387,12 @@ Resources:
           - IPV_VC_RECEIVED
           - IPV_JOURNEY_END
           - IPV_IDENTITY_ISSUED
+          - IPV_CONTRA_INDICATOR_STORAGE_GET_START
+          - IPV_CONTRA_INDICATOR_STORAGE_GET_QUERY
+          - IPV_CONTRA_INDICATOR_STORAGE_GET_END
+          - IPV_CONTRA_INDICATOR_STORAGE_PUT_START
+          - IPV_CONTRA_INDICATOR_STORAGE_PUT_NEW_CIS
+          - IPV_CONTRA_INDICATOR_STORAGE_PUT_END
           - AUTH_PROCESSING_IDENTITY_REQUEST
           - AUTH_IPV_AUTHORISATION_RESPONSE_RECEIVED
           - AUTH_IPV_SUCCESSFUL_IDENTITY_RESPONSE_RECEIVED
@@ -2543,6 +2692,14 @@ Resources:
       FunctionName: !Ref IPVPassEventProcessorFunction
       Principal: !Ref TestRoleArn
 
+  IPVCITestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref IPVCIEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
   SPOTTestInvokePermission:
     Type: AWS::Lambda::Permission
     Condition: DeployTestRolePolicy
@@ -2621,6 +2778,15 @@ Resources:
     Properties:
       LogGroupName:
         Ref: "IPVPassEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  CSLSIPVCILogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "IPVCIEventProcessorLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
