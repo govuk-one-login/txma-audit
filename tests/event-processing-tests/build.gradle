@@ -16,8 +16,6 @@ dependencies {
     implementation 'software.amazon.awssdk:cloudwatchlogs'
     implementation 'software.amazon.awssdk:cloudwatch'
     implementation 'org.json:json:20171018'
-    implementation 'org.seleniumhq.selenium:selenium-java:4.1.2'
-    implementation 'io.github.bonigarcia:webdrivermanager:5.1.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.3.4'
     testImplementation 'org.junit.platform:junit-platform-suite:1.8.2'
