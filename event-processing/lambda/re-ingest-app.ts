@@ -23,7 +23,6 @@ export const handler = async (event: S3Event): Promise<void> => {
 
         if (s3Object) {
             let recordBatch: Array<IReIngestRecordInterface> = [];
-            let deleteFromS3 = 0;
             let destinationFH = 0;
             const s3ObjectLines = s3Object.split('\n');
 
@@ -40,7 +39,6 @@ export const handler = async (event: S3Event): Promise<void> => {
                 }
 
                 const jsonData = AuditEvent.fromJSONString(currentLine);
-                let s3Payload = {}; //Type?
 
                 if (jsonData.reIngestCount) {
                     jsonData.reIngestCount++;
@@ -52,9 +50,7 @@ export const handler = async (event: S3Event): Promise<void> => {
 
                 if (jsonData.reIngestCount > maxIngest) {
                     console.log(`Max ReIngest reached... archive to S3`);
-                    deleteFromS3 += 1;
                     destination = DestinationEnum.s3;
-                    s3Payload = s3Payload + JSON.stringify(jsonData) + '\n';
                 }
 
                 if (destination === DestinationEnum.fireHose) {
@@ -82,20 +78,10 @@ export const handler = async (event: S3Event): Promise<void> => {
                     console.log(e);
                     throw e;
                 }
-
-                console.log(`Delete object from S3... Bucket: ${bucket}, key: ${key}`);
-                await S3Service.deleteObject(bucket, key);
             }
 
-            if (deleteFromS3 > 0) {
-                console.log(
-                    '[WARN] MAXIMUM RE-INGEST LIMIT REACHED\n' +
-                        'One or more event records has been unsuccessfully delivered to splunk: ',
-                );
-
-                console.log(`Delete object from S3... Bucket: ${bucket}, key: ${key}`);
-                await S3Service.deleteObject(bucket, key);
-            }
+            console.log(`Delete object from S3... Bucket: ${bucket}, key: ${key}`);
+            await S3Service.deleteObject(bucket, key);
         } else {
             console.log(`Delete object from S3... Bucket: ${bucket}, key: ${key}`);
             await S3Service.deleteObject(bucket, key);
@@ -106,6 +92,7 @@ export const handler = async (event: S3Event): Promise<void> => {
     }
 };
 
+//Move to a service?
 function getStreamName(bucketName: string): string {
     const fraudBucketName = String(process.env.fraudBucketName);
     const performanceBucketName = String(process.env.performanceBucketName);
@@ -130,6 +117,7 @@ function getStreamName(bucketName: string): string {
     return stream;
 }
 
+//Move to validation service?
 function validateEnvironmentVariables(): void {
     const missingEnvironmentVariables: Array<string> = [];
     if (!('performanceBucketName' in process.env)) {
