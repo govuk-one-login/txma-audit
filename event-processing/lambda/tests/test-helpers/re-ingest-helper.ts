@@ -1,6 +1,8 @@
 /* istanbul ignore file */
 import { S3Event } from 'aws-lambda/trigger/s3';
-import stream, { Readable } from 'stream';
+import { Readable } from 'stream';
+import * as zlib from 'zlib';
+import * as fs from 'fs';
 
 export class ReIngestHelper {
     static exampleS3Event(): S3Event {
@@ -45,12 +47,26 @@ export class ReIngestHelper {
         };
     }
 
-    static createReadableStream(message: string): Readable {
-        const rs = new stream.Readable({ objectMode: true });
-        rs.push(Buffer.from(message));
-        rs.push(null);
-        rs.pipe(process.stdout);
+    static async createGzipStream(message: string): Promise<Readable> {
+        return new Promise<Readable>(async (resolve, reject) => {
+            Readable.from(message)
+                .pipe(zlib.createGzip())
+                .pipe(fs.createWriteStream(`tempMessageZip.gzip`))
+                .on('error', (error) => {
+                    reject(error);
+                })
+                .on('finish', () => {
+                    const buffer: Buffer[] = [];
+                    const fileStream = fs.createReadStream('tempMessageZip.gzip');
 
-        return rs;
+                    fileStream.on('data', (chunk) => {
+                        buffer.push(<Buffer>chunk);
+                    });
+
+                    fileStream.on('end', () => {
+                        resolve(Readable.from(Buffer.concat(buffer)));
+                    });
+                });
+        });
     }
 }

@@ -1,6 +1,7 @@
 import { DeleteObjectCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
 import { ErrorService } from './error-service';
+import * as zlib from 'zlib';
 
 export class S3Service {
     static client = new S3Client({ region: 'eu-west-2' });
@@ -26,8 +27,17 @@ export class S3Service {
                 // Each chunk is a Buffer instance
                 stream.on('data', (chunk) => responseDataChunks.push(chunk));
 
-                // Once the stream has no more data, join the chunks into a string and return the string
-                stream.once('end', () => resolve(Buffer.concat(responseDataChunks).toString()));
+                // Once the stream has no more data, join the chunks, unzip and return as string
+                stream.once('end', () => {
+                    zlib.unzip(Buffer.concat(responseDataChunks), (err, result: Buffer) => {
+                        if (err) {
+                            console.log(err);
+                            throw err;
+                        } else {
+                            resolve(result.toString('utf8'));
+                        }
+                    });
+                });
             } catch (error) {
                 const errorWithMessage = ErrorService.toErrorWithMessage(error);
                 console.log(`[ERROR] GET FROM S3 ERROR:\n Error: ${errorWithMessage.message}`, errorWithMessage.stack);

@@ -33,7 +33,7 @@ describe('Unit test for re-ingest app handler', function () {
         const exampleMessage = EventProcessorHelper.exampleAuditMessage();
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
-        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+        const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
 
         exampleMessage.reIngestCount = 1;
         const encoder = new TextEncoder();
@@ -103,7 +103,7 @@ describe('Unit test for re-ingest app handler', function () {
         const exampleMessage = EventProcessorHelper.exampleAuditMessage();
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
-        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+        const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
 
         exampleMessage.reIngestCount = 1;
         const encoder = new TextEncoder();
@@ -174,7 +174,7 @@ describe('Unit test for re-ingest app handler', function () {
         const exampleMessage = EventProcessorHelper.exampleAuditMessage();
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
-        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+        const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
 
         exampleMessage.reIngestCount = 1;
         const encoder = new TextEncoder();
@@ -245,7 +245,7 @@ describe('Unit test for re-ingest app handler', function () {
         exampleMessage.reIngestCount=3;
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
-        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+        const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
 
         exampleMessage.reIngestCount = 4;
         const encoder = new TextEncoder();
@@ -316,7 +316,7 @@ describe('Unit test for re-ingest app handler', function () {
         exampleMessage.reIngestCount=14;
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
-        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+        const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
 
         s3Mock.on(GetObjectCommand).resolves({
             $metadata: {
@@ -420,7 +420,7 @@ describe('Unit test for re-ingest app handler', function () {
         const exampleMessage = EventProcessorHelper.exampleAuditMessage();
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
-        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+        const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
 
         exampleMessage.reIngestCount = 1;
         const encoder = new TextEncoder();
@@ -492,7 +492,7 @@ describe('Unit test for re-ingest app handler', function () {
         const exampleMessage = EventProcessorHelper.exampleAuditMessage();
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
-        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+        const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
 
         exampleMessage.reIngestCount = 1;
         const encoder = new TextEncoder();
@@ -566,7 +566,7 @@ describe('Unit test for re-ingest app handler', function () {
         const exampleMessage = EventProcessorHelper.exampleAuditMessage();
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
-        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+        const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
 
         exampleMessage.reIngestCount = 1;
         const encoder = new TextEncoder();
@@ -726,7 +726,7 @@ describe('Unit test for re-ingest app handler', function () {
 
 
     it('picks up an s3 object with no messages within and does not fail', async () => {
-        const readableStream = ReIngestHelper.createReadableStream('');
+        const readableStream = await ReIngestHelper.createGzipStream('');
 
         s3Mock.on(GetObjectCommand).resolves({
             $metadata: {
@@ -774,7 +774,7 @@ describe('Unit test for re-ingest app handler', function () {
             s3ObjectString += JSON.stringify(exampleMessage) + '\n';
         }
 
-        const readableStream = ReIngestHelper.createReadableStream(s3ObjectString);
+        const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
 
         exampleMessage.reIngestCount = 1;
         const encoder = new TextEncoder();
