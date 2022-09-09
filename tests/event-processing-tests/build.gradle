@@ -16,36 +16,37 @@ dependencies {
     implementation 'software.amazon.awssdk:cloudwatchlogs'
     implementation 'software.amazon.awssdk:cloudwatch'
     implementation 'org.json:json:20171018'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.1.2'
+    implementation 'io.github.bonigarcia:webdrivermanager:5.1.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.3.4'
     testImplementation 'org.junit.platform:junit-platform-suite:1.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-}
 
-task cucumber(type: Test) {
-    useJUnitPlatform ()
-    systemProperty("cucumber.execution.parallel.enabled", true)
-    systemProperty("cucumber.junit-platform.naming-strategy", "long")
-    systemProperty("cucumber.plugin", "pretty, json:"+System.getenv("TEST_REPORT_ABSOLUTE_DIR")+"/result.json, junit:"+System.getenv("TEST_REPORT_ABSOLUTE_DIR")+"/result.xml")
-    systemProperty("cucumber.filter.tags", "@"+System.getenv("TEST_ENVIRONMENT"))
-}
 
-task cleanup(type: JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass.set('uk.gov.di.txma.eventprocessor.Cleanup')
-}
+    task cucumber(type: Test) {
+        useJUnitPlatform()
+        systemProperty("cucumber.execution.parallel.enabled", true)
+        systemProperty("cucumber.junit-platform.naming-strategy", "long")
+        systemProperty("cucumber.plugin", "pretty, json:" + System.getenv("TEST_REPORT_ABSOLUTE_DIR") + "/result.json, junit:" + System.getenv("TEST_REPORT_ABSOLUTE_DIR") + "/result.xml")
+        systemProperty("cucumber.filter.tags", "@" + System.getenv("TEST_ENVIRONMENT"))
+    }
 
-cleanup.configure {
-    mustRunAfter cucumber
-}
+    task cleanup(type: JavaExec) {
+        classpath = sourceSets.main.runtimeClasspath
+        mainClass.set('uk.gov.di.txma.eventprocessor.Cleanup')
+    }
 
-tasks {
-    test {
-        dependsOn assemble, testClasses, cucumber
-        if (System.getenv("TEST_ENVIRONMENT") != "staging"){
-            dependsOn cleanup
+    cleanup.configure {
+        mustRunAfter cucumber
+    }
+
+    tasks {
+        test {
+            dependsOn assemble, testClasses, cucumber
+            if (System.getenv("TEST_ENVIRONMENT") != "staging") {
+                dependsOn cleanup
+            }
         }
     }
 }
-
-

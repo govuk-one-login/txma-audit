@@ -35,4 +35,10 @@ public class VerifiableCredentialsPage {
     @FindBy (xpath = "//div[@class='govuk-details__text']//pre")
     public WebElement AddressCRIJSONResponse;
 
+    @FindBy (xpath = "/html/body/div/main/div/div/dl[4]/div/dd/details/summary/span")
+    public WebElement PassportCredential_attributes_link;
+
+    @FindBy (xpath = "//div[@class='govuk-details__text']//pre")
+    public WebElement PassportCRIJSONResponse;
+
 }

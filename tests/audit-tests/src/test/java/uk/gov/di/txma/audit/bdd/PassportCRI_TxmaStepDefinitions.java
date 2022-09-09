@@ -1,6 +1,5 @@
 package uk.gov.di.txma.audit.bdd;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,25 +9,17 @@ import io.cucumber.java.en.When;
 import org.json.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import pages.CheckYourAddressPage;
-import pages.ChooseYourAddressPage;
-import pages.ConfirmYourDetailsPage;
-import pages.FindYourAddressPage;
-import pages.IPVCoreStubPage;
+import pages.IPVCoreFrontPage;
 import pages.VerifiableCredentialsPage;
-import pages.VisitCredentialIssuersPage;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import software.amazon.awssdk.services.s3.model.S3Exception;
-import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.*;
 import utilities.BrowserUtils;
 import utilities.ConfigurationReader;
 import utilities.Driver;
+import pages.OrchestratorStubPage;
+import pages.IPVCoreStubPage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,76 +33,89 @@ import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class AddressCRI_TxmaStepDefinitions {
+public class PassportCRI_TxmaStepDefinitions {
 
-    String KennethPostcode = "BA2 5AA";
-    String KennethMoveYear = "2014";
     List<JSONObject> output = new ArrayList<>();
     Region region = Region.EU_WEST_2;
     String sub = null;
 
-
-    @Given("the user is on Address CRI")
-    public void the_user_is_on_Address_CRI() {
-        Driver.get().get(ConfigurationReader.getIPVCoreStubUrl());
-        BrowserUtils.waitForPageToLoad(100);
-        new IPVCoreStubPage().VisitCredentialIssuers.click();
-        new VisitCredentialIssuersPage().AddressCRIStaging.click();
-        BrowserUtils.waitForPageToLoad(100);
-
+    @Given("user is on Passport CRI staging")
+    public void navigateToPassportCriURL() throws IOException {
+        Driver.get().get(ConfigurationReader.getOrchestratorStubUrl());
+        BrowserUtils.waitForPageToLoad(10);
+        OrchestratorStubPage.DebugRoute.click();
+        BrowserUtils.waitForPageToLoad(10);
+        IPVCoreFrontPage.UkPassport.click();
+        BrowserUtils.waitForPageToLoad(10);
     }
-    @When("the user enters their postcode and click `Find address`")
-    public void the_user_enters_their_postcode_and_click_Find_address() {
-        new FindYourAddressPage().EnterYourPostcode.sendKeys(KennethPostcode);
-        new FindYourAddressPage().FindAddress.click();
-        BrowserUtils.waitForPageToLoad(100);
-    }
+    @When("user completes address journey successfully")
+    public void fillInPassportDetails() throws JsonProcessingException {
 
-    @When("the user chooses their address from dropdown and click `Choose address`")
-    public void the_user_chooses_their_address_from_dropdown_and_click_Choose_address() {
-        Select select = new Select(new ChooseYourAddressPage().ChooseYourAddressFromTheList);
-        select.selectByValue("8 HADLEY ROAD, BATH, BA2 5AA");
-        new ChooseYourAddressPage().ChooseAddress.click();
-        BrowserUtils.waitForPageToLoad(100);
-    }
+        WebElement PassportNumber = Driver.get().findElement(By.id("passportNumber"));
+        PassportNumber.sendKeys("824159121");
+        WebElement Surname = Driver.get().findElement(By.id("surname"));
+        Surname.sendKeys("Watson");
+        WebElement FirstName = Driver.get().findElement(By.id("firstName"));
+        FirstName.sendKeys("Mary");
+        WebElement birthDay = Driver.get().findElement(By.id("dateOfBirth-day"));
+        birthDay.sendKeys("25");
+        WebElement birthMonth = Driver.get().findElement(By.id("dateOfBirth-month"));
+        birthMonth.sendKeys("02");
+        WebElement birthYear = Driver.get().findElement(By.id("dateOfBirth-year"));
+        birthYear.sendKeys("1932");
+        WebElement PassportExpiryDay = Driver.get().findElement(By.id("expiryDate-day"));
+        PassportExpiryDay.sendKeys("01");
+        WebElement PassportExpiryMonth = Driver.get().findElement(By.id("expiryDate-month"));
+        PassportExpiryMonth.sendKeys("03");
+        WebElement PassportExpiryYear = Driver.get().findElement(By.id("expiryDate-year"));
+        PassportExpiryYear.sendKeys("2031");
+        WebElement PassportContinueButton = Driver.get().findElement(By.xpath("//button[@class='govuk-button button']"));
+        PassportContinueButton.click();
 
-    @When("the user enters the date they moved into their current address")
-    public void the_user_enters_the_date_they_moved_into_their_current_address() {
-        new CheckYourAddressPage().EnterTheYearYouStartedLivingAtThisAddress.sendKeys(KennethMoveYear);
-        new CheckYourAddressPage().Continue.click();
-        BrowserUtils.waitForPageToLoad(100);
-
-    }
-    @When("the user clicks `I confirm my details are correct`")
-    public void the_user_clicks_I_confirm_my_details_are_correct() {
-        new ConfirmYourDetailsPage().IConfirmMyDetailsAreCorrect.click();
-        BrowserUtils.waitForPageToLoad(100);
-    }
-
-    @Then("Response from Address CRI Integration displays the user's address in JSON")
-    public void response_from_Address_CRI_Integration_displays_the_user_s_address_in_JSON() throws JsonProcessingException {
-        new VerifiableCredentialsPage().ResponseFromAddressCRIIntegration.click();
-        String AddressCRIJSONResponse = new VerifiableCredentialsPage().AddressCRIJSONResponse.getText();
+        new VerifiableCredentialsPage().PassportCredential_attributes_link.click();
+        String PassportCRIJSONResponse = new VerifiableCredentialsPage().PassportCRIJSONResponse.getText();
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(AddressCRIJSONResponse);
-        sub = jsonNode.get("sub").asText();
+        JsonNode jsonNode = objectMapper.readTree(PassportCRIJSONResponse);
+        sub = jsonNode.get("userId").asText();
+        Driver.get().quit();
 
     }
 
-    @Then("the audit S3 should have a new event with the postcode provided")
-    public void the_Audit_S3_Should_Have_A_New_Event_With_The_Postcode_Provided() throws InterruptedException {
+    @Then("the audit event should appear in TxMA")
+    public void checkPassportCriEventInTxMAS3()  throws InterruptedException {
         assertTrue(isFoundInS3());
     }
 
-    @When("the user clicks on summaryTest and reads the sub value from JSON")
-    public void the_User_Clicks_On_Summary_Test_And_Reads_The_Sub_Value_From_JSON() {
-        new VerifiableCredentialsPage().ResponseFromAddressCRIDev.click();
+    public boolean isFoundInS3() throws InterruptedException {
+        // count will make sure it only searches for a finite time
+        int count = 0;
 
+        // Has a retry loop in case it finds the wrong key on the first try
+        // Count < 11 is enough time for it to be processed by the Firehose
+        while (count < 11) {
+            // Checks for latest key and saves the contents in the output variable
+            output = new ArrayList<>();
+            findLatestKeysFromAuditS3();
+
+            // If an object was found
+            if (output != null) {
+
+                // Compares all individual jsons with our test data
+                for (JSONObject object : output) {
+                    if (object.toString().contains(sub)) {
+                        return true;
+                    }
+                }
+            }
+
+            Thread.sleep(10000);
+            count ++;
+        }
+        return false;
     }
 
     private void findLatestKeysFromAuditS3(){
         String bucketName = "audit-" + System.getenv("TEST_ENVIRONMENT") + "-message-batch";
-
         // The list of the latest two keys
         List<String> keys = new ArrayList<>();
 
@@ -188,42 +192,9 @@ public class AddressCRI_TxmaStepDefinitions {
             }
 
         } catch (S3Exception e) {
-            System.err.println(e.awsErrorDetails().errorMessage());
             System.exit(1);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-
-    public boolean isFoundInS3() throws InterruptedException {
-        // count will make sure it only searches for a finite time
-        int count = 0;
-
-        // Has a retry loop in case it finds the wrong key on the first try
-        // Count < 11 is enough time for it to be processed by the Firehose
-        while (count < 11) {
-            // Checks for latest key and saves the contents in the output variable
-            output = new ArrayList<>();
-            findLatestKeysFromAuditS3();
-
-            // If an object was found
-            if (output != null) {
-
-                // Compares all individual jsons with our test data
-                for (JSONObject object : output) {
-                    if (object.toString().contains(sub)) {
-                        return true;
-                    }
-                }
-            }
-
-            Thread.sleep(10000);
-            count ++;
-        }
-        return false;
-    }
-
-
 }
-
-

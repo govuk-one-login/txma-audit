@@ -1,4 +1,4 @@
-package utilities;
+package uk.gov.di.ipv_core.utilities;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
@@ -11,11 +11,7 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.safari.SafariDriver;
 
-import java.util.logging.Logger;
-
 public class Driver {
-
-    private static final Logger LOGGER = Logger.getLogger(Driver.class.getName());
 
     private Driver() {
 
@@ -32,10 +28,8 @@ public class Driver {
         //if this thread doesn't have driver - create it and add to pool
         if (driverPool.get() == null) {
 
-//            if we pass the driver from terminal then use that one
-//           if we do not pass the driver from terminal then use the one properties file
-            String browser = ConfigurationReader.getBrowser();
-            LOGGER.info("ℹ️ browser is " + browser);
+            String browser = gov.di_ipv_core.utilities.ConfigurationReader.getBrowser();
+
             switch (browser) {
                 case "chrome":
                     WebDriverManager.chromedriver().setup();
@@ -43,10 +37,11 @@ public class Driver {
                     break;
                 case "chrome-headless":
                     WebDriverManager.chromedriver().setup();
-                    ChromeOptions chromeOptions = new ChromeOptions();
-                    chromeOptions.setHeadless(true);
-                    chromeOptions.addArguments("--no-sandbox");
-                    chromeOptions.addArguments("--disable-dev-shm-usage");
+                    ChromeOptions chromeOptions = new ChromeOptions().setHeadless(true);
+                    if (gov.di_ipv_core.utilities.ConfigurationReader.noChromeSandbox()) {
+                        // no-sandbox is needed for chrome-headless when running in a container due to restricted syscalls
+                        chromeOptions.addArguments("--no-sandbox");
+                    }
                     driverPool.set(new ChromeDriver(chromeOptions));
                     break;
                 case "firefox":
@@ -80,5 +75,10 @@ public class Driver {
             }
         }
         return driverPool.get();
+    }
+
+    public static void closeDriver() {
+        driverPool.get().quit();
+        driverPool.remove();
     }
 }

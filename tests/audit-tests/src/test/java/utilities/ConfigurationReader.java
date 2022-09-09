@@ -40,4 +40,19 @@ public class ConfigurationReader {
         return orchestratorStubUrl;
     }
 
+    public static String getOrchestratorStubUrl() {
+        return "https://staging-di-ipv-orchestrator-stub.london.cloudapps.digital/";
+    }
+    public static String getCoreStubUrl() {
+        return getEnvironmentVariableOrError("IPV_CORE_STUB_URL");
+    }
+
+    private static String getEnvironmentVariableOrError(String variable) {
+        String value = System.getenv(variable);
+        if (value == null) {
+            throw new IllegalArgumentException(String.format("Environment variable %s is not set", variable));
+        }
+        return value;
+    }
+
 }

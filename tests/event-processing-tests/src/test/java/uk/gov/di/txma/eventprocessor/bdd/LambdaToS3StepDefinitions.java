@@ -7,6 +7,10 @@ import io.cucumber.java.en.When;
 import io.cucumber.datatable.DataTable;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatch.model.CloudWatchException;
@@ -26,6 +30,7 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import uk.gov.di.ipv_core.utilities.Driver;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -190,6 +195,45 @@ public class LambdaToS3StepDefinitions {
             // Checks that the output is present for each endpoint
             assertFalse(isFoundInS3(teamName,folderName + "/" + teamName + "_" + fileName, account),  "The message " + fileName + " from " + account + " was found in the " + teamName + " S3 bucket.");
         }
+    }
+
+    @Given("user is on Passport CRI staging")
+    public void navigateToPassportCriURL() throws IOException {
+        Driver.get().get(gov.di_ipv_core.utilities.ConfigurationReader.getCoreStubUrl());
+        WebDriverWait wait = new WebDriverWait(Driver.get(), 10);
+        assertTrue(Driver.get().getCurrentUrl().endsWith("/passport/details"));
+    }
+    @When("user completes address journey successfully")
+    public void fillInPassportDetails() {
+
+        WebElement PassportNumber = Driver.get().findElement(By.id("passportNumber"));
+        PassportNumber.sendKeys("824159121");
+        WebElement Surname = Driver.get().findElement(By.id("surname"));
+        Surname.sendKeys("Watson");
+        WebElement FirstName = Driver.get().findElement(By.id("firstName"));
+        FirstName.sendKeys("Mary");
+        WebElement birthDay = Driver.get().findElement(By.id("dateOfBirth-day"));
+        birthDay.sendKeys("25");
+        WebElement birthMonth = Driver.get().findElement(By.id("dateOfBirth-month"));
+        birthMonth.sendKeys("02");
+        WebElement birthYear = Driver.get().findElement(By.id("dateOfBirth-year"));
+        birthYear.sendKeys("1932");
+        WebElement PassportExpiryDay = Driver.get().findElement(By.id("expiryDate-day"));
+        PassportExpiryDay.sendKeys("01");
+        WebElement PassportExpiryMonth = Driver.get().findElement(By.id("expiryDate-month"));
+        PassportExpiryMonth.sendKeys("03");
+        WebElement PassportExpiryYear = Driver.get().findElement(By.id("expiryDate-year"));
+        PassportExpiryYear.sendKeys("2031");
+        WebElement PassportContinueButton = Driver.get().findElement(By.xpath("//button[@class='govuk-button button']"));
+        PassportContinueButton.click();
+
+    }
+
+    @Then("the audit event should appear in TxMA")
+    public void checkSQSInputFilsAvailable(String fileName, String account) throws IOException {
+        JSONObject rawJSON = new JSONObject(readJSONFile(fileName));
+        JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
     }
 
     /**
