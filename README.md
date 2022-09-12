@@ -3,6 +3,20 @@ Digital Identity Auditing Services
 
 This project contains source code and supporting files for creating the Event Processor and Audit serverless architecture.
 
+## PreRequisites
+
+- [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) - Used to build and deploy the application
+- [Node.js](https://nodejs.org/en/) version 14 - Recommended way to install is via [NVM](https://github.com/nvm-sh/nvm)
+- [Docker](https://docs.docker.com/get-docker/) - Required to run SAM locally and run integration tests
+- [Yarn](https://yarnpkg.com/getting-started/install) version 3 - The package manager for the project
+- [Checkov](https://www.checkov.io/) - Scans cloud infrastructure configurations to find misconfigurations before they're deployed. Added as a Husky pre-commit hook.
+- [Husky](https://typicode.github.io/husky/#/?id=install) - For pre-commit and pre-push validations
+
+Enable Git Hooks to be used with Husky. In the root of the project run the following command:
+```bash
+npx husky install
+```
+
 ## Event Processing
 
 Event Processing allows for various services to integrate into the TxMA journey. We do this by pulling messages from an SQS queue owned by the various services owners. <br>
