@@ -63,7 +63,13 @@ export const handler = async (event: S3Event): Promise<void> => {
                     if (destinationFH > 499) {
                         console.log(`Flush batch...`);
                         //flush max batch
-                        await FirehoseService.putRecordsToFirehoseStream(streamName, recordBatch, 0, 20);
+                        try {
+                            console.log(`Push message to FireHose for ReProcessing...`);
+                            await FirehoseService.putRecordsToFirehoseStream(streamName, recordBatch, 0, 20);
+                        } catch (e) {
+                            console.log(e);
+                            throw e;
+                        }
                         destinationFH = 0;
                         recordBatch = [];
                     }
