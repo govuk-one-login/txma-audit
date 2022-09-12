@@ -22,7 +22,7 @@ public class VisitCredentialIssuersPage {
     @FindBy(xpath = "//input[@value='KBV CRI Build']")
     public WebElement KBVCRIBuild;
 
-    @FindBy(xpath = "//*[@id=\"main-content\"]/p[5]/a/input")
+    @FindBy(xpath = "//*[@id=\"main-content\"]/p[6]/a/input")
     public WebElement KBVCRIStaging;
 
     @FindBy(xpath = "//input[@value='Address CRI Staging']")
