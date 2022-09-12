@@ -46,7 +46,7 @@ public class IPVCoreFrontPage {
 
     //@FindBy(xpath = "//a[normalize-space()='ukPassport']")
     @FindBy(xpath = "//*[@id='cri-link-ukPassport']")
-    public static WebElement UkPassport;
+    public WebElement UkPassport;
 
     @FindBy(xpath = "//span[@class='govuk-details__summary-text']")
     public WebElement CredentialAttributes;

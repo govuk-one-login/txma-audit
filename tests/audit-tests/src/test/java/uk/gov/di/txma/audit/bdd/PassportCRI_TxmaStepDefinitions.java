@@ -20,6 +20,7 @@ import utilities.ConfigurationReader;
 import utilities.Driver;
 import pages.OrchestratorStubPage;
 import pages.IPVCoreStubPage;
+import pages.PassportPage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -43,9 +44,9 @@ public class PassportCRI_TxmaStepDefinitions {
     public void navigateToPassportCriURL() throws IOException {
         Driver.get().get(ConfigurationReader.getOrchestratorStubUrl());
         BrowserUtils.waitForPageToLoad(10);
-        OrchestratorStubPage.DebugRoute.click();
+        new OrchestratorStubPage().DebugRoute.click();
         BrowserUtils.waitForPageToLoad(10);
-        IPVCoreFrontPage.UkPassport.click();
+        new IPVCoreFrontPage().UkPassport.click();
         BrowserUtils.waitForPageToLoad(10);
     }
     @When("user completes address journey successfully")
@@ -71,7 +72,6 @@ public class PassportCRI_TxmaStepDefinitions {
         PassportExpiryYear.sendKeys("2031");
         WebElement PassportContinueButton = Driver.get().findElement(By.xpath("//button[@class='govuk-button button']"));
         PassportContinueButton.click();
-
         new VerifiableCredentialsPage().PassportCredential_attributes_link.click();
         String PassportCRIJSONResponse = new VerifiableCredentialsPage().PassportCRIJSONResponse.getText();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -84,6 +84,7 @@ public class PassportCRI_TxmaStepDefinitions {
     @Then("the audit event should appear in TxMA")
     public void checkPassportCriEventInTxMAS3()  throws InterruptedException {
         assertTrue(isFoundInS3());
+
     }
 
     public boolean isFoundInS3() throws InterruptedException {
@@ -121,6 +122,7 @@ public class PassportCRI_TxmaStepDefinitions {
 
         // Opens an S3 client
         try (S3Client s3 = S3Client.builder()
+
                 .region(region)
                 .build()){
 
@@ -143,6 +145,7 @@ public class PassportCRI_TxmaStepDefinitions {
 
             // Stores the most recent two keys
             keys.add(objects.get(objects.size() - 1).key());
+
             if (res.keyCount() > 1){
                 keys.add(objects.get(objects.size() - 2).key());
             }
@@ -186,12 +189,14 @@ public class PassportCRI_TxmaStepDefinitions {
                 InputStreamReader inpstr = new InputStreamReader(gzinpstr);
                 BufferedReader read = new BufferedReader(inpstr);
                 String line;
+
                 while ((line = read.readLine()) != null) {
                     output.add(new JSONObject(line));
                 }
             }
 
         } catch (S3Exception e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
             System.exit(1);
         } catch (IOException e) {
             throw new RuntimeException(e);

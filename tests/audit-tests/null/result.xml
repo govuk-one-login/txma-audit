@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<testsuite errors="0" failures="1" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="1" time="12.281">
-    <testcase classname="Hello world" name="Check a successful address journey from Passport CRI is logged into TxMA" time="12.152">
-        <failure message="Cannot invoke &quot;com.fasterxml.jackson.databind.JsonNode.asText()&quot; because the return value of &quot;com.fasterxml.jackson.databind.JsonNode.get(String)&quot; is null" type="java.lang.NullPointerException"><![CDATA[Given user is on Passport CRI staging.......................................passed
-When user completes address journey successfully............................failed
-Then the audit event should appear in TxMA..................................skipped
-
-StackTrace:
-java.lang.NullPointerException: Cannot invoke "com.fasterxml.jackson.databind.JsonNode.asText()" because the return value of "com.fasterxml.jackson.databind.JsonNode.get(String)" is null
-	at uk.gov.di.txma.audit.bdd.PassportCRI_TxmaStepDefinitions.fillInPassportDetails(PassportCRI_TxmaStepDefinitions.java:80)
-	at ✽.user completes address journey successfully(classpath:features/PassportCRI_Txma.feature:5)
-]]></failure>
+<testsuite errors="0" failures="0" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="1" time="90.532">
+    <testcase classname="Hello world" name="Check a successful address journey from Passport CRI is logged into TxMA" time="90.417">
+        <system-out><![CDATA[Given user is on Passport CRI staging.......................................passed
+When user completes address journey successfully............................passed
+Then the audit event should appear in TxMA..................................passed
+]]></system-out>
     </testcase>
 </testsuite>

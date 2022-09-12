@@ -11,8 +11,8 @@ public class OrchestratorStubPage {
         PageFactory.initElements(Driver.get(), this);
     }
 
-    @FindBy(xpath = "//input[@value='Debug route']")
-    public static WebElement DebugRoute;
+    @FindBy(xpath = "//*[@id='main-content']/form[2]/input[2]")
+    public WebElement DebugRoute;
 
     @FindBy(xpath = "//input[@value='Full journey route']")
     public WebElement FullJourneyRoute;

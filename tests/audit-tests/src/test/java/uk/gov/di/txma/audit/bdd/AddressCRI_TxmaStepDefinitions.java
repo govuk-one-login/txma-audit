@@ -60,6 +60,7 @@ public class AddressCRI_TxmaStepDefinitions {
         BrowserUtils.waitForPageToLoad(100);
 
     }
+
     @When("the user enters their postcode and click `Find address`")
     public void the_user_enters_their_postcode_and_click_Find_address() {
         new FindYourAddressPage().EnterYourPostcode.sendKeys(KennethPostcode);
@@ -82,6 +83,7 @@ public class AddressCRI_TxmaStepDefinitions {
         BrowserUtils.waitForPageToLoad(100);
 
     }
+
     @When("the user clicks `I confirm my details are correct`")
     public void the_user_clicks_I_confirm_my_details_are_correct() {
         new ConfirmYourDetailsPage().IConfirmMyDetailsAreCorrect.click();
@@ -109,7 +111,7 @@ public class AddressCRI_TxmaStepDefinitions {
 
     }
 
-    private void findLatestKeysFromAuditS3(){
+    private void findLatestKeysFromAuditS3() {
         String bucketName = "audit-" + System.getenv("TEST_ENVIRONMENT") + "-message-batch";
 
         // The list of the latest two keys
@@ -118,7 +120,7 @@ public class AddressCRI_TxmaStepDefinitions {
         // Opens an S3 client
         try (S3Client s3 = S3Client.builder()
                 .region(region)
-                .build()){
+                .build()) {
 
             // This is used to get the current year, so that we can search the correct s3 files by prefix
             ZonedDateTime currentDateTime = Instant.now().atZone(ZoneOffset.UTC);
@@ -127,29 +129,29 @@ public class AddressCRI_TxmaStepDefinitions {
             ListObjectsV2Request listObjects = ListObjectsV2Request
                     .builder()
                     .bucket(bucketName)
-                    .prefix("firehose/"+currentDateTime.getYear()+"/")
+                    .prefix("firehose/" + currentDateTime.getYear() + "/")
                     .build();
             ListObjectsV2Response res = s3.listObjectsV2(listObjects);
             List<S3Object> objects = res.contents();
 
             // If no objects were found, returns nothing
-            if (res.keyCount()==0){
+            if (res.keyCount() == 0) {
                 return;
             }
 
             // Stores the most recent two keys
             keys.add(objects.get(objects.size() - 1).key());
-            if (res.keyCount() > 1){
+            if (res.keyCount() > 1) {
                 keys.add(objects.get(objects.size() - 2).key());
             }
 
             // If more than 1000 objects, cycles through the rest
-            while (res.isTruncated()){
+            while (res.isTruncated()) {
                 // Gets the next batch
                 listObjects = ListObjectsV2Request
                         .builder()
                         .bucket(bucketName)
-                        .prefix("firehose/"+currentDateTime.getYear()+"/")
+                        .prefix("firehose/" + currentDateTime.getYear() + "/")
                         .continuationToken(res.nextContinuationToken())
                         .build();
 
@@ -160,7 +162,7 @@ public class AddressCRI_TxmaStepDefinitions {
                 // If there's more than one object, we store the most recent two keys
                 // If there is only one object, we keep the latest key from the previous batch,
                 // and store the most recent from this one
-                if (res.keyCount() > 1){
+                if (res.keyCount() > 1) {
                     keys.set(0, objects.get(objects.size() - 1).key());
                     keys.set(1, objects.get(objects.size() - 2).key());
                 } else {
@@ -169,7 +171,7 @@ public class AddressCRI_TxmaStepDefinitions {
             }
 
             // Loops through the latest two keys
-            for (String key : keys){
+            for (String key : keys) {
                 // Gets the new object
                 GetObjectRequest objectRequest = GetObjectRequest
                         .builder()
@@ -218,7 +220,7 @@ public class AddressCRI_TxmaStepDefinitions {
             }
 
             Thread.sleep(10000);
-            count ++;
+            count++;
         }
         return false;
     }
