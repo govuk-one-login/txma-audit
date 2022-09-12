@@ -1698,6 +1698,11 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/fraud-splunk-delivery-failure-bucket/"
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteRedundantFiles
+            Status: Enabled
+            ExpirationInDays: 7
       NotificationConfiguration:
         QueueConfigurations:
           !If
@@ -1786,6 +1791,11 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/performance-splunk-delivery-failure-bucket/"
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteRedundantFiles
+            Status: Enabled
+            ExpirationInDays: 7
       NotificationConfiguration:
         QueueConfigurations:
           !If
