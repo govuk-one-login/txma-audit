@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* istanbul ignore file */ 
+/* istanbul ignore file */
 export interface AuditEvent {
     event_id: string;
     client_id: string;
@@ -53,12 +53,9 @@ export class AuditEvent {
         message.component_id !== undefined && (obj.component_id = message.component_id);
         message.user !== undefined &&
             (obj.user = message.user ? AuditEventUserMessage.toJSON(message.user) : undefined);
-        message.platform !== undefined &&
-            (obj.platform = message.platform ? message.platform : undefined);
-        message.restricted !== undefined &&
-            (obj.restricted = message.restricted ? message.restricted : undefined);
-        message.extensions !== undefined &&
-            (obj.extensions = message.extensions ? message.extensions : undefined);
+        message.platform !== undefined && (obj.platform = message.platform ? message.platform : undefined);
+        message.restricted !== undefined && (obj.restricted = message.restricted ? message.restricted : undefined);
+        message.extensions !== undefined && (obj.extensions = message.extensions ? message.extensions : undefined);
         message.new_unknown_field !== undefined && (obj.new_unknown_field = message.new_unknown_field);
         return obj;
     }
@@ -74,7 +71,9 @@ export class AuditEventUserMessage {
             ip_address: isSet(object.ip_address) ? String(object.ip_address) : '',
             session_id: isSet(object.session_id) ? String(object.session_id) : '',
             persistent_session_id: isSet(object.persistent_session_id) ? String(object.persistent_session_id) : '',
-            govuk_signin_journey_id: isSet(object.govuk_signin_journey_id) ? String(object.govuk_signin_journey_id) : '',
+            govuk_signin_journey_id: isSet(object.govuk_signin_journey_id)
+                ? String(object.govuk_signin_journey_id)
+                : '',
             unknown_user_field: isSet(object.unknown_user_field) ? String(object.unknown_user_field) : '',
         };
     }
@@ -88,7 +87,8 @@ export class AuditEventUserMessage {
         message.ip_address !== undefined && (obj.ip_address = message.ip_address);
         message.session_id !== undefined && (obj.session_id = message.session_id);
         message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
-        message.govuk_signin_journey_id !== undefined && (obj.govuk_signin_journey_id = message.govuk_signin_journey_id);
+        message.govuk_signin_journey_id !== undefined &&
+            (obj.govuk_signin_journey_id = message.govuk_signin_journey_id);
         message.unknown_user_field !== undefined && (obj.unknown_user_field = message.unknown_user_field);
         return obj;
     }

@@ -40,34 +40,36 @@ export class CleansedEvent implements ICleansedEvent {
         this.timestamp_formatted = timestamp_formatted;
 
         if (extensions != undefined && (extensions as ICleansedExtensionsEvent).evidence != undefined) {
-            let evidence = CleansedEvent.CleanseEvidenceArrayEvent((extensions as ICleansedExtensionsEvent).evidence as Array<ICleansedEvidenceEvent>)
-            if (Object.keys(evidence).length){
-              this.extensions = { evidence: evidence };
+            const evidence = CleansedEvent.CleanseEvidenceArrayEvent(
+                (extensions as ICleansedExtensionsEvent).evidence as Array<ICleansedEvidenceEvent>,
+            );
+            if (Object.keys(evidence).length) {
+                this.extensions = { evidence: evidence };
             }
         }
     }
 
     private static CleanseEvidenceArrayEvent(evidenceArray: Array<ICleansedEvidenceEvent>) {
-        let cleansedEvidence: Array<ICleansedEvidenceEvent> = []
-        for (let evidence of evidenceArray){
-            evidence = CleansedEvent.CleanseEvidenceEvent(evidence as ICleansedEvidenceEvent)
-            if (Object.keys(evidence).length){
-                cleansedEvidence.push(evidence)
+        const cleansedEvidence: Array<ICleansedEvidenceEvent> = [];
+        for (let evidence of evidenceArray) {
+            evidence = CleansedEvent.CleanseEvidenceEvent(evidence as ICleansedEvidenceEvent);
+            if (Object.keys(evidence).length) {
+                cleansedEvidence.push(evidence);
             }
         }
 
-        return cleansedEvidence
+        return cleansedEvidence;
     }
 
     private static CleanseEvidenceEvent(evidence: ICleansedEvidenceEvent) {
-        for (let key in evidence) {
+        for (const key in evidence) {
             const k = key as keyof ICleansedEvidenceEvent;
 
             if (!fraudKeys.includes(k)) {
-                delete evidence[k]
+                delete evidence[k];
             }
         }
 
-        return evidence
+        return evidence;
     }
 }
