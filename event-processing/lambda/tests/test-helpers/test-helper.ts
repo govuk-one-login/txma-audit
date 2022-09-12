@@ -2,8 +2,8 @@
 import { FirehoseTransformationEvent, FirehoseTransformationEventRecord, SQSEvent, SQSRecord } from 'aws-lambda';
 import { IAuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../test-events/unknown-audit-event';
-import {ICleansedEvent} from "../../models/cleansed-event";
-import {IEnrichedAuditEvent} from "../../models/enriched-audit-event";
+import { ICleansedEvent } from '../../models/cleansed-event';
+import { IEnrichedAuditEvent } from '../../models/enriched-audit-event';
 
 export class TestHelper {
     private static sqsRecord: SQSRecord = {

@@ -1,12 +1,12 @@
 /* eslint-disable */
-import {handler} from '../../re-ingest-app';
-import {S3Event} from "aws-lambda/trigger/s3";
-import {ReIngestHelper} from "../test-helpers/re-ingest-helper";
-import { mockClient } from "aws-sdk-client-mock";
-import {DeleteObjectCommand, GetObjectCommand, S3Client} from "@aws-sdk/client-s3";
-import {FirehoseClient, PutRecordBatchCommand} from "@aws-sdk/client-firehose";
-import {EventProcessorHelper} from "../test-helpers/event-processor-helper";
-import {IReIngestRecordInterface} from "../../models/re-ingest-record.interface";
+import { handler } from '../../re-ingest-app';
+import { S3Event } from 'aws-lambda/trigger/s3';
+import { ReIngestHelper } from '../test-helpers/re-ingest-helper';
+import { mockClient } from 'aws-sdk-client-mock';
+import { DeleteObjectCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { FirehoseClient, PutRecordBatchCommand } from '@aws-sdk/client-firehose';
+import { EventProcessorHelper } from '../test-helpers/event-processor-helper';
+import { IReIngestRecordInterface } from '../../models/re-ingest-record.interface';
 
 describe('Unit test for re-ingest app handler', function () {
     let consoleMock: jest.SpyInstance;
@@ -40,10 +40,10 @@ describe('Unit test for re-ingest app handler', function () {
         const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
         const recordsArray: Array<IReIngestRecordInterface> = [
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
         ];
 
@@ -55,7 +55,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -65,7 +65,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).resolves({
@@ -75,7 +75,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -95,7 +95,7 @@ describe('Unit test for re-ingest app handler', function () {
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(1);
         expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
             DeliveryStreamName: 'perfStream',
-            Records: recordsArray
+            Records: recordsArray,
         });
     });
 
@@ -110,10 +110,10 @@ describe('Unit test for re-ingest app handler', function () {
         const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
         const recordsArray: Array<IReIngestRecordInterface> = [
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
         ];
 
@@ -125,7 +125,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -135,7 +135,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).resolves({
@@ -145,7 +145,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -166,7 +166,7 @@ describe('Unit test for re-ingest app handler', function () {
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(1);
         expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
             DeliveryStreamName: 'fraudStream',
-            Records: recordsArray
+            Records: recordsArray,
         });
     });
 
@@ -181,10 +181,10 @@ describe('Unit test for re-ingest app handler', function () {
         const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
         const recordsArray: Array<IReIngestRecordInterface> = [
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
         ];
 
@@ -196,7 +196,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -206,7 +206,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).rejects({
@@ -216,7 +216,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -234,15 +234,23 @@ describe('Unit test for re-ingest app handler', function () {
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(20);
         expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
             DeliveryStreamName: 'perfStream',
-            Records: recordsArray
+            Records: recordsArray,
         });
-        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('[ERROR] FIREHOSE DELIVERY ERROR:\n Error: "Could not put records after 20 attempts.'), expect.anything());
-        expect(consoleMock).toHaveBeenCalledWith( expect.stringContaining('[ERROR] REINGEST ERROR:\n Error: "Could not put records after 20 attempts.'), expect.anything());
+        expect(consoleMock).toHaveBeenCalledWith(
+            expect.stringContaining(
+                '[ERROR] FIREHOSE DELIVERY ERROR:\n Error: "Could not put records after 20 attempts.',
+            ),
+            expect.anything(),
+        );
+        expect(consoleMock).toHaveBeenCalledWith(
+            expect.stringContaining('[ERROR] REINGEST ERROR:\n Error: "Could not put records after 20 attempts.'),
+            expect.anything(),
+        );
     });
 
     it('pick up a previously re-ingested message and correctly adjusts the reIngest count', async () => {
         const exampleMessage = EventProcessorHelper.exampleAuditMessage();
-        exampleMessage.reIngestCount=3;
+        exampleMessage.reIngestCount = 3;
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
         const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
@@ -252,10 +260,10 @@ describe('Unit test for re-ingest app handler', function () {
         const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
         const recordsArray: Array<IReIngestRecordInterface> = [
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
         ];
 
@@ -267,7 +275,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -277,7 +285,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).resolves({
@@ -287,7 +295,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -307,13 +315,13 @@ describe('Unit test for re-ingest app handler', function () {
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(1);
         expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
             DeliveryStreamName: 'perfStream',
-            Records: recordsArray
+            Records: recordsArray,
         });
     });
 
     it('pick up a message and does not try and reIngest if the maximum retry amount has been reached and deletes from S3', async () => {
         const exampleMessage = EventProcessorHelper.exampleAuditMessage();
-        exampleMessage.reIngestCount=14;
+        exampleMessage.reIngestCount = 14;
 
         const s3ObjectString = JSON.stringify(exampleMessage) + '\n' + JSON.stringify(exampleMessage) + '\n';
         const readableStream = await ReIngestHelper.createGzipStream(s3ObjectString);
@@ -326,7 +334,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -336,7 +344,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).resolves({
@@ -346,7 +354,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -378,7 +386,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '1',
                 cfId: '1',
                 attempts: 1,
-            }
+            },
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -388,7 +396,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).resolves({
@@ -398,7 +406,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -412,8 +420,14 @@ describe('Unit test for re-ingest app handler', function () {
         });
         expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
-        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("[ERROR] GET FROM S3 ERROR:\n Error: "), expect.anything())
-        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("[ERROR] REINGEST ERROR:\n Error: "), expect.anything())
+        expect(consoleMock).toHaveBeenCalledWith(
+            expect.stringContaining('[ERROR] GET FROM S3 ERROR:\n Error: '),
+            expect.anything(),
+        );
+        expect(consoleMock).toHaveBeenCalledWith(
+            expect.stringContaining('[ERROR] REINGEST ERROR:\n Error: '),
+            expect.anything(),
+        );
     });
 
     it('rejects when an error occurs when deleting an object via the s3 service', async () => {
@@ -427,10 +441,10 @@ describe('Unit test for re-ingest app handler', function () {
         const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
         const recordsArray: Array<IReIngestRecordInterface> = [
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
         ];
 
@@ -442,7 +456,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).rejects({
@@ -452,7 +466,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).resolves({
@@ -462,7 +476,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -482,10 +496,16 @@ describe('Unit test for re-ingest app handler', function () {
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(1);
         expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
             DeliveryStreamName: 'perfStream',
-            Records: recordsArray
+            Records: recordsArray,
         });
-        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("[ERROR] DELETE FROM S3 ERROR:\n Error: "), expect.anything())
-        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("[ERROR] REINGEST ERROR:\n Error: "), expect.anything())
+        expect(consoleMock).toHaveBeenCalledWith(
+            expect.stringContaining('[ERROR] DELETE FROM S3 ERROR:\n Error: '),
+            expect.anything(),
+        );
+        expect(consoleMock).toHaveBeenCalledWith(
+            expect.stringContaining('[ERROR] REINGEST ERROR:\n Error: '),
+            expect.anything(),
+        );
     });
 
     it('will handle response errors from firehose service', async () => {
@@ -499,10 +519,10 @@ describe('Unit test for re-ingest app handler', function () {
         const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
         const recordsArray: Array<IReIngestRecordInterface> = [
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
         ];
 
@@ -514,7 +534,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -524,7 +544,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).resolves({
@@ -536,11 +556,13 @@ describe('Unit test for re-ingest app handler', function () {
                 attempts: 1,
             },
             FailedPutCount: 1,
-            RequestResponses: [{
-                RecordId: '1',
-                ErrorCode: '1234',
-                ErrorMessage: 'some error occurred',
-            }]
+            RequestResponses: [
+                {
+                    RecordId: '1',
+                    ErrorCode: '1234',
+                    ErrorMessage: 'some error occurred',
+                },
+            ],
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -556,10 +578,20 @@ describe('Unit test for re-ingest app handler', function () {
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(20);
         expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
             DeliveryStreamName: 'perfStream',
-            Records: recordsArray
+            Records: recordsArray,
         });
-        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('[ERROR] FIREHOSE DELIVERY ERROR:\n Error: "Could not put records after 20 attempts. Individual error codes: 1234"'), expect.anything());
-        expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining('[ERROR] REINGEST ERROR:\n Error: "Could not put records after 20 attempts. Individual error codes: 1234"'), expect.anything());
+        expect(consoleMock).toHaveBeenCalledWith(
+            expect.stringContaining(
+                '[ERROR] FIREHOSE DELIVERY ERROR:\n Error: "Could not put records after 20 attempts. Individual error codes: 1234"',
+            ),
+            expect.anything(),
+        );
+        expect(consoleMock).toHaveBeenCalledWith(
+            expect.stringContaining(
+                '[ERROR] REINGEST ERROR:\n Error: "Could not put records after 20 attempts. Individual error codes: 1234"',
+            ),
+            expect.anything(),
+        );
     });
 
     it('will handle response errors from firehose where the error code is not defined', async () => {
@@ -573,10 +605,10 @@ describe('Unit test for re-ingest app handler', function () {
         const messageBytes = encoder.encode(JSON.stringify(exampleMessage));
         const recordsArray: Array<IReIngestRecordInterface> = [
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
             {
-                Data: messageBytes
+                Data: messageBytes,
             },
         ];
 
@@ -588,7 +620,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -598,7 +630,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).resolves({
@@ -610,11 +642,13 @@ describe('Unit test for re-ingest app handler', function () {
                 attempts: 1,
             },
             FailedPutCount: 1,
-            RequestResponses: [{
-                RecordId: '1',
-                ErrorCode: undefined,
-                ErrorMessage: 'some error occurred',
-            }]
+            RequestResponses: [
+                {
+                    RecordId: '1',
+                    ErrorCode: undefined,
+                    ErrorMessage: 'some error occurred',
+                },
+            ],
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -634,7 +668,7 @@ describe('Unit test for re-ingest app handler', function () {
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(1);
         expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
             DeliveryStreamName: 'perfStream',
-            Records: recordsArray
+            Records: recordsArray,
         });
     });
 
@@ -643,9 +677,13 @@ describe('Unit test for re-ingest app handler', function () {
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
 
-        await expect(handler(s3Event)).rejects.toThrow(expect.objectContaining({
-            message: expect.stringContaining('[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: performanceStreamName')
-        }));
+        await expect(handler(s3Event)).rejects.toThrow(
+            expect.objectContaining({
+                message: expect.stringContaining(
+                    '[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: performanceStreamName',
+                ),
+            }),
+        );
 
         expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(0);
         expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
@@ -657,54 +695,67 @@ describe('Unit test for re-ingest app handler', function () {
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
 
-        await expect(handler(s3Event)).rejects.toThrow(expect.objectContaining({
-            message: expect.stringContaining('[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: fraudStreamName')
-        }));
+        await expect(handler(s3Event)).rejects.toThrow(
+            expect.objectContaining({
+                message: expect.stringContaining(
+                    '[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: fraudStreamName',
+                ),
+            }),
+        );
 
         expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(0);
         expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
     });
-
 
     it('throws an error when "performanceBucketName" is empty', async () => {
         delete process.env.performanceBucketName;
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
 
-        await expect(handler(s3Event)).rejects.toThrow(expect.objectContaining({
-            message: expect.stringContaining('[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: performanceBucketName')
-        }));
+        await expect(handler(s3Event)).rejects.toThrow(
+            expect.objectContaining({
+                message: expect.stringContaining(
+                    '[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: performanceBucketName',
+                ),
+            }),
+        );
 
         expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(0);
         expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
     });
-
 
     it('throws an error when "fraudBucketName" is empty', async () => {
         delete process.env.fraudBucketName;
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
 
-        await expect(handler(s3Event)).rejects.toThrow(expect.objectContaining({
-            message: expect.stringContaining('[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: fraudBucketName')
-        }));
+        await expect(handler(s3Event)).rejects.toThrow(
+            expect.objectContaining({
+                message: expect.stringContaining(
+                    '[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: fraudBucketName',
+                ),
+            }),
+        );
 
         expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(0);
         expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
     });
 
-
     it('throws an error when "maxIngestion" is empty', async () => {
         delete process.env.maxIngestion;
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
 
-        await expect(handler(s3Event)).rejects.toThrow(expect.objectContaining({
-            message: expect.stringContaining('[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: maxIngestion')
-        }));
+        await expect(handler(s3Event)).rejects.toThrow(
+            expect.objectContaining({
+                message: expect.stringContaining(
+                    '[ERROR] MISSING ENVIRONMENT VARIABLES:\n The following variables were not provided: maxIngestion',
+                ),
+            }),
+        );
 
         expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(0);
         expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
@@ -715,15 +766,18 @@ describe('Unit test for re-ingest app handler', function () {
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
         s3Event.Records[0].s3.bucket.name = 'wrongBucket';
 
-        await expect(handler(s3Event)).rejects.toThrow(expect.objectContaining({
-            message: expect.stringContaining('[ERROR] NO MATCHING BUCKET FOUND:\n We could not match the S3 object bucket name to an expected value: wrongBucket')
-        }));
+        await expect(handler(s3Event)).rejects.toThrow(
+            expect.objectContaining({
+                message: expect.stringContaining(
+                    '[ERROR] NO MATCHING BUCKET FOUND:\n We could not match the S3 object bucket name to an expected value: wrongBucket',
+                ),
+            }),
+        );
 
         expect(s3Mock.commandCalls(GetObjectCommand).length).toEqual(0);
         expect(s3Mock.commandCalls(DeleteObjectCommand).length).toEqual(0);
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(0);
     });
-
 
     it('picks up an s3 object with no messages within and does not fail', async () => {
         const readableStream = await ReIngestHelper.createGzipStream('');
@@ -736,7 +790,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -746,7 +800,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -770,7 +824,7 @@ describe('Unit test for re-ingest app handler', function () {
         const exampleMessage = EventProcessorHelper.exampleAuditMessage();
         let s3ObjectString = '';
 
-        for(let i = 0; i < 505; i++){
+        for (let i = 0; i < 505; i++) {
             s3ObjectString += JSON.stringify(exampleMessage) + '\n';
         }
 
@@ -782,15 +836,15 @@ describe('Unit test for re-ingest app handler', function () {
         const firstRecordsArray: Array<IReIngestRecordInterface> = [];
         const secondRecordsArray: Array<IReIngestRecordInterface> = [];
 
-        for(let i = 0; i < 500; i++){
+        for (let i = 0; i < 500; i++) {
             firstRecordsArray.push({
-                Data: messageBytes
+                Data: messageBytes,
             });
         }
 
-        for(let i = 0; i < 5; i++){
+        for (let i = 0; i < 5; i++) {
             secondRecordsArray.push({
-                Data: messageBytes
+                Data: messageBytes,
             });
         }
 
@@ -802,7 +856,7 @@ describe('Unit test for re-ingest app handler', function () {
                 cfId: '1',
                 attempts: 1,
             },
-            Body: readableStream
+            Body: readableStream,
         });
 
         s3Mock.on(DeleteObjectCommand).resolves({
@@ -812,7 +866,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         fireHoseMock.on(PutRecordBatchCommand).resolves({
@@ -822,7 +876,7 @@ describe('Unit test for re-ingest app handler', function () {
                 extendedRequestId: '2',
                 cfId: '2',
                 attempts: 1,
-            }
+            },
         });
 
         const s3Event: S3Event = ReIngestHelper.exampleS3Event();
@@ -842,11 +896,11 @@ describe('Unit test for re-ingest app handler', function () {
         expect(fireHoseMock.commandCalls(PutRecordBatchCommand).length).toEqual(2);
         expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
             DeliveryStreamName: 'perfStream',
-            Records: firstRecordsArray
+            Records: firstRecordsArray,
         });
         expect(fireHoseMock).toHaveReceivedCommandWith(PutRecordBatchCommand, {
             DeliveryStreamName: 'perfStream',
-            Records: secondRecordsArray
+            Records: secondRecordsArray,
         });
     });
 });
