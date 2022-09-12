@@ -44,6 +44,9 @@ Conditions:
   DeployTestRolePolicy: !And
     - !Condition IsPipelineTestStage
     - !Condition UseTestRole
+  DeployTestBucket: !And
+    - !Equals [ !Ref Environment, build ]
+    - !Condition UseTestRole
 
 Globals:
   Function:
@@ -1710,7 +1713,7 @@ Resources:
 
   FraudSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: DeployTestRolePolicy
+    Condition: DeployTestBucket
     Properties:
       Bucket: !Ref FraudSplunkDeliveryTestBucket
       PolicyDocument:
@@ -1729,7 +1732,7 @@ Resources:
 
   FraudSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
-    Condition: IsBuildOrDev
+    Condition: DeployTestBucket
     Properties:
       BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-test"
       VersioningConfiguration:
@@ -1798,7 +1801,7 @@ Resources:
 
   PerformanceSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: DeployTestRolePolicy
+    Condition: DeployTestBucket
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryTestBucket
       PolicyDocument:
@@ -1817,7 +1820,7 @@ Resources:
 
   PerformanceSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
-    Condition: IsBuildOrDev
+    Condition: DeployTestBucket
     Properties:
       BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-test"
       VersioningConfiguration:
