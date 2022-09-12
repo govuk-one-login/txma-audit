@@ -87,12 +87,11 @@ public class AddressCRI_TxmaStepDefinitions {
 
     @Then("Response from Address CRI Integration displays the user's address in JSON")
     public void response_from_Address_CRI_Integration_displays_the_user_s_address_in_JSON() throws JsonProcessingException {
-        new VerifiableCredentialsPage().ResponseFromAddressCRIIntegration.click();
+//        new VerifiableCredentialsPage().ResponseFromAddressCRIIntegration.click();
         String AddressCRIJSONResponse = new VerifiableCredentialsPage().AddressCRIJSONResponse.getText();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(AddressCRIJSONResponse);
         sub = jsonNode.get("sub").asText();
-
     }
 
     @Then("the audit S3 should have a new event with the postcode provided")
