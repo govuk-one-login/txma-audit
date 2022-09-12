@@ -1,4 +1,4 @@
-package gov.di_ipv_kbv.pages;
+package pages;
 
 //import gov.di_ipv_kbv.utilities.Driver;
 
