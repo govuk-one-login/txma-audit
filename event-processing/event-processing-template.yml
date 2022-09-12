@@ -2619,7 +2619,7 @@ Resources:
           fraudBucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
           performanceStreamName: !Sub "PerformanceFireHose-${Environment}"
           fraudStreamName: !Sub "FraudFireHose-${Environment}"
-          maxIngestion: "10"
+          maxIngestion: "14"
       Events:
         FraudBucket:
           Type: S3
