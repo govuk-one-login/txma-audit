@@ -313,8 +313,8 @@ describe('Unit test for app handler', function () {
     });
 
     it('has the expected result when using HMAC obfuscation method', async () => {
-        const message = 'My Secret String';
-        const key = 'My secret key';
+        const message: string = 'My Secret String';
+        const key: string = 'My secret key';
         const expectedResult = '5d224b25388f72dc5e329dd68385680535f6d9bda65c5f830631d72e255b9f95';
 
         const result: string = ObfuscationService.obfuscateField(message, key);
