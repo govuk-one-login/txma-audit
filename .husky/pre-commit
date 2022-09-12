@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-cd "event-processing\\lambda\\" || exit
+cd "event-processing/lambda/" || exit
 
 yarn lint-staged
 
@@ -14,7 +14,7 @@ then
 fi
 
 cd .. || exit
-cd "audit\\lambda\\" || exit
+cd "audit/lambda/" || exit
 
 yarn lint-staged
 
@@ -27,7 +27,7 @@ then
 fi
 
 cd .. || exit
-cd "analysis\\" || exit
+cd "analysis/" || exit
 
 git diff --cached --name-only | if grep --quiet analysis-template.yml
 then
