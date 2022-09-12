@@ -3,6 +3,7 @@
 
 cd "event-processing/lambda/" || exit
 
+yarn install
 yarn lint-staged
 
 cd .. || exit
@@ -16,6 +17,7 @@ fi
 cd .. || exit
 cd "audit/lambda/" || exit
 
+yarn install
 yarn lint-staged
 
 cd .. || exit
