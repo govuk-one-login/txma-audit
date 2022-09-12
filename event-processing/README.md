@@ -24,6 +24,13 @@ Enable Git Hooks to be used with Husky. In the root of the project run the follo
 npx husky install
 ```
 
+Also, if running on Linux you may need to make sure the Husky scripts are executable:
+
+```bash
+chmod ug+x .husky/*   
+chmod ug+x .git/hooks/*
+```
+
 The deployment of the resources contained here rely on the following AWS System Manager Parameters being available in the event processing account:
 
 * AuthAccountARN - Auth Root Account

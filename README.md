@@ -17,6 +17,13 @@ Enable Git Hooks to be used with Husky. In the root of the project run the follo
 npx husky install
 ```
 
+Also, if running on Linux you may need to make sure the Husky scripts are executable:
+
+```bash
+chmod ug+x .husky/*   
+chmod ug+x .git/hooks/*
+```
+
 ## Event Processing
 
 Event Processing allows for various services to integrate into the TxMA journey. We do this by pulling messages from an SQS queue owned by the various services owners. <br>
