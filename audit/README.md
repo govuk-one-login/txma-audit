@@ -21,7 +21,6 @@ npx husky install
 ```
 
 Also, if running on Linux you may need to make sure the Husky scripts are executable:
-
 ```bash
 chmod ug+x .husky/*   
 chmod ug+x .git/hooks/*
@@ -31,6 +30,10 @@ The deployment of the resources contained here rely on the following AWS System 
 
 * EventProcessorSNSTopicARN - Event Processing SNS topic ARN
 * SNSKMSKeyARN - KMS key used for encryption on the Event Processing SNS topic
+* EventProcessorAccountARN - ARN for the Event Processing Account
+* CSLSLogsDestination - ARN for cyber hosted Lambda used to process logs
+* CSLSS3LambdaARN - ARN for cyber hosted Lambda used to process S3 logs
+* CSLSS3QueueARN - ARN for cyber hosted queue used to receive notifications of object events in S3
 
 You can see these values being referenced throughout the audit-template file in the following format:
 

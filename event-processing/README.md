@@ -1,11 +1,12 @@
 # event-processing
 
-This project contains source code and supporting files for creating the Event Processor and Audit serverless architecture.
+This project contains source code and supporting files for creating the Event Processor serverless architecture.
 
 ### Event Processor
-- event-processing/event-processor - Code for the application's Lambda function written in TypeScript.
-- event-processing/events - Invocation events that you can use to invoke the function using SAM CLI (See below).
-- event-processing/event-processor/tests - Unit tests for the application code.
+- event-processing/event-processor/lambda - Code for the application's Lambda function written in TypeScript.
+- event-processing/invoke-events - Invocation events that you can use to invoke the function using SAM CLI (See below).
+- event-processing/invoke-vars - Invocation variables that you can use when invoking the function using SAM CLI (See below).
+- event-processing/event-processor/lambda/tests - Unit tests for the application code.
 - event-processing/event-processor-template.yaml - A template that defines the Event Processor AWS resources.
 
 The application uses several AWS resources, including Lambda functions, SNS, Kinesis FireHose and S3. These resources are defined in the template files located in the event-processing and audit sub-folders. You can update the template to add AWS resources through the same deployment process that updates your application code.
@@ -43,8 +44,16 @@ The deployment of the resources contained here rely on the following AWS System 
 * KbvFraudKmsArn - KMS ARN used for at rest encryption of the KBV Fraud queue
 * IPVCoreQueueARN - SQS Queue for IPV Core events
 * IPVPassportQueueARN - SQS Queue for IPV Passport events
+* IPVCIQueueARN - SQS Queue for IPV CI events
 * IPVCoreKmsArn - KMS ARN used for at rest encryption of the IPV Core queue
 * IPVPassportKmsArn - KMS ARN used for at rest encryption of the IPV Passport queue
+* IPVCIKmsArn - KMS ARN used for at rest encryption of the IPV CI queue
+* AppQueueArn - SQS Queue for App events
+* AppKmsArn - KMS ARN used for at rest encryption of the App queue
+* AuthOIDCQueueARN - SQS Queue for Auth OIDC events
+* AuthOIDCKmsArn - KMS ARN used for at rest encryption of the Auth OIDC queue
+* AuthAccountMgmtQueueARN - SQS Queue for Auth Account Management events
+* AuthAccountMgmtKmsArn - KMS ARN used for at rest encryption of the Auth Account Management queue
 * SPOTKmsArn - KMS ARN used for at rest encryption of the SPOT queue
 * SPOTQueueArn - SQS Queue for SPOT events
 * HECEndpoint - Splunk instance endpoint for FireHose instances
@@ -52,6 +61,9 @@ The deployment of the resources contained here rely on the following AWS System 
 * HECPerformanceToken - Splunk token for performance index
 * HMACKeyKMSKey - 32 Char string used for HMAC encryption
 * HMACSecretArnParameter - ARN for the Secret Manager secret containing the string used for HMAC encryption
+* CSLSLogsDestination - ARN for cyber hosted Lambda used to process logs
+* CSLSS3LambdaARN - ARN for cyber hosted Lambda used to process S3 logs
+* CSLSS3QueueARN - ARN for cyber hosted queue used to receive notifications of object events in S3
 
 You can see these values being referenced throughout the event-processing-template file in the following format:
 
@@ -81,7 +93,7 @@ To build and deploy your application for the first time, create an S3 bucket to 
 sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "<environment name>"
 sam deploy --config-file config/samconfig-event-processing.toml --config-env "<environment name>" --s3-bucket "<bucket name>"
 ```
-*Note*: When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket of the lambda zip.
+*Note*: When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket to store the lambda zip.
 
 *Deploying Locally*: When deploying locally you can specify the profile to be used for deployment by adding the profile argument e.g.
 
@@ -99,7 +111,7 @@ sam deploy --config-file config/samconfig-event-processing.toml --config-env "<e
 
 #### Available Environments
 
-- dev
+- dev (sandbox only)
 - build
 - staging
 - integration
@@ -110,12 +122,14 @@ sam deploy --config-file config/samconfig-event-processing.toml --config-env "<e
 Build your application with the `sam build` command.
 
 ```bash
-event-processing$ sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "develop"
+event-processing$ sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "dev"
 ```
 
 The SAM CLI installs dependencies defined in `event-processor/package.json`, compiles TypeScript with esbuild, creates a deployment package, and saves it in the `.aws-sam/build` folder.
 
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
+Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `invoke-events` folder in this project.
+
+Environment variables can be provided to the function by providing JSON to the `env-vars` parameter. An example can be found in `invoke-vars`.
 
 The event type we use for the event-processor lambda is an SQSEvent.
 
@@ -124,6 +138,7 @@ Run functions locally and invoke them with the `sam local invoke` command.
 ```bash
 event-processor$ sam local invoke <Function-Name> --event invoke-events/event.json --env-vars invoke-vars/environment-vars.json --profile <dev acccount profile>
 ```
+
 You can also test against a Lambda deployed into the Dev environment using the AWS CLI:
 
 ```bash
@@ -132,7 +147,8 @@ event-processor$ aws lambda invoke --function-name <Function-Name> --invocation-
 
 ## Unit tests
 
-Tests are defined in the `event-processor/tests` folder in this project. Use YARN to install the [Jest test framework](https://jestjs.io/) and run unit tests.
+Tests are defined in the `lambda/tests` folder in this project. Use yarn to install the [Jest test framework](https://jestjs.io/) and run unit tests.
+
 
 ```bash
 event-processor$ cd event-processor
