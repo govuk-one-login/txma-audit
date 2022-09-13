@@ -61,7 +61,7 @@ To use the SAM CLI, you need the following tools.
 To build and deploy your application for the first time, create an S3 bucket to store the code, and run the following in your shell whilst in the audit folder:
 
 ```bash
-sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env "<environment name>"
+sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env "<environment name>"  --use-container --beta-features
 sam deploy --config-file config/samconfig-audit.toml --config-env "<environment name>" --s3-bucket "<bucket name>"
 ```
 

@@ -87,7 +87,7 @@ To use the SAM CLI, you need the following tools.
 To build and deploy your application for the first time, run the following in your shell whilst in either the event-processing or audit folders:
 
 ```bash
-sam build --template-file <account-name>-template.yml --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
+sam build --template-file <account-name>-template.yml --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --use-container --beta-features
 sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
 ```
 *Note*: When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket to store the lambda zip.
@@ -119,7 +119,7 @@ sam deploy --config-file config/samconfig-event-processing.toml --config-env "de
 Build your application with the `sam build` command.
 
 ```bash
-event-processing$ sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "dev"
+event-processing$ sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "dev" --use-container --beta-features
 ```
 
 The SAM CLI installs dependencies defined in `package.json`, compiles TypeScript with esbuild, creates a deployment package, and saves it in the `.aws-sam/build` folder.
