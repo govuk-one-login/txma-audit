@@ -15,6 +15,9 @@ public class HowMuchOfYourLoanDoYouPayBackEveryMonthPage {
     @FindBy(id = "Q00042-OVER550UPTO600-label")
     public WebElement OVER550UPTO600;
 
+    @FindBy(id = "Q00042-UPTO600-label")
+    public WebElement UPTO600;
+
     @FindBy(id = "Q00042-NONEOFTHEABOVEDOESNOTAPPLY-label")
     public WebElement NONEOFTHEABOVEDOESNOTAPPLY;
 

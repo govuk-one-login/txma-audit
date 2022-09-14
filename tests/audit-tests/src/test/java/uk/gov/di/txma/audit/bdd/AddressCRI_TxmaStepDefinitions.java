@@ -101,7 +101,7 @@ public class AddressCRI_TxmaStepDefinitions {
     @When("the user clicks on summaryTest and reads the sub value from JSON")
     public void the_User_Clicks_On_Summary_Test_And_Reads_The_Sub_Value_From_JSON() {
         new VerifiableCredentialsPage().ResponseFromAddressCRIDev.click();
-//        driver.close();
+        Driver.get().quit();
 
     }
 

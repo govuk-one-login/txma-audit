@@ -15,7 +15,7 @@ public class HowMuchDoYouHaveLeftToPayOnYourMortgagePage {
     @FindBy(id = "Q00015-OVER35000UPTO60000-label")
     public WebElement OVER35000UPTO60000;
 
-    @FindBy(xpath = "//*[@id=\"Q00015-UPTO60000-label\"]")
+    @FindBy(id = "Q00015-UPTO60000-label")
     public WebElement UPTO60000;
 
     @FindBy(id = "Q00015-NONEOFTHEABOVEDOESNOTAPPLY-label")

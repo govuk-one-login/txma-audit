@@ -12,8 +12,8 @@ public class WhoHaveYouOpenedACurrentAccountWithPage {
         PageFactory.initElements(Driver.get(), this);
     }
 
-    @FindBy(xpath= "//*[@id='Q00048-TSBBANKPLC-label']")
-    public WebElement TSBBANKPLC;
+    @FindBy(id= "Q00048-TSBBANKPLC-label")
+    public WebElement Tsbbankplc;
 
     @FindBy(id = "Q00048-NONEOFTHEABOVEDOESNOTAPPLY-label")
     public WebElement NONEOFTHEABOVEDOESNOTAPPLY;
