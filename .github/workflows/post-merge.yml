@@ -38,11 +38,10 @@ jobs:
       - name: Use Node.js 14
         uses: actions/setup-node@v3.0.0
         with:
-          node-version: '14.x'
-      - name: Update Yarn
-        working-directory: ${{ env.eventProcessorDirectory }}/lambda
-        run: |
-          yarn policies set-version 3.2.3
+          node-version: '16.x'
+      - name: Install Yarn v3 using CorePack
+        working-directory: ${{ env.auditDirectory }}/lambda
+        run: corepack enable
       - name: Install Lambda Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/lambda
         run: yarn install --immutable --immutable-cache --check-cache
@@ -105,11 +104,10 @@ jobs:
       - name: Use Node.js 14
         uses: actions/setup-node@v3.0.0
         with:
-          node-version: '14.x'
-      - name: Update Yarn
+          node-version: '16.x'
+      - name: Install Yarn v3 using CorePack
         working-directory: ${{ env.auditDirectory }}/lambda
-        run: |
-          yarn policies set-version 3.2.3
+        run: corepack enable
       - name: Install Lambda Dependencies
         working-directory: ${{ env.auditDirectory }}/lambda
         run: yarn install --immutable --immutable-cache --check-cache

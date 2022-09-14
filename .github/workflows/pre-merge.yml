@@ -41,7 +41,7 @@ jobs:
         run: corepack enable
       - name: Install Lambda Dependencies
         working-directory: ${{ env.eventProcessorDirectory }}/lambda
-        run: yarn install --immutable --immutable-cache --check-cache --verbose
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: Test Lambdas
         working-directory: ${{ env.eventProcessorDirectory }}/lambda
         run: yarn test
@@ -84,7 +84,7 @@ jobs:
         run: corepack enable
       - name: Install Lambda Dependencies
         working-directory: ${{ env.auditDirectory }}/lambda
-        run: yarn install --immutable --immutable-cache --check-cache --verbose
+        run: yarn install --immutable --immutable-cache --check-cache
       - name: Test Lambdas
         working-directory: ${{ env.auditDirectory }}/lambda
         run: yarn test
