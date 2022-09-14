@@ -241,7 +241,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt KBVLambdaAccessRole.Arn
       Environment:
@@ -376,7 +376,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt KBVAddressLambdaAccessRole.Arn
       Environment:
@@ -511,7 +511,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt KBVFraudLambdaAccessRole.Arn
       Environment:
@@ -646,7 +646,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt IPVLambdaAccessRole.Arn
       Environment:
@@ -782,7 +782,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt IPVPassLambdaAccessRole.Arn
       Environment:
@@ -917,7 +917,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt IPVCILambdaAccessRole.Arn
       Environment:
@@ -1052,7 +1052,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt SPOTLambdaAccessRole.Arn
       Environment:
@@ -1186,7 +1186,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt AppLambdaAccessRole.Arn
       Environment:
@@ -1321,7 +1321,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt AuthOIDCLambdaAccessRole.Arn
       Environment:
@@ -1456,7 +1456,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt AuthAccountMgmtLambdaAccessRole.Arn
       Environment:
@@ -2509,7 +2509,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: obfuscation-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt ObfuscationFunctionRole.Arn
       Environment:
@@ -2583,7 +2583,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: cleanser-app.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 30
       Role: !GetAtt CleanserFunctionRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
@@ -2610,7 +2610,7 @@ Resources:
 #      CodeUri: ../event-processing/lambda
 #      PackageType: Zip
 #      Handler: re-ingest-app.handler
-#      Runtime: nodejs14.x
+#      Runtime: nodejs16.x
 #      Timeout: 30
 #      Events:
 #        FraudBucket:
