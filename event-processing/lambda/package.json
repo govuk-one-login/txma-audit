@@ -5,6 +5,7 @@
     "main": "event-processor-app.js",
     "repository": "https://github.com/alphagov/di-txma-audit",
     "author": "GDS",
+    "packageManager": "yarn@3.2.3",
     "license": "MIT",
     "scripts": {
         "unit": "jest",
