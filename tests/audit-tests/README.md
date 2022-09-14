@@ -54,7 +54,6 @@ Mac:
 ```bash
 export TEST_ENVIRONMENT="build"
 export TEST_REPORT_DIR="report"
-export BROWSER=chrome
 ./gradlew clean test
 ```
 Windows:

@@ -7,9 +7,6 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.json.JSONObject;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import pages.IPVCoreFrontPage;
 import pages.VerifiableCredentialsPage;
 import software.amazon.awssdk.regions.Region;
@@ -19,7 +16,6 @@ import utilities.BrowserUtils;
 import utilities.ConfigurationReader;
 import utilities.Driver;
 import pages.OrchestratorStubPage;
-import pages.IPVCoreStubPage;
 import pages.PassportPage;
 
 import java.io.BufferedReader;
@@ -50,35 +46,24 @@ public class PassportCRI_TxmaStepDefinitions {
         BrowserUtils.waitForPageToLoad(10);
     }
     @When("user completes address journey successfully")
-    public void fillInPassportDetails() throws JsonProcessingException {
+    public void enterPassportDetails() throws JsonProcessingException {
 
-        WebElement PassportNumber = Driver.get().findElement(By.id("passportNumber"));
-        PassportNumber.sendKeys("824159121");
-        WebElement Surname = Driver.get().findElement(By.id("surname"));
-        Surname.sendKeys("Watson");
-        WebElement FirstName = Driver.get().findElement(By.id("firstName"));
-        FirstName.sendKeys("Mary");
-        WebElement birthDay = Driver.get().findElement(By.id("dateOfBirth-day"));
-        birthDay.sendKeys("25");
-        WebElement birthMonth = Driver.get().findElement(By.id("dateOfBirth-month"));
-        birthMonth.sendKeys("02");
-        WebElement birthYear = Driver.get().findElement(By.id("dateOfBirth-year"));
-        birthYear.sendKeys("1932");
-        WebElement PassportExpiryDay = Driver.get().findElement(By.id("expiryDate-day"));
-        PassportExpiryDay.sendKeys("01");
-        WebElement PassportExpiryMonth = Driver.get().findElement(By.id("expiryDate-month"));
-        PassportExpiryMonth.sendKeys("03");
-        WebElement PassportExpiryYear = Driver.get().findElement(By.id("expiryDate-year"));
-        PassportExpiryYear.sendKeys("2031");
-        WebElement PassportContinueButton = Driver.get().findElement(By.xpath("//button[@class='govuk-button button']"));
-        PassportContinueButton.click();
+        new PassportPage().PassportNumber.sendKeys("824159121");
+        new PassportPage().Surname.sendKeys("Watson");
+        new PassportPage().FirstName.sendKeys("Mary");
+        new PassportPage().birthDay.sendKeys("25");
+        new PassportPage().birthMonth.sendKeys("02");
+        new PassportPage().birthYear.sendKeys("1932");
+        new PassportPage().PassportExpiryDay.sendKeys("01");
+        new PassportPage().PassportExpiryMonth.sendKeys("03");
+        new PassportPage().PassportExpiryYear.sendKeys("2031");
+        new PassportPage().PassportContinueButton.click();
         new VerifiableCredentialsPage().PassportCredential_attributes_link.click();
         String PassportCRIJSONResponse = new VerifiableCredentialsPage().PassportCRIJSONResponse.getText();
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(PassportCRIJSONResponse);
         sub = jsonNode.get("userId").asText();
         Driver.get().quit();
-
     }
 
     @Then("the audit event should appear in TxMA")

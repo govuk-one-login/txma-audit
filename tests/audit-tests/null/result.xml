@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<testsuite errors="0" failures="0" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="1" time="90.532">
-    <testcase classname="Hello world" name="Check a successful address journey from Passport CRI is logged into TxMA" time="90.417">
-        <system-out><![CDATA[Given user is on Passport CRI staging.......................................passed
-When user completes address journey successfully............................passed
-Then the audit event should appear in TxMA..................................passed
-]]></system-out>
-    </testcase>
-</testsuite>
