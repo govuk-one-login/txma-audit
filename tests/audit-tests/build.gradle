@@ -31,6 +31,7 @@ dependencies {
     implementation 'io.github.bonigarcia:webdrivermanager:5.0.3'
     implementation 'com.google.code.gson:gson:2.8.6'
     testImplementation 'io.cucumber:cucumber-junit:4.8.1'
+    implementation 'org.seleniumhq.selenium:selenium-chrome-driver:3.141.59'
 }
 
 tasks {

@@ -21,12 +21,12 @@ import pages.WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgag
 import pages.WhatIsTheNameOfTheCompanyThatProvidesYourMortgagePage;
 import pages.WhatIsTheNameOfYourLoanProviderPage;
 import pages.WhatIsTheTermInMonthsOfYourLoanPage;
+import pages.WhenWasTheOtherPersonOnYourMortgageBornPage;
+import pages.WhoHaveYouOpenedACurrentAccountWithPage;
 import pages.WhoIsYourCurrentAccountWithPage;
 import utilities.BrowserUtils;
 import utilities.ConfigurationReader;
 import utilities.Driver;
-
-import static org.junit.Assert.assertEquals;
 
 public class kbv_TxmaStepDefinitions {
 
@@ -74,6 +74,32 @@ public class kbv_TxmaStepDefinitions {
                     if (new WhatIsTheNameOfYourLoanProviderPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
                         new WhatIsTheNameOfYourLoanProviderPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
                         new WhatIsTheNameOfYourLoanProviderPage().Continue.click();
+                    }
+                }
+                break;
+            case "Who Have You Opened A Current Account With? – Prove your identity – GOV.UK":
+                try {
+                    if (new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.isDisplayed()) {
+                        new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.click();
+                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
+                    }
+                } catch (Exception e) {
+                    if (new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+                        new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
+                    }
+                }
+                break;
+            case "When Was The Other Person On Your Mortgage Born? – Prove your identity – GOV.UK":
+                try {
+                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.isDisplayed()) {
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.click();
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
+                    }
+                } catch (Exception e) {
+                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
                     }
                 }
                 break;
@@ -222,6 +248,32 @@ public class kbv_TxmaStepDefinitions {
                     if (new WhatIsTheNameOfYourLoanProviderPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
                         new WhatIsTheNameOfYourLoanProviderPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
                         new WhatIsTheNameOfYourLoanProviderPage().Continue.click();
+                    }
+                }
+                break;
+            case "Who Have You Opened A Current Account With? – Prove your identity – GOV.UK":
+                try {
+                    if (new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.isDisplayed()) {
+                        new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.click();
+                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
+                    }
+                } catch (Exception e) {
+                    if (new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+                        new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
+                    }
+                }
+                break;
+            case "When Was The Other Person On Your Mortgage Born? – Prove your identity – GOV.UK":
+                try {
+                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.isDisplayed()) {
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.click();
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
+                    }
+                } catch (Exception e) {
+                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
                     }
                 }
                 break;
@@ -486,6 +538,32 @@ public class kbv_TxmaStepDefinitions {
                     }
                 }
                 break;
+            case "Who Have You Opened A Current Account With? – Prove your identity – GOV.UK":
+                try {
+                    if (new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.isDisplayed()) {
+                        new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.click();
+                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
+                    }
+                } catch (Exception e) {
+                    if (new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+                        new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
+                    }
+                }
+                break;
+            case "When Was The Other Person On Your Mortgage Born? – Prove your identity – GOV.UK":
+                try {
+                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.isDisplayed()) {
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.click();
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
+                    }
+                } catch (Exception e) {
+                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
+                    }
+                }
+                break;
             case "In what month and year was the other person on your mortgage born? – Prove your identity – GOV.UK":
                 try {
                     if (new InWhatMonthAndYearWasTheOtherPersonOnYourMortgageBornPage().February1963.isDisplayed()) {
@@ -505,21 +583,21 @@ public class kbv_TxmaStepDefinitions {
         }
     }
 
-    @Then("the user should get verificationCode {int}")
-    public void the_user_should_get_verificationCode(Integer int1) throws JsonProcessingException {
+    @Then("the verifiable credential page should be displayed")
+    public void the_verifiable_credential_page_should_be_displayed() throws JsonProcessingException {
         BrowserUtils.waitForPageToLoad(100);
         new VerifiableCredentialsPage().ResponseFromKBVCRIStaging.click();
         String ResponseJSON = new VerifiableCredentialsPage().Data.getText();
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(ResponseJSON);
-        JsonNode vcNode = jsonNode.get("vc");
-        JsonNode evidenceNode = vcNode.get("evidence");
-        JsonNode insideEvidence = evidenceNode.get(0);
-        String verificationScore = insideEvidence.get("verificationScore").asText();
-        System.out.println("verificationScore = " + verificationScore);
-        String expectedVerificationScore = "2";
-        System.out.println("expectedVerificationScore = " + expectedVerificationScore);
-        assertEquals(expectedVerificationScore, verificationScore);
+//        JsonNode jsonNode = objectMapper.readTree(ResponseJSON);
+//        JsonNode vcNode = jsonNode.get("vc");
+//        JsonNode evidenceNode = vcNode.get("evidence");
+//        JsonNode insideEvidence = evidenceNode.get(0);
+//        String verificationScore = insideEvidence.get("verificationScore").asText();
+//        System.out.println("verificationScore = " + verificationScore);
+//        String expectedVerificationScore = "2";
+//        System.out.println("expectedVerificationScore = " + expectedVerificationScore);
+//        assertEquals(expectedVerificationScore, verificationScore);
 
     }
 
