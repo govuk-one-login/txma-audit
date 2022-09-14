@@ -1,7 +1,7 @@
 import { DeleteObjectCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
 import { ErrorService } from './error-service';
-import * as zlib from 'zlib';
+import { unzip } from 'zlib';
 
 export class S3Service {
     static client = new S3Client({ region: 'eu-west-2' });
@@ -29,7 +29,7 @@ export class S3Service {
 
                 // Once the stream has no more data, join the chunks, unzip and return as string
                 stream.once('end', () => {
-                    zlib.unzip(Buffer.concat(responseDataChunks), (err, result: Buffer) => {
+                    unzip(Buffer.concat(responseDataChunks), (err, result: Buffer) => {
                         if (err) {
                             console.log(err);
                             throw err;

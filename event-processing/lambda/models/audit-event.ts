@@ -12,7 +12,6 @@ export interface IAuditEvent {
     platform?: unknown | undefined;
     restricted?: unknown | undefined;
     extensions?: unknown | undefined;
-    hasBeenProcessed?: boolean;
     reIngestCount?: number;
 }
 
