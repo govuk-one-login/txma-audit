@@ -79,8 +79,8 @@ public class kbv_TxmaStepDefinitions {
                 break;
             case "Who Have You Opened A Current Account With? – Prove your identity – GOV.UK":
                 try {
-                    if (new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.isDisplayed()) {
-                        new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.click();
+                    if (new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.isDisplayed()) {
+                        new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.click();
                         new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
                     }
                 } catch (Exception e) {
@@ -165,12 +165,37 @@ public class kbv_TxmaStepDefinitions {
                         new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
                     }
                 } catch (Exception e) {
-                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+                    try{
+                        if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.isDisplayed()) {
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.click();
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
                     }
-                }
-                break;
+                } catch (Exception f) {
+                        if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+                    }
+                    }
+
+                    }
+                    break;
+//                try {
+//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.isDisplayed()) {
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.click();
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+//                    }
+//                    else if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.isDisplayed()) {
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.click();
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+//                    }
+//
+//                } catch (Exception f) {
+//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+//                    }
+//                }
+//                break;
             case "How much do you have left to pay on your mortgage? – Prove your identity – GOV.UK":
                 try {
                     if (new HowMuchDoYouHaveLeftToPayOnYourMortgagePage().OVER35000UPTO60000.isDisplayed()) {
@@ -253,8 +278,8 @@ public class kbv_TxmaStepDefinitions {
                 break;
             case "Who Have You Opened A Current Account With? – Prove your identity – GOV.UK":
                 try {
-                    if (new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.isDisplayed()) {
-                        new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.click();
+                    if (new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.isDisplayed()) {
+                        new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.click();
                         new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
                     }
                 } catch (Exception e) {
@@ -365,12 +390,36 @@ public class kbv_TxmaStepDefinitions {
                         new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
                     }
                 } catch (Exception e) {
-                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+                    try{
+                        if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.isDisplayed()) {
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.click();
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+                        }
+                    } catch (Exception f) {
+                        if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+                        }
                     }
+
                 }
                 break;
+//                try {
+//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.isDisplayed()) {
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.click();
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+//                    }
+//                    else if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.isDisplayed()) {
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.click();
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+//                    }
+//                } catch (Exception f) {
+//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+//                    }
+//                }
+//                break;
             case "What are the first two letters of the forename of the other person on your mortgage? – Prove your identity – GOV.UK":
                 new WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage().KA.click();
                 new WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage().Continue.click();
@@ -515,12 +564,37 @@ public class kbv_TxmaStepDefinitions {
                         new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
                     }
                 } catch (Exception e) {
-                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+                    try{
+                        if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.isDisplayed()) {
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.click();
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+                        }
+                    } catch (Exception f) {
+                        if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+                            new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+                        }
                     }
+
                 }
                 break;
+//                try {
+//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.isDisplayed()) {
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.click();
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+//                    }
+//                    else if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.isDisplayed()) {
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.click();
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+//                    }
+//
+//                } catch (Exception f) {
+//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
+//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
+//                    }
+//                }
+//                break;
             case "What are the first two letters of the forename of the other person on your mortgage? – Prove your identity – GOV.UK":
                 new WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage().KA.click();
                 new WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage().Continue.click();
@@ -540,8 +614,8 @@ public class kbv_TxmaStepDefinitions {
                 break;
             case "Who Have You Opened A Current Account With? – Prove your identity – GOV.UK":
                 try {
-                    if (new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.isDisplayed()) {
-                        new WhoHaveYouOpenedACurrentAccountWithPage().TSBBANKPLC.click();
+                    if (new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.isDisplayed()) {
+                        new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.click();
                         new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
                     }
                 } catch (Exception e) {
@@ -589,16 +663,6 @@ public class kbv_TxmaStepDefinitions {
         new VerifiableCredentialsPage().ResponseFromKBVCRIStaging.click();
         String ResponseJSON = new VerifiableCredentialsPage().Data.getText();
         ObjectMapper objectMapper = new ObjectMapper();
-//        JsonNode jsonNode = objectMapper.readTree(ResponseJSON);
-//        JsonNode vcNode = jsonNode.get("vc");
-//        JsonNode evidenceNode = vcNode.get("evidence");
-//        JsonNode insideEvidence = evidenceNode.get(0);
-//        String verificationScore = insideEvidence.get("verificationScore").asText();
-//        System.out.println("verificationScore = " + verificationScore);
-//        String expectedVerificationScore = "2";
-//        System.out.println("expectedVerificationScore = " + expectedVerificationScore);
-//        assertEquals(expectedVerificationScore, verificationScore);
-
     }
 
 

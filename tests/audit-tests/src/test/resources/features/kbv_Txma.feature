@@ -12,4 +12,4 @@ Feature: KBV-TxMA Integration.
     Then the verifiable credential page should be displayed
     Then Response from Address CRI Integration displays the user's address in JSON
     When the user clicks on summaryTest and reads the sub value from JSON
-    Then the audit S3 should have a new event with the postcode provided
+#    Then the audit S3 should have a new event with the postcode provided

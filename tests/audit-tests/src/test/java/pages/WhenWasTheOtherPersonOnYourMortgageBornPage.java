@@ -12,10 +12,10 @@ public class WhenWasTheOtherPersonOnYourMortgageBornPage {
         PageFactory.initElements(Driver.get(), this);
     }
 
-    @FindBy(xpath = "//*[@id='Q00020-021963-label']")
+    @FindBy(id = "Q00020-021963-label")
     public WebElement February1963;
 
-    @FindBy(xpath = "//label[@id='Q00020-NONEOFTHEABOVEDOESNOTAPPLY-label']")
+    @FindBy(id = "Q00020-NONEOFTHEABOVEDOESNOTAPPLY-label")
     public WebElement NONEOFTHEABOVEDOESNOTAPPLY;
 
     @FindBy(xpath = "//button[@id='continue']")
