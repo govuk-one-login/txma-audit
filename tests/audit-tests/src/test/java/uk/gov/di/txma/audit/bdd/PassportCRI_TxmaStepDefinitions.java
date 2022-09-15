@@ -37,7 +37,7 @@ public class PassportCRI_TxmaStepDefinitions {
     String sub = null;
 
     @Given("user is on Passport CRI staging")
-    public void navigateToPassportCriURL() throws IOException {
+    public void navigateToPassportCriURL() {
         Driver.get().get(ConfigurationReader.getOrchestratorStubUrl());
         BrowserUtils.waitForPageToLoad(10);
         new OrchestratorStubPage().DebugRoute.click();
@@ -45,6 +45,7 @@ public class PassportCRI_TxmaStepDefinitions {
         new IPVCoreFrontPage().UkPassport.click();
         BrowserUtils.waitForPageToLoad(10);
     }
+
     @When("user completes address journey successfully")
     public void enterPassportDetails() throws JsonProcessingException {
 
@@ -67,12 +68,11 @@ public class PassportCRI_TxmaStepDefinitions {
     }
 
     @Then("the audit event should appear in TxMA")
-    public void checkPassportCriEventInTxMAS3()  throws InterruptedException {
-        assertTrue(isFoundInS3());
-
+    public void checkPassportCriEventInTxMAS3() throws InterruptedException {
+        assertTrue(isFoundInS3("IPV_PASSPORT_CRI_START"));
     }
 
-    public boolean isFoundInS3() throws InterruptedException {
+    public boolean isFoundInS3(String... additionalSearch) throws InterruptedException {
         // count will make sure it only searches for a finite time
         int count = 0;
 
@@ -88,19 +88,32 @@ public class PassportCRI_TxmaStepDefinitions {
 
                 // Compares all individual jsons with our test data
                 for (JSONObject object : output) {
-                    if (object.toString().contains(sub)) {
+                    if (doesObjectContainText(object, sub, additionalSearch)) {
+
                         return true;
                     }
                 }
             }
 
             Thread.sleep(10000);
-            count ++;
+            count++;
         }
         return false;
     }
 
-    private void findLatestKeysFromAuditS3(){
+    public boolean doesObjectContainText(JSONObject objectToSearch, String stringToFind, String... additionalStringToFind) {
+        if (!objectToSearch.toString().contains(stringToFind)) {
+            return false;
+        }
+        for (String search : additionalStringToFind) {
+            if (!objectToSearch.toString().contains(search)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void findLatestKeysFromAuditS3() {
         String bucketName = "audit-" + System.getenv("TEST_ENVIRONMENT") + "-message-batch";
         // The list of the latest two keys
         List<String> keys = new ArrayList<>();
@@ -108,42 +121,32 @@ public class PassportCRI_TxmaStepDefinitions {
         // Opens an S3 client
         try (S3Client s3 = S3Client.builder()
 
-                .region(region)
-                .build()){
+                .region(region).build()) {
 
             // This is used to get the current year, so that we can search the correct s3 files by prefix
             ZonedDateTime currentDateTime = Instant.now().atZone(ZoneOffset.UTC);
 
             // Lists 1000 objects
-            ListObjectsV2Request listObjects = ListObjectsV2Request
-                    .builder()
-                    .bucket(bucketName)
-                    .prefix("firehose/"+currentDateTime.getYear()+"/")
-                    .build();
+            ListObjectsV2Request listObjects = ListObjectsV2Request.builder().bucket(bucketName).prefix("firehose/" + currentDateTime.getYear() + "/").build();
             ListObjectsV2Response res = s3.listObjectsV2(listObjects);
             List<S3Object> objects = res.contents();
 
             // If no objects were found, returns nothing
-            if (res.keyCount()==0){
+            if (res.keyCount() == 0) {
                 return;
             }
 
             // Stores the most recent two keys
             keys.add(objects.get(objects.size() - 1).key());
 
-            if (res.keyCount() > 1){
+            if (res.keyCount() > 1) {
                 keys.add(objects.get(objects.size() - 2).key());
             }
 
             // If more than 1000 objects, cycles through the rest
-            while (res.isTruncated()){
+            while (res.isTruncated()) {
                 // Gets the next batch
-                listObjects = ListObjectsV2Request
-                        .builder()
-                        .bucket(bucketName)
-                        .prefix("firehose/"+currentDateTime.getYear()+"/")
-                        .continuationToken(res.nextContinuationToken())
-                        .build();
+                listObjects = ListObjectsV2Request.builder().bucket(bucketName).prefix("firehose/" + currentDateTime.getYear() + "/").continuationToken(res.nextContinuationToken()).build();
 
                 // Stores the batch
                 res = s3.listObjectsV2(listObjects);
@@ -152,7 +155,7 @@ public class PassportCRI_TxmaStepDefinitions {
                 // If there's more than one object, we store the most recent two keys
                 // If there is only one object, we keep the latest key from the previous batch,
                 // and store the most recent from this one
-                if (res.keyCount() > 1){
+                if (res.keyCount() > 1) {
                     keys.set(0, objects.get(objects.size() - 1).key());
                     keys.set(1, objects.get(objects.size() - 2).key());
                 } else {
@@ -161,13 +164,9 @@ public class PassportCRI_TxmaStepDefinitions {
             }
 
             // Loops through the latest two keys
-            for (String key : keys){
+            for (String key : keys) {
                 // Gets the new object
-                GetObjectRequest objectRequest = GetObjectRequest
-                        .builder()
-                        .key(key)
-                        .bucket(bucketName)
-                        .build();
+                GetObjectRequest objectRequest = GetObjectRequest.builder().key(key).bucket(bucketName).build();
 
                 // Reads the new object
                 GZIPInputStream gzinpstr = new GZIPInputStream(s3.getObject(objectRequest));

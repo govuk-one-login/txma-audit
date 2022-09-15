@@ -33,15 +33,18 @@ public class ConfigurationReader {
     }
 
     public static String getIPVCoreStubUrl() {
-        String orchestratorStubUrl = System.getenv("IPV_CORE_STUB_URL");
-        if (orchestratorStubUrl == null) {
+        String IpvCoreStubUrl = System.getenv("IPV_CORE_STUB_URL");
+        if (IpvCoreStubUrl == null) {
             throw new IllegalArgumentException("Environment variable IPV_CORE_STUB_URL is not set");
         }
-        return orchestratorStubUrl;
+        return IpvCoreStubUrl;
     }
 
     public static String getOrchestratorStubUrl() {
-        return "https://staging-di-ipv-orchestrator-stub.london.cloudapps.digital/";
-    }
+        String orchestratorStubUrl = System.getenv("ORCHESTRATOR_STUB_URL");
+        if (orchestratorStubUrl == null) {
+            throw new IllegalArgumentException("Environment variable IPV_CORE_STUB_URL is not set");
+        }
+        return orchestratorStubUrl;    }
 
 }
