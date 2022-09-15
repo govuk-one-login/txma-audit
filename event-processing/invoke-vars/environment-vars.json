@@ -1,5 +1,5 @@
 {
   "IPVEventProcessorFunction": {
-    "topicArn": "<dev topic ARN>"
+    "topicArn": "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-dev"
   }
 }
