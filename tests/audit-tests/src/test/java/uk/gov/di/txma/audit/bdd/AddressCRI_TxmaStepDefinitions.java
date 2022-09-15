@@ -12,7 +12,7 @@ import org.openqa.selenium.support.ui.Select;
 import pages.CheckYourAddressPage;
 import pages.ChooseYourAddressPage;
 import pages.ConfirmYourDetailsPage;
-import pages.FindYourAddressPage;
+import pages.KBV.FindYourAddressPage;
 import pages.IPVCoreStubPage;
 import pages.VerifiableCredentialsPage;
 import pages.VisitCredentialIssuersPage;

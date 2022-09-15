@@ -7,23 +7,21 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import pages.ExperianUATUserSearchResultsPage;
-import pages.HowMuchDoYouHaveLeftToPayOnYourMortgagePage;
-import pages.HowMuchIsYourMonthlyMortgagePaymentPage;
-import pages.HowMuchOfYourLoanDoYouHaveLeftToPayBackPage;
-import pages.HowMuchOfYourLoanDoYouPayBackEveryMonthPage;
+import pages.KBV.HowMuchDoYouHaveLeftToPayOnYourMortgagePage;
+import pages.KBV.HowMuchIsYourMonthlyMortgagePaymentPage;
+import pages.KBV.HowMuchOfYourLoanDoYouHaveLeftToPayBackPage;
+import pages.KBV.HowMuchOfYourLoanDoYouPayBackEveryMonthPage;
 import pages.IPVCoreStubPage;
-import pages.InWhatMonthAndYearWasTheOtherPersonOnYourMortgageBornPage;
-import pages.InWhichYearDidYouMoveToYourCurrentAddressPage;
+import pages.KBV.InWhatMonthAndYearWasTheOtherPersonOnYourMortgageBornPage;
+import pages.KBV.InWhichYearDidYouMoveToYourCurrentAddressPage;
 import pages.UserForKBVCRIStagingPage;
 import pages.VerifiableCredentialsPage;
 import pages.VisitCredentialIssuersPage;
-import pages.WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage;
-import pages.WhatIsTheNameOfTheCompanyThatProvidesYourMortgagePage;
-import pages.WhatIsTheNameOfYourLoanProviderPage;
-import pages.WhatIsTheTermInMonthsOfYourLoanPage;
-import pages.WhenWasTheOtherPersonOnYourMortgageBornPage;
-import pages.WhoHaveYouOpenedACurrentAccountWithPage;
-import pages.WhoIsYourCurrentAccountWithPage;
+import pages.KBV.WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage;
+import pages.KBV.WhatIsTheNameOfTheCompanyThatProvidesYourMortgagePage;
+import pages.KBV.WhatIsTheNameOfYourLoanProviderPage;
+import pages.KBV.WhatIsTheTermInMonthsOfYourLoanPage;
+import pages.KBV.WhoIsYourCurrentAccountWithPage;
 import utilities.BrowserUtils;
 import utilities.ConfigurationReader;
 import utilities.Driver;
@@ -74,32 +72,6 @@ public class kbv_TxmaStepDefinitions {
                     if (new WhatIsTheNameOfYourLoanProviderPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
                         new WhatIsTheNameOfYourLoanProviderPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
                         new WhatIsTheNameOfYourLoanProviderPage().Continue.click();
-                    }
-                }
-                break;
-            case "Who Have You Opened A Current Account With? – Prove your identity – GOV.UK":
-                try {
-                    if (new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.isDisplayed()) {
-                        new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.click();
-                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
-                    }
-                } catch (Exception e) {
-                    if (new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-                        new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
-                    }
-                }
-                break;
-            case "When Was The Other Person On Your Mortgage Born? – Prove your identity – GOV.UK":
-                try {
-                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.isDisplayed()) {
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.click();
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
-                    }
-                } catch (Exception e) {
-                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
                     }
                 }
                 break;
@@ -179,23 +151,6 @@ public class kbv_TxmaStepDefinitions {
 
                     }
                     break;
-//                try {
-//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.isDisplayed()) {
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.click();
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
-//                    }
-//                    else if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.isDisplayed()) {
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.click();
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
-//                    }
-//
-//                } catch (Exception f) {
-//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
-//                    }
-//                }
-//                break;
             case "How much do you have left to pay on your mortgage? – Prove your identity – GOV.UK":
                 try {
                     if (new HowMuchDoYouHaveLeftToPayOnYourMortgagePage().OVER35000UPTO60000.isDisplayed()) {
@@ -273,32 +228,6 @@ public class kbv_TxmaStepDefinitions {
                     if (new WhatIsTheNameOfYourLoanProviderPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
                         new WhatIsTheNameOfYourLoanProviderPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
                         new WhatIsTheNameOfYourLoanProviderPage().Continue.click();
-                    }
-                }
-                break;
-            case "Who Have You Opened A Current Account With? – Prove your identity – GOV.UK":
-                try {
-                    if (new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.isDisplayed()) {
-                        new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.click();
-                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
-                    }
-                } catch (Exception e) {
-                    if (new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-                        new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
-                    }
-                }
-                break;
-            case "When Was The Other Person On Your Mortgage Born? – Prove your identity – GOV.UK":
-                try {
-                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.isDisplayed()) {
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.click();
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
-                    }
-                } catch (Exception e) {
-                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
                     }
                 }
                 break;
@@ -404,22 +333,6 @@ public class kbv_TxmaStepDefinitions {
 
                 }
                 break;
-//                try {
-//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.isDisplayed()) {
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.click();
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
-//                    }
-//                    else if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.isDisplayed()) {
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.click();
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
-//                    }
-//                } catch (Exception f) {
-//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
-//                    }
-//                }
-//                break;
             case "What are the first two letters of the forename of the other person on your mortgage? – Prove your identity – GOV.UK":
                 new WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage().KA.click();
                 new WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage().Continue.click();
@@ -578,23 +491,6 @@ public class kbv_TxmaStepDefinitions {
 
                 }
                 break;
-//                try {
-//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.isDisplayed()) {
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().OVER550UPTO600.click();
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
-//                    }
-//                    else if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.isDisplayed()) {
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().UPTO600.click();
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
-//                    }
-//
-//                } catch (Exception f) {
-//                    if (new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-//                        new HowMuchOfYourLoanDoYouPayBackEveryMonthPage().Continue.click();
-//                    }
-//                }
-//                break;
             case "What are the first two letters of the forename of the other person on your mortgage? – Prove your identity – GOV.UK":
                 new WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage().KA.click();
                 new WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage().Continue.click();
@@ -609,32 +505,6 @@ public class kbv_TxmaStepDefinitions {
                     if (new WhoIsYourCurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
                         new WhoIsYourCurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
                         new WhoIsYourCurrentAccountWithPage().Continue.click();
-                    }
-                }
-                break;
-            case "Who Have You Opened A Current Account With? – Prove your identity – GOV.UK":
-                try {
-                    if (new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.isDisplayed()) {
-                        new WhoHaveYouOpenedACurrentAccountWithPage().Tsbbankplc.click();
-                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
-                    }
-                } catch (Exception e) {
-                    if (new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-                        new WhoHaveYouOpenedACurrentAccountWithPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-                        new WhoHaveYouOpenedACurrentAccountWithPage().Continue.click();
-                    }
-                }
-                break;
-            case "When Was The Other Person On Your Mortgage Born? – Prove your identity – GOV.UK":
-                try {
-                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.isDisplayed()) {
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().February1963.click();
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
-                    }
-                } catch (Exception e) {
-                    if (new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.isDisplayed()) {
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().NONEOFTHEABOVEDOESNOTAPPLY.click();
-                        new WhenWasTheOtherPersonOnYourMortgageBornPage().Continue.click();
                     }
                 }
                 break;

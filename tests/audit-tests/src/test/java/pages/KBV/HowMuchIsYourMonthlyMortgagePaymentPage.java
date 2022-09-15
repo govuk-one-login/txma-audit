@@ -1,4 +1,4 @@
-package pages;
+package pages.KBV;
 
 //import gov.di_ipv_kbv.utilities.Driver;
 
@@ -7,18 +7,18 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import utilities.Driver;
 
-public class HowMuchDoYouHaveLeftToPayOnYourMortgagePage {
-    public HowMuchDoYouHaveLeftToPayOnYourMortgagePage() {
+public class HowMuchIsYourMonthlyMortgagePaymentPage {
+    public HowMuchIsYourMonthlyMortgagePaymentPage() {
         PageFactory.initElements(Driver.get(), this);
     }
 
-    @FindBy(id = "Q00015-OVER35000UPTO60000-label")
-    public WebElement OVER35000UPTO60000;
+    @FindBy(id = "Q00018-OVER500UPTO600-label")
+    public WebElement OVER500UPTO600;
 
-    @FindBy(id = "Q00015-UPTO60000-label")
-    public WebElement UPTO60000;
+    @FindBy(id = "Q00018-UPTO600-label")
+    public WebElement UPTO600;
 
-    @FindBy(id = "Q00015-NONEOFTHEABOVEDOESNOTAPPLY-label")
+    @FindBy(id = "Q00018-NONEOFTHEABOVEDOESNOTAPPLY-label")
     public WebElement NONEOFTHEABOVEDOESNOTAPPLY;
 
     @FindBy(id = "continue")

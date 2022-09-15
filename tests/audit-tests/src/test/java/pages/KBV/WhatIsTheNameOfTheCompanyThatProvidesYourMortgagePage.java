@@ -1,4 +1,4 @@
-package pages;
+package pages.KBV;
 
 //import gov.di_ipv_kbv.utilities.Driver;
 
@@ -7,17 +7,17 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import utilities.Driver;
 
-public class WhenWasTheOtherPersonOnYourMortgageBornPage {
-    public WhenWasTheOtherPersonOnYourMortgageBornPage() {
+public class WhatIsTheNameOfTheCompanyThatProvidesYourMortgagePage {
+    public WhatIsTheNameOfTheCompanyThatProvidesYourMortgagePage() {
         PageFactory.initElements(Driver.get(), this);
     }
 
-    @FindBy(id = "Q00020-021963-label")
-    public WebElement February1963;
+    @FindBy(id = "Q00009-SANTANDERANMFMORTGAGE-label")
+    public WebElement SANTANDERANMFMORTGAGE;
 
-    @FindBy(id = "Q00020-NONEOFTHEABOVEDOESNOTAPPLY-label")
+    @FindBy(id = "Q00009-NONEOFTHEABOVEDOESNOTAPPLY-label")
     public WebElement NONEOFTHEABOVEDOESNOTAPPLY;
 
-    @FindBy(xpath = "//button[@id='continue']")
+    @FindBy(id = "continue")
     public WebElement Continue;
 }

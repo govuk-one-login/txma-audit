@@ -1,4 +1,4 @@
-package pages;
+package pages.KBV;
 
 //import gov.di_ipv_kbv.utilities.Driver;
 
@@ -7,15 +7,15 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import utilities.Driver;
 
-public class WhoHaveYouOpenedACurrentAccountWithPage {
-    public WhoHaveYouOpenedACurrentAccountWithPage() {
+public class WhatIsTheNameOfYourLoanProviderPage {
+    public WhatIsTheNameOfYourLoanProviderPage() {
         PageFactory.initElements(Driver.get(), this);
     }
 
-    @FindBy(id= "Q00048-TSBBANKPLC-label")
-    public WebElement Tsbbankplc;
+    @FindBy(id = "Q00033-TSBBANKPLC-label")
+    public WebElement TSBBANKPLC;
 
-    @FindBy(id = "Q00048-NONEOFTHEABOVEDOESNOTAPPLY-label")
+    @FindBy(id = "Q00033-NONEOFTHEABOVEDOESNOTAPPLY-label")
     public WebElement NONEOFTHEABOVEDOESNOTAPPLY;
 
     @FindBy(id = "continue")
