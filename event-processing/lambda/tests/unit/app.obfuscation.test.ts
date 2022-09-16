@@ -400,4 +400,27 @@ describe('Unit test for app handler', function () {
         const resultAuditEvent: unknown = JSON.parse(resultData);
         expect(resultAuditEvent).toEqual(expectedData);
     });
+
+    it('do not obfuscates when reIngestCount is not 0', async () => {
+        const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
+        expectedData.reIngestCount = 1;
+        const data: string = Buffer.from(TestHelper.encodeAuditEventArray(expectedData)).toString('base64');
+        const expectedResult: FirehoseTransformationResult = {
+            records: [
+                {
+                    data: data,
+                    recordId: '7041e12f-c772-41e4-a05f-8bf25cc6f4bb',
+                    result: 'Ok',
+                },
+            ],
+        };
+
+        const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(
+            TestHelper.encodeAuditEventArray(EventProcessorHelper.exampleReIngestAuditMessage()),
+        );
+
+        const result = await handler(firehoseEvent);
+
+        expect(result).toEqual(expectedResult);
+    });
 });
