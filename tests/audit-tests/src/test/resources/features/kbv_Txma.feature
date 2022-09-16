@@ -1,15 +1,12 @@
-Feature: KBV-TxMA Integration.
-  Kenneth Decerqueira is an Experian test user.
+Feature: Whenever user creates an event on KBV CRI UI, TxMA S3 bucket should how a log of this event within a minute.
 
   @staging
   Scenario: KBV to TxMA integration test in Staging
-    Given the user is on KBV CRI Staging
+    Given the user is on "KBV" CRI
     When the user searches Kenneth Decerqueira and click `Search`
     When the user clicks on `Go to KBV CRI Staging`
-    When the user answers the first question correctly
-    When the user answers the second KBV question correctly
-    When the user answers the third KBV question correctly
-    Then the verifiable credential page should be displayed
-    Then Response from Address CRI Integration displays the user's address in JSON
-    When the user clicks on summaryTest and reads the sub value from JSON
-#    Then the audit S3 should have a new event with the postcode provided
+    When the user answers the "first" question correctly
+    When the user answers the "second" question correctly
+    When the user answers the "third" question correctly
+    Then Response from CRI displays the subject identifier
+    Then the audit S3 should have a new event with the subject identifier and event_name "IPV_KBV_CRI_START"
