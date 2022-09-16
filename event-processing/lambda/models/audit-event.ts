@@ -12,6 +12,7 @@ export interface IAuditEvent {
     platform?: unknown | undefined;
     restricted?: unknown | undefined;
     extensions?: unknown | undefined;
+    reIngestCount?: number;
 }
 
 export interface IAuditEventUserMessage {
@@ -37,6 +38,7 @@ function createBaseAuditEvent(): IAuditEvent {
         platform: undefined,
         restricted: undefined,
         extensions: undefined,
+        reIngestCount: 0,
     };
 }
 
@@ -77,6 +79,9 @@ export class AuditEvent {
                 case 'extensions':
                     event.extensions = jsonObject[value];
                     break;
+                case 'reIngestCount':
+                    event.reIngestCount = jsonObject[value];
+                    break;
                 default:
                     unknown_fields.set(value, jsonObject[value]);
                     break;
@@ -101,6 +106,7 @@ export class AuditEvent {
         message.platform !== undefined && (obj.platform = message.platform ? message.platform : undefined);
         message.restricted !== undefined && (obj.restricted = message.restricted ? message.restricted : undefined);
         message.extensions !== undefined && (obj.extensions = message.extensions ? message.extensions : undefined);
+        message.reIngestCount !== undefined && (obj.reIngestCount = message.reIngestCount ? message.reIngestCount : 0);
         return obj;
     }
 }

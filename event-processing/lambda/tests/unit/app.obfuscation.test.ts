@@ -6,50 +6,43 @@ import { AuditEvent, IAuditEvent } from '../../models/audit-event';
 import { ObfuscationService } from '../../services/obfuscation-service';
 import { ObfuscationHelper } from '../test-helpers/obfuscation-helper';
 import { EventProcessorHelper } from '../test-helpers/event-processor-helper';
-
-jest.mock('aws-sdk');
-
-const mockGetSecretValue = jest.fn((SecretId) => {
-    switch (SecretId) {
-        case 'secret-string':
-            return {
-                SecretString: 'secret-1-value',
-            };
-        case 'secret-binary':
-            return {
-                SecretBinary: Buffer.from('secret-1-value').toString('base64'),
-            };
-        case 'no-data-secret':
-            return {};
-        default:
-            throw Error('secret not found');
-    }
-});
-
-jest.mock('aws-sdk', () => {
-    return {
-        config: {
-            update() {
-                return {};
-            },
-        },
-        SecretsManager: jest.fn(() => {
-            return {
-                getSecretValue: jest.fn(({ SecretId }) => {
-                    return {
-                        promise: () => mockGetSecretValue(SecretId),
-                    };
-                }),
-            };
-        }),
-    };
-});
+import { mockClient } from 'aws-sdk-client-mock';
+import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
 
 describe('Unit test for app handler', function () {
     let consoleWarningMock: jest.SpyInstance;
+    const secretManagerMock = mockClient(SecretsManagerClient);
 
     beforeEach(() => {
         consoleWarningMock = jest.spyOn(global.console, 'log');
+        secretManagerMock.reset();
+
+        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'no-data-secret' }).resolves({});
+
+        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'secret-binary' }).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            },
+            SecretBinary: Buffer.from(Buffer.from('secret-1-value').toString('base64')),
+        });
+
+        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'secret-string' }).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            },
+            SecretString: 'secret-1-value',
+        });
+
+        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'unknown_arn' }).rejects(new Error('secret not found'));
+
         process.env.SECRET_ARN = 'secret-string';
     });
 
@@ -63,6 +56,7 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
+            reIngestCount: 0,
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString('base64');
@@ -382,7 +376,6 @@ describe('Unit test for app handler', function () {
 
     it('handles obfuscating boolean fields', async () => {
         const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
-        // @ts-ignore
         expectedData.user!.email = ObfuscationService.obfuscateField(false, 'secret-1-value');
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(expectedData)).toString('base64');
         const expectedResult: FirehoseTransformationResult = {

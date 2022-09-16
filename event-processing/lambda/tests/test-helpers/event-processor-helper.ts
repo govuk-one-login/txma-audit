@@ -30,6 +30,7 @@ export class EventProcessorHelper {
             extensions: {
                 response: 'Authentication successful',
             },
+            reIngestCount: 0,
         };
     }
 }

@@ -17,8 +17,8 @@ export const handler = async (record: IAuditEvent): Promise<void> => {
             Record: { Data: JSON.stringify(record) },
         };
     } else {
-        console.error('[ERROR] ENV VAR MISSING: \n missing firehose name enironment variable');
-        throw new Error('[ERROR] ENV VAR MISSING: \n missing firehose name enironment variable');
+        console.error('[ERROR] ENV VAR MISSING: \n missing firehose name environment variable');
+        throw new Error('[ERROR] ENV VAR MISSING: \n missing firehose name environment variable');
     }
 
     const sendTextPromise = firehose.putRecord(params).promise();
