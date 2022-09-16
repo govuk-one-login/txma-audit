@@ -1612,7 +1612,7 @@ Resources:
                 "aws:PrincipalArn":
                   - !GetAtt ObfuscationFunction.Arn
                   - !GetAtt CleanserFunction.Arn
-#                  - !GetAtt ReIngestFunction.Arn
+                  - !GetAtt ReIngestFunction.Arn
 
   FireHoseKMSKeyAlias:
     Type: AWS::KMS::Alias
@@ -1695,6 +1695,11 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/fraud-splunk-delivery-failure-bucket/"
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteRedundantFiles
+            Status: Enabled
+            ExpirationInDays: 7
       NotificationConfiguration:
         QueueConfigurations:
           !If
@@ -1710,7 +1715,7 @@ Resources:
 
   FraudSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: IsBuildOrDev
+    Condition: DeployTestRolePolicy
     Properties:
       Bucket: !Ref FraudSplunkDeliveryTestBucket
       PolicyDocument:
@@ -1783,6 +1788,11 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref SplunkDeliveryBucketLogsBucket
         LogFilePrefix: "event-processing/performance-splunk-delivery-failure-bucket/"
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteRedundantFiles
+            Status: Enabled
+            ExpirationInDays: 7
       NotificationConfiguration:
         QueueConfigurations:
           !If
@@ -1798,7 +1808,7 @@ Resources:
 
   PerformanceSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: IsBuildOrDev
+    Condition: DeployTestRolePolicy
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryTestBucket
       PolicyDocument:
@@ -2596,50 +2606,58 @@ Resources:
         EntryPoints:
           - cleanser-app.ts
 
-#  ReIngestLogGroup:
-#    Type: AWS::Logs::LogGroup
-#    Properties:
-#      KmsKeyId: !GetAtt LogsKmsKey.Arn
-#      LogGroupName: "/aws/lambda/ReIngest"
-#      RetentionInDays: 7
+  ReIngestLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/ReIngest"
+      RetentionInDays: 7
 
-#  ReIngestFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: "Re-IngestFunction"
-#      CodeUri: ../event-processing/lambda
-#      PackageType: Zip
-#      Handler: re-ingest-app.handler
-#      Runtime: nodejs14.x
-#      Timeout: 30
-#      Events:
-#        FraudBucket:
-#          Type: S3
-#          Properties:
-#            Bucket: !Ref FraudSplunkDeliveryFailureBucket
-#            Events: 's3:ObjectCreated:*'
-#        PerformanceBucket:
-#          Type: S3
-#          Properties:
-#            Bucket: !Ref PerformanceSplunkDeliveryFailureBucket
-#            Events: 's3:ObjectCreated:*'
-#      Policies:
-#        - S3ReadPolicy:
-#            BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
-#        - S3ReadPolicy:
-#            BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
-##        - FirehoseWritePolicy:
-##            DeliveryStreamName: !Ref FraudDeliveryStream
-##        - FirehoseWritePolicy:
-##            DeliveryStreamName: !Ref PerformanceDeliveryStream
-#    Metadata: # Manage esbuild properties
-#      BuildMethod: esbuild
-#      BuildProperties:
-#        Minify: true
-#        Target: "es2020"
-#        Sourcemap: true
-#        EntryPoints:
-#          - re-ingest-app.ts
+  ReIngestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "ReIngestFunction"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: re-ingest-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+      Environment:
+        Variables:
+          performanceBucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
+          fraudBucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
+          performanceStreamName: !Sub "PerformanceFireHose-${Environment}"
+          fraudStreamName: !Sub "FraudFireHose-${Environment}"
+          maxIngestion: "5"
+      Events:
+        FraudBucket:
+          Type: S3
+          Properties:
+            Bucket: !Ref FraudSplunkDeliveryFailureBucket
+            Events: 's3:ObjectCreated:*'
+        PerformanceBucket:
+          Type: S3
+          Properties:
+            Bucket: !Ref PerformanceSplunkDeliveryFailureBucket
+            Events: 's3:ObjectCreated:*'
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
+        - S3CrudPolicy:
+            BucketName: !Sub "${AWS::StackName}-${Environment}-perf-splunk-fail"
+        - FirehoseWritePolicy:
+            DeliveryStreamName: !Sub "FraudFireHose-${Environment}"
+        - FirehoseWritePolicy:
+            DeliveryStreamName: !Sub "PerformanceFireHose-${Environment}"
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - re-ingest-app.ts
 
   #
   # Test Role Permissions
