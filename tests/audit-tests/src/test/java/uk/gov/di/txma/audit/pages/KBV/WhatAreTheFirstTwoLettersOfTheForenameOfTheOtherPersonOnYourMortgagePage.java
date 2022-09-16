@@ -1,11 +1,9 @@
-package pages.KBV;
-
-//import gov.di_ipv_kbv.utilities.Driver;
+package uk.gov.di.txma.audit.pages.KBV;
 
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
-import utilities.Driver;
+import uk.gov.di.txma.audit.utilities.Driver;
 
 public class WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage {
     public WhatAreTheFirstTwoLettersOfTheForenameOfTheOtherPersonOnYourMortgagePage() {
