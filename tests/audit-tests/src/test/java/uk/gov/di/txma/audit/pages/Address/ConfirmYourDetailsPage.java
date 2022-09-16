@@ -1,9 +1,9 @@
-package pages;
+package uk.gov.di.txma.audit.pages.Address;
 
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
-import utilities.Driver;
+import uk.gov.di.txma.audit.utilities.Driver;
 
 public class ConfirmYourDetailsPage {
     public ConfirmYourDetailsPage(){

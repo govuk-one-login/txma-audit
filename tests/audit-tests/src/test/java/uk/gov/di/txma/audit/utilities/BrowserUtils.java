@@ -1,4 +1,4 @@
-package utilities;
+package uk.gov.di.txma.audit.utilities;
 
 
 import org.openqa.selenium.By;
