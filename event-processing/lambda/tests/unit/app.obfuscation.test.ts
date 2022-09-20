@@ -401,7 +401,7 @@ describe('Unit test for app handler', function () {
         expect(resultAuditEvent).toEqual(expectedData);
     });
 
-    it('obfuscate only when reIngestCount is 0 or reIngestCount does not exists', async () => {
+    it('obfuscate only when reIngestCount is 0', async () => {
         const expectedData: IAuditEvent = ObfuscationHelper.exampleObfuscatedMessage();
         expectedData.reIngestCount = 1;
         const data: string = Buffer.from(TestHelper.encodeAuditEventArray(expectedData)).toString('base64');

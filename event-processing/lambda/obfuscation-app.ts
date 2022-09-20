@@ -38,7 +38,7 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
         if (events.length > 0) {
             for (let i = 0; i < events.length; i++) {
                 const auditEvent: IAuditEvent = AuditEvent.fromJSONString(JSON.stringify(events[i]));
-                 if (typeof auditEvent.reIngestCount == 'undefined' || auditEvent.reIngestCount == 0) {
+                 if (auditEvent.reIngestCount == 0) {
                    ObfuscationService.obfuscateEvent(auditEvent, hmacKey);
                  }
                 const cleanedEvent = ObjectHelper.removeEmpty(auditEvent);
@@ -47,7 +47,7 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
             data = Buffer.from(JSON.stringify(obfuscatedEvents)).toString('base64');
         } else {
             const auditEvent: IAuditEvent = AuditEvent.fromJSONString(plaintextData);
-             if (typeof auditEvent.reIngestCount == 'undefined' || auditEvent.reIngestCount == 0) {
+             if (auditEvent.reIngestCount == 0) {
                ObfuscationService.obfuscateEvent(auditEvent, hmacKey);
              }
             const cleanedEvent = ObjectHelper.removeEmpty(auditEvent);
