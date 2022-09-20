@@ -23,5 +23,6 @@
   },
   "extensions": {
     "response": "Authentification successful"
-  }
+  },
+  "reIngestCount": 0
 }
