@@ -6,18 +6,6 @@ import { ICleansedEvent } from '../../models/cleansed-event';
 import { TestHelper } from '../test-helpers/test-helper';
 import { CleanserHelper } from '../test-helpers/cleanser-helper';
 
-jest.mock('aws-sdk');
-
-jest.mock('aws-sdk', () => {
-    return {
-        config: {
-            update() {
-                return {};
-            },
-        },
-    };
-});
-
 describe('Unit test for app handler', function () {
     let consoleWarningMock: jest.SpyInstance;
 

@@ -17,6 +17,7 @@ export class AuditEventUnknownFields {
             platform: isSet(object.platform) ? object.platform : undefined,
             restricted: isSet(object.restricted) ? object.restricted : undefined,
             extensions: isSet(object.extensions) ? object.extensions : undefined,
+            reIngestCount: isSet(object.reIngestCount) ? object.reIngestCount : 0,
             _unknownFields: unknown_fields,
         };
     }

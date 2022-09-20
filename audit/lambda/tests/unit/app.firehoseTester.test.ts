@@ -84,7 +84,7 @@ describe('Unit test for app firehoseTesterHandler', function () {
         (firehose.putRecord().promise as MockedFunction<any>).mockRejectedValueOnce(new Error('Firehose error'));
 
         await expect(handler(exampleMessage)).rejects.toThrow(
-            '[ERROR] ENV VAR MISSING: \n missing firehose name enironment variable',
+            '[ERROR] ENV VAR MISSING: \n missing firehose name environment variable',
         );
 
         expect(errorMock).toHaveBeenCalledTimes(1);

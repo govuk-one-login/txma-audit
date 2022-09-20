@@ -21,7 +21,6 @@ npx husky install
 ```
 
 Also, if running on Linux you may need to make sure the Husky scripts are executable:
-
 ```bash
 chmod ug+x .husky/*   
 chmod ug+x .git/hooks/*
@@ -31,6 +30,10 @@ The deployment of the resources contained here rely on the following AWS System 
 
 * EventProcessorSNSTopicARN - Event Processing SNS topic ARN
 * SNSKMSKeyARN - KMS key used for encryption on the Event Processing SNS topic
+* EventProcessorAccountARN - ARN for the Event Processing Account
+* CSLSLogsDestination - ARN for cyber hosted Lambda used to process logs
+* CSLSS3LambdaARN - ARN for cyber hosted Lambda used to process S3 logs
+* CSLSS3QueueARN - ARN for cyber hosted queue used to receive notifications of object events in S3
 
 You can see these values being referenced throughout the audit-template file in the following format:
 
@@ -58,7 +61,7 @@ To use the SAM CLI, you need the following tools.
 To build and deploy your application for the first time, create an S3 bucket to store the code, and run the following in your shell whilst in the audit folder:
 
 ```bash
-sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env "<environment name>"
+sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env "<environment name>"  --use-container --beta-features
 sam deploy --config-file config/samconfig-audit.toml --config-env "<environment name>" --s3-bucket "<bucket name>"
 ```
 
