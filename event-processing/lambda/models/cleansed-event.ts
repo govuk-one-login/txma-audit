@@ -15,6 +15,7 @@ export interface ICleansedEvent {
     timestamp: number;
     timestamp_formatted: string;
     extensions?: unknown | undefined;
+    reIngestCount?: number;
 }
 
 export class CleansedEvent implements ICleansedEvent {
@@ -24,6 +25,7 @@ export class CleansedEvent implements ICleansedEvent {
     readonly timestamp: number;
     readonly timestamp_formatted: string;
     readonly extensions?: unknown | undefined;
+    readonly reIngestCount?: number;
 
     constructor(
         event_id: string,
@@ -32,12 +34,14 @@ export class CleansedEvent implements ICleansedEvent {
         timestamp: number,
         timestamp_formatted: string,
         extensions?: unknown | undefined,
+        reIngestCount?: number,
     ) {
         this.event_id = event_id;
         this.event_name = event_name;
         this.component_id = component_id;
         this.timestamp = timestamp;
         this.timestamp_formatted = timestamp_formatted;
+        this.reIngestCount = reIngestCount;
 
         if (extensions != undefined && (extensions as ICleansedExtensionsEvent).evidence != undefined) {
             const evidence = CleansedEvent.CleanseEvidenceArrayEvent(
