@@ -1,6 +1,7 @@
 export interface IEnrichedAuditEvent {
     event_id: string;
     client_id?: string;
+    govuk_signin_client_id?: string;
     timestamp: number;
     timestamp_formatted: string;
     event_name: string;
@@ -26,6 +27,7 @@ function createBaseAuditEvent(): IEnrichedAuditEvent {
     return {
         event_id: '',
         client_id: '',
+        govuk_signin_client_id: '',
         timestamp: 0,
         timestamp_formatted: '',
         event_name: '',
@@ -48,6 +50,9 @@ export class EnrichedAuditEvent {
                     break;
                 case 'client_id':
                     event.client_id = jsonObject[value];
+                    break;
+                case 'govuk_signin_client_id':
+                    event.govuk_signin_client_id = jsonObject[value];
                     break;
                 case 'timestamp':
                     event.timestamp = jsonObject[value];

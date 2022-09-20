@@ -356,6 +356,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         const expectedResult: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             client_id: 'some-client',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
@@ -418,6 +419,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         const expectedResult: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             client_id: 'some-client',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
@@ -678,6 +680,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         const expectedResult: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             client_id: 'some-client',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
@@ -709,6 +712,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         const exampleInvalidMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             client_id: 'some-client',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: '',
@@ -791,6 +795,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         const expectedResult: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             client_id: 'some-client',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
@@ -822,6 +827,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         const exampleInvalidMessage: IAuditEvent = {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             client_id: 'some-client',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 0,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
