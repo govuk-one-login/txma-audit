@@ -10,6 +10,7 @@ export class CleansingService {
             auditEvent.timestamp,
             auditEvent.timestamp_formatted,
             auditEvent.extensions,
+            auditEvent.reIngestCount,
         );
     }
 }
