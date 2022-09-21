@@ -21,7 +21,7 @@ public class CRIToTxMAStepDefinitions {
 
     @Given("the user is on {string} CRI")
     public void openIPVCoreStubAndClickCRIPage(String CRI) {
-        Driver.get().get(ConfigurationReader.getUrl("IPVCoreStubURL"));
+        Driver.get().get(ConfigurationReader.getIPVCoreStubUrl());
         BrowserUtils.waitForPageToLoad(100);
         new IPVCoreStubPage().VisitCredentialIssuers.click();
         switch (CRI) {
