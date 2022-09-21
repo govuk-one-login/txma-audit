@@ -1,4 +1,4 @@
-package utilities;
+package uk.gov.di.txma.audit.utilities;
 
 import java.io.FileInputStream;
 import java.util.Optional;
