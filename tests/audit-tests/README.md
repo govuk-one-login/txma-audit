@@ -67,4 +67,4 @@ To view the report produced, run the following command:
 ``` bash
 open build/reports/tests/test/index.html
 ```
-Or view one of the other produced reports in the `TEST_REPORT_DIR` directory.
+Or view one of the other produced reports in the `TEST_REPORT_DIR` directory
