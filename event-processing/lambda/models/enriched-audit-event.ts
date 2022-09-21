@@ -9,6 +9,7 @@ export interface IEnrichedAuditEvent {
     platform?: unknown | undefined;
     restricted?: unknown | undefined;
     extensions?: unknown | undefined;
+    reIngestCount?: number;
 }
 
 export interface IAuditEventUserMessage {
@@ -20,6 +21,7 @@ export interface IAuditEventUserMessage {
     session_id?: string;
     persistent_session_id?: string;
     govuk_signin_journey_id?: string;
+    reIngestCount?: number;
 }
 
 function createBaseAuditEvent(): IEnrichedAuditEvent {
@@ -34,6 +36,7 @@ function createBaseAuditEvent(): IEnrichedAuditEvent {
         platform: undefined,
         restricted: undefined,
         extensions: undefined,
+        reIngestCount: 0,
     };
 }
 
@@ -72,6 +75,9 @@ export class EnrichedAuditEvent {
                     break;
                 case 'extensions':
                     event.extensions = jsonObject[value];
+                    break;
+                case 'reIngestCount':
+                    event.reIngestCount = jsonObject[value];
                     break;
             }
         }
