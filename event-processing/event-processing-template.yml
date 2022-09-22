@@ -2535,31 +2535,6 @@ Resources:
         EntryPoints:
           - obfuscation-app.ts
 
-  HMACSecretAuthAccessPolicy:
-    DependsOn:
-      - ObfuscationFunctionRole
-    Type: AWS::SecretsManager::ResourcePolicy
-    Properties:
-      BlockPublicPolicy: True
-      SecretId: "{{resolve:ssm:HMACSecretArn}}"
-      ResourcePolicy:
-        Version: '2012-10-17'
-        Statement:
-          - !If
-            - IsProductionOrStaging
-            -
-              Effect: "Allow"
-              Principal:
-                AWS: "{{resolve:ssm:AuthAccountARN}}"
-              Action: "secretsmanager:GetSecretValue"
-              Resource: "{{resolve:ssm:HMACSecretArn}}"
-            - !Ref "AWS::NoValue"
-          - Resource: "{{resolve:ssm:HMACSecretArn}}"
-            Action: "secretsmanager:GetSecretValue"
-            Effect: Allow
-            Principal:
-              AWS: !GetAtt ObfuscationFunctionRole.Arn
-
   CleanserFunctionRole:
     Type: AWS::IAM::Role
     Properties:
