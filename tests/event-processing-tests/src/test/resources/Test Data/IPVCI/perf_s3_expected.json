@@ -3,5 +3,6 @@
   "timestamp": 1647969131,
   "timestamp_formatted": "2022-03-22T17:12:11.000Z",
   "event_name": "IPV_CONTRA_INDICATOR_STORAGE_GET_START",
-  "component_id": "https://IPV-CI.staging.account.gov.uk"
+  "component_id": "https://IPV-CI.staging.account.gov.uk",
+  "reIngestCount": 0
 }
