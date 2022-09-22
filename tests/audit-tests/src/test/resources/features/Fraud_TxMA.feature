@@ -1,6 +1,6 @@
 Feature: Whenever user creates an event on Fraud CRI UI, TxMA S3 bucket should have a log of this event within a minute.
 
-  @staging
+ # @staging
 
   Scenario: Testing Address CRI TxMA integration
     Given the user is on "Fraud" CRI
