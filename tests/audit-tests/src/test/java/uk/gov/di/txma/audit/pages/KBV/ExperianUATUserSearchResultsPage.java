@@ -13,4 +13,7 @@ public class ExperianUATUserSearchResultsPage {
     @FindBy(xpath = "//a[normalize-space()='Go to KBV CRI Staging']")
     public WebElement GoToKBVCRIStaging;
 
+    @FindBy(xpath = "//a[normalize-space()='Go to Fraud CRI Staging']")
+    public WebElement GoToFraudCRIStaging;
+
 }
