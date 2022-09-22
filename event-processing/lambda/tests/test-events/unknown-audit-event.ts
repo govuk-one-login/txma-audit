@@ -3,6 +3,7 @@
 export interface AuditEvent {
     event_id: string;
     client_id: string;
+    govuk_signin_client_id: string;
     timestamp: number;
     timestamp_formatted: string;
     event_name: string;
@@ -31,6 +32,7 @@ export class AuditEvent {
         return {
             event_id: isSet(object.event_id) ? String(object.event_id) : '',
             client_id: isSet(object.client_id) ? String(object.client_id) : '',
+            govuk_signin_client_id: isSet(object.govuk_signin_client_id) ? String(object.govuk_signin_client_id) : '',
             timestamp: isSet(object.timestamp) ? Number(object.timestamp) : 0,
             timestamp_formatted: isSet(object.timestamp_formatted) ? String(object.timestamp_formatted) : '',
             event_name: isSet(object.event_name) ? String(object.event_name) : '',
@@ -47,6 +49,7 @@ export class AuditEvent {
         const obj: any = {};
         message.event_id !== undefined && (obj.event_id = message.event_id);
         message.client_id !== undefined && (obj.client_id = message.client_id);
+        message.govuk_signin_client_id !== undefined && (obj.govuk_signin_client_id = message.govuk_signin_client_id);
         message.timestamp !== undefined && (obj.timestamp = Math.round(message.timestamp));
         message.timestamp_formatted !== undefined && (obj.timestamp_formatted = message.timestamp_formatted);
         message.event_name !== undefined && (obj.event_name = message.event_name);

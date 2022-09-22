@@ -81,6 +81,7 @@ Resources:
           Columns:
             - {Name: "event_id", Type: string}
             - {Name: "client_id", Type: string}
+            - {Name: "govuk_signin_client_id", Type: string}
             - {Name: "timestamp", Type: bigint}
             - {Name: "timestamp_formatted", Type: string}
             - {Name: "event_name", Type: string}

@@ -16,6 +16,7 @@ export interface ICleansedEvent {
     timestamp_formatted: string;
     extensions?: unknown | undefined;
     reIngestCount?: number;
+    govuk_signin_client_id?: string;
 }
 
 export class CleansedEvent implements ICleansedEvent {
@@ -26,6 +27,7 @@ export class CleansedEvent implements ICleansedEvent {
     readonly timestamp_formatted: string;
     readonly extensions?: unknown | undefined;
     readonly reIngestCount?: number;
+    readonly govuk_signin_client_id?: string;
 
     constructor(
         event_id: string,
@@ -35,6 +37,7 @@ export class CleansedEvent implements ICleansedEvent {
         timestamp_formatted: string,
         extensions?: unknown | undefined,
         reIngestCount?: number,
+        govuk_signin_client_id?: string,
     ) {
         this.event_id = event_id;
         this.event_name = event_name;
@@ -42,6 +45,7 @@ export class CleansedEvent implements ICleansedEvent {
         this.timestamp = timestamp;
         this.timestamp_formatted = timestamp_formatted;
         this.reIngestCount = reIngestCount;
+        this.govuk_signin_client_id = govuk_signin_client_id;
 
         if (extensions != undefined && (extensions as ICleansedExtensionsEvent).evidence != undefined) {
             const evidence = CleansedEvent.CleanseEvidenceArrayEvent(

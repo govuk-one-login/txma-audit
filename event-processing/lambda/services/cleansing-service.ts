@@ -11,6 +11,7 @@ export class CleansingService {
             auditEvent.timestamp_formatted,
             auditEvent.extensions,
             auditEvent.reIngestCount,
+            auditEvent.govuk_signin_client_id,
         );
     }
 }

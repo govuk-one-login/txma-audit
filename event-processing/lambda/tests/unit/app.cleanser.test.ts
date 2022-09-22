@@ -21,6 +21,7 @@ describe('Unit test for app handler', function () {
         const exampleMessage: IEnrichedAuditEvent = {
             event_id: '123456789',
             client_id: 'My-client-id',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
@@ -35,6 +36,7 @@ describe('Unit test for app handler', function () {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             reIngestCount:0,
+            govuk_signin_client_id: 'some-govuk-client',
 
         };
 
@@ -72,6 +74,7 @@ describe('Unit test for app handler', function () {
         const exampleMessage: IEnrichedAuditEvent = {
             event_id: '123456789',
             client_id: 'My-Client-Id',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
@@ -87,6 +90,7 @@ describe('Unit test for app handler', function () {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             reIngestCount:0,
+            govuk_signin_client_id: 'some-govuk-client',
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');
@@ -181,6 +185,7 @@ describe('Unit test for app handler', function () {
         const exampleMessage: IEnrichedAuditEvent = {
             event_id: '123456789',
             client_id: 'My-client-id',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
@@ -202,6 +207,7 @@ describe('Unit test for app handler', function () {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             reIngestCount:0,
+            govuk_signin_client_id: 'some-govuk-client',
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');
@@ -227,6 +233,7 @@ describe('Unit test for app handler', function () {
         const exampleMessage: IEnrichedAuditEvent = {
             event_id: '123456789',
             client_id: 'My-client-id',
+            govuk_signin_client_id: 'some-govuk-client',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
@@ -244,6 +251,7 @@ describe('Unit test for app handler', function () {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             reIngestCount:0,
+            govuk_signin_client_id: 'some-govuk-client',
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');

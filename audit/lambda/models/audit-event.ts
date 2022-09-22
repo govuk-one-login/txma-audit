@@ -1,6 +1,7 @@
 export interface IAuditEvent {
     event_id?: string;
     client_id?: string;
+    govuk_signin_client_id?: string;
     timestamp: number;
     timestamp_formatted?: string;
     event_name: string;

@@ -9,6 +9,7 @@ export class AuditEventUnknownFields {
         return {
             event_id: isSet(object.event_id) ? String(object.event_id) : '',
             client_id: isSet(object.client_id) ? String(object.client_id) : '',
+            govuk_signin_client_id: isSet(object.govuk_signin_client_id) ? String(object.govuk_signin_client_id) : '',
             timestamp: isSet(object.timestamp) ? Number(object.timestamp) : 0,
             timestamp_formatted: isSet(object.timestamp_formatted) ? String(object.timestamp_formatted) : '',
             event_name: isSet(object.event_name) ? String(object.event_name) : '',
