@@ -567,3 +567,11 @@ Resources:
         Ref: "DelimiterLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+Outputs:
+
+  IPVCoreStubURL:
+    Value: !ImportValue IPVCoreStubURL
+
+  OrchestrationStubURL:
+    Value: !ImportValue OrchestrationStubURL
