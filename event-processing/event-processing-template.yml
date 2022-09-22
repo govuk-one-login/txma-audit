@@ -44,6 +44,9 @@ Conditions:
   DeployTestRolePolicy: !And
     - !Condition IsPipelineTestStage
     - !Condition UseTestRole
+  DeployTestBucketPolicy: !And
+    - !Condition IsBuildOrDev
+    - !Condition UseTestRole
 
 Globals:
   Function:
@@ -1763,7 +1766,7 @@ Resources:
     
   FraudSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: DeployTestRolePolicy
+    Condition: DeployTestBucketPolicy
     Properties:
       Bucket: !Ref FraudSplunkDeliveryTestBucket
       PolicyDocument:
@@ -1904,7 +1907,7 @@ Resources:
 
   PerformanceSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    Condition: DeployTestRolePolicy
+    Condition: DeployTestBucketPolicy
     Properties:
       Bucket: !Ref PerformanceSplunkDeliveryTestBucket
       PolicyDocument:

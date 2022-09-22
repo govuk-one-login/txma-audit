@@ -49,7 +49,7 @@ export const handler = async (event: S3Event): Promise<void> => {
                 console.log(`Current ReIngest count: ${jsonData.reIngestCount}`);
 
                 if (jsonData.reIngestCount > maxIngest) {
-                    console.log(`Max ReIngest reached... archive to S3`);
+                    console.log(`Max ReIngest reached... set to delete from S3 only`);
                     destination = DestinationEnum.s3;
                 }
 

@@ -12,6 +12,7 @@ export class CleanserHelper {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
+            reIngestCount: 0,
             user: {
                 transaction_id: 'a52f6f87',
                 user_id: 'some_user_id',
@@ -49,6 +50,7 @@ export class CleanserHelper {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
+            reIngestCount: 0,
             user: {
                 transaction_id: 'a52f6f87',
                 user_id: 'some_user_id',
@@ -87,6 +89,7 @@ export class CleanserHelper {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            reIngestCount: 0,
             extensions: {
                 evidence: [
                     {
@@ -105,6 +108,7 @@ export class CleanserHelper {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
+            reIngestCount: 0,
             user: {
                 transaction_id: 'a52f6f87',
                 user_id: 'some_user_id',
@@ -144,6 +148,7 @@ export class CleanserHelper {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            reIngestCount: 0,
             extensions: {
                 evidence: [
                     {

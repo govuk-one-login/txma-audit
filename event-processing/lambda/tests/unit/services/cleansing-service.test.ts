@@ -12,6 +12,7 @@ describe('Unit test for cleansing-service', function () {
             event_id: '123456789',
             component_id: '1234',
             client_id: 'An Example Client',
+            reIngestCount: 0,
         };
 
         const expectedMessage: ICleansedEvent = {
@@ -20,6 +21,7 @@ describe('Unit test for cleansing-service', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             event_id: '123456789',
             component_id: '1234',
+            reIngestCount: 0,
         };
 
         expect(CleansingService.cleanseEvent(inputMessage)).toEqual(expectedMessage);
