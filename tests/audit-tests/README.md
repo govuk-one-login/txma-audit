@@ -5,7 +5,7 @@
 This directory contains the automation tests for the Audit side of the TxMA service.
 The tests have been written to ensure that all the components within the TxMA Audit account are connected and any messages which pass through are manipulated as expected.
 
-The tests will test the configuration in the `dev`, `build`, and `staging` environments.
+The tests will test the configuration in the `dev`, `build`, and `staging` environments
 
 ## Prerequisites
 
