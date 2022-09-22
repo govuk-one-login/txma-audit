@@ -31,6 +31,9 @@ public class CRIToTxMAStepDefinitions {
             case "KBV":
                 new VisitCredentialIssuersPage().KBVCRIStaging.click();
                 break;
+            case "Fraud":
+                new VisitCredentialIssuersPage().FraudCRIStaging.click();
+                break;
             default:
                 System.out.println("CRI page not found");
         }
