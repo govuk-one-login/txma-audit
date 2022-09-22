@@ -15,4 +15,7 @@ public class VisitCredentialIssuersPage {
     @FindBy(xpath = "//input[@value='Address CRI Staging']")
     public WebElement AddressCRIStaging;
 
+    @FindBy(xpath = "//input[@value='Fraud CRI Staging']")
+    public WebElement FraudCRIStaging;
+
 }
