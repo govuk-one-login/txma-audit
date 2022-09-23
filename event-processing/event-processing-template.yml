@@ -1740,29 +1740,6 @@ Resources:
         Value: !Ref FraudSplunkDeliveryFailureBucket
       - Name: FilterId
         Value: EntireBucket
-
-  FraudSplunkDeliveryFailureBucketObjectDeleteAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: !Sub 
-        - "S3DeleteObjectsAlarm-${BucketName}"
-        - BucketName: !Ref FraudSplunkDeliveryFailureBucket
-      AlarmDescription: !Sub  
-        - "An alarm where a Delete Request event occurs in the bucket ${BucketName}"
-        - BucketName: !Ref FraudSplunkDeliveryFailureBucket
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 86400
-      Threshold: 1
-      TreatMissingData: notBreaching
-      MetricName: "DeleteRequests"
-      Namespace: "AWS/S3"
-      Dimensions:
-      - Name: BucketName
-        Value: !Ref FraudSplunkDeliveryFailureBucket
-      - Name: FilterId
-        Value: EntireBucket
     
   FraudSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -1881,29 +1858,6 @@ Resources:
         Value: !Ref PerformanceSplunkDeliveryFailureBucket
       - Name: FilterId
         Value: EntireBucket
-
-  PerformanceSplunkDeliveryFailureBucketObjectDeleteAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: !Sub 
-        - "S3DeleteObjectsAlarm-${BucketName}"
-        - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket
-      AlarmDescription: !Sub  
-        - "An alarm where is a Delete Request event occurs in the bucket ${BucketName}"
-        - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket 
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 86400
-      Threshold: 1
-      TreatMissingData: notBreaching
-      MetricName: "DeleteRequests"
-      Namespace: "AWS/S3"
-      Dimensions:
-      - Name: BucketName
-        Value: !Ref PerformanceSplunkDeliveryFailureBucket
-      - Name: FilterId
-        Value: EntireBucket  
 
   PerformanceSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
