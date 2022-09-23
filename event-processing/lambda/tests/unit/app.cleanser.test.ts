@@ -25,7 +25,7 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
-            reIngestCount:0,
+            reIngestCount: 0,
         };
 
         const outputMessage: ICleansedEvent = {
@@ -34,8 +34,7 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            reIngestCount:0,
-
+            reIngestCount: 0,
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');
@@ -76,7 +75,7 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
-            reIngestCount:0,
+            reIngestCount: 0,
             user,
         };
 
@@ -86,7 +85,7 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            reIngestCount:0,
+            reIngestCount: 0,
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');
@@ -185,7 +184,7 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
-            reIngestCount:0,
+            reIngestCount: 0,
             extensions: {
                 evidence: [
                     {
@@ -201,7 +200,7 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            reIngestCount:0,
+            reIngestCount: 0,
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');
@@ -231,7 +230,7 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
-            reIngestCount:0,
+            reIngestCount: 0,
             extensions: {
                 other_extension: 'value',
             },
@@ -243,7 +242,7 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            reIngestCount:0,
+            reIngestCount: 0,
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');
@@ -264,5 +263,4 @@ describe('Unit test for app handler', function () {
         const result = await handler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });
-
 });
