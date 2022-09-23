@@ -2732,7 +2732,7 @@ Resources:
       - ReIngestFunctionMaxIngestReachedMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "The reingest function has attempted to reingest multiple times and has failed at each attempt resulting in a complete ingest failure"
+      AlarmDescription: "The reingest function has attempted to reingest multiple times and has exceeded the maxIngest value."
       AlarmName: "MaxReingestReached"
       ComparisonOperator: GreaterThanOrEqualToThreshold
       EvaluationPeriods: 1
