@@ -1,6 +1,6 @@
 Feature: Whenever user creates an event on Address CRI UI, TxMA S3 bucket should how a log of this event within a minute.
 
-  @staging
+#  @staging
   Scenario: Testing Address CRI TxMA integration
     Given the user is on "Address" CRI
     When the user enters their postcode and click `Find address`
