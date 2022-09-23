@@ -2760,6 +2760,35 @@ Resources:
         EntryPoints:
           - re-ingest-app.ts
 
+  ReIngestFunctionMaxIngestReachedMetric:
+    DependsOn:
+      - ReIngestFunction
+      - ReIngestLogGroup
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "Max ReIngest reached"
+      LogGroupName: "/aws/lambda/ReIngestFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "MaxReIngestReached"
+
+  ReIngestFunctionMaxIngestReachedAlarm:
+    DependsOn:
+      - ReIngestFunctionMaxIngestReachedMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "The reingest function has attempted to reingest multiple times and has failed at each attempt resulting in a complete ingest failure"
+      AlarmName: "MaxReingestReached"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      TreatMissingData: notBreaching
+      Threshold: 1
+      MetricName: "MaxReIngestReached"
+      Namespace: "lambda/di/txma/errors"
+
   #
   # Test Role Permissions
   #
