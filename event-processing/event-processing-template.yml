@@ -2706,10 +2706,12 @@ Resources:
           - cleanser-app.ts
 
   ReIngestLogGroup:
+    DependsOn:
+      - ReIngestFunction
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: "/aws/lambda/ReIngest"
+      LogGroupName: "/aws/lambda/ReIngestFunction"
       RetentionInDays: 7
 
   ReIngestFunction:
