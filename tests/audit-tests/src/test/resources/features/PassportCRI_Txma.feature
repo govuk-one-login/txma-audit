@@ -1,5 +1,5 @@
 @staging
-Feature: Whenever a user creates an event on Passport CRI UI, TxMA S3 bucket should show a log of this event within a minute.
+Feature: Whenever a user creates an event on Passport CRI UI, the TxMA S3 bucket should show a log of this event within a minute.
 
   Scenario: Check a successful address journey from Passport CRI is logged into TxMA
     Given user is on Passport CRI staging
