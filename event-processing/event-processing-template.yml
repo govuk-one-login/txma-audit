@@ -2603,7 +2603,7 @@ Resources:
             - IsStaging
             - Effect: "Allow"
               Principal:
-                AWS: "{{resolve:ssm:AuthAccountARN:3:1664182485000}}"
+                AWS: "{{resolve:ssm:AuthAccountARN:3:1664182485444}}"
               Action: "secretsmanager:GetSecretValue"
               Resource: "{{resolve:ssm:HMACSecretArn}}"
             - !Ref "AWS::NoValue"
