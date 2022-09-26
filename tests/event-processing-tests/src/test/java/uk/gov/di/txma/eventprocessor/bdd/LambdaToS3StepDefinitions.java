@@ -216,7 +216,6 @@ public class LambdaToS3StepDefinitions {
 
         return wrapped.toString();
     }
-
     /**
      * This adds the current timestamp to the nearest millisecond (if timestamp was already present)
      * and adds the component_id (if component_id was already present)
