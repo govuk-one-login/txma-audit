@@ -44,7 +44,6 @@ public class CRIToTxMAStepDefinitions {
     public void getSubValueFromCRIPage() throws JsonProcessingException {
         new VerifiableCredentialsPage().ResponseFromCRI.click();
         String CRIJSONResponse = new VerifiableCredentialsPage().CRIJSONResponse.getText();
-
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(CRIJSONResponse);
         sub = jsonNode.get("sub").asText();

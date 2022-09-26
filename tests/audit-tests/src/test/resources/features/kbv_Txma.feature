@@ -1,6 +1,6 @@
+@staging
 Feature: Whenever user creates an event on KBV CRI UI, TxMA S3 bucket should have a log of this event within a minute.
 
-#  @staging
   Scenario: KBV to TxMA integration test in Staging
     Given the user is on "KBV" CRI
     When the user searches Kenneth Decerqueira and click `Search`
