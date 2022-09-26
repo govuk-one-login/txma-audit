@@ -20,4 +20,5 @@ export interface IAuditEventUserMessage {
     session_id?: string;
     persistent_session_id?: string;
     govuk_signin_journey_id?: string;
+    device_id?: string;
 }

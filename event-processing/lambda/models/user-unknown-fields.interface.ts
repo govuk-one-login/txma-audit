@@ -7,6 +7,7 @@ export interface IUserUnknownFields {
     session_id: string;
     persistent_session_id: string;
     govuk_signin_journey_id: string;
+    device_id: string;
     _unknownFields: Map<string, unknown>;
 }
 
@@ -23,6 +24,7 @@ export class UserUnknownFields {
             govuk_signin_journey_id: isSet(object.govuk_signin_journey_id)
                 ? String(object.govuk_signin_journey_id)
                 : '',
+            device_id: isSet(object.device_id) ? String(object.device_id) : '',
             _unknownFields: unknown_fields,
         };
     }
