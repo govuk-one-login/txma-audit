@@ -1704,14 +1704,14 @@ Resources:
             Status: Enabled
             ExpirationInDays: 7
       NotificationConfiguration:
-        QueueConfigurations:
-          !If
-          - IsProductionOrStaging
-          - - Event: "s3:ObjectCreated:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - Event: "s3:ObjectRestore:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-          - - !Ref AWS::NoValue
+#        QueueConfigurations:
+#          !If
+#          - IsProductionOrStaging
+#          - - Event: "s3:ObjectCreated:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#            - Event: "s3:ObjectRestore:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -1821,15 +1821,15 @@ Resources:
           - Id: DeleteRedundantFiles
             Status: Enabled
             ExpirationInDays: 7
-      NotificationConfiguration:
-        QueueConfigurations:
-          !If
-          - IsProductionOrStaging
-          - - Event: "s3:ObjectCreated:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - Event: "s3:ObjectRestore:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-          - - !Ref AWS::NoValue
+#      NotificationConfiguration:
+#        QueueConfigurations:
+#          !If
+#          - IsProductionOrStaging
+#          - - Event: "s3:ObjectCreated:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#            - Event: "s3:ObjectRestore:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
