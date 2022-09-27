@@ -35,8 +35,8 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            govuk_signin_client_id: 'some-govuk-client',
             reIngestCount: 0,
+            govuk_signin_client_id: 'some-govuk-client',
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');
@@ -249,8 +249,8 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            reIngestCount:0,
             govuk_signin_client_id: 'some-govuk-client',
-            reIngestCount: 0,
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');
