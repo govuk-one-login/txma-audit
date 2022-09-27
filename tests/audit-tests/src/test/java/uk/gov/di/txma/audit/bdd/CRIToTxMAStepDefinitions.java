@@ -13,6 +13,8 @@ import uk.gov.di.txma.audit.utilities.BrowserUtils;
 import uk.gov.di.txma.audit.utilities.ConfigurationReader;
 import uk.gov.di.txma.audit.utilities.Driver;
 
+import java.net.MalformedURLException;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CRIToTxMAStepDefinitions {
@@ -20,7 +22,7 @@ public class CRIToTxMAStepDefinitions {
     String sub = null;
 
     @Given("the user is on {string} CRI")
-    public void openIPVCoreStubAndClickCRIPage(String CRI) {
+    public void openIPVCoreStubAndClickCRIPage(String CRI) throws MalformedURLException {
         Driver.get().get(ConfigurationReader.getIPVCoreStubUrl());
         BrowserUtils.waitForPageToLoad(100);
         new IPVCoreStubPage().VisitCredentialIssuers.click();
@@ -41,7 +43,7 @@ public class CRIToTxMAStepDefinitions {
     }
 
     @Then("Response from CRI displays the subject identifier")
-    public void getSubValueFromCRIPage() throws JsonProcessingException {
+    public void getSubValueFromCRIPage() throws JsonProcessingException, MalformedURLException {
         new VerifiableCredentialsPage().ResponseFromCRI.click();
         String CRIJSONResponse = new VerifiableCredentialsPage().CRIJSONResponse.getText();
 
