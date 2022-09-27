@@ -15,17 +15,18 @@ RUN yum install -y unzip
 
 RUN mkdir reports
 
-# copy source code over
-COPY ./ ./
-
 #Install Gradle and dependencies
 RUN wget https://services.gradle.org/distributions/gradle-7.4.2-bin.zip -P /tmp
 RUN unzip -d /opt/gradle /tmp/gradle-*.zip
 
 ENV GRADLE_HOME=/opt/gradle/gradle-7.4.2
 ENV PATH=$PATH:$GRADLE_HOME/bin
+ENV BROWSER=chrome-headless
 
 RUN echo $PATH
 RUN gradle -v
+
+# copy source code over
+COPY ./ ./
 
 ENTRYPOINT ["./run-tests.sh"]

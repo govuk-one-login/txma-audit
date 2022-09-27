@@ -9,8 +9,11 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.ie.InternetExplorerDriver;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.safari.SafariDriver;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Logger;
 
 public class Driver {
@@ -26,13 +29,13 @@ public class Driver {
     // for each thread, in InheritableThreadLocal we can have separate object for that thread
 
     // driver class will provide separate webdriver object per thread
-    private static InheritableThreadLocal<WebDriver> driverPool = new InheritableThreadLocal<>();
+    private static final InheritableThreadLocal<WebDriver> driverPool = new InheritableThreadLocal<>();
 
-    public static WebDriver get() {
+    public static WebDriver get() throws MalformedURLException {
         //if this thread doesn't have driver - create it and add to pool
         if (driverPool.get() == null) {
 
-//            if we pass the driver from terminal then use that one
+//           if we pass the driver from terminal then use that one
 //           if we do not pass the driver from terminal then use the one properties file
             String browser = ConfigurationReader.getBrowser();
             LOGGER.info("ℹ️ browser is " + browser);
@@ -45,9 +48,16 @@ public class Driver {
                     WebDriverManager.chromedriver().setup();
                     ChromeOptions chromeOptions = new ChromeOptions();
                     chromeOptions.setHeadless(true);
-                    chromeOptions.addArguments("--no-sandbox");
-                    chromeOptions.addArguments("--disable-dev-shm-usage");
-                    driverPool.set(new ChromeDriver(chromeOptions));
+                    chromeOptions.addArguments("--no-sandbox"); // Bypass OS security model, MUST BE THE VERY FIRST OPTION
+                    chromeOptions.addArguments("--disable-setuid-sandbox");
+                    chromeOptions.addArguments("start-maximized"); // open Browser in maximized mode
+                    chromeOptions.addArguments("disable-infobars"); // disabling infobars
+                    chromeOptions.addArguments("--disable-extensions"); // disabling extensions
+                    chromeOptions.addArguments("--disable-gpu"); // applicable to windows os only
+                    chromeOptions.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
+                    chromeOptions.addArguments("--headless");
+                    chromeOptions.addArguments("--remote-debugging-port=9222");
+                    driverPool.set(new RemoteWebDriver(new URL(System.getenv("DRIVER")), chromeOptions));
                     break;
                 case "firefox":
                     WebDriverManager.firefoxdriver().setup();

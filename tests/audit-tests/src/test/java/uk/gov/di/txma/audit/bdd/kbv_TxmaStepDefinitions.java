@@ -17,23 +17,25 @@ import uk.gov.di.txma.audit.pages.KBV.WhoIsYourCurrentAccountWithPage;
 import uk.gov.di.txma.audit.utilities.BrowserUtils;
 import uk.gov.di.txma.audit.utilities.Driver;
 
+import java.net.MalformedURLException;
+
 public class kbv_TxmaStepDefinitions {
 
     @When("the user searches Kenneth Decerqueira and click `Search`")
-    public void the_user_searches_Kenneth_Decerqueira_and_click_Search() {
+    public void the_user_searches_Kenneth_Decerqueira_and_click_Search() throws MalformedURLException {
         new UserForKBVCRIStagingPage().SearchForUserInExperian.sendKeys("KENNETH DECERQUEIRA");
         new UserForKBVCRIStagingPage().Search.click();
         BrowserUtils.waitForPageToLoad(100);
     }
 
     @When("the user clicks on `Go to KBV CRI Staging`")
-    public void the_user_clicks_on_Go_to_KBV_CRI_Staging() {
+    public void the_user_clicks_on_Go_to_KBV_CRI_Staging() throws MalformedURLException {
         new ExperianUATUserSearchResultsPage().GoToKBVCRIStaging.click();
         BrowserUtils.waitForPageToLoad(100);
     }
 
     @When("the user answers the {string} question correctly")
-    public void KennethAnswersQuestion(String questionNumber) {
+    public void KennethAnswersQuestion(String questionNumber) throws MalformedURLException {
         String kennethQuestion = Driver.get().getTitle();
         System.out.println("kenneth " + questionNumber + " Question = " + kennethQuestion);
         switch (kennethQuestion) {

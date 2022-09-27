@@ -7,8 +7,10 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import uk.gov.di.txma.audit.utilities.Driver;
 
+import java.net.MalformedURLException;
+
 public class UserForKBVCRIStagingPage {
-    public UserForKBVCRIStagingPage (){
+    public UserForKBVCRIStagingPage () throws MalformedURLException {
         PageFactory.initElements(Driver.get(), this);
     }
 

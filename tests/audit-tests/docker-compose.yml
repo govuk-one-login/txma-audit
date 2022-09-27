@@ -1,0 +1,24 @@
+version: '3.3'
+services:
+  chrome:
+    # arm image
+#    image: seleniarm/node-chromium:105.0
+    # x86 image
+    image: selenium/standalone-chrome:105.0
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+  selenium-hub:
+    # arm image
+#    image: seleniarm/hub:4.4.0-20220903
+    # x86 image
+    image: selenium/hub:4.4.0
+    container_name: selenium-hub
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
