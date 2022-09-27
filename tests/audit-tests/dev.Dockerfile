@@ -5,6 +5,7 @@ ARG GIT_REPO
 LABEL "BUILD_DATE" = ${BUILD_DATE}
 LABEL "COMMIT_SHA" = ${COMMIT_SHA}
 LABEL "GIT_REPO" = ${GIT_REPO}
+# cannot copy files to container root directory as docker build fails
 WORKDIR /usr/src/
 RUN yum install -y awscli
 RUN yum install -y shadow-utils
