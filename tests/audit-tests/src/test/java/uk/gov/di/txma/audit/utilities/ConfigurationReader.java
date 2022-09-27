@@ -1,10 +1,6 @@
 package uk.gov.di.txma.audit.utilities;
 
-import java.io.FileInputStream;
 import java.util.Optional;
-import java.util.Properties;
-
-
 public class ConfigurationReader {
 
     public static String getBrowser() {
@@ -18,5 +14,11 @@ public class ConfigurationReader {
         }
         return IPVCoreStubUrl;
     }
+    public static String getOrchestratorStubUrl() {
+        String orchestratorStubUrl = System.getenv("ORCHESTRATOR_STUB_URL");
+        if (orchestratorStubUrl == null) {
+            throw new IllegalArgumentException("Environment variable ORCHESTRATOR_STUB_URL is not set");
+        }
+        return orchestratorStubUrl;    }
 
 }
