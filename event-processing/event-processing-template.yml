@@ -35,7 +35,6 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
-  IsStaging: !Equals [ !Ref Environment, staging ]
   IsBuildOrDev: !Or
     - !Equals [ !Ref Environment, dev ]
     - !Equals [ !Ref Environment, build ]
@@ -1704,15 +1703,15 @@ Resources:
           - Id: DeleteRedundantFiles
             Status: Enabled
             ExpirationInDays: 7
-#      NotificationConfiguration:
-#        QueueConfigurations:
-#          !If
-#          - IsProductionOrStaging
-#          - - Event: "s3:ObjectCreated:*"
-#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-#            - Event: "s3:ObjectRestore:*"
-#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-#          - - !Ref AWS::NoValue
+      NotificationConfiguration:
+        QueueConfigurations:
+          !If
+          - IsProductionOrStaging
+          - - Event: "s3:ObjectCreated:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectRestore:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -1822,15 +1821,15 @@ Resources:
           - Id: DeleteRedundantFiles
             Status: Enabled
             ExpirationInDays: 7
-#      NotificationConfiguration:
-#        QueueConfigurations:
-#          !If
-#          - IsProductionOrStaging
-#          - - Event: "s3:ObjectCreated:*"
-#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-#            - Event: "s3:ObjectRestore:*"
-#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-#          - - !Ref AWS::NoValue
+      NotificationConfiguration:
+        QueueConfigurations:
+          !If
+          - IsProductionOrStaging
+          - - Event: "s3:ObjectCreated:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+            - Event: "s3:ObjectRestore:*"
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -2599,14 +2598,6 @@ Resources:
       ResourcePolicy:
         Version: '2012-10-17'
         Statement:
-          - !If
-            - IsStaging
-            - Effect: "Allow"
-              Principal:
-                AWS: "{{resolve:ssm:AuthAccountARN:3:1664182485444}}"
-              Action: "secretsmanager:GetSecretValue"
-              Resource: "{{resolve:ssm:HMACSecretArn}}"
-            - !Ref "AWS::NoValue"
           - Resource: "{{resolve:ssm:HMACSecretArn}}"
             Action: "secretsmanager:GetSecretValue"
             Effect: Allow
