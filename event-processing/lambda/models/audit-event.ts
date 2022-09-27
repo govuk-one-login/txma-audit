@@ -24,6 +24,7 @@ export interface IAuditEventUserMessage {
     session_id?: string;
     persistent_session_id?: string;
     govuk_signin_journey_id?: string;
+    device_id?: string;
 }
 
 function createBaseAuditEvent(): IAuditEvent {
@@ -121,6 +122,7 @@ function createBaseAuditEventUserMessage(): IAuditEventUserMessage {
         session_id: '',
         persistent_session_id: '',
         govuk_signin_journey_id: '',
+        device_id: '',
     };
 }
 
@@ -154,6 +156,9 @@ export class AuditEventUserMessage {
                 case 'govuk_signin_journey_id':
                     user.govuk_signin_journey_id = object.govuk_signin_journey_id;
                     break;
+                case 'device_id':
+                    user.device_id = object.device_id;
+                    break;
                 default:
                     unknown_fields.set(value, object[value]);
                     break;
@@ -176,6 +181,7 @@ export class AuditEventUserMessage {
         message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
         message.govuk_signin_journey_id !== undefined &&
             (obj.govuk_signin_journey_id = message.govuk_signin_journey_id);
+        message.device_id !== undefined && (obj.device_id = message.device_id);
         return obj;
     }
 }

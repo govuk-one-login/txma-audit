@@ -22,6 +22,7 @@ export class CleanserHelper {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -60,6 +61,7 @@ export class CleanserHelper {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -118,6 +120,7 @@ export class CleanserHelper {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
