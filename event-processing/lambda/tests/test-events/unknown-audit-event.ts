@@ -23,6 +23,7 @@ export interface IAuditEventUserMessage {
     session_id: string;
     persistent_session_id: string;
     govuk_signin_journey_id: string;
+    device_id: string;
     unknown_user_field: string;
 }
 
@@ -74,6 +75,7 @@ export class AuditEventUserMessage {
             govuk_signin_journey_id: isSet(object.govuk_signin_journey_id)
                 ? String(object.govuk_signin_journey_id)
                 : '',
+            device_id: isSet(object.device_id) ? String(object.device_id) : '',
             unknown_user_field: isSet(object.unknown_user_field) ? String(object.unknown_user_field) : '',
         };
     }
@@ -89,6 +91,7 @@ export class AuditEventUserMessage {
         message.persistent_session_id !== undefined && (obj.persistent_session_id = message.persistent_session_id);
         message.govuk_signin_journey_id !== undefined &&
             (obj.govuk_signin_journey_id = message.govuk_signin_journey_id);
+        message.device_id !== undefined && (obj.device_id = message.device_id);
         message.unknown_user_field !== undefined && (obj.unknown_user_field = message.unknown_user_field);
         return obj;
     }

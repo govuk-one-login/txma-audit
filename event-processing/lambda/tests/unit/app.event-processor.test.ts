@@ -369,6 +369,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -431,6 +432,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -507,6 +509,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -537,6 +540,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
                 unknown_user_field: 'some unknown user field',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -603,6 +607,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -632,6 +637,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -691,6 +697,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -722,6 +729,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -804,6 +812,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',
@@ -835,6 +844,7 @@ describe('Unit test for app eventProcessorHandler', function () {
                 session_id: 'c222c1ec',
                 persistent_session_id: 'some session id',
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             platform: {
                 xray_trace_id: '24727sda4192',

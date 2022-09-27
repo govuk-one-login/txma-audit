@@ -22,6 +22,7 @@ export interface IAuditEventUserMessage {
     persistent_session_id?: string;
     govuk_signin_journey_id?: string;
     reIngestCount?: number;
+    device_id?: string;
 }
 
 function createBaseAuditEvent(): IEnrichedAuditEvent {
@@ -95,6 +96,7 @@ function createBaseAuditEventUserMessage(): IAuditEventUserMessage {
         session_id: '',
         persistent_session_id: '',
         govuk_signin_journey_id: '',
+        device_id: '',
     };
 }
 
@@ -126,6 +128,9 @@ export class AuditEventUserMessage {
                     break;
                 case 'govuk_signin_journey_id':
                     user.govuk_signin_journey_id = object.govuk_signin_journey_id;
+                    break;
+                case 'device_id':
+                    user.device_id = object.device_id;
                     break;
             }
         }

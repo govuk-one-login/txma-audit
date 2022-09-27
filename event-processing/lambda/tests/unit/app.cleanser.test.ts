@@ -66,6 +66,7 @@ describe('Unit test for app handler', function () {
             session_id: 'aaaa-bbbb-cccc-dddd-1234',
             persistent_session_id: 'aaaa-bbbb-cccc-dddd-1234',
             govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
+            device_id:'some known device'
         };
 
         const exampleMessage: IEnrichedAuditEvent = {

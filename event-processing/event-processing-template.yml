@@ -1703,7 +1703,7 @@ Resources:
           - Id: DeleteRedundantFiles
             Status: Enabled
             ExpirationInDays: 7
-#      NotificationConfiguration:
+      NotificationConfiguration:
 #        QueueConfigurations:
 #          !If
 #          - IsProductionOrStaging
