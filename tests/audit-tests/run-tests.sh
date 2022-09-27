@@ -5,7 +5,6 @@ set -eu
 gradle -v
 
 # if we are running the test in docker compose, change to dev.Dockerfile WORKDIR otherwise preserve default behaviour
-echo "$DRIVER"
 if [ "$DRIVER" == "http://selenium-hub:4444/wd/hub" ]; then
   echo "running in docker compose as the environment variable DRIVER is the selinium hubs service name as specified in docker-compose.dev.yml"
   echo "preserving current working directory which is"
@@ -14,6 +13,7 @@ else
   echo "not in docker-compose"
   cd /
   docker compose -f "docker-compose.yml" up -d --build
+  export DRIVER="http://localhost:4444/wd/hub"
   jq --help
   exit 1
 fi
@@ -21,6 +21,8 @@ fi
 echo "Environment: $TEST_ENVIRONMENT"
 
 echo "Current Working Directory: $PWD"
+
+echo "Selenium Grid URL for RemoteWebDriver: $DRIVER"
 
 gradle -q test --info
 
