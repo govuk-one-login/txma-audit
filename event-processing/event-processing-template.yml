@@ -35,7 +35,6 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
-  IsIntegration: !Equals [ !Ref Environment, integration ]
   IsBuildOrDev: !Or
     - !Equals [ !Ref Environment, dev ]
     - !Equals [ !Ref Environment, build ]
@@ -2599,14 +2598,6 @@ Resources:
       ResourcePolicy:
         Version: '2012-10-17'
         Statement:
-          - !If
-            - IsIntegration
-            - Effect: "Allow"
-              Principal:
-                AWS: "{{resolve:ssm:AuthAccountARN:1:1663931619833}}"
-              Action: "secretsmanager:GetSecretValue"
-              Resource: "{{resolve:ssm:HMACSecretArn}}"
-            - !Ref "AWS::NoValue"
           - Resource: "{{resolve:ssm:HMACSecretArn}}"
             Action: "secretsmanager:GetSecretValue"
             Effect: Allow
