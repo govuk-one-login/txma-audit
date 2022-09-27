@@ -10,6 +10,8 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.net.MalformedURLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +22,7 @@ public class BrowserUtils {
      * Switches to new window by the exact title. Returns to original window if target title not found
      * @param targetTitle
      */
-    public static void switchToWindow(String targetTitle) {
+    public static void switchToWindow(String targetTitle) throws MalformedURLException {
         String origin = Driver.get().getWindowHandle();
         for (String handle : Driver.get().getWindowHandles()) {
             Driver.get().switchTo().window(handle);
@@ -36,7 +38,7 @@ public class BrowserUtils {
      *
      * @param element on which to hover
      */
-    public static void hover(WebElement element) {
+    public static void hover(WebElement element) throws MalformedURLException {
         Actions actions = new Actions(Driver.get());
         actions.moveToElement(element).perform();
     }
@@ -61,7 +63,7 @@ public class BrowserUtils {
      * @param locator
      * @return list of strings
      */
-    public static List<String> getElementsText(By locator) {
+    public static List<String> getElementsText(By locator) throws MalformedURLException {
 
         List<WebElement> elems = Driver.get().findElements(locator);
         List<String> elemTexts = new ArrayList<>();
@@ -92,8 +94,8 @@ public class BrowserUtils {
      * @param timeToWaitInSec
      * @return
      */
-    public static WebElement waitForVisibility(WebElement element, int timeToWaitInSec) {
-        WebDriverWait wait = new WebDriverWait(Driver.get(), timeToWaitInSec);
+    public static WebElement waitForVisibility(WebElement element, int timeToWaitInSec) throws MalformedURLException {
+        WebDriverWait wait = new WebDriverWait(Driver.get(), Duration.ofSeconds(timeToWaitInSec));
         return wait.until(ExpectedConditions.visibilityOf(element));
     }
 
@@ -104,8 +106,8 @@ public class BrowserUtils {
      * @param timeout
      * @return
      */
-    public static WebElement waitForVisibility(By locator, int timeout) {
-        WebDriverWait wait = new WebDriverWait(Driver.get(), timeout);
+    public static WebElement waitForVisibility(By locator, int timeout) throws MalformedURLException {
+        WebDriverWait wait = new WebDriverWait(Driver.get(), Duration.ofSeconds(timeout));
         return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 
@@ -116,8 +118,8 @@ public class BrowserUtils {
      * @param timeout
      * @return
      */
-    public static WebElement waitForClickablility(WebElement element, int timeout) {
-        WebDriverWait wait = new WebDriverWait(Driver.get(), timeout);
+    public static WebElement waitForClickablility(WebElement element, int timeout) throws MalformedURLException {
+        WebDriverWait wait = new WebDriverWait(Driver.get(), Duration.ofSeconds(timeout));
         return wait.until(ExpectedConditions.elementToBeClickable(element));
     }
 
@@ -128,8 +130,8 @@ public class BrowserUtils {
      * @param timeout
      * @return
      */
-    public static WebElement waitForClickablility(By locator, int timeout) {
-        WebDriverWait wait = new WebDriverWait(Driver.get(), timeout);
+    public static WebElement waitForClickablility(By locator, int timeout) throws MalformedURLException {
+        WebDriverWait wait = new WebDriverWait(Driver.get(), Duration.ofSeconds(timeout));
         return wait.until(ExpectedConditions.elementToBeClickable(locator));
     }
 
@@ -145,7 +147,7 @@ public class BrowserUtils {
             }
         };
         try {
-            WebDriverWait wait = new WebDriverWait(Driver.get(), timeOutInSeconds);
+            WebDriverWait wait = new WebDriverWait(Driver.get(), Duration.ofSeconds(timeOutInSeconds));
             wait.until(expectation);
         } catch (Throwable error) {
             error.printStackTrace();
