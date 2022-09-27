@@ -15,7 +15,6 @@ else
   docker compose -f "docker-compose.yml" up -d --build
   export DRIVER="http://localhost:4444/wd/hub"
   jq --help
-  exit 1
 fi
 
 echo "Environment: $TEST_ENVIRONMENT"
@@ -23,6 +22,8 @@ echo "Environment: $TEST_ENVIRONMENT"
 echo "Current Working Directory: $PWD"
 
 echo "Selenium Grid URL for RemoteWebDriver: $DRIVER"
+
+sleep 10
 
 gradle -q test --info
 
