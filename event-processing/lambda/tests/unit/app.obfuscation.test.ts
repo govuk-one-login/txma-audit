@@ -423,5 +423,4 @@ describe('Unit test for app handler', function () {
 
         expect(result).toEqual(expectedResult);
     });
-    
 });

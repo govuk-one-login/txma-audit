@@ -35,6 +35,7 @@ Conditions:
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
+  IsIntegration: !Equals [ !Ref Environment, integration ]
   IsBuildOrDev: !Or
     - !Equals [ !Ref Environment, dev ]
     - !Equals [ !Ref Environment, build ]
@@ -1703,19 +1704,44 @@ Resources:
           - Id: DeleteRedundantFiles
             Status: Enabled
             ExpirationInDays: 7
-      NotificationConfiguration:
-        QueueConfigurations:
-          !If
-          - IsProductionOrStaging
-          - - Event: "s3:ObjectCreated:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - Event: "s3:ObjectRestore:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-          - - !Ref AWS::NoValue
+#      NotificationConfiguration:
+#        QueueConfigurations:
+#          !If
+#          - IsProductionOrStaging
+#          - - Event: "s3:ObjectCreated:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#            - Event: "s3:ObjectRestore:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
+      MetricsConfigurations:
+        - Id: EntireBucket
 
+  FraudSplunkDeliveryFailureBucketObjectPutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 
+        - "S3PutObjectsAlarm-${BucketName}"
+        - BucketName: !Ref FraudSplunkDeliveryFailureBucket
+      AlarmDescription: !Sub  
+        - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
+        - BucketName: !Ref FraudSplunkDeliveryFailureBucket
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      TreatMissingData: notBreaching
+      MetricName: "PutRequests"
+      Namespace: "AWS/S3"
+      Dimensions:
+      - Name: BucketName
+        Value: !Ref FraudSplunkDeliveryFailureBucket
+      - Name: FilterId
+        Value: EntireBucket
+    
   FraudSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Condition: DeployTestBucketPolicy
@@ -1796,18 +1822,43 @@ Resources:
           - Id: DeleteRedundantFiles
             Status: Enabled
             ExpirationInDays: 7
-      NotificationConfiguration:
-        QueueConfigurations:
-          !If
-          - IsProductionOrStaging
-          - - Event: "s3:ObjectCreated:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - Event: "s3:ObjectRestore:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-          - - !Ref AWS::NoValue
+#      NotificationConfiguration:
+#        QueueConfigurations:
+#          !If
+#          - IsProductionOrStaging
+#          - - Event: "s3:ObjectCreated:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#            - Event: "s3:ObjectRestore:*"
+#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+#          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  PerformanceSplunkDeliveryFailureBucketObjectPutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 
+        - "S3PutObjectsAlarm-${BucketName}"
+        - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket
+      AlarmDescription: !Sub  
+        - "An alarm where is a PutRequest event occurs in the bucket ${BucketName}"
+        - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket 
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      TreatMissingData: notBreaching
+      MetricName: "PutRequests"
+      Namespace: "AWS/S3"
+      Dimensions:
+      - Name: BucketName
+        Value: !Ref PerformanceSplunkDeliveryFailureBucket
+      - Name: FilterId
+        Value: EntireBucket
 
   PerformanceSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -2549,11 +2600,10 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - !If
-            - IsProductionOrStaging
-            -
-              Effect: "Allow"
+            - IsIntegration
+            - Effect: "Allow"
               Principal:
-                AWS: "{{resolve:ssm:AuthAccountARN}}"
+                AWS: "{{resolve:ssm:AuthAccountARN:1:1663931619833}}"
               Action: "secretsmanager:GetSecretValue"
               Resource: "{{resolve:ssm:HMACSecretArn}}"
             - !Ref "AWS::NoValue"
@@ -2610,10 +2660,12 @@ Resources:
           - cleanser-app.ts
 
   ReIngestLogGroup:
+    DependsOn:
+      - ReIngestFunction
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: "/aws/lambda/ReIngest"
+      LogGroupName: "/aws/lambda/ReIngestFunction"
       RetentionInDays: 7
 
   ReIngestFunction:
@@ -2661,6 +2713,35 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - re-ingest-app.ts
+
+  ReIngestFunctionMaxIngestReachedMetric:
+    DependsOn:
+      - ReIngestFunction
+      - ReIngestLogGroup
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "Max ReIngest reached"
+      LogGroupName: "/aws/lambda/ReIngestFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "MaxReIngestReached"
+
+  ReIngestFunctionMaxIngestReachedAlarm:
+    DependsOn:
+      - ReIngestFunctionMaxIngestReachedMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "The reingest function has attempted to reingest multiple times and has exceeded the maxIngest value."
+      AlarmName: "MaxReingestReached"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      TreatMissingData: notBreaching
+      Threshold: 1
+      MetricName: "MaxReIngestReached"
+      Namespace: "lambda/di/txma/errors"
 
   #
   # Test Role Permissions
