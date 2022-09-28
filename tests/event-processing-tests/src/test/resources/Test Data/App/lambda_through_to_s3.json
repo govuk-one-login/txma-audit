@@ -6,6 +6,7 @@
   "event_name": "DCMAW_CRI_START",
   "component_id": "https://www.review-b.staging.account.gov.uk",
   "user": {
+    "device_id": "12e467e2",
     "transaction_id": "e190264c-7ab6-4f13-97bc-251f1b59dfd9",
     "email": "m.thompson@randatmail.com",
     "phone": "33600182839",
