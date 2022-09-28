@@ -3,7 +3,7 @@
     {
       "messageId": "MessageID_1",
       "receiptHandle": "MessageReceiptHandle",
-      "body": "{\"event_name\": \"some_event_name\", \"timestamp\": 1609462861, \"timestamp_formatted\": \"2021-01-23T15:43:21.842\" }",
+      "body": "{\"event_name\": \"some_event_name\", \"timestamp\": 1609462861, \"timestamp_formatted\": \"2021-01-23T15:43:21.842\",  \"device_id\":\"Some Known Device\" }",
       "md5OfBody": "fce0ea8dd236ccb3ed9b37dae260836f",
       "eventSourceARN": "arn:aws:sqs:us-west-2:123456789012:SQSQueue",
       "eventSource": "aws:sqs",

@@ -2557,6 +2557,10 @@ Resources:
             Action:
               - 'kms:Decrypt'
             Resource: "{{resolve:ssm:HMACKeyKMSKeyArn}}"
+          - Effect: Allow
+            Action:
+              - 'secretsmanager:GetSecretValue'
+            Resource: "{{resolve:ssm:HMACSecretArn}}"
 
   ObfuscationLogGroup:
     Type: AWS::Logs::LogGroup
