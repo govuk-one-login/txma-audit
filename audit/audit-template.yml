@@ -480,71 +480,71 @@ Resources:
         EntryPoints:
           - delimiter-app.ts
 
-  # firehoseTesterLambdaAccessRole:
-  #   Type: AWS::IAM::Role
-  #   Condition: IsTestableEnv
-  #   Properties:
-  #     RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-firehoseTester"
-  #     PermissionsBoundary: !If
-  #       - UsePermissionsBoundary
-  #       - !Ref PermissionsBoundary
-  #       - !Ref AWS::NoValue
-  #     AssumeRolePolicyDocument:
-  #       Version: 2012-10-17
-  #       Statement:
-  #         - Sid: ''
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - lambda.amazonaws.com
-  #           Action: 'sts:AssumeRole'
-  #     Policies:
-  #       - PolicyName: lambda_kinesis_firehose_PutRecord_policy
-  #         PolicyDocument:
-  #           Version: '2012-10-17'
-  #           Statement:
-  #             - Effect: Allow
-  #               Action:
-  #                 - 'firehose:PutRecord'
-  #               Resource:
-  #                 - !GetAtt AuditDeliveryStream.Arn
+  firehoseTesterLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Condition: IsTestableEnv
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-firehoseTester"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: lambda_kinesis_firehose_PutRecord_policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'firehose:PutRecord'
+                Resource:
+                  - !GetAtt AuditDeliveryStream.Arn
 
-  #     ManagedPolicyArns:
-  #       - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
 
-  # firehoseTesterFunction:
-  #   DependsOn:
-  #     - firehoseTesterLambdaAccessRole
-  #   Type: "AWS::Serverless::Function"
-  #   Condition: IsTestableEnv
-  #   Properties:
-  #     FunctionName: "firehoseTester"
-  #     CodeUri: ../audit/lambda
-  #     PackageType: Zip
-  #     Handler: firehoseTester-app.handler
-  #     Runtime: nodejs14.x
-  #     Timeout: 30
-  #     Role: !GetAtt firehoseTesterLambdaAccessRole.Arn
-  #     KmsKeyArn: !GetAtt LambdaKMSKey.Arn
-  #     Environment:
-  #       Variables:
-  #         firehoseName: !Ref AuditDeliveryStream
-  #   Metadata: # Manage esbuild properties
-  #     BuildMethod: esbuild
-  #     BuildProperties:
-  #       Minify: true
-  #       Target: "es2020"
-  #       Sourcemap: true
-  #       EntryPoints:
-  #         - firehoseTester-app.ts
+  firehoseTesterFunction:
+    DependsOn:
+      - firehoseTesterLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Condition: IsTestableEnv
+    Properties:
+      FunctionName: "firehoseTester"
+      CodeUri: ../audit/lambda
+      PackageType: Zip
+      Handler: firehoseTester-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt firehoseTesterLambdaAccessRole.Arn
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+      Environment:
+        Variables:
+          firehoseName: !Ref AuditDeliveryStream
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - firehoseTester-app.ts
 
-  # firehoseTesterInvokePermission:
-  #   Type: AWS::Lambda::Permission
-  #   Condition: DeployTestRolePolicy
-  #   Properties:
-  #     Action: lambda:InvokeFunction
-  #     FunctionName: !Ref firehoseTesterFunction
-  #     Principal: !Ref TestRoleArn
+  firehoseTesterInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref firehoseTesterFunction
+      Principal: !Ref TestRoleArn
 
   #
   # CSLS
