@@ -1708,7 +1708,7 @@ Resources:
           !If
           - IsProductionOrStaging
           - - Event: "s3:ObjectRestore:*"
-              Queue: arn:aws:sqs:eu-west-2:248098332657:temporaryCSLSqueue
+              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
           - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
