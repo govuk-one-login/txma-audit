@@ -6,6 +6,7 @@
   "event_name": "DCMAW_CRI_START",
   "component_id": "https://www.review-b.staging.account.gov.uk",
   "user": {
+    "device_id": "4ce55ddb566125f16089d3922807ae1292b2469f5fc7053765f409e136b5a75a",
     "transaction_id": "34055c0e53c26f892c187b128c3d8508e85d0ee927bad3fb4945d27b06dc7027",
     "user_id": "urn:fdc:gov.uk:2022:oWfZvNetum3drTp5foBV_RiAxBOpXEhVxL9pocKRLME",
     "email": "1c87ec8fe1e1de279f84e4eb58d7df393f021e28e1a9a7ed7c88683a2b11eca6",
