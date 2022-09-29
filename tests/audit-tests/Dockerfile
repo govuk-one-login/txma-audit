@@ -8,10 +8,19 @@ LABEL "BUILD_DATE" = ${BUILD_DATE}
 LABEL "COMMIT_SHA" = ${COMMIT_SHA}
 LABEL "GIT_REPO" = ${GIT_REPO}
 
-RUN yum install -y awscli
-RUN yum install -y shadow-utils
-RUN yum install -y wget
-RUN yum install -y unzip
+RUN yum install -y awscli shadow-utils wget unzip jq xz tar gzip Xvfb
+
+# download latest chromedriver and place in $PATH
+RUN wget -O chromedriver_linux https://chromedriver.storage.googleapis.com/2.40/chromedriver_linux64.zip
+RUN unzip chromedriver_linux
+RUN mv chromedriver /usr/local/bin/chromedriver
+
+# download latest chrome
+RUN wget -O chrome_x64.rpm https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+RUN yum localinstall -y *.rpm
+
+# download latest selenium
+RUN wget -O selenium-server.jar https://github.com/SeleniumHQ/selenium/releases/download/selenium-4.4.0/selenium-server-4.4.0.jar
 
 RUN mkdir reports
 
