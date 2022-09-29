@@ -1,10 +1,10 @@
 {
-  "event_id": "529f-dece-615e-dIPV",
-  "client_id": "NO_IPV_CLIENT_ID_YET",
+  "event_id": "529f-dece-615e-IPVCI",
+  "client_id": "NO_IPVCI_CLIENT_ID_YET",
   "timestamp": 1647969131,
   "timestamp_formatted": "2022-03-22T17:12:11.000Z",
   "event_name": "IPV_CONTRA_INDICATOR_STORAGE_GET_START",
-  "component_id": "https://IPV-CI.staging.account.gov.uk",
+  "component_id": "https://ci-storage.account.gov.uk",
   "user": {
     "transaction_id": "34055c0e53c26f892c187b128c3d8508e85d0ee927bad3fb4945d27b06dc7027",
     "user_id": "urn:uuid:01d3d0b5-0b04-4ead-947f-54152e021a1f",
