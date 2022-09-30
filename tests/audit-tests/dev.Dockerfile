@@ -11,6 +11,8 @@ RUN yum install -y awscli
 RUN yum install -y shadow-utils
 RUN yum install -y wget
 RUN yum install -y unzip
+RUN yum install -y jq
+
 RUN mkdir reports
 #Install Gradle and dependencies
 RUN wget https://services.gradle.org/distributions/gradle-7.4.2-bin.zip -P /tmp
