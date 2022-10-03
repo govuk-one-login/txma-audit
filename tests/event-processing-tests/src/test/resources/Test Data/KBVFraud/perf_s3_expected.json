@@ -4,5 +4,9 @@
   "timestamp_formatted": "2022-03-22T17:12:11.000Z",
   "event_name": "IPV_FRAUD_CRI_START",
   "component_id": "https://review-f.integration.account.gov.uk",
+  "client_id": "NO_FRAUD_CLIENT_ID_YET",
+  "user": {
+    "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd"
+  },
   "reIngestCount": 0
 }
