@@ -8,12 +8,18 @@ export interface ICleansedExtensionsEvent {
     evidence?: ICleansedEvidenceEvent | undefined;
 }
 
+export interface ICleansedUserEvent {
+    govuk_signin_journey_id?: string;
+}
+
 export interface ICleansedEvent {
     event_id: string;
     event_name: string;
     component_id: string;
     timestamp: number;
     timestamp_formatted: string;
+    client_id?: string;
+    user?: unknown | undefined;
     extensions?: unknown | undefined;
     reIngestCount?: number;
 }
@@ -24,6 +30,8 @@ export class CleansedEvent implements ICleansedEvent {
     readonly component_id: string;
     readonly timestamp: number;
     readonly timestamp_formatted: string;
+    readonly client_id?: string;
+    readonly user?: unknown | undefined;
     readonly extensions?: unknown | undefined;
     readonly reIngestCount?: number;
 
@@ -33,6 +41,8 @@ export class CleansedEvent implements ICleansedEvent {
         component_id: string,
         timestamp: number,
         timestamp_formatted: string,
+        client_id?: string,
+        user?: unknown | undefined,
         extensions?: unknown | undefined,
         reIngestCount?: number,
     ) {
@@ -41,7 +51,14 @@ export class CleansedEvent implements ICleansedEvent {
         this.component_id = component_id;
         this.timestamp = timestamp;
         this.timestamp_formatted = timestamp_formatted;
+        this.client_id = client_id;
         this.reIngestCount = reIngestCount;
+
+        if (user != undefined && (user as ICleansedUserEvent).govuk_signin_journey_id) {
+            this.user = {
+                govuk_signin_journey_id: (user as ICleansedUserEvent).govuk_signin_journey_id,
+            } as ICleansedUserEvent;
+        }
 
         if (extensions != undefined && (extensions as ICleansedExtensionsEvent).evidence != undefined) {
             const evidence = CleansedEvent.CleanseEvidenceArrayEvent(
