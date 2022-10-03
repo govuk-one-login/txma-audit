@@ -213,6 +213,7 @@ Resources:
               - "s3:DeleteObject"
               - "s3:DeleteObjectVersion"
               - "s3:DeleteBucket"
+              - "s3:DeleteBucketPolicy"
             Resource:
               - !GetAtt MessageBatchBucket.Arn
               - !Sub "${MessageBatchBucket.Arn}/*"
