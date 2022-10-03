@@ -17,5 +17,4 @@ public class VerifiableCredentialsPage {
 
     @FindBy (xpath = "//div[@class='govuk-details__text']//pre")
     public WebElement CRIJSONResponse;
-
 }
