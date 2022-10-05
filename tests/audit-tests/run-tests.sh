@@ -60,6 +60,8 @@ gradle -v
 #   echo "selenium is ready to run tests"
 # fi
 
+cd /
+
 echo "Environment: $TEST_ENVIRONMENT"
 
 echo "Current Working Directory: $PWD"
