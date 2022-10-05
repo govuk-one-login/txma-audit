@@ -60,10 +60,10 @@ public class Driver {
                     // chromeOptions.addArguments("--remote-debugging-port=9222");
 
                     if (System.getenv("DRIVER").equals("http://selenium-hub:4444/wd/hub")) {
-                        LOGGER.info("using selenium grid to run the tests");
+                        System.out.println("[INFO]: using selenium grid remotedriver to run the tests");
                         driverPool.set(new RemoteWebDriver(new URL(System.getenv("DRIVER")), chromeOptions));
                     } else {
-                        LOGGER.info("using selenium chromedriver to run the tests");
+                        System.out.println("[INFO]: using selenium chromedriver to run the tests");
                         driverPool.set(new ChromeDriver(chromeOptions));
                     }
 
