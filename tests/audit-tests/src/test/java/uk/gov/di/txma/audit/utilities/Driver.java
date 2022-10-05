@@ -57,7 +57,6 @@ public class Driver {
                     chromeOptions.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
                     chromeOptions.addArguments("--headless");
                     chromeOptions.addArguments("--whitelisted-ips=");
-                    // chromeOptions.addArguments("--remote-debugging-port=9222");
 
                     if (System.getenv("DRIVER").equals("http://selenium-hub:4444/wd/hub")) {
                         LOGGER.info("using selenium grid to run the tests");
