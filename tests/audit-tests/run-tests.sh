@@ -61,7 +61,6 @@ else
 
 fi
 
-
 echo "Environment: $TEST_ENVIRONMENT"
 
 echo "Current Working Directory: $PWD"
