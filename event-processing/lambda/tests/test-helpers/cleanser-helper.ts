@@ -91,7 +91,11 @@ export class CleanserHelper {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            client_id: 'some-client',
             reIngestCount: 0,
+            user: {
+                govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+            },
             extensions: {
                 evidence: [
                     {
@@ -151,7 +155,11 @@ export class CleanserHelper {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            client_id: 'some-client',
             reIngestCount: 0,
+            user: {
+                govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+            },
             extensions: {
                 evidence: [
                     {
