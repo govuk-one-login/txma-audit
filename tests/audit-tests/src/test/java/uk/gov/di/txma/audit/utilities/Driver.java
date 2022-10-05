@@ -58,6 +58,7 @@ public class Driver {
                     chromeOptions.addArguments("--headless");
                     chromeOptions.addArguments("--whitelisted-ips=");
 
+                    System.out.println("The value of $DRIVER: " + System.getenv("DRIVER"));
                     if (System.getenv("DRIVER").equals("http://selenium-hub:4444/wd/hub")) {
                         System.out.println("[INFO]: using selenium grid remotedriver to run the tests");
                         driverPool.set(new RemoteWebDriver(new URL(System.getenv("DRIVER")), chromeOptions));
