@@ -20,10 +20,6 @@ RUN unzip chromedriver_linux
 RUN mv chromedriver /usr/local/bin/chromedriver
 RUN chmod 0777 /usr/local/bin/chromedriver
 
-
-# download latest selenium grid
-# RUN wget -O selenium-server.jar https://github.com/SeleniumHQ/selenium/releases/download/selenium-4.4.0/selenium-server-4.4.0.jar
-
 RUN mkdir reports
 
 #Install Gradle and dependencies
@@ -39,7 +35,6 @@ RUN gradle -v
 
 # copy source code over
 COPY ./ ./
-
 
 # ENTRYPOINT ["/bin/bash"]
 ENTRYPOINT ["./run-tests.sh"]
