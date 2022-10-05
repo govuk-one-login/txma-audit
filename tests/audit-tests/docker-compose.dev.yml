@@ -1,6 +1,7 @@
 version: '3.3'
 services:
   tests:
+    container_name: tests
     depends_on:
       - selenium-hub
     environment:

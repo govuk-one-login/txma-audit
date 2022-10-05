@@ -24,19 +24,20 @@ public class Driver {
 
     }
 
-    // InheritableThreadLocal  --> this is like a container, bag, pool.
+    // InheritableThreadLocal --> this is like a container, bag, pool.
     // in this pool we can have separate objects for each thread
-    // for each thread, in InheritableThreadLocal we can have separate object for that thread
+    // for each thread, in InheritableThreadLocal we can have separate object for
+    // that thread
 
     // driver class will provide separate webdriver object per thread
     private static final InheritableThreadLocal<WebDriver> driverPool = new InheritableThreadLocal<>();
 
     public static WebDriver get() throws MalformedURLException {
-        //if this thread doesn't have driver - create it and add to pool
+        // if this thread doesn't have driver - create it and add to pool
         if (driverPool.get() == null) {
 
-//           if we pass the driver from terminal then use that one
-//           if we do not pass the driver from terminal then use the one properties file
+            // if we pass the driver from terminal then use that one
+            // if we do not pass the driver from terminal then use the one properties file
             String browser = ConfigurationReader.getBrowser();
             LOGGER.info("ℹ️ browser is " + browser);
             switch (browser) {
@@ -47,7 +48,7 @@ public class Driver {
                 case "chrome-headless":
                     WebDriverManager.chromedriver().setup();
                     ChromeOptions chromeOptions = new ChromeOptions();
-                    chromeOptions.addArguments("--no-sandbox"); // Bypass OS security model, MUST BE THE VERY FIRST OPTION
+                    chromeOptions.addArguments("--no-sandbox"); // Bypass OS security model, MUST BE FIRST OPTION
                     chromeOptions.addArguments("--disable-setuid-sandbox");
                     chromeOptions.addArguments("start-maximized"); // open Browser in maximized mode
                     chromeOptions.addArguments("disable-infobars"); // disabling infobars
@@ -56,9 +57,15 @@ public class Driver {
                     chromeOptions.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
                     chromeOptions.addArguments("--headless");
                     chromeOptions.addArguments("--whitelisted-ips=");
-                    // chromeOptions.addArguments("--remote-debugging-port=9222");
-                    // driverPool.set(new RemoteWebDriver(new URL(System.getenv("DRIVER")), chromeOptions));
-                    driverPool.set(new ChromeDriver(chromeOptions));
+
+                    if (System.getenv("DRIVER").equals("http://selenium-hub:4444/wd/hub")) {
+                        LOGGER.info("using selenium grid to run the tests");
+                        driverPool.set(new RemoteWebDriver(new URL(System.getenv("DRIVER")), chromeOptions));
+                    } else {
+                        LOGGER.info("using selenium chromedriver to run the tests");
+                        driverPool.set(new ChromeDriver(chromeOptions));
+                    }
+
                     break;
                 case "firefox":
                     WebDriverManager.firefoxdriver().setup();
