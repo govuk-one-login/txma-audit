@@ -15,15 +15,13 @@ services:
       - TEST_ENVIRONMENT=staging
       - DRIVER=http://selenium-hub:4444/wd/hub 
     build:
-      dockerfile: dev.Dockerfile
+      dockerfile: Dockerfile
       context: ./
     volumes:
       - "./:/usr/src/"
   chrome:
-    # arm image
+    # arm image for apple silicon
     image: seleniarm/node-chromium:105.0
-    # x86 image
-    # image: selenium/standalone-chrome:105.0
     shm_size: 2gb
     depends_on:
       - selenium-hub
@@ -32,10 +30,8 @@ services:
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
   selenium-hub:
-    # arm image
+    # arm image for apple silicon
     image: seleniarm/hub:4.4.0-20220903
-    # x86 image
-    # image: selenium/hub:4.4.0
     container_name: selenium-hub
     ports:
       - "4442:4442"

@@ -47,7 +47,6 @@ public class Driver {
                 case "chrome-headless":
                     WebDriverManager.chromedriver().setup();
                     ChromeOptions chromeOptions = new ChromeOptions();
-                    chromeOptions.setHeadless(true);
                     chromeOptions.addArguments("--no-sandbox"); // Bypass OS security model, MUST BE THE VERY FIRST OPTION
                     chromeOptions.addArguments("--disable-setuid-sandbox");
                     chromeOptions.addArguments("start-maximized"); // open Browser in maximized mode
@@ -56,8 +55,10 @@ public class Driver {
                     chromeOptions.addArguments("--disable-gpu"); // applicable to windows os only
                     chromeOptions.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
                     chromeOptions.addArguments("--headless");
-                    chromeOptions.addArguments("--remote-debugging-port=9222");
-                    driverPool.set(new RemoteWebDriver(new URL(System.getenv("DRIVER")), chromeOptions));
+                    chromeOptions.addArguments("--whitelisted-ips=");
+                    // chromeOptions.addArguments("--remote-debugging-port=9222");
+                    // driverPool.set(new RemoteWebDriver(new URL(System.getenv("DRIVER")), chromeOptions));
+                    driverPool.set(new ChromeDriver(chromeOptions));
                     break;
                 case "firefox":
                     WebDriverManager.firefoxdriver().setup();
