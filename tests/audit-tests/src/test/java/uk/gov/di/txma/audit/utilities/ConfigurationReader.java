@@ -1,9 +1,6 @@
 package uk.gov.di.txma.audit.utilities;
 
-import java.io.FileInputStream;
 import java.util.Optional;
-import java.util.Properties;
-
 
 public class ConfigurationReader {
 
@@ -18,5 +15,11 @@ public class ConfigurationReader {
         }
         return IPVCoreStubUrl;
     }
-
+    public static String getOrchestratorStubUrl() {
+        String orchestratorStubUrl = System.getenv("CFN_OrchestrationStubURL");
+        if (orchestratorStubUrl == null) {
+            throw new IllegalArgumentException("Environment variable CFN_OrchestrationStubURL is not set");
+        }
+        return orchestratorStubUrl;
+    }
 }
