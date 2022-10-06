@@ -18,6 +18,8 @@ import java.util.logging.Logger;
 
 public class Driver {
 
+    private static final String SELENIUM_HUB_URL = "http://selenium-hub:4444/wd/hub";
+    private static final String REMOTE_DRIVER_EMV_VAR = System.getenv("DRIVER");
     private static final Logger LOGGER = Logger.getLogger(Driver.class.getName());
 
     private Driver() {
@@ -57,12 +59,13 @@ public class Driver {
                     chromeOptions.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
                     chromeOptions.addArguments("--headless");
                     chromeOptions.addArguments("--whitelisted-ips=");
-
-                    if (System.getenv("DRIVER").equals("http://selenium-hub:4444/wd/hub")) {
-                        LOGGER.info("using selenium grid to run the tests");
-                        driverPool.set(new RemoteWebDriver(new URL(System.getenv("DRIVER")), chromeOptions));
+                    
+                    System.out.println("The value of environment variable DRIVER: " + REMOTE_DRIVER_EMV_VAR);
+                    if (REMOTE_DRIVER_EMV_VAR.equals(SELENIUM_HUB_URL)) {
+                        System.out.println("[INFO]: using selenium grid remotedriver to run the tests");
+                        driverPool.set(new RemoteWebDriver(new URL(REMOTE_DRIVER_EMV_VAR), chromeOptions));
                     } else {
-                        LOGGER.info("using selenium chromedriver to run the tests");
+                        System.out.println("[INFO]: using selenium chromedriver to run the tests");
                         driverPool.set(new ChromeDriver(chromeOptions));
                     }
 
