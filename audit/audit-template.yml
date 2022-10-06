@@ -579,6 +579,26 @@ Resources:
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
+  # Old CSLS config
+
+  OldCSLSFireHoseLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "FirehoseLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
+
+  OldCSLSDelimiterLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "DelimiterLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
+
 Outputs:
 
   IPVCoreStubURL:
