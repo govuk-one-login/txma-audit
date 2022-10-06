@@ -18,25 +18,28 @@ import java.util.logging.Logger;
 
 public class Driver {
 
+    private static final String SELENIUM_HUB_URL = "http://selenium-hub:4444/wd/hub";
+    private static final String REMOTE_DRIVER_EMV_VAR = System.getenv("DRIVER");
     private static final Logger LOGGER = Logger.getLogger(Driver.class.getName());
 
     private Driver() {
 
     }
 
-    // InheritableThreadLocal  --> this is like a container, bag, pool.
+    // InheritableThreadLocal --> this is like a container, bag, pool.
     // in this pool we can have separate objects for each thread
-    // for each thread, in InheritableThreadLocal we can have separate object for that thread
+    // for each thread, in InheritableThreadLocal we can have separate object for
+    // that thread
 
     // driver class will provide separate webdriver object per thread
     private static final InheritableThreadLocal<WebDriver> driverPool = new InheritableThreadLocal<>();
 
     public static WebDriver get() throws MalformedURLException {
-        //if this thread doesn't have driver - create it and add to pool
+        // if this thread doesn't have driver - create it and add to pool
         if (driverPool.get() == null) {
 
-//           if we pass the driver from terminal then use that one
-//           if we do not pass the driver from terminal then use the one properties file
+            // if we pass the driver from terminal then use that one
+            // if we do not pass the driver from terminal then use the one properties file
             String browser = ConfigurationReader.getBrowser();
             LOGGER.info("ℹ️ browser is " + browser);
             switch (browser) {
@@ -47,8 +50,7 @@ public class Driver {
                 case "chrome-headless":
                     WebDriverManager.chromedriver().setup();
                     ChromeOptions chromeOptions = new ChromeOptions();
-                    chromeOptions.setHeadless(true);
-                    chromeOptions.addArguments("--no-sandbox"); // Bypass OS security model, MUST BE THE VERY FIRST OPTION
+                    chromeOptions.addArguments("--no-sandbox"); // Bypass OS security model, MUST BE FIRST OPTION
                     chromeOptions.addArguments("--disable-setuid-sandbox");
                     chromeOptions.addArguments("start-maximized"); // open Browser in maximized mode
                     chromeOptions.addArguments("disable-infobars"); // disabling infobars
@@ -56,8 +58,17 @@ public class Driver {
                     chromeOptions.addArguments("--disable-gpu"); // applicable to windows os only
                     chromeOptions.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
                     chromeOptions.addArguments("--headless");
-                    chromeOptions.addArguments("--remote-debugging-port=9222");
-                    driverPool.set(new RemoteWebDriver(new URL(System.getenv("DRIVER")), chromeOptions));
+                    chromeOptions.addArguments("--whitelisted-ips=");
+                    
+                    System.out.println("The value of environment variable DRIVER: " + REMOTE_DRIVER_EMV_VAR);
+                    if (REMOTE_DRIVER_EMV_VAR.equals(SELENIUM_HUB_URL)) {
+                        System.out.println("[INFO]: using selenium grid remotedriver to run the tests");
+                        driverPool.set(new RemoteWebDriver(new URL(REMOTE_DRIVER_EMV_VAR), chromeOptions));
+                    } else {
+                        System.out.println("[INFO]: using selenium chromedriver to run the tests");
+                        driverPool.set(new ChromeDriver(chromeOptions));
+                    }
+
                     break;
                 case "firefox":
                     WebDriverManager.firefoxdriver().setup();

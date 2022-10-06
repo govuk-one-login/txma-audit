@@ -534,7 +534,7 @@ Resources:
       PackageType: Zip
       Handler: firehoseTester-app.handler
       Runtime: nodejs14.x
-      Timeout: 30
+      Timeout: 60
       Role: !GetAtt firehoseTesterLambdaAccessRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
       Environment:
@@ -578,6 +578,26 @@ Resources:
         Ref: "DelimiterLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  # Old CSLS config
+
+  OldCSLSFireHoseLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "FirehoseLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
+
+  OldCSLSDelimiterLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "DelimiterLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
 
 Outputs:
 
