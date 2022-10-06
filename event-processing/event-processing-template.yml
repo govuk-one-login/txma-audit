@@ -2937,6 +2937,7 @@ Resources:
 
   ReIngestFunctionLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
         Ref: "ReIngestLogGroup"
@@ -3064,9 +3065,9 @@ Resources:
 
   OldReIngestFunctionLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
         Ref: "ReIngestLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-      
