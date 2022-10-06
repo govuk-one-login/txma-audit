@@ -479,7 +479,7 @@ Resources:
       PackageType: Zip
       Handler: delimiter-app.handler
       Runtime: nodejs14.x
-      Timeout: 60
+      Timeout: 30
       Role: !GetAtt DelimiterLambdaAccessRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
