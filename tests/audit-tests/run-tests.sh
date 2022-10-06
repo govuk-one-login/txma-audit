@@ -26,7 +26,6 @@ grid_status_check() {
   done
 
   echo "returning selenium ready state as $SELENIUM_READY"
-
 }
 
 gradle -v
@@ -57,9 +56,9 @@ else
   echo "environment variable DRIVER exists but is not the selinium hubs service name. using the default localhost variant"
   cd /
   echo "running selenium using chromedriver"
+  export DRIVER=$DRIVER
 
 fi
-
 
 echo "Environment: $TEST_ENVIRONMENT"
 
