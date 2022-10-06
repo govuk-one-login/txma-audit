@@ -26,7 +26,6 @@ grid_status_check() {
   done
 
   echo "returning selenium ready state as $SELENIUM_READY"
-
 }
 
 gradle -v
