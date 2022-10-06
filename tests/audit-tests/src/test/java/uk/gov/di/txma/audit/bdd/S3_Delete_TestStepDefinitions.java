@@ -28,8 +28,6 @@ public class S3_Delete_TestStepDefinitions {
                 .region(Region.EU_WEST_2)
                 .build()) {
             String bucketName = "audit-" + System.getenv("TEST_ENVIRONMENT") + "-message-batch";
-            // This is used to get the current year, so that we can search the correct s3 files by prefix
-//            ZonedDateTime currentDateTime = Instant.now().atZone(ZoneOffset.UTC);
 
             // Lists first object
             ListObjectsV2Request listObjects = ListObjectsV2Request
