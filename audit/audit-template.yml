@@ -534,7 +534,7 @@ Resources:
       PackageType: Zip
       Handler: firehoseTester-app.handler
       Runtime: nodejs14.x
-      Timeout: 30
+      Timeout: 60
       Role: !GetAtt firehoseTesterLambdaAccessRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
       Environment:
