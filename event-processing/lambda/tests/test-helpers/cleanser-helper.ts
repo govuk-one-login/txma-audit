@@ -35,7 +35,11 @@ export class CleanserHelper {
                 response: 'Authentication successful',
                 evidence: [
                     {
+                        activityHistoryScore: 0,
+                        identityFraudScore: 2,
+                        strengthScore: 2,
                         validityScore: 2,
+                        verificationScore: 2,
                         other_evidence: 'evidence',
                     },
                 ],
@@ -43,7 +47,7 @@ export class CleanserHelper {
         };
     }
 
-    static exampleEnrichedMessageWithValidityScoreInOneEvidence(): IEnrichedAuditEvent {
+    static exampleEnrichedMessageWithScoresInOneEvidence(): IEnrichedAuditEvent {
         return {
             event_id: '66258f3e-82fc-4f61-9ba0-62424e1f06b4',
             client_id: 'some-client',
@@ -74,7 +78,11 @@ export class CleanserHelper {
                 response: 'Authentication successful',
                 evidence: [
                     {
+                        activityHistoryScore: 0,
+                        identityFraudScore: 2,
+                        strengthScore: 2,
                         validityScore: 2,
+                        verificationScore: 2,
                     },
                     {
                         other_evidence: 'evidence',
@@ -99,7 +107,11 @@ export class CleanserHelper {
             extensions: {
                 evidence: [
                     {
+                        activityHistoryScore: 0,
+                        identityFraudScore: 2,
+                        strengthScore: 2,
                         validityScore: 2,
+                        verificationScore: 2,
                     },
                 ],
             },
@@ -137,7 +149,11 @@ export class CleanserHelper {
                 response: 'Authentication successful',
                 evidence: [
                     {
+                        activityHistoryScore: 0,
+                        identityFraudScore: 2,
+                        strengthScore: 2,
                         validityScore: 2,
+                        verificationScore: 2,
                         other_evidence: 'evidence',
                     },
                     {
@@ -163,7 +179,11 @@ export class CleanserHelper {
             extensions: {
                 evidence: [
                     {
+                        activityHistoryScore: 0,
+                        identityFraudScore: 2,
+                        strengthScore: 2,
                         validityScore: 2,
+                        verificationScore: 2,
                     },
                     {
                         validityScore: 2,
