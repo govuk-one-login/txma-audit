@@ -21,15 +21,11 @@ export const handler = async (record: IAuditEvent): Promise<void> => {
         throw new Error('[ERROR] ENV VAR MISSING: \n missing firehose name environment variable');
     }
 
-    const sendTextPromise = firehose.putRecord(params).promise();
-
-    await sendTextPromise
-        .then((data) => {
-            console.log('MessageID is ' + data.RecordId);
-        })
-        .catch((err) => {
-            console.error(err, err.stack);
-        });
-
+    try {
+        const response = await firehose.putRecord(params).promise();
+        console.log(`message ID is: ${response.RecordId}`);
+    } catch (error) {
+        console.error('failed to put ');
+    }
     return;
 };
