@@ -23,9 +23,10 @@ export const handler = async (record: IAuditEvent): Promise<void> => {
 
     try {
         const response = await firehose.putRecord(params).promise();
-        console.log(`message ID is: ${response.RecordId}`);
+        console.log(`MessageID is ${response.RecordId}`);
     } catch (error) {
-        console.error('failed to put ');
+        console.error('failed to put record into firehose. stack trace below');
+        console.error(error);
     }
     return;
 };
