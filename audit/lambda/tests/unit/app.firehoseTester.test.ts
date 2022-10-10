@@ -73,7 +73,7 @@ describe('Unit test for app firehoseTesterHandler', function () {
             Record: { Data: expectedResult },
             DeliveryStreamName: 'SOME-FIREHOSE',
         });
-        expect(errorMock).toHaveBeenCalledTimes(1);
+        expect(errorMock).toHaveBeenCalledTimes(2);
     });
 
     it('logs an Error if missing firehose name environment variable', async () => {
