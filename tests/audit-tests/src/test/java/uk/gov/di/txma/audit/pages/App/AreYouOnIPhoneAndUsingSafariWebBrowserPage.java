@@ -6,12 +6,15 @@ import org.openqa.selenium.support.PageFactory;
 import uk.gov.di.txma.audit.utilities.Driver;
 
 import java.net.MalformedURLException;
+public class AreYouOnIPhoneAndUsingSafariWebBrowserPage {
 
-public class DocCheckingPage {
-    public DocCheckingPage() throws MalformedURLException {
+    public AreYouOnIPhoneAndUsingSafariWebBrowserPage() throws MalformedURLException {
         PageFactory.initElements(Driver.get(),this);
     }
 
-    @FindBy(id="govuk-signin-button")
+    @FindBy(id="select-option-2")
+    public WebElement AnswerNo;
+
+    @FindBy(xpath= "//*[@id='form-tracking']/button")
     public WebElement Continue;
 }
