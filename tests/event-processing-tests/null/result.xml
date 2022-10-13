@@ -1,19 +1,2 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<testsuite errors="0" failures="0" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="2" time="135.033">
-    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check re-ingest lambda adds and updates the reIngestCount field" time="134.889">
-        <system-out><![CDATA[Given the failed S3 event file "reIngestCount" is available for "fraud".....passed
-When the failed event with ReIngestCount 2 is processed by the "fraud" lambda.passed
-Then there should be a message in the reIngest lambda logs..................passed
-And the S3 for "fraud" will contain the event with correct reIngestCount....passed
-And the S3 for "perf" will not contain the event with correct reIngestCount.passed
-]]></system-out>
-    </testcase>
-    <testcase classname="Raw event data journey from the lambda to S3 for build (and dev) environment" name="Check re-ingest lambda adds and updates the reIngestCount field 2" time="134.892">
-        <system-out><![CDATA[Given the failed S3 event file "reIngestCount" is available for "perf"......passed
-When the failed event with ReIngestCount 2 is processed by the "perf" lambda.passed
-Then there should be a message in the reIngest lambda logs..................passed
-And the S3 for "perf" will contain the event with correct reIngestCount.....passed
-And the S3 for "fraud" will not contain the event with correct reIngestCount.passed
-]]></system-out>
-    </testcase>
-</testsuite>
+<testsuite errors="0" failures="0" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" time="0.064"/>

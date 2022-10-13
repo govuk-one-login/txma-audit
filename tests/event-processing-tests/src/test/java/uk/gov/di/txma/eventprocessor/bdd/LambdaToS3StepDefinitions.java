@@ -563,7 +563,7 @@ public class LambdaToS3StepDefinitions {
     }
 
     @And("the S3 for {string} will contain the event with correct reIngestCount")
-    public void theS3ForWillContainTheEventWithCorrectReIngestCount(String teamName) throws IOException, InterruptedException {
+    public void checkReIngestCountInS3HasIncrimented(String teamName) throws IOException, InterruptedException {
         JSONObject incrimentedJSON = incrimentReIngestCount();
         assertTrue(isJSONObjectFoundInS3(teamName, incrimentedJSON));
     }
@@ -576,19 +576,19 @@ public class LambdaToS3StepDefinitions {
     }
 
     @And("the S3 for {string} will not contain the event with correct reIngestCount")
-    public void theS3ForWillNotContainTheEventWithCorrectReIngestCount(String otherTeam) throws IOException, InterruptedException {
+    public void checkS3DoesNotContainTheEventWithCorrectReIngestCount(String otherTeam) throws IOException, InterruptedException {
         JSONObject incrimentedJSON = incrimentReIngestCount();
         assertFalse(isJSONObjectFoundInS3(otherTeam, incrimentedJSON));
     }
 
     @Given("the failed S3 event file {string} is available for {string}")
-    public void theFailedS3EventFileIsAvailable(String fileName, String teamName) throws IOException {
+    public void checkTheFailedS3EventFileIsAvailable(String fileName, String teamName) throws IOException {
         rawJSON = new JSONObject(readJSONFile("Re-IngestLambda/" + teamName + "_" + fileName));
 
     }
 
     @When("the failed event with ReIngestCount {int} is processed by the {string} lambda")
-    public void theFailedEventIsProcessedByTheLambda(int reIngestCount, String teamName) {
+    public void checkTheFailedEventIsProcessedByTheLambda(int reIngestCount, String teamName) {
         enrichedJSON = addReIngestCount(rawJSON, reIngestCount);
         Path pathOfFileToBeSentToS3 = Path.of(new File("src/test/resources/Test Data/out.gzip").getAbsolutePath());
         createGZIP(enrichedJSON.toString(), pathOfFileToBeSentToS3);
@@ -615,7 +615,6 @@ public class LambdaToS3StepDefinitions {
     private JSONObject addReIngestCount(JSONObject rawJSON, int reIngestCount) {
         rawJSON.put("reIngestCount", reIngestCount);
         return rawJSON;
-
     }
 
     public void createGZIP(String input, Path outPath) {
@@ -627,7 +626,30 @@ public class LambdaToS3StepDefinitions {
     }
 
     @Then("there should be a message in the reIngest lambda logs")
-    public void thereShouldBeAMessageInTheReIngestLambdaLogs() throws InterruptedException {
+    public void checkForMessageInTheReIngestLambdaLogs() throws InterruptedException {
         assertTrue(areSearchStringsFoundForGroup("/aws/lambda/ReIngestFunction", timestamp.toString()));
+    }
+
+    @And("the {string} S3 does not contain the object with the timestamp key")
+    public void theS3DoesNotContainTheObjectWithTheTimestampKey(String teamName) {
+        String bucketName = "event-processing-" + System.getenv("TEST_ENVIRONMENT") + "-" + teamName + "-splunk-fail";
+        assertFalse(isKeyInS3Bucket(bucketName, timestamp.toString()), "The object was not deleted from the " + teamName + " bucket");
+    }
+
+    public boolean isKeyInS3Bucket(String bucketName, String key) {
+        try (S3Client s3 = S3Client.builder()
+                .region(region)
+                .build()) {
+            HeadObjectRequest req = HeadObjectRequest.builder()
+                    .key(key)
+                    .bucket(bucketName)
+                    .build();
+            s3.headObject(req);
+        } catch (AwsServiceException e) {
+            // Here if object not in S3
+            System.err.println(e.awsErrorDetails().errorMessage());
+                return false;
+        }
+        return true;
     }
 }
