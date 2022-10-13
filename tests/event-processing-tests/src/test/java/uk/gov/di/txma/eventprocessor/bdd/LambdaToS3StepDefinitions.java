@@ -576,9 +576,9 @@ public class LambdaToS3StepDefinitions {
     }
 
     @And("the S3 for {string} will not contain the event with correct reIngestCount")
-    public void checkS3DoesNotContainTheEventWithCorrectReIngestCount(String otherTeam) throws IOException, InterruptedException {
+    public void checkS3DoesNotContainTheEventWithCorrectReIngestCount(String teamName) throws IOException, InterruptedException {
         JSONObject incrimentedJSON = incrimentReIngestCount();
-        assertFalse(isJSONObjectFoundInS3(otherTeam, incrimentedJSON));
+        assertFalse(isJSONObjectFoundInS3(teamName, incrimentedJSON));
     }
 
     @Given("the failed S3 event file {string} is available for {string}")
@@ -628,6 +628,7 @@ public class LambdaToS3StepDefinitions {
     @Then("there should be a message in the reIngest lambda logs")
     public void checkForMessageInTheReIngestLambdaLogs() throws InterruptedException {
         assertTrue(areSearchStringsFoundForGroup("/aws/lambda/ReIngestFunction", timestamp.toString()));
+        System.out.println("Found in Lambda logs");
     }
 
     @And("the {string} S3 does not contain the object with the timestamp key")
@@ -648,8 +649,15 @@ public class LambdaToS3StepDefinitions {
         } catch (AwsServiceException e) {
             // Here if object not in S3
             System.err.println(e.awsErrorDetails().errorMessage());
-                return false;
+            return false;
         }
         return true;
+    }
+
+    @When("the event for {string} is sent")
+    public void theEventForIsSent(String teamName) {
+        Path pathOfFileToBeSentToS3 = Path.of(new File("src/test/resources/Test Data/badOut.gzip").getAbsolutePath());
+        createGZIP(rawJSON.toString(), pathOfFileToBeSentToS3);
+        sendToS3Bucket("event-processing-" + System.getenv("TEST_ENVIRONMENT") + "-" + teamName + "-splunk-fail", pathOfFileToBeSentToS3);
     }
 }
