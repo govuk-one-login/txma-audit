@@ -577,8 +577,8 @@ public class LambdaToS3StepDefinitions {
 
     @And("the S3 for {string} will not contain the event with correct reIngestCount")
     public void checkS3DoesNotContainTheEventWithCorrectReIngestCount(String teamName) throws IOException, InterruptedException {
-        JSONObject incrimentedJSON = incrimentReIngestCount();
-        assertFalse(isJSONObjectFoundInS3(teamName, incrimentedJSON));
+//        JSONObject incrimentedJSON = incrimentReIngestCount();
+        assertFalse(isJSONObjectFoundInS3(teamName, rawJSON));
     }
 
     @Given("the failed S3 event file {string} is available for {string}")
@@ -628,7 +628,6 @@ public class LambdaToS3StepDefinitions {
     @Then("there should be a message in the reIngest lambda logs")
     public void checkForMessageInTheReIngestLambdaLogs() throws InterruptedException {
         assertTrue(areSearchStringsFoundForGroup("/aws/lambda/ReIngestFunction", timestamp.toString()));
-        System.out.println("Found in Lambda logs");
     }
 
     @And("the {string} S3 does not contain the object with the timestamp key")
