@@ -1,6 +1,6 @@
 Feature: Test to prove that an S3 object cannot be deleted
 
-  @build
+#  @build
 
   Scenario: Verify that an S3 object cannot be deleted
     Given there is an object in S3 bucket
