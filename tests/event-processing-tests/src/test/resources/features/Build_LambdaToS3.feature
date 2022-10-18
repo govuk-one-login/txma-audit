@@ -125,6 +125,17 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | fraud    | perf      |
       | perf     | fraud     |
 
+  Scenario Outline: Check re-ingest lambda does not process when reIngestCount exceeds the maximum
+    Given the failed S3 event file "reIngestCount" is available for "<teamName>"
+    When the failed event with ReIngestCount 5 is processed by the "<teamName>" lambda
+    Then there should be a message in the reIngest lambda logs
+    And the S3 for "<teamName>" will not contain the event with correct reIngestCount
+    And the S3 for "<otherTeam>" will not contain the event with correct reIngestCount
+    Examples:
+      | teamName | otherTeam |
+      | fraud    | perf      |
+      | perf     | fraud     |
+
   Scenario Outline: Check re-ingest lambda does not process an erroneous S3 object
     Given the failed S3 event file "badReIngestCount" is available for "<teamName>"
     When the event for "<teamName>" is sent

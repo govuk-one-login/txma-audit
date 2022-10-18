@@ -577,7 +577,6 @@ public class LambdaToS3StepDefinitions {
 
     @And("the S3 for {string} will not contain the event with correct reIngestCount")
     public void checkS3DoesNotContainTheEventWithCorrectReIngestCount(String teamName) throws IOException, InterruptedException {
-//        JSONObject incrimentedJSON = incrimentReIngestCount();
         assertFalse(isJSONObjectFoundInS3(teamName, rawJSON));
     }
 
@@ -588,7 +587,7 @@ public class LambdaToS3StepDefinitions {
     }
 
     @When("the failed event with ReIngestCount {int} is processed by the {string} lambda")
-    public void checkTheFailedEventIsProcessedByTheLambda(int reIngestCount, String teamName) {
+    public void incrementReIngestCountAndSendToReIngestLambda(int reIngestCount, String teamName) {
         enrichedJSON = addReIngestCount(rawJSON, reIngestCount);
         Path pathOfFileToBeSentToS3 = Path.of(new File("src/test/resources/Test Data/out.gzip").getAbsolutePath());
         createGZIP(enrichedJSON.toString(), pathOfFileToBeSentToS3);
@@ -631,7 +630,7 @@ public class LambdaToS3StepDefinitions {
     }
 
     @And("the {string} S3 does not contain the object with the timestamp key")
-    public void theS3DoesNotContainTheObjectWithTheTimestampKey(String teamName) {
+    public void checkTheS3DoesNotContainTheObjectWithTheTimestampKey(String teamName) {
         String bucketName = "event-processing-" + System.getenv("TEST_ENVIRONMENT") + "-" + teamName + "-splunk-fail";
         assertFalse(isKeyInS3Bucket(bucketName, timestamp.toString()), "The object was not deleted from the " + teamName + " bucket");
     }
@@ -654,7 +653,7 @@ public class LambdaToS3StepDefinitions {
     }
 
     @When("the event for {string} is sent")
-    public void theEventForIsSent(String teamName) {
+    public void sendEventToReIngestLambda(String teamName) {
         Path pathOfFileToBeSentToS3 = Path.of(new File("src/test/resources/Test Data/badOut.gzip").getAbsolutePath());
         createGZIP(rawJSON.toString(), pathOfFileToBeSentToS3);
         sendToS3Bucket("event-processing-" + System.getenv("TEST_ENVIRONMENT") + "-" + teamName + "-splunk-fail", pathOfFileToBeSentToS3);
