@@ -68,8 +68,6 @@ public class S3SearchHelper {
 
                 // Compares all individual jsons with our test data
                 for (JSONObject object : output) {
-                    System.out.println(object);
-                    System.out.println(stringToFind);
                     if (searchObject(object, stringToFind, additionalStringsToFind)) {
                         return true;
                     }

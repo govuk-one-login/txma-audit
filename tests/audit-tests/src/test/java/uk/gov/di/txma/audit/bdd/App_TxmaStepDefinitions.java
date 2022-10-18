@@ -50,7 +50,7 @@ public class App_TxmaStepDefinitions {
 
     @Then("the audit S3 should have a new event with the user identifier subjectId")
     public void theAuditSShouldHaveANewEventWithTheUserIdentifierSubjectId() throws InterruptedException {
-        System.out.println(sessionId);
+//        System.out.println(sessionId);
         assertTrue(S3SearchHelper.isStringFoundInS3(sessionId), "No event was found with user_id " + sessionId);
 
 
