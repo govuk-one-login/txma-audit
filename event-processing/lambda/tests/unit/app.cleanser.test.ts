@@ -34,6 +34,7 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            client_id: 'My-client-id',
             reIngestCount: 0,
         };
 
@@ -66,12 +67,12 @@ describe('Unit test for app handler', function () {
             session_id: 'aaaa-bbbb-cccc-dddd-1234',
             persistent_session_id: 'aaaa-bbbb-cccc-dddd-1234',
             govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
-            device_id:'some known device'
+            device_id: 'some known device',
         };
 
         const exampleMessage: IEnrichedAuditEvent = {
             event_id: '123456789',
-            client_id: 'My-Client-Id',
+            client_id: 'My-client-id',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
@@ -86,7 +87,11 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            client_id: 'My-client-id',
             reIngestCount: 0,
+            user: {
+                govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
+            },
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(outputMessage)).toString('base64');
@@ -201,6 +206,7 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            client_id: 'My-client-id',
             reIngestCount: 0,
         };
 
@@ -243,6 +249,7 @@ describe('Unit test for app handler', function () {
             component_id: 'AUTH',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            client_id: 'My-client-id',
             reIngestCount: 0,
         };
 

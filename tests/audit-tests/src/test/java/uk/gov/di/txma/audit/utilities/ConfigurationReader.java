@@ -11,7 +11,7 @@ public class ConfigurationReader {
     public static String getIPVCoreStubUrl() {
         String IPVCoreStubUrl = System.getenv("CFN_IPVCoreStubURL");
         if (IPVCoreStubUrl == null) {
-            throw new IllegalArgumentException("Environment variable IPV_CORE_STUB_URL is not set");
+            throw new IllegalArgumentException("Environment variable CFN_IPVCoreStubURL is not set");
         }
         return IPVCoreStubUrl;
     }

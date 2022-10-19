@@ -2,7 +2,7 @@
 
 ## In this directory
 
-This directory contains the automation tests for the Event Processing side of the TxMA service.
+This directory contains the automation tests for the Event Processing side of the TxMA service in the event processing account.
 The tests have been written to ensure that all the components within the TxMA Event Processing account are connected and any messages which pass through are manipulated as expected.
 
 These tests do not cover what the unit tests, within [the Event Processing code](https://github.com/alphagov/di-txma-audit/tree/main/event-processing/lambda/tests/unit), cover.
@@ -37,6 +37,9 @@ You can generate your temporary credentials for the build environment by using t
 ```bash
 gds aws di-txma-build -e
 ```
+
+> di-txma-build is for event processing build, all the other subscription should follow the pattern  di-txma-{event-processing | audit}-{environment}
+
 and setting the access key, secret access key, and session token in the terminal. <br>
 To do this, copy the output of the previous command and run them (paste) in the terminal or command line.
 

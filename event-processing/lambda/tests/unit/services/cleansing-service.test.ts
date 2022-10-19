@@ -12,6 +12,9 @@ describe('Unit test for cleansing-service', function () {
             event_id: '123456789',
             component_id: '1234',
             client_id: 'An Example Client',
+            user: {
+                transaction_id: 'a52f6f87',
+            },
             reIngestCount: 0,
         };
 
@@ -21,6 +24,7 @@ describe('Unit test for cleansing-service', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             event_id: '123456789',
             component_id: '1234',
+            client_id: 'An Example Client',
             reIngestCount: 0,
         };
 
