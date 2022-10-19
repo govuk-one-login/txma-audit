@@ -54,7 +54,7 @@ if [ "$DRIVER" == "http://selenium-hub:4444/wd/hub" ]; then
 
 else
   echo "environment variable DRIVER exists but is not the selinium hubs service name. using the default localhost variant"
-#  cd /
+  cd /
   echo "running selenium using chromedriver"
   export DRIVER=$DRIVER
 fi
