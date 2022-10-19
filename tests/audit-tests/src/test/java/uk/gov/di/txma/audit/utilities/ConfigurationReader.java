@@ -22,4 +22,12 @@ public class ConfigurationReader {
         }
         return orchestratorStubUrl;
     }
+
+    public static String getAppURL() {
+        String AppURL = System.getenv("CFN_AppURL");
+        if (AppURL == null) {
+            throw new IllegalArgumentException("Environment variable CFN_AppURL is not set");
+        }
+        return AppURL;
+    }
 }

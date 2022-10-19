@@ -12,7 +12,7 @@ services:
       - AWS_DEFAULT_REGION=eu-west-2
       - TEST_REPORT_DIR=null
       - TEST_REPORT_ABSOLUTE_DIR=null
-      - CFN_IPVCoreStubURL=https://user:qTdrBchPGyt2bxaCr3ve@di-ipv-core-stub.london.cloudapps.digital/
+      - CFN_IPVCoreStubenvRL=https://user:qTdrBchPGyt2bxaCr3ve@di-ipv-core-stub.london.cloudapps.digital/
       - TEST_ENVIRONMENT=staging
       - DRIVER=http://selenium-hub:4444/wd/hub 
     build:
@@ -22,7 +22,9 @@ services:
       - "./:/usr/src/"
   chrome:
     # arm image for apple silicon
-    image: seleniarm/node-chromium:105.0
+#    image: seleniarm/node-chromium:105.0
+    #The image below is for intel CPUs
+    image: selenium/node-chrome:104.0
     shm_size: 2gb
     depends_on:
       - selenium-hub
@@ -32,7 +34,9 @@ services:
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
   selenium-hub:
     # arm image for apple silicon
-    image: seleniarm/hub:4.4.0-20220903
+#    image: seleniarm/hub:4.4.0-20220903
+    #The below image is for intel CPUs
+    image: selenium/hub:4.4.0
     container_name: selenium-hub
     ports:
       - "4442:4442"
