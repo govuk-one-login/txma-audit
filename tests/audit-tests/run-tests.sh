@@ -67,7 +67,6 @@ echo "Environment: $TEST_ENVIRONMENT"
 export CFN_OrchestrationStubURL="https://staging-di-ipv-orchestrator-stub.london.cloudapps.digital/"
 echo "Environment: $TEST_ENVIRONMENT"
 
-export
 
 echo "Current Working Directory: $PWD"
 
