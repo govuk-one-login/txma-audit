@@ -57,10 +57,16 @@ else
   cd /
   echo "running selenium using chromedriver"
   export DRIVER=$DRIVER
-
 fi
-
+export CFN_AppURL="https://di-auth-stub-relying-party-staging-app.london.cloudapps.digital/"
 echo "Environment: $TEST_ENVIRONMENT"
+
+export CFN_IPVCoreStubURL="https://user:qTdrBchPGyt2bxaCr3ve@di-ipv-core-stub.london.cloudapps.digital/"
+echo "Environment: $TEST_ENVIRONMENT"
+
+export CFN_OrchestrationStubURL="https://staging-di-ipv-orchestrator-stub.london.cloudapps.digital/"
+echo "Environment: $TEST_ENVIRONMENT"
+
 
 echo "Current Working Directory: $PWD"
 
