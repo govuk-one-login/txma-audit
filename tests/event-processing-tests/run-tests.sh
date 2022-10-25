@@ -4,7 +4,7 @@ set -eu
 
 gradle -v
 
-#cd /
+cd /
 
 echo "Environment: $TEST_ENVIRONMENT"
 
