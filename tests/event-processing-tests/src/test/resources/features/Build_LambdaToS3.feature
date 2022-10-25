@@ -92,8 +92,8 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
     When the "<account>" lambda is invoked
     Then the s3 below should have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
       | fraud |
-    And the S3 below should not have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
-      | perf |
+#    And the S3 below should not have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
+#      | perf |
 
     Examples:
       | account |
@@ -118,7 +118,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
     Given the failed S3 event file "reIngestCount" is available for "<teamName>"
     When the failed event with ReIngestCount 2 is processed by the "<teamName>" lambda
     Then there should be a message in the reIngest lambda logs
-    And the S3 for "<teamName>" will contain the event with correct reIngestCount
+#    And the S3 for "<teamName>" will contain the event with correct reIngestCount
     And the S3 for "<otherTeam>" will not contain the event with correct reIngestCount
     Examples:
       | teamName | otherTeam |
