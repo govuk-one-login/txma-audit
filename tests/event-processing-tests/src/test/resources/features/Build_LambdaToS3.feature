@@ -22,7 +22,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | KBV             |
       | KBVAddress      |
       | KBVFraud        |
-#      | SPOT            |
+      | SPOT            |
 
 
   Scenario Outline: Check messages don't pass through lambda if missing event_name
