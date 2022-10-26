@@ -10,7 +10,7 @@ echo "Environment: $TEST_ENVIRONMENT"
 
 echo "Current Working Directory: $PWD"
 
-gradle -q test --info --stacktrace
+# gradle -q test --info --stacktrace
 
 cp null/result.json report/result.json
 cp null/result.xml report/result.xml
