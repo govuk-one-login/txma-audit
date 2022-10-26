@@ -6,7 +6,7 @@ gradle -v
 
 cd /
 
-mkdir results
+mkdir $$TEST_ENVIRONMENT
 
 echo "Environment: $TEST_ENVIRONMENT"
 
@@ -14,8 +14,8 @@ echo "Current Working Directory: $PWD"
 
 # gradle -q test --info --stacktrace
 
-cp null/result.json results/result.json
-cp null/result.xml results/result.xml
+cp null/result.json $TEST_ENVIRONMENT/result.json
+cp null/result.xml $TEST_ENVIRONMENT/result.xml
 
 echo "Successfully generated report"
 
