@@ -1,6 +1,7 @@
 @build @dev
 Feature: Raw event data journey from the lambda to S3 for build (and dev) environment
 
+#  Fails to run on AWS only. works locally
 #  Scenario Outline: Check messages pass through lambda to S3
 #    Given the SQS file "lambda_through_to_s3" is available in the "<account>" folder
 #    And the output file "s3_expected" in the "<account>" folder is available
