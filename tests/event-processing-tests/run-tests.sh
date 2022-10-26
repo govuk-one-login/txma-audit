@@ -6,7 +6,7 @@ gradle -v
 
 cd /
 
-mkdir $$TEST_ENVIRONMENT
+mkdir $TEST_ENVIRONMENT
 
 echo "Environment: $TEST_ENVIRONMENT"
 
