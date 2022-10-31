@@ -151,7 +151,7 @@ describe('Unit test for app handler', function () {
         };
 
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(
-            TestHelper.encodeAuditEventArray(CleanserHelper.exampleEnrichedMessageWithValidityScoreInOneEvidence()),
+            TestHelper.encodeAuditEventArray(CleanserHelper.exampleEnrichedMessageWithScoresInOneEvidence()),
         );
 
         const result = await handler(firehoseEvent);

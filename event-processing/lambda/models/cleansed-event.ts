@@ -1,7 +1,11 @@
-const fraudKeys = ['validityScore'];
+const fraudKeys = ['activityHistoryScore', 'identityFraudScore', 'strengthScore', 'validityScore', 'verificationScore'];
 
 export interface ICleansedEvidenceEvent {
+    activityHistoryScore?: number;
+    identityFraudScore?: number;
+    strengthScore?: number;
     validityScore?: number;
+    verificationScore?: number;
 }
 
 export interface ICleansedExtensionsEvent {
