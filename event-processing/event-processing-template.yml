@@ -2344,6 +2344,7 @@ Resources:
           - IPV_CONTRA_INDICATOR_STORAGE_PUT_START
           - IPV_CONTRA_INDICATOR_STORAGE_PUT_NEW_CIS
           - IPV_CONTRA_INDICATOR_STORAGE_PUT_END
+          - IPV_GPG45_PROFILE_MATCHED
           - AUTH_PROCESSING_IDENTITY_REQUEST
           - AUTH_IPV_AUTHORISATION_RESPONSE_RECEIVED
           - AUTH_IPV_SUCCESSFUL_IDENTITY_RESPONSE_RECEIVED
@@ -2390,6 +2391,7 @@ Resources:
           - AUTH_UPDATE_EMAIL
           - AUTH_UPDATE_PASSWORD
           - AUTH_UPDATE_PHONE_NUMBER
+          - AUTH_PHONE_CHECK_COMPLETE
           - AUTH_ACCOUNT_MANAGEMENT_AUTHENTICATE
           - AUTH_DELETE_ACCOUNT
           - AUTH_SEND_OTP
@@ -2409,6 +2411,9 @@ Resources:
           - DCMAW_CRI_ABORT
           - DCMAW_CRI_4XXERROR
           - DCMAW_CRI_5XXERROR
+          - DCMAW_APP_START
+          - DCMAW_APP_END
+          - DCMAW_WEB_END
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -2453,6 +2458,7 @@ Resources:
           - IPV_CONTRA_INDICATOR_STORAGE_PUT_START
           - IPV_CONTRA_INDICATOR_STORAGE_PUT_NEW_CIS
           - IPV_CONTRA_INDICATOR_STORAGE_PUT_END
+          - IPV_GPG45_PROFILE_MATCHED
           - AUTH_PROCESSING_IDENTITY_REQUEST
           - AUTH_IPV_AUTHORISATION_RESPONSE_RECEIVED
           - AUTH_IPV_SUCCESSFUL_IDENTITY_RESPONSE_RECEIVED
@@ -2499,6 +2505,7 @@ Resources:
           - AUTH_UPDATE_EMAIL
           - AUTH_UPDATE_PASSWORD
           - AUTH_UPDATE_PHONE_NUMBER
+          - AUTH_PHONE_CHECK_COMPLETE
           - AUTH_ACCOUNT_MANAGEMENT_AUTHENTICATE
           - AUTH_DELETE_ACCOUNT
           - AUTH_SEND_OTP
@@ -2518,6 +2525,9 @@ Resources:
           - DCMAW_CRI_ABORT
           - DCMAW_CRI_4XXERROR
           - DCMAW_CRI_5XXERROR
+          - DCMAW_APP_START
+          - DCMAW_APP_END
+          - DCMAW_WEB_END
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
@@ -2943,131 +2953,3 @@ Resources:
         Ref: "ReIngestLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
-
-  ### Old CSLS config
-
-  OldCSLSKBVLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "KBVEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSKBVAddressLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "KBVAddressEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSKBVFraudLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "KBVFraudEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSIPVLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "IPVEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSIPVPassLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "IPVPassEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSIPVCILogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "IPVCIEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSSPOTLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "SPOTEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSAppLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "AppEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSAuthOIDCLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "AuthOIDCEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSAuthAccountMgmtLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "AuthAccountMgmtEventProcessorLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSFireHoseLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "FirehoseLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSObfuscationLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "ObfuscationLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldCSLSCleanserFunctionLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "CleanserLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
-
-  OldReIngestFunctionLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsProductionOrStaging
-    Properties:
-      LogGroupName:
-        Ref: "ReIngestLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:OldCSLSLogsDestination}}"
