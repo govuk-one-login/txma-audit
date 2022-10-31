@@ -70,7 +70,7 @@ echo "Environment: $TEST_ENVIRONMENT"
 
 echo "Current Working Directory: $PWD"
 
-gradle -q test --info
+# gradle -q test --info
 
 echo "Successfully generated report"
 
