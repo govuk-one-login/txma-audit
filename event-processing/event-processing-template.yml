@@ -133,6 +133,34 @@ Resources:
       AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SNSKMSKey"
       TargetKeyId: !Ref SNSKMSKey
 
+  SQSKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              AWS: "{{resolve:ssm:AuditAccountARN}}"
+            Action:
+              - 'kms:Decrypt'
+            Resource: '*'
+
+  SQSKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SQSKMSKey"
+      TargetKeyId: !Ref SQSKMSKey
+
+
   LambdaKMSKey:
     Type: AWS::KMS::Key
     Properties:
@@ -200,6 +228,7 @@ Resources:
       - AppLambdaAccessRole
       - AuthOIDCLambdaAccessRole
       - AuthAccountMgmtLambdaAccessRole
+      - AccountsLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
@@ -213,6 +242,7 @@ Resources:
         - !Ref AppLambdaAccessRole
         - !Ref AuthOIDCLambdaAccessRole
         - !Ref AuthAccountMgmtLambdaAccessRole
+        - !Ref AccountsLambdaAccessRole
       PolicyName: sns_publish_policy
       PolicyDocument:
         Version: 2012-10-17
@@ -1719,10 +1749,10 @@ Resources:
   FraudSplunkDeliveryFailureBucketObjectPutAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub 
+      AlarmName: !Sub
         - "S3PutObjectsAlarm-${BucketName}"
         - BucketName: !Ref FraudSplunkDeliveryFailureBucket
-      AlarmDescription: !Sub  
+      AlarmDescription: !Sub
         - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
         - BucketName: !Ref FraudSplunkDeliveryFailureBucket
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -1738,7 +1768,7 @@ Resources:
         Value: !Ref FraudSplunkDeliveryFailureBucket
       - Name: FilterId
         Value: EntireBucket
-    
+
   FraudSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Condition: DeployTestBucketPolicy
@@ -1835,12 +1865,12 @@ Resources:
   PerformanceSplunkDeliveryFailureBucketObjectPutAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub 
+      AlarmName: !Sub
         - "S3PutObjectsAlarm-${BucketName}"
         - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket
-      AlarmDescription: !Sub  
+      AlarmDescription: !Sub
         - "An alarm where is a PutRequest event occurs in the bucket ${BucketName}"
-        - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket 
+        - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket
       ComparisonOperator: GreaterThanOrEqualToThreshold
       EvaluationPeriods: 1
       Statistic: Sum
@@ -2953,3 +2983,401 @@ Resources:
         Ref: "ReIngestLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+   #AccountsData changes
+  AccountsLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-Accounts"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  AccountsEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-Accounts"
+      RetentionInDays: 7
+
+  AccountsEventProcessorFunction:
+    DependsOn:
+      - AccountsEventProcessorLogGroup
+      - AccountsLambdaAccessRole
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: "EventProcessorFunction-Accounts"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: event-processor-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt AccountsLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+          defaultComponentId: "Accounts"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - event-processor-app.ts
+
+  AccountsEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - AccountsEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-Accounts"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields Accounts"
+
+  AccountsEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - AccountsEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Accounts Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-Accounts"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields Accounts"
+      Namespace: "lambda/di/txma/errors"
+
+  AccountsEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - AccountsEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-Accounts"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors Accounts"
+
+  AccountsEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - AccountsEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Accounts Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-Accounts"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors Accounts"
+      Namespace: "lambda/di/txma/errors"
+
+  AccountsLambdaEventSourceMapping:
+    DependsOn:
+      - AccountsEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:AuthAccountMgmtQueueARN}}" #TODO: To be replaced with AccountsQueueARN
+      FunctionName: !Ref AccountsEventProcessorFunction
+
+  AccountsKMSPolicy:
+    DependsOn:
+      - AccountsLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref AccountsLambdaAccessRole
+      PolicyName: auth_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:AuthAccountMgmtKmsArn}}"  #TODO: To be replaced with AccountsKmsARN
+
+  LambdaSNSSubscriptionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: sns_lambda_access_policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - 'lambda:InvokeFunction'
+                  - 'lambda:GetFunctionConfiguration'
+                Effect: Allow
+                Resource:
+                  - !GetAtt RedactedFunction.Arn
+
+  AccountsSQSQueue:
+    DependsOn:
+      - AccountsSQSDLQueue
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "AccountsSQSQueue-${Environment}"
+      KmsMasterKeyId: !GetAtt SQSKMSKey.Arn
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt  AccountsSQSDLQueue.Arn
+        maxReceiveCount: 1
+      MessageRetentionPeriod: 86400 #1 day
+      RedriveAllowPolicy:
+        redrivePermission: denyAll
+
+  AccountsSQSDLQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "AccountsSQSDLQueue-${Environment}"
+      KmsMasterKeyId: !GetAtt SQSKMSKey.Arn
+      MessageRetentionPeriod: 345600 #4 day
+      RedriveAllowPolicy:
+        redrivePermission: allowAll
+
+  AccountsSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref epSNSTopic
+      Endpoint: !GetAtt  RedactedFunction.Arn #Lambda
+      Protocol: lambda
+      FilterPolicy:
+        eventName:
+          - AUTH_AUTH_CODE_ISSUED
+
+  RedactedLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref RedactedLambdaAccessRole
+      PolicyName: redacted_lambda_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'sqs:SendMessage'
+            Resource:
+              - !Sub "${AccountsSQSQueue.Arn}"
+          - Effect: Allow
+            Action:
+              - 'sqs:DeleteMessage'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:GetQueueAttributes'
+              - 'sqs:SendMessage'
+            Resource:
+              - !Sub "${AccountsSQSDLQueue.Arn}"
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: !GetAtt SQSKMSKey.Arn
+
+  RedactedLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sqs.amazonaws.com
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+  RedactedLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/RedactedFunction"
+      RetentionInDays: 7
+
+  RedactedFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref RedactedFunction
+      Principal: sns.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn: !Ref epSNSTopic
+
+  RedactedFunction:
+    DependsOn:
+      - RedactedLogGroup
+      - RedactedLambdaAccessRole
+      - AccountsSQSQueue
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "RedactedFunction"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: redacted-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt  RedactedLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          sqsArn: !GetAtt AccountsSQSQueue.Arn
+          defaultComponentId: "ACCOUNTS"
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt AccountsSQSQueue.QueueName
+      KmsKeyArn: !GetAtt  SQSKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - redacted-app.ts
+
+  RetryLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/RetryFunction"
+      RetentionInDays: 7
+
+  RetryFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref RetryFunction
+      Principal: sqs.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn: !Sub "${AccountsSQSDLQueue.Arn}"
+
+  RetryFunction:
+    DependsOn:
+      - RetryLogGroup
+      - RedactedLambdaAccessRole
+      - AccountsSQSDLQueue
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "RetryFunction"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: retry-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt  RedactedLambdaAccessRole.Arn
+      Events:
+        AccountsSQSRetryEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt AccountsSQSDLQueue.Arn
+            BatchSize: 1
+      Environment:
+        Variables:
+          sqsArn: !GetAtt AccountsSQSQueue.Arn
+          maxRetry: 3
+          defaultComponentId: "ACCOUNTS"
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt AccountsSQSQueue.QueueName
+      KmsKeyArn: !GetAtt  SQSKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - retry-app.ts
+
+  AccountsSQSRetryEventFailureErrorMetric:
+    DependsOn:
+      - RetryFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR MAX ATTEMPT RETRY FAILED"
+      LogGroupName: "/aws/lambda/RetryFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Accounts SQS Consume Failed Errors"
+
+  AccountsSQSRetryEventFailureAlarm:
+    DependsOn:
+      - AccountsSQSRetryEventFailureErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Accounts SQS Consume Failed Alarm"
+      AlarmName: "ConsumeRetryFailedAlarm-Accounts"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Accounts SQS Consume Failed Errors"
+      Namespace: "lambda/di/txma/errors"
+
+  AccountsTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AccountsEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  RedactedFunctionTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref RedactedFunction
+      Principal: !Ref TestRoleArn
