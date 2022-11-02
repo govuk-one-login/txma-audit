@@ -3157,7 +3157,7 @@ Resources:
       KmsMasterKeyId: !GetAtt SQSKMSKey.Arn
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt  AccountsSQSDLQueue.Arn
-        maxReceiveCount: 1
+        maxReceiveCount: 5
       MessageRetentionPeriod: 86400 #1 day
       RedriveAllowPolicy:
         redrivePermission: denyAll

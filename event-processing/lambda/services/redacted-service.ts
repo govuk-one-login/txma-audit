@@ -17,7 +17,7 @@ export class RedactedService {
     }
 
 
-    public static applyRedaction(snsMessage: string): IRedactedAuditEvent[] {
+    public static applyRedaction(snsMessage: string): IRedactedAuditEvent {
 
         const events: unknown[] = JSON.parse(snsMessage);
         const redactedEvents: IRedactedAuditEvent[] = [];
@@ -29,12 +29,12 @@ export class RedactedService {
             }
             data = Buffer.from(JSON.stringify(redactedEvents)).toString('base64');
         } else {
-            const redactedEvent: IRedactedAuditEvent = RedactedAuditEvent.fromJSONString(snsMessage);
+            const redactedEvent: IRedactedAuditEvent = RedactedAuditEvent.fromJSONString(JSON.stringify(events));
             redactedEvents.push(this.redactedEvent(redactedEvent));
             data = Buffer.from(JSON.stringify(redactedEvents)).toString('base64');
         }
 
-        return redactedEvents;
+        return redactedEvents[0];
     }
 
 

@@ -32,14 +32,13 @@ describe('Unit test for app handler', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            reIngestCount: 0,
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
         console.log('SourceData' + data);
         const result = RedactedService.applyRedaction(data);
-        for (const k in result) {
-            expect(result[k]).toEqual(expectedResult);
-        }
+            expect(result).toEqual(expectedResult);
     });
 
     it('redact a simple event with user object', async () => {
@@ -75,6 +74,7 @@ describe('Unit test for app handler', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            reIngestCount:0,
             user: {
                 user_id: 'some_user_id',
                 govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
@@ -84,9 +84,7 @@ describe('Unit test for app handler', function () {
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
         console.log('SourceData' + data);
         const result = RedactedService.applyRedaction(data);
-        for (const k in result) {
-            expect(result[k]).toEqual(expectedResult);
-        }
+        expect(result).toEqual(expectedResult);
     });
 
     it('redact a simple event with partial user object with user_id and without journey id', async () => {
@@ -121,6 +119,7 @@ describe('Unit test for app handler', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            reIngestCount:0,
             user: {
                 user_id: 'some_user_id',
             },
@@ -129,9 +128,7 @@ describe('Unit test for app handler', function () {
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
         console.log('SourceData' + data);
         const result = RedactedService.applyRedaction(data);
-        for (const k in result) {
-            expect(result[k]).toEqual(expectedResult);
-        }
+        expect(result).toEqual(expectedResult);
     });
 
     it('redact a simple event with partial user object with journey id and without user id', async () => {
@@ -166,6 +163,7 @@ describe('Unit test for app handler', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
+            reIngestCount:0,
             user: {
                 govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
             },
@@ -174,11 +172,7 @@ describe('Unit test for app handler', function () {
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
         console.log('SourceData' + data);
         const result = RedactedService.applyRedaction(data);
-        for (const k in result) {
-            expect(result[k]).toEqual(expectedResult);
-        }
+        expect(result).toEqual(expectedResult);
     });
-
-
 
 });
