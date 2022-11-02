@@ -3339,31 +3339,58 @@ Resources:
         EntryPoints:
           - retry-app.ts
 
+  AccountsSQSEventFailureErrorMetric:
+    DependsOn:
+      - RedactedFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "?ERROR"
+      LogGroupName: "/aws/lambda/RedactedFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Accounts SQS Publish Failed Errors"
+
+  AccountsSQSEventFailureAlarm:
+    DependsOn:
+      - AccountsSQSEventFailureErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Accounts SQS Publish Failed Alarm"
+      AlarmName: "SQSPublishFailedAlarm-Accounts"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 2
+      MetricName: "Accounts SQS Publish Failed Errors"
+      Namespace: "lambda/di/txma/errors"
+
   AccountsSQSRetryEventFailureErrorMetric:
     DependsOn:
       - RetryFunction
     Type: AWS::Logs::MetricFilter
     Properties:
-      FilterPattern: "ERROR MAX ATTEMPT RETRY FAILED"
+      FilterPattern: "?ERROR"
       LogGroupName: "/aws/lambda/RetryFunction"
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: "lambda/di/txma/errors"
-          MetricName: "Accounts SQS Consume Failed Errors"
+          MetricName: "Accounts SQS Publish Retry Failed Errors"
 
   AccountsSQSRetryEventFailureAlarm:
     DependsOn:
       - AccountsSQSRetryEventFailureErrorMetric
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "Accounts SQS Consume Failed Alarm"
-      AlarmName: "ConsumeRetryFailedAlarm-Accounts"
+      AlarmDescription: "Accounts SQS Publish Retry Failed Alarm"
+      AlarmName: "SQSPublishRetryFailedAlarm-Accounts"
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       Statistic: Sum
       Period: 86400
-      Threshold: 1
-      MetricName: "Accounts SQS Consume Failed Errors"
+      Threshold: 2
+      MetricName: "Accounts SQS Publish Retry Failed Errors"
       Namespace: "lambda/di/txma/errors"
 
   AccountsTestInvokePermission:
