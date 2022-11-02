@@ -3362,7 +3362,7 @@ Resources:
       EvaluationPeriods: 1
       Statistic: Sum
       Period: 86400
-      Threshold: 2
+      Threshold: 1
       MetricName: "Accounts SQS Publish Failed Errors"
       Namespace: "lambda/di/txma/errors"
 
@@ -3389,7 +3389,7 @@ Resources:
       EvaluationPeriods: 1
       Statistic: Sum
       Period: 86400
-      Threshold: 2
+      Threshold: 1
       MetricName: "Accounts SQS Publish Retry Failed Errors"
       Namespace: "lambda/di/txma/errors"
 
