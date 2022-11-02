@@ -18,13 +18,12 @@ export const handler = async (event:SQSEvent): Promise<void> => {
             console.log('Message Id ' + record.messageId);
             console.log('Event Message : ' + msgbody);
             const redactedEvent: IRedactedAuditEvent = RedactedAuditEvent.fromJSONString(msgbody);
-            console.log('ReIngest Count is ' + redactedEvent.reIngestCount);
             if (redactedEvent.reIngestCount == undefined || redactedEvent.reIngestCount == 0 || redactedEvent.reIngestCount < maxRetryAttempt) {
                 redactedEvent.reIngestCount = redactedEvent.reIngestCount + 1;
                 await SqsService.sendMessageToSQS(RedactedService.redactedEvent(redactedEvent), queueUrl);
             }else  {
                 console.log(
-                    'ERROR MAX ATTEMPT RETRY FAILED\n' +
+                    'ERROR SQS MAX ATTEMPT RETRY FAILED\n' +
                                         'Max Attempt ' + maxRetryAttempt + ' reached for Message Id ' + record.messageId);
                 return ; //throw new Error("Max attempt reached failed to process the message data, MessageID :" + record.messageId);
             }

@@ -33,12 +33,13 @@ export class SqsService {
         };
         const run = async () => {
             try {
+
                 const data = await this.sqsClient.send(new SendMessageCommand(params));
                 console.log('SQS Response Success' + data.MessageId);
             } catch (error) {
                 const errorWithMessage = ErrorService.toErrorWithMessage(error);
-                console.log('ERROR - Send to SQS :\n Error: ${errorWithMessage.message}', errorWithMessage.stack);
-                throw error;
+                console.log('ERROR SQS Publish :\n Error: ${errorWithMessage.message}', errorWithMessage.stack);
+                //throw error;
             }
         };
         await run();
