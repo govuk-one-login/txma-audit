@@ -583,7 +583,6 @@ public class LambdaToS3StepDefinitions {
     @Given("the failed S3 event file {string} is available for {string}")
     public void checkTheFailedS3EventFileIsAvailable(String fileName, String teamName) throws IOException {
         rawJSON = new JSONObject(readJSONFile("Re-IngestLambda/" + teamName + "_" + fileName));
-
     }
 
     @When("the failed event with ReIngestCount {int} is processed by the {string} lambda")
@@ -673,7 +672,7 @@ public class LambdaToS3StepDefinitions {
 
     @And("the S3 for {string} will contain the event")
     public void theS3ForAccountWillContainTheDCMAWEvent(String eventName) throws IOException, InterruptedException  {
-        assertTrue(isJSONObjectFoundInS3(eventName, enrichedJSON));
+        assertTrue(isJSONObjectFoundInS3(eventName, rawJSON));
     }
 
     @Then("there should be a message in the lambda logs")
@@ -683,6 +682,11 @@ public class LambdaToS3StepDefinitions {
 
     @And("the S3 for {string} will not contain the event")
     public void theS3ForAccountWillNotContainTheDCMAWEvent(String eventName) throws IOException, InterruptedException  {
-        assertFalse(isJSONObjectFoundInS3(eventName, enrichedJSON));
+        assertFalse(isJSONObjectFoundInS3(eventName, rawJSON));
+    }
+
+    @Given("the file {string} is available in the {string} folder")
+    public void theFileIsAvailableInTheFolder(String fileName, String accountName) throws IOException {
+        rawJSON = new JSONObject(readJSONFile(accountName + "/" + fileName));
     }
 }
