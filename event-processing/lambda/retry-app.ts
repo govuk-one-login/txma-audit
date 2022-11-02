@@ -6,7 +6,8 @@ import {TestHelper} from "./tests/test-helpers/test-helper";
 import {ErrorService} from "./services/error-service";
 export const handler = async (event:SQSEvent): Promise<void> => {
     console.log('[INFO] Retry Function has been Called!');
-    const arn = process.env.sqsArn;
+    // @ts-ignore
+    const arn :string  = process.env.sqsArn;
     const maxRetryAttempt : number  = Number(process.env.maxRetry);
     const region = arn.split(':')[3];
     const accountId = arn.split(':')[4];
