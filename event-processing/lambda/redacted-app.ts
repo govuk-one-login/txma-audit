@@ -1,9 +1,10 @@
 import { SNSEvent } from 'aws-lambda';
 import { SqsService } from './services/sqs-service';
-import {IRedactedAuditEvent} from "./models/redacted-event";
+import {IRedactedAuditEvent, RedactedAuditEvent} from "./models/redacted-event";
 import {RedactedService} from "./services/redacted-service";
 import {TestHelper} from "./tests/test-helpers/test-helper";
 import {ErrorService} from "./services/error-service";
+import {IAuditEvent} from "./models/audit-event";
 export const handler = async (event: SNSEvent): Promise<void> => {
 
     const arn = process.env.sqsArn;
@@ -15,10 +16,9 @@ export const handler = async (event: SNSEvent): Promise<void> => {
     const queueUrl = 'https://sqs.' + region + '.amazonaws.com/' + accountId + '/' + queueName;
     try {
         for (const record of event.Records) {
-            const redactedMessages: IRedactedAuditEvent[] = RedactedService.applyRedaction(record.Sns.Message);
-            for (const k in redactedMessages) {
-                await SqsService.sendMessageToSQS(redactedMessages[k], queueUrl);
-            }
+
+             const redactedMessage: IRedactedAuditEvent = RedactedService.applyRedaction(record.Sns.Message);
+              await SqsService.sendMessageToSQS(redactedMessage, queueUrl);
         }
     }catch(error){
         const errorWithMessage = ErrorService.toErrorWithMessage(error);

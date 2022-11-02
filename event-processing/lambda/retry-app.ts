@@ -25,7 +25,6 @@ export const handler = async (event:SQSEvent): Promise<void> => {
                 console.log(
                     'ERROR SQS MAX ATTEMPT RETRY FAILED\n' +
                                         'Max Attempt ' + maxRetryAttempt + ' reached for Message Id ' + record.messageId);
-                return ; //throw new Error("Max attempt reached failed to process the message data, MessageID :" + record.messageId);
             }
 
         }
