@@ -7,7 +7,8 @@ import {ErrorService} from "./services/error-service";
 import {IAuditEvent} from "./models/audit-event";
 export const handler = async (event: SNSEvent): Promise<void> => {
 
-    const arn = process.env.sqsArn;
+    // @ts-ignore
+    const arn : string  = process.env.sqsArn;
 
     const region = arn.split(':')[3];
     const accountId = arn.split(':')[4];
