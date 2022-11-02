@@ -561,6 +561,51 @@ Resources:
   # CSLS
   #
 
+  MessageBatchBucketTxMA2:
+  Type: AWS::S3::Bucket
+  Condition: IsTestableEnv
+  Properties:
+    BucketName: !Sub "${AWS::StackName}-${Environment}-message-batch-txma2"
+    BucketEncryption:
+      ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+    PublicAccessBlockConfiguration:
+      BlockPublicAcls: true
+      BlockPublicPolicy: true
+      IgnorePublicAcls: true
+      RestrictPublicBuckets: true
+    VersioningConfiguration:
+      Status: "Enabled"
+    # LoggingConfiguration:
+    #   DestinationBucketName: !Ref MessageBucketLogsBucket
+    #   LogFilePrefix: "audit/message-batch-bucket/"
+    LifecycleConfiguration:
+      Rules:
+        - Id: AuditGlacierRule
+          Status: Enabled
+          Transitions:
+            - TransitionInDays: 90
+              StorageClass: GLACIER
+    # NotificationConfiguration:
+    #   QueueConfigurations:
+    #     !If
+    #     - IsProductionOrStaging
+    #     - - Event: "s3:ObjectCreated:*"
+    #         Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+    #       - Event: "s3:ObjectRestore:*"
+    #         Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+        - - !Ref AWS::NoValue
+    OwnershipControls:
+      Rules:
+        - ObjectOwnership: BucketOwnerPreferred
+    MetricsConfigurations:
+      - Id: EntireBucket
+
+  #
+  # CSLS
+  #
+
   CSLSFireHoseLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProductionOrStaging
