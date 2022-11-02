@@ -658,4 +658,31 @@ public class LambdaToS3StepDefinitions {
         createGZIP(rawJSON.toString(), pathOfFileToBeSentToS3);
         sendToS3Bucket("event-processing-" + System.getenv("TEST_ENVIRONMENT") + "-" + teamName + "-splunk-fail", pathOfFileToBeSentToS3);
     }
+
+    @When("the {string} is processed by the {string} lambda")
+    public void addEventNameAndSendEventToS3(String eventName, String teamName) {
+        enrichedJSON = addEventName(rawJSON, eventName);
+        Path pathOfFileToBeSentToS3 = Path.of(new File("src/test/resources/Test Data/out.gzip").getAbsolutePath());
+        createGZIP(enrichedJSON.toString(), pathOfFileToBeSentToS3);
+        sendToS3Bucket("event-processing-" + System.getenv("TEST_ENVIRONMENT") + "-" + teamName + "-splunk-fail", pathOfFileToBeSentToS3);
+    }
+    private JSONObject addEventName(JSONObject rawJSON, String eventName) {
+        rawJSON.put("event_name", eventName);
+        return rawJSON;
+    }
+
+    @And("the S3 for {string} will contain the event")
+    public void theS3ForAccountWillContainTheDCMAWEvent(String eventName) throws IOException, InterruptedException  {
+        assertTrue(isJSONObjectFoundInS3(eventName, enrichedJSON));
+    }
+
+    @Then("there should be a message in the lambda logs")
+    public void thereShouldBeAMessageInTheLambdaLogs()throws InterruptedException {
+        assertTrue(areSearchStringsFoundForGroup("/aws/lambda/EventsProcessor", timestamp.toString()));
+    }
+
+    @And("the S3 for {string} will not contain the event")
+    public void theS3ForAccountWillNotContainTheDCMAWEvent(String eventName) throws IOException, InterruptedException  {
+        assertFalse(isJSONObjectFoundInS3(eventName, enrichedJSON));
+    }
 }
