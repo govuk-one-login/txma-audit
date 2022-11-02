@@ -150,7 +150,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | perf     | fraud     |
 
   Scenario Outline: Check all DCMAW events are processed
-    Given the SQS file "baseFile" is available in the "<account>" folder
+    Given the file "baseFile" is available in the "<account>" folder
     When the "<eventName>" is processed by the "<teamName>" lambda
     Then there should be a message in the lambda logs
     And the S3 for "<teamName>" will contain the event
