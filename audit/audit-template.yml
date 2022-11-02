@@ -561,6 +561,12 @@ Resources:
   # CSLS
   #
 
+
+  #
+  # txma2 specific resources
+  #
+
+  # separate message batch bucket so txma2 and txma tests remain isolated and can run concurrently
   MessageBatchBucketTxMA2:
   Type: AWS::S3::Bucket
   Condition: IsTestableEnv
