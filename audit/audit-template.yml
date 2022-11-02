@@ -558,11 +558,6 @@ Resources:
       Principal: !Ref TestRoleArn
 
   #
-  # CSLS
-  #
-
-
-  #
   # txma2 specific resources
   #
 
