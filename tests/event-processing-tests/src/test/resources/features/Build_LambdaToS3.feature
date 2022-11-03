@@ -1,29 +1,29 @@
 @build @dev
 Feature: Raw event data journey from the lambda to S3 for build (and dev) environment
 
-#  Fails to run on AWS only. works locally
-#  Scenario Outline: Check messages pass through lambda to S3
-#    Given the SQS file "lambda_through_to_s3" is available in the "<account>" folder
-#    And the output file "s3_expected" in the "<account>" folder is available
-#      | fraud |
-#      | perf  |
-#    When the "<account>" lambda is invoked
-#    Then the s3 below should have a new event matching the output file "s3_expected" in the "<account>" folder
-#      | fraud |
-#      | perf  |
-#
-#    Examples:
-#      | account         |
-#      | App             |
-#      | AuthAccountMgmt |
-#      | AuthOIDC        |
-#      | IPV             |
-#      | IPVCI           |
-#      | IPVPass         |
-#      | KBV             |
-#      | KBVAddress      |
-#      | KBVFraud        |
-#      | SPOT            |
+  Fails to run on AWS only. works locally
+  Scenario Outline: Check messages pass through lambda to S3
+    Given the SQS file "lambda_through_to_s3" is available in the "<account>" folder
+    And the output file "s3_expected" in the "<account>" folder is available
+      | fraud |
+      | perf  |
+    When the "<account>" lambda is invoked
+    Then the s3 below should have a new event matching the output file "s3_expected" in the "<account>" folder
+      | fraud |
+      | perf  |
+
+    Examples:
+      | account         |
+      | App             |
+      | AuthAccountMgmt |
+      | AuthOIDC        |
+      | IPV             |
+      | IPVCI           |
+      | IPVPass         |
+      | KBV             |
+      | KBVAddress      |
+      | KBVFraud        |
+      | SPOT            |
 
 
   Scenario Outline: Check messages don't pass through lambda if missing event_name

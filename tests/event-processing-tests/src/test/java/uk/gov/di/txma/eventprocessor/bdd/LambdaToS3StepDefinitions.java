@@ -658,4 +658,6 @@ public class LambdaToS3StepDefinitions {
         createGZIP(rawJSON.toString(), pathOfFileToBeSentToS3);
         sendToS3Bucket("event-processing-" + System.getenv("TEST_ENVIRONMENT") + "-" + teamName + "-splunk-fail", pathOfFileToBeSentToS3);
     }
+
+
 }
