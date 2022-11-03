@@ -3,29 +3,29 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 
   Fails to run on AWS only. works locally
 
-  Scenario Outline: Check messages pass through lambda to S3
-    Given the SQS file "lambda_through_to_s3" is available in the "<account>" folder
-    And the output file "s3_expected" in the "<account>" folder is available
-      | fraud |
-      | perf  |
-    When the "<account>" lambda is invoked
-    Then the s3 below should have a new event matching the output file "s3_expected" in the "<account>" folder
-      | fraud |
-      | perf  |
-
-    Examples:
-      | account         |
-      | App             |
-      | AuthAccountMgmt |
-      | AuthOIDC        |
-      | IPV             |
-      | IPVCI           |
-      | IPVPass         |
-      | DCMAW           |
-      | KBV             |
-      | KBVAddress      |
-      | KBVFraud        |
-      | SPOT            |
+#  Scenario Outline: Check messages pass through lambda to S3
+#    Given the SQS file "lambda_through_to_s3" is available in the "<account>" folder
+#    And the output file "s3_expected" in the "<account>" folder is available
+#      | fraud |
+#      | perf  |
+#    When the "<account>" lambda is invoked
+#    Then the s3 below should have a new event matching the output file "s3_expected" in the "<account>" folder
+#      | fraud |
+#      | perf  |
+#
+#    Examples:
+#      | account         |
+#      | App             |
+#      | AuthAccountMgmt |
+#      | AuthOIDC        |
+#      | IPV             |
+#      | IPVCI           |
+#      | IPVPass         |
+#      | DCMAW           |
+#      | KBV             |
+#      | KBVAddress      |
+#      | KBVFraud        |
+#      | SPOT            |
 
   Scenario Outline: Check messages don't pass through lambda if missing event_name
     Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "<account>" team
@@ -94,8 +94,8 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
     When the "<account>" lambda is invoked
     Then the s3 below should have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
       | fraud |
-#    And the S3 below should not have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
-#      | perf |
+    And the S3 below should not have a new event matching the respective "<account>" output file "expected" in the "SNSFilterTests" folder
+      | perf |
 
     Examples:
       | account |
@@ -120,7 +120,7 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
     Given the failed S3 event file "reIngestCount" is available for "<teamName>"
     When the failed event with ReIngestCount 2 is processed by the "<teamName>" lambda
     Then there should be a message in the reIngest lambda logs
-#    And the S3 for "<teamName>" will contain the event with correct reIngestCount
+    And the S3 for "<teamName>" will contain the event with correct reIngestCount
     And the S3 for "<otherTeam>" will not contain the event with correct reIngestCount
     Examples:
       | teamName | otherTeam |
@@ -149,20 +149,30 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | fraud    | perf      |
       | perf     | fraud     |
 
-  Scenario Outline: Check all DCMAW events are processed
-    Given the file "baseFile" is available in the "<account>" folder
-    When the "<eventName>" is processed by the "<teamName>" lambda
-    Then there should be a message in the lambda logs
-    And the S3 for "<teamName>" will contain the event
-    And the S3 for "<otherTeam>" will not contain the event
+  Scenario Outline: Check all DCMAW (Document Check Mobile And Web) events are processed
+    Given the DCMAW baseFile is available in the DCMAW folder
+    And the event "<eventName>" has been added
+    When the "<account>" lambda is invoked
+    Then there should be a message in the "<account>" lambda logs
+#    And the S3 for "<teamName>" will contain the event
+#    And the S3 for "<otherTeam>" will not contain the event
     Examples:
       | account | teamName | otherTeam | eventName           |
-      | DCMAW   | fraud    | perf      | DCMAW_CRI_START     |
-      |         | perf     | fraud     | DCMAW_APP_START     |
-      |         |          |           | DCMAW_APP_END       |
-      |         |          |           | DCMAW_WEB_END       |
-      |         |          |           | DCMAW_CRI_VC_ISSUED |
-      |         |          |           | DCMAW_CRI_END       |
-      |         |          |           | DCMAW_CRI_ABORT     |
-      |         |          |           | DCMAW_CRI_4XXERROR  |
-      |         |          |           | DCMAW_CRI_5XXERROR  |
+      | IPV     | fraud    | perf      | DCMAW_CRI_START     |
+      | IPV     | perf     | fraud     | DCMAW_CRI_START     |
+      | IPV     | fraud    | perf      | DCMAW_APP_START     |
+      | IPV     | perf     | fraud     | DCMAW_APP_START     |
+      | IPV     | fraud    | perf      | DCMAW_APP_END       |
+      | IPV     | perf     | fraud     | DCMAW_APP_END       |
+      | IPV     | fraud    | perf      | DCMAW_WEB_END       |
+      | IPV     | perf     | fraud     | DCMAW_WEB_END       |
+      | IPV     | fraud    | perf      | DCMAW_CRI_VC_ISSUED |
+      | IPV     | perf     | fraud     | DCMAW_CRI_VC_ISSUED |
+      | IPV     | fraud    | perf      | DCMAW_CRI_END       |
+      | IPV     | perf     | fraud     | DCMAW_CRI_END       |
+      | IPV     | fraud    | perf      | DCMAW_CRI_ABORT     |
+      | IPV     | perf     | fraud     | DCMAW_CRI_ABORT     |
+      | IPV     | fraud    | perf      | DCMAW_CRI_4XXERROR  |
+      | IPV     | perf     | fraud     | DCMAW_CRI_4XXERROR  |
+      | IPV     | fraud    | perf      | DCMAW_CRI_5XXERROR  |
+      | IPV     | perf     | fraud     | DCMAW_CRI_5XXERROR  |
