@@ -73,8 +73,8 @@ public class LambdaToS3StepDefinitions {
     @Given("the SQS file {string} is available in the {string} folder")
     public void checkSQSInputFileIsAvailableInFolder(String fileName, String account) throws IOException {
         JSONObject rawJSON = new JSONObject(readJSONFile(account + "/" + fileName));
-        JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
-        lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
+        JSONObject JSONWithComponentIdAndTimestampFields = addComponentIdAndTimestampFields(rawJSON, account);
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithComponentIdAndTimestampFields);
     }
 
     /**
@@ -101,6 +101,7 @@ public class LambdaToS3StepDefinitions {
     @When("the {string} lambda is invoked")
     public void invokeAccountsLambda(String account) {
         String functionName = "EventProcessorFunction-" + account;
+//        String functionName = "EventProcessorFunction-App";
 
         // Opens the lambda client
         try (LambdaClient awsLambda = LambdaClient.builder()
@@ -416,7 +417,7 @@ public class LambdaToS3StepDefinitions {
         return false;
     }
 
-    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws IOException, InterruptedException {
+    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws InterruptedException {
 
         while (count < 11) {
             // Checks for latest key and saves the contents in the output variable
@@ -671,13 +672,15 @@ public class LambdaToS3StepDefinitions {
     }
 
     @And("the S3 for {string} will contain the event")
-    public void theS3ForAccountWillContainTheDCMAWEvent(String eventName) throws IOException, InterruptedException  {
-        assertTrue(isJSONObjectFoundInS3(eventName, rawJSON));
+    public void theS3ForAccountWillContainTheDCMAWEvent(String teamName) throws IOException, InterruptedException  {
+        JSONObject DCMAWEventJSON = new JSONObject(lambdaInput);
+        assertTrue(isJSONObjectFoundInS3(teamName, DCMAWEventJSON));
     }
 
-    @Then("there should be a message in the lambda logs")
-    public void thereShouldBeAMessageInTheLambdaLogs()throws InterruptedException {
-        assertTrue(areSearchStringsFoundForGroup("/aws/lambda/EventsProcessor", timestamp.toString()));
+    @Then("there should be a message in the {string} lambda logs")
+    public void thereShouldBeAMessageInTheLambdaLogs(String account)throws InterruptedException {
+        String logGroup = "/aws/lambda/EventProcessorFunction-" + account;
+        assertTrue(areSearchStringsFoundForGroup(logGroup, requestID), "No log from the lambda contained a the message.");
     }
 
     @And("the S3 for {string} will not contain the event")
@@ -685,9 +688,17 @@ public class LambdaToS3StepDefinitions {
         assertFalse(isJSONObjectFoundInS3(eventName, rawJSON));
     }
 
-    @Given("the file {string} is available in the {string} folder")
-    public void theFileIsAvailableInTheFolder(String fileName, String accountName) throws IOException {
-        rawJSON = new JSONObject(readJSONFile(accountName + "/" + fileName));
+    @Given("the DCMAW baseFile is available in the DCMAW folder")
+    public void theFileIsAvailableInTheFolder() throws IOException {
+        rawJSON = new JSONObject(readJSONFile("DCMAW/baseFile"));
+        JSONObject JSONWithComponentIdAndTimestampFields = addComponentIdAndTimestampFields(rawJSON, "DCMAW");
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithComponentIdAndTimestampFields);
+    }
+
+    @And("the event {string} has been added")
+    public void theEventHasBeenAdded(String eventName) {
+        JSONObject JSONWithEventAdded = addEventName(rawJSON, eventName);
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithEventAdded);
     }
 
 
