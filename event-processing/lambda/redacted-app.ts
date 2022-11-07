@@ -6,7 +6,7 @@ import { ErrorService } from "./services/error-service";
 export const handler = async (event: SNSEvent): Promise<void> => {
 
     // @ts-ignore
-    const arn : string  = process.env.sqsArn;
+    const arn : string  = process.env.publishToAccountsARN;
 
     const region = arn.split(':')[3];
     const accountId = arn.split(':')[4];
@@ -16,8 +16,8 @@ export const handler = async (event: SNSEvent): Promise<void> => {
     try {
         for (const record of event.Records) {
 
-             const redactedMessage: IRedactedAuditEvent = RedactedService.applyRedaction(record.Sns.Message);
-              await SqsService.sendMessageToSQS(redactedMessage, queueUrl);
+            const redactedMessage: IRedactedAuditEvent = RedactedService.applyRedaction(record.Sns.Message);
+            await SqsService.sendMessageToSQS(redactedMessage, queueUrl);
         }
     }catch(error){
         const errorWithMessage = ErrorService.toErrorWithMessage(error);
