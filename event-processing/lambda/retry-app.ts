@@ -19,7 +19,7 @@ export const handler = async (event:SQSEvent): Promise<void> => {
         console.log('Message Id ' + record.messageId);
         console.log('Event Message : ' + msgbody);
         const redactedEvent: IRedactedAuditEvent = RedactedAuditEvent.fromJSONString(msgbody);
-        if (redactedEvent.reIngestCount == undefined || redactedEvent.reIngestCount == 0 || redactedEvent.reIngestCount < maxRetryAttempt) {
+        if (redactedEvent.reIngestCount == 0 || redactedEvent.reIngestCount < maxRetryAttempt) {
             redactedEvent.reIngestCount = redactedEvent.reIngestCount + 1;
             await SqsService.sendMessageToSQS(RedactedService.redactedEvent(redactedEvent), queueUrl);
         }else  {
