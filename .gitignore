@@ -1,4 +1,5 @@
 # IntelliJ
 *.iml
 .idea/aws.xml
+.idea/*
 **/*.DS_Store

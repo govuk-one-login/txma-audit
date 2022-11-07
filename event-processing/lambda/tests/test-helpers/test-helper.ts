@@ -1,9 +1,17 @@
 /* istanbul ignore file */
-import { FirehoseTransformationEvent, FirehoseTransformationEventRecord, SQSEvent, SQSRecord } from 'aws-lambda';
+import {
+    FirehoseTransformationEvent,
+    FirehoseTransformationEventRecord, SNSEvent,
+    SNSEventRecord,
+    SQSEvent,
+    SQSRecord
+} from 'aws-lambda';
 import { IAuditEvent } from '../../models/audit-event';
 import { AuditEvent as UnknownAuditEvent } from '../test-events/unknown-audit-event';
 import { ICleansedEvent } from '../../models/cleansed-event';
 import { IEnrichedAuditEvent } from '../../models/enriched-audit-event';
+import {SNSMessage} from "aws-lambda/trigger/sns";
+import {IRedactedAuditEvent} from "../../models/redacted-event";
 
 export class TestHelper {
     private static sqsRecord: SQSRecord = {
@@ -41,6 +49,39 @@ export class TestHelper {
             },
         },
     };
+
+    private static snsMessage: SNSMessage = {
+        SignatureVersion: "1",
+        Timestamp: "2022-10-25T21:45:07.000Z",
+        MessageId: "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
+        Signature:"",
+        Message: "",
+        MessageAttributes: {
+            Attribute1: {
+                Type: "String",
+                Value: "TestString"
+            },
+            Attribute2: {
+                Type: "Binary",
+                Value: "TestBinary"
+            },
+        },
+        Type: "Notification",
+        TopicArn: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-dev",
+        Subject: "TestInvoke",
+        Token: "",
+        SigningCertUrl: "",
+        UnsubscribeUrl: "",
+    }
+
+    private static snsEventRecord: SNSEventRecord = {
+        EventVersion: "1.0",
+        EventSubscriptionArn: "arn:aws:sns:eu-west-2:248098332657:EventProcessorSNSTopic-dev:7ba774f7-78cf-43b7-93f4-553e7836640e",
+        EventSource: "aws:sns",
+        Sns: this.snsMessage,
+    }
+
+
 
     private static firehoseTransformationEvent: FirehoseTransformationEvent = {
         invocationId: 'bb5d7530-f7b7-44aa-bc0f-01b76248fbb8',
@@ -90,11 +131,28 @@ export class TestHelper {
         return sqsEvent;
     }
 
-    static encodeAuditEvent(message: IAuditEvent | ICleansedEvent | IEnrichedAuditEvent): string {
+
+
+    static encodeAuditEvent(message: IAuditEvent | ICleansedEvent | IEnrichedAuditEvent | IRedactedAuditEvent ): string {
         return JSON.stringify(message);
     }
 
     static encodeAuditEventWithUnknownField(message: UnknownAuditEvent): string {
         return JSON.stringify(message);
+    }
+
+    static createSNSEventWithEncodedMessage(message: string, numberOfRecords = 1): SNSEvent {
+        const snsEvent = {
+            Records: Array<SNSEventRecord>(),
+        };
+
+        for (let i = 0; i < numberOfRecords; i++) {
+            const snsRecord: SNSEventRecord = JSON.parse(JSON.stringify(this.snsEventRecord));
+            snsRecord.Sns.Message = message;
+
+            snsEvent.Records.push(snsRecord);
+        }
+
+        return snsEvent;
     }
 }
