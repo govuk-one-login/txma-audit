@@ -1,10 +1,8 @@
 import { SNSEvent } from 'aws-lambda';
 import { SqsService } from './services/sqs-service';
-import {IRedactedAuditEvent, RedactedAuditEvent} from "./models/redacted-event";
-import {RedactedService} from "./services/redacted-service";
-import {TestHelper} from "./tests/test-helpers/test-helper";
-import {ErrorService} from "./services/error-service";
-import {IAuditEvent} from "./models/audit-event";
+import { IRedactedAuditEvent } from "./models/redacted-event";
+import { RedactedService } from "./services/redacted-service";
+import { ErrorService } from "./services/error-service";
 export const handler = async (event: SNSEvent): Promise<void> => {
 
     // @ts-ignore

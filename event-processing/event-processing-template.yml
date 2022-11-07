@@ -3009,7 +3009,7 @@ Resources:
                   - 'lambda:GetFunctionConfiguration'
                 Effect: Allow
                 Resource:
-                  - !GetAtt RedactedFunction.Arn
+                  - !GetAtt PublishToAccountsRedactedFunction.Arn
 
   PublishToAccountsSQSQueue:
     DependsOn:
@@ -3038,18 +3038,18 @@ Resources:
     Type: AWS::SNS::Subscription
     Properties:
       TopicArn: !Ref epSNSTopic
-      Endpoint: !GetAtt  RedactedFunction.Arn #Lambda
+      Endpoint: !GetAtt  PublishToAccountsRedactedFunction.Arn #Lambda
       Protocol: lambda
       FilterPolicy:
         eventName:
           - AUTH_AUTH_CODE_ISSUED
 
-  RedactedLambdaPolicy:
+  PublishToAccountsPolicy:
     Type: AWS::IAM::Policy
     Properties:
       Roles:
-        - !Ref RedactedLambdaAccessRole
-      PolicyName: redacted_lambda_policy
+        - !Ref PublishToAccountsAccessRole
+      PolicyName: publish_to_accounts_policy
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -3074,7 +3074,7 @@ Resources:
               - 'kms:DescribeKey'
             Resource: !GetAtt SQSKMSKeyPublishAccount.Arn
 
-  RedactedLambdaAccessRole:
+  PublishToAccountsAccessRole:
     Type: AWS::IAM::Role
     Properties:
       PermissionsBoundary: !If
@@ -3094,36 +3094,36 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 
-  RedactedLogGroup:
+  PublishToAccountsRedactedLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: "/aws/lambda/RedactedFunction"
+      LogGroupName: "/aws/lambda/PublishToAccountsRedactedFunction"
       RetentionInDays: 7
 
-  RedactedFunctionPermission:
+  PublishToAccountsRedactedFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref RedactedFunction
+      FunctionName: !Ref PublishToAccountsRedactedFunction
       Principal: sns.amazonaws.com
       SourceAccount: !Sub "${AWS::AccountId}"
       SourceArn: !Ref epSNSTopic
 
-  RedactedFunction:
+  PublishToAccountsRedactedFunction:
     DependsOn:
-      - RedactedLogGroup
-      - RedactedLambdaAccessRole
+      - PublishToAccountsRedactedLogGroup
+      - PublishToAccountsAccessRole
       - PublishToAccountsSQSQueue
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: "RedactedFunction"
+      FunctionName: "PublishToAccountsRedactedFunction"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: redacted-app.handler
       Runtime: nodejs14.x
       Timeout: 30
-      Role: !GetAtt  RedactedLambdaAccessRole.Arn
+      Role: !GetAtt  PublishToAccountsAccessRole.Arn
       Environment:
         Variables:
           sqsArn: !GetAtt PublishToAccountsSQSQueue.Arn
@@ -3141,36 +3141,36 @@ Resources:
         EntryPoints:
           - redacted-app.ts
 
-  RetryLogGroup:
+  PublishToAccountsRetryLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: "/aws/lambda/RetryFunction"
+      LogGroupName: "/aws/lambda/PublishToAccountsRetryFunction"
       RetentionInDays: 7
 
-  RetryFunctionPermission:
+  PublishToAccountsRetryFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref RetryFunction
+      FunctionName: !Ref PublishToAccountsRetryFunction
       Principal: sqs.amazonaws.com
       SourceAccount: !Sub "${AWS::AccountId}"
       SourceArn: !Sub "${PublishToAccountsSQSDLQueue.Arn}"
 
-  RetryFunction:
+  PublishToAccountsRetryFunction:
     DependsOn:
-      - RetryLogGroup
-      - RedactedLambdaAccessRole
+      - PublishToAccountsRetryLogGroup
+      - PublishToAccountsAccessRole
       - PublishToAccountsSQSDLQueue
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: "RetryFunction"
+      FunctionName: "PublishToAccountsRetryFunction"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: retry-app.handler
       Runtime: nodejs14.x
       Timeout: 30
-      Role: !GetAtt  RedactedLambdaAccessRole.Arn
+      Role: !GetAtt  PublishToAccountsAccessRole.Arn
       Events:
         AccountsSQSRetryEvent:
           Type: SQS
@@ -3197,11 +3197,11 @@ Resources:
 
   PublishToAccountsSQSEventFailureErrorMetric:
     DependsOn:
-      - RedactedFunction
+      - PublishToAccountsRedactedFunction
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterPattern: "?ERROR"
-      LogGroupName: "/aws/lambda/RedactedFunction"
+      LogGroupName: "/aws/lambda/PublishToAccountsRedactedFunction"
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: "lambda/di/txma/errors"
@@ -3224,11 +3224,11 @@ Resources:
 
   PublishToAccountsSQSRetryEventFailureErrorMetric:
     DependsOn:
-      - RetryFunction
+      - PublishToAccountsRetryFunction
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterPattern: "?ERROR"
-      LogGroupName: "/aws/lambda/RetryFunction"
+      LogGroupName: "/aws/lambda/PublishToAccountsRetryFunction"
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: "lambda/di/txma/errors"
@@ -3250,10 +3250,10 @@ Resources:
       Namespace: "lambda/di/txma/errors"
 
 
-  RedactedFunctionTestInvokePermission:
+  PublishToAccountsRedactedFunctionTestInvokePermission:
     Type: AWS::Lambda::Permission
     Condition: DeployTestRolePolicy
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref RedactedFunction
+      FunctionName: !Ref PublishToAccountsRedactedFunction
       Principal: !Ref TestRoleArn
