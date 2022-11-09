@@ -3021,7 +3021,7 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt  PublishToAccountsSQSDLQueue.Arn
         maxReceiveCount: 5
-      MessageRetentionPeriod: 86400 #1 day
+      MessageRetentionPeriod: 604800 #7 day
       RedriveAllowPolicy:
         redrivePermission: denyAll
 
@@ -3030,7 +3030,7 @@ Resources:
     Properties:
       QueueName: !Sub "PublishToAccountsSQSDLQueue-${Environment}"
       KmsMasterKeyId: !GetAtt SQSKMSKeyPublishAccount.Arn
-      MessageRetentionPeriod: 345600 #4 day
+      MessageRetentionPeriod: 1209600 #14 day
       RedriveAllowPolicy:
         redrivePermission: allowAll
 
@@ -3073,6 +3073,12 @@ Resources:
               - 'kms:GenerateDataKey*'
               - 'kms:DescribeKey'
             Resource: !GetAtt SQSKMSKeyPublishAccount.Arn
+          - Effect: Allow
+            Action:
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt PublishToAccountsConsumeFailureMessageBucket.Arn
+              - !Sub "${PublishToAccountsConsumeFailureMessageBucket.Arn}/*"
 
   PublishToAccountsAccessRole:
     Type: AWS::IAM::Role
@@ -3089,6 +3095,7 @@ Resources:
               Service:
                 - sqs.amazonaws.com
                 - lambda.amazonaws.com
+                - s3.amazonaws.com
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
@@ -3181,6 +3188,7 @@ Resources:
         Variables:
           publishToAccountsARN: !GetAtt PublishToAccountsSQSQueue.Arn
           maxRetry: 3
+          publishToAccountsFailureBucketARN: !GetAtt PublishToAccountsConsumeFailureMessageBucket.Arn
           defaultComponentId: "ACCOUNTS"
       Policies:
         - SQSSendMessagePolicy:
@@ -3249,6 +3257,92 @@ Resources:
       MetricName: "Accounts SQS Publish Retry Failed Errors"
       Namespace: "lambda/di/txma/errors"
 
+  PublishToAccountsConsumeFailureMessageBucket:
+    DependsOn:
+      - PublishToAccountsConsumeFailureBucketLogsBucket
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-publish-to-accounts-fail"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref  PublishToAccountsConsumeFailureBucketLogsBucket
+        LogFilePrefix: "event-processing/publish-to-accounts-fail/"
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  PublishToAccountsConsumeFailureBucketObjectPutAlarm:
+    DependsOn:
+      - PublishToAccountsConsumeFailureMessageBucket
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub
+        - "S3PutObjectsAlarm-${BucketName}"
+        - BucketName: !Ref PublishToAccountsConsumeFailureMessageBucket
+      AlarmDescription: !Sub
+        - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
+        - BucketName: !Ref PublishToAccountsConsumeFailureMessageBucket
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      TreatMissingData: notBreaching
+      MetricName: "PutRequests"
+      Namespace: "AWS/S3"
+      Dimensions:
+        - Name: BucketName
+          Value: !Ref PublishToAccountsConsumeFailureMessageBucket
+        - Name: FilterId
+          Value: EntireBucket
+
+  PublishToAccountsConsumeFailureBucketLogsBucket:
+    Type: AWS::S3::Bucket
+    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-publish-to-accounts-fail-logs"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
+
+  PublishToAccountsConsumeFailureBucketLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PublishToAccountsConsumeFailureBucketLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${PublishToAccountsConsumeFailureBucketLogsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
 
   PublishToAccountsRedactedFunctionTestInvokePermission:
     Type: AWS::Lambda::Permission
