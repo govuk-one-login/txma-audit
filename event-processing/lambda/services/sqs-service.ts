@@ -8,7 +8,6 @@ export class SqsService {
     static async sendMessageToSQS(message: IRedactedAuditEvent, queueURL: string | undefined): Promise<void> {
 
         const cleanMessage = ObjectHelper.removeEmpty(message);
-        console.log('MessageBody to SQS: ' + JSON.stringify(cleanMessage));
         const params = {
             MessageAttributes: {
                 eventName: {
