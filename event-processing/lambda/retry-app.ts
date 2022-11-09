@@ -21,7 +21,6 @@ export const handler = async (event:SQSEvent): Promise<void> => {
     for (const record of event.Records) {
         const msgbody = record.body;
         console.log('Message Id ' + record.messageId);
-        console.log('Event Message : ' + msgbody);
         const redactedEvent: IRedactedAuditEvent = RedactedAuditEvent.fromJSONString(msgbody);
         if (redactedEvent.reIngestCount == undefined || redactedEvent.reIngestCount == 0 || redactedEvent.reIngestCount < maxRetryAttempt) {
             redactedEvent.reIngestCount = redactedEvent.reIngestCount + 1;
