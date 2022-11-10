@@ -27,6 +27,10 @@ describe('Unit test for cleansing-service', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             event_id: '123456789',
             reIngestCount: 0,
+            user: {
+                govuk_signin_journey_id: "",
+                user_id: ""
+            }
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(inputMessage)).toString();
