@@ -7,15 +7,6 @@ import { S3Client } from "@aws-sdk/client-s3";
 import {handler} from "../../retry-app";
 
 
-jest.mock('crypto', () => {
-    return {
-        randomUUID: jest.fn(() => {
-            return '58339721-64c9-486b-903f-ad7e63fc45de';
-        }),
-    };
-});
-
-
 describe('Unit test for app retryHandler', function () {
     let consoleMock: jest.SpyInstance;
     const snsMock = mockClient(SNSClient);
@@ -50,5 +41,5 @@ describe('Unit test for app retryHandler', function () {
         await handler(sqsEvent);
         expect(snsMock.commandCalls(PublishCommand).length).toEqual(0);
     });
-    
+
 });
