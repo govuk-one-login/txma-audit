@@ -35,5 +35,3 @@ export const handler = async (event:SQSEvent): Promise<void> => {
     }
     return;
 }
-
-

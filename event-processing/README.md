@@ -28,7 +28,7 @@ npx husky install
 Also, if running on Linux you may need to make sure the Husky scripts are executable:
 
 ```bash
-chmod ug+x .husky/*   
+chmod ug+x .husky/*
 chmod ug+x .git/hooks/*
 ```
 
