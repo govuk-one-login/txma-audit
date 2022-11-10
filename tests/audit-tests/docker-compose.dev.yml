@@ -14,7 +14,7 @@ services:
       - TEST_REPORT_ABSOLUTE_DIR=null
       - CFN_IPVCoreStubenvRL=https://user:qTdrBchPGyt2bxaCr3ve@di-ipv-core-stub.london.cloudapps.digital/
       - TEST_ENVIRONMENT=staging
-      - DRIVER=http://selenium-hub:4444/wd/hub 
+      - DRIVER=http://selenium-hub:4444/wd/hub
     build:
       dockerfile: dev.Dockerfile
       context: ./

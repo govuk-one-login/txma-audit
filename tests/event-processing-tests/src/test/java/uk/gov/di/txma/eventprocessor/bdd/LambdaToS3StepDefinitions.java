@@ -101,7 +101,6 @@ public class LambdaToS3StepDefinitions {
     @When("the {string} lambda is invoked")
     public void invokeAccountsLambda(String account) {
         String functionName = "EventProcessorFunction-" + account;
-//        String functionName = "EventProcessorFunction-App";
 
         // Opens the lambda client
         try (LambdaClient awsLambda = LambdaClient.builder()
@@ -417,7 +416,7 @@ public class LambdaToS3StepDefinitions {
         return false;
     }
 
-    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws InterruptedException {
+    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws IOException, InterruptedException {
 
         while (count < 11) {
             // Checks for latest key and saves the contents in the output variable
