@@ -3021,7 +3021,7 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt  PublishToAccountsSQSDLQueue.Arn
         maxReceiveCount: 5
-      MessageRetentionPeriod: 604800 #7 day
+      MessageRetentionPeriod: 604800 #7 days
       RedriveAllowPolicy:
         redrivePermission: denyAll
 
@@ -3030,7 +3030,7 @@ Resources:
     Properties:
       QueueName: !Sub "PublishToAccountsSQSDLQueue-${Environment}"
       KmsMasterKeyId: !GetAtt SQSKMSKeyPublishAccount.Arn
-      MessageRetentionPeriod: 1209600 #14 day
+      MessageRetentionPeriod: 1209600 #14 days
       RedriveAllowPolicy:
         redrivePermission: allowAll
 
