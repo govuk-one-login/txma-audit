@@ -15,8 +15,8 @@ export const handler = async (event: SNSEvent): Promise<void> => {
     const queueUrl = 'https://sqs.' + region + '.amazonaws.com/' + accountId + '/' + queueName;
     try {
         for (const record of event.Records) {
-
             const redactedMessage: IRedactedAuditEvent = RedactedService.applyRedaction(record.Sns.Message);
+            console.log('Message Id ' + record.Sns.MessageId);
             await SqsService.sendMessageToSQS(redactedMessage, queueUrl);
         }
     }catch(error){
