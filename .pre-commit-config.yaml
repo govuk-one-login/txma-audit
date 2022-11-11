@@ -18,8 +18,8 @@ repos:
         exclude: package.lock.json
 -   repo: local
     hooks:
-      - id: husky-pre-commit
+    -   id: husky-pre-commit
         name: husky-pre-commit
-        entry: bash '.husky/pre-commit'
+        entry: bash 'pre-commit'
         language: system
         pass_filenames: false
