@@ -78,25 +78,23 @@ export class RedactedAuditEvent  implements  IRedactedAuditEvent {
         })[0];
 
 
-        if (JSONPath({
-            path: "$.user.user_id",
-            json: snsMessage
-        })[0] != undefined) {
-            (redactedAuditData.user as IRedactedAuditEventUserMessage).user_id = JSONPath({
-                path: "$.user.user_id",
-                json: snsMessage
-            })[0];
-        }
+         const  userId = JSONPath({
+             path: "$.user.user_id",
+             json: snsMessage
+         })[0] ;
 
-        if (JSONPath({
+         if (userId != undefined) {
+             (redactedAuditData.user as IRedactedAuditEventUserMessage).user_id =  userId;
+         }
+
+        const govuk_signin_journey_id = JSONPath({
             path: "$.user.govuk_signin_journey_id",
             json: snsMessage
-        })[0] != undefined) {
-            (redactedAuditData.user as IRedactedAuditEventUserMessage).govuk_signin_journey_id = JSONPath({
-                path: "$.user.govuk_signin_journey_id",
-                json: snsMessage
-            })[0];
-        }
+        })[0];
+
+         if (govuk_signin_journey_id !=undefined) {
+            (redactedAuditData.user as IRedactedAuditEventUserMessage).govuk_signin_journey_id = govuk_signin_journey_id;
+         }
 
         return redactedAuditData;
     }
@@ -110,19 +108,3 @@ export class RedactedAuditEvent  implements  IRedactedAuditEvent {
         };
     }
 
-export class RedactedAuditEventUserMessage {
-    static fromObject(object: any): IRedactedAuditEventUserMessage {
-        const user = createBaseRedactedAuditEventUserMessage();
-        for (const value in object) {
-            switch (value) {
-                case 'user_id':
-                    user.user_id = object.user_id;
-                    break;
-                case 'govuk_signin_journey_id':
-                    user.govuk_signin_journey_id = object.govuk_signin_journey_id;
-                    break;
-            }
-        }
-        return user;
-    }
-}
