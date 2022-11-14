@@ -3,3 +3,6 @@
 .idea/aws.xml
 .idea/*
 **/*.DS_Store
+.idea/di-txma-audit.iml
+.idea/modules.xml
+.idea/vcs.xml
