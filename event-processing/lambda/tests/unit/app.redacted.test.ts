@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { TestHelper } from '../test-helpers/test-helper';
-import {RedactedService} from "../../services/redacted-service";
+import {AccountsRedactedService} from "../../services/redacted-service";
 import {IAuditEvent, IAuditEventUserMessage} from "../../models/audit-event";
 import {IRedactedAuditEvent} from "../../models/redacted-event";
 
@@ -33,11 +33,14 @@ describe('Unit test for app handler', function () {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
             reIngestCount: 0,
+            user: {
+                govuk_signin_journey_id: "",
+                user_id: ""
+            }
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        console.log('SourceData' + data);
-        const result = RedactedService.applyRedaction(data);
+        const result = AccountsRedactedService.applyRedaction(data);
             expect(result).toEqual(expectedResult);
     });
 
@@ -82,8 +85,7 @@ describe('Unit test for app handler', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        console.log('SourceData' + data);
-        const result = RedactedService.applyRedaction(data);
+        const result = AccountsRedactedService.applyRedaction(data);
         expect(result).toEqual(expectedResult);
     });
 
@@ -121,13 +123,13 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             reIngestCount:0,
             user: {
+                govuk_signin_journey_id: '',
                 user_id: 'some_user_id',
             },
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        console.log('SourceData' + data);
-        const result = RedactedService.applyRedaction(data);
+        const result = AccountsRedactedService.applyRedaction(data);
         expect(result).toEqual(expectedResult);
     });
 
@@ -166,12 +168,12 @@ describe('Unit test for app handler', function () {
             reIngestCount:0,
             user: {
                 govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
+                user_id: ""
             },
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        console.log('SourceData' + data);
-        const result = RedactedService.applyRedaction(data);
+        const result = AccountsRedactedService.applyRedaction(data);
         expect(result).toEqual(expectedResult);
     });
 

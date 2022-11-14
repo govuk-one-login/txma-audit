@@ -1,4 +1,5 @@
-import {ICleansedEvidenceEvent, ICleansedExtensionsEvent, ICleansedUserEvent} from "./cleansed-event";
+import { JSONPath } from 'jsonpath-plus';
+
 
 export interface IRedactedAuditEvent {
     event_id: string;
@@ -20,7 +21,7 @@ function createBaseRedactedAuditEvent(): IRedactedAuditEvent {
         timestamp: 0,
         timestamp_formatted: '',
         event_name: '',
-        user: undefined,
+        user: createBaseRedactedAuditEventUserMessage(),
         reIngestCount: 0,
     };
 }
@@ -47,82 +48,63 @@ export class RedactedAuditEvent  implements  IRedactedAuditEvent {
         this.timestamp = timestamp;
         this.timestamp_formatted = timestamp_formatted;
         this.reIngestCount = reIngestCount;
-
-        if (user != undefined) {
-
-            if ((user as IRedactedAuditEventUserMessage).govuk_signin_journey_id && !((user as IRedactedAuditEventUserMessage).user_id)) {
-                this.user = {
-                    govuk_signin_journey_id: (user as IRedactedAuditEventUserMessage).govuk_signin_journey_id,
-                } as IRedactedAuditEventUserMessage;
-            }
-
-            if ((user as IRedactedAuditEventUserMessage).user_id && !((user as IRedactedAuditEventUserMessage).govuk_signin_journey_id)) {
-                this.user = {
-                    user_id: (user as IRedactedAuditEventUserMessage).user_id,
-                } as IRedactedAuditEventUserMessage;
-            }
-
-
-            if ((user as IRedactedAuditEventUserMessage).govuk_signin_journey_id && (user as IRedactedAuditEventUserMessage).user_id) {
-                this.user = {
-                    govuk_signin_journey_id: (user as IRedactedAuditEventUserMessage).govuk_signin_journey_id,
-                    user_id: (user as IRedactedAuditEventUserMessage).user_id,
-                } as IRedactedAuditEventUserMessage;
-            }
-        }
-
     }
 
+    static accountsDataExtractor(snsMessage: Object): IRedactedAuditEvent {
+        const redactedAuditData: IRedactedAuditEvent = createBaseRedactedAuditEvent();
 
-    static fromJSONString(object: string): IRedactedAuditEvent {
-        const event = createBaseRedactedAuditEvent();
-        const jsonObject = JSON.parse(object);
-        for (const value in jsonObject) {
-            switch (value) {
-                case 'event_id':
-                    event.event_id = jsonObject[value];
-                    break;
-                case 'timestamp':
-                    event.timestamp = jsonObject[value];
-                    break;
-                case 'timestamp_formatted':
-                    event.timestamp_formatted = jsonObject[value];
-                    break;
-                case 'event_name':
-                    event.event_name = jsonObject[value];
-                    break;
-                case 'user':
-                    event.user = RedactedAuditEventUserMessage.fromObject(jsonObject[value]);
-                    break;
-                case 'reIngestCount':
-                    event.reIngestCount = jsonObject[value];
-                    break;
-            }
-        }
-        return event;
+        redactedAuditData.event_id = JSONPath({
+            path: "$.event_id",
+            json: snsMessage
+        })[0];
+
+        redactedAuditData.event_name = JSONPath({
+            path: "$.event_name",
+            json: snsMessage
+        })[0];
+        redactedAuditData.timestamp = JSONPath({
+            path: "$.timestamp",
+            json: snsMessage
+        })[0];
+
+        redactedAuditData.timestamp_formatted = JSONPath({
+            path: "$.timestamp_formatted",
+            json: snsMessage
+        })[0];
+
+        redactedAuditData.reIngestCount = JSONPath({
+            path: "$.reIngestCount",
+            json: snsMessage
+        })[0];
+
+
+         const  userId = JSONPath({
+             path: "$.user.user_id",
+             json: snsMessage
+         })[0] ;
+
+         if (userId != undefined) {
+             (redactedAuditData.user as IRedactedAuditEventUserMessage).user_id =  userId;
+         }
+
+        const govuk_signin_journey_id = JSONPath({
+            path: "$.user.govuk_signin_journey_id",
+            json: snsMessage
+        })[0];
+
+         if (govuk_signin_journey_id !=undefined) {
+            (redactedAuditData.user as IRedactedAuditEventUserMessage).govuk_signin_journey_id = govuk_signin_journey_id;
+         }
+
+        return redactedAuditData;
     }
+
 }
 
-function createBaseRedactedAuditEventUserMessage(): IRedactedAuditEventUserMessage {
-    return {
-        user_id: '',
-        govuk_signin_journey_id: '',
-    };
-}
-
-export class RedactedAuditEventUserMessage {
-    static fromObject(object: any): IRedactedAuditEventUserMessage {
-        const user = createBaseRedactedAuditEventUserMessage();
-        for (const value in object) {
-            switch (value) {
-                case 'user_id':
-                    user.user_id = object.user_id;
-                    break;
-                case 'govuk_signin_journey_id':
-                    user.govuk_signin_journey_id = object.govuk_signin_journey_id;
-                    break;
-            }
-        }
-        return user;
+    function createBaseRedactedAuditEventUserMessage(): IRedactedAuditEventUserMessage {
+        return {
+            user_id: '',
+            govuk_signin_journey_id: '',
+        };
     }
-}
+
