@@ -3,7 +3,7 @@ import { CleansingService } from '../../../services/cleansing-service';
 import { IEnrichedAuditEvent } from '../../../models/enriched-audit-event';
 import { ICleansedEvent } from '../../../models/cleansed-event';
 import {TestHelper} from "../../test-helpers/test-helper";
-import {RedactedService} from "../../../services/redacted-service";
+import {AccountsRedactedService} from "../../../services/redacted-service";
 import {IRedactedAuditEvent} from "../../../models/redacted-event";
 
 describe('Unit test for cleansing-service', function () {
@@ -34,6 +34,6 @@ describe('Unit test for cleansing-service', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(inputMessage)).toString();
-        expect(RedactedService.applyRedaction(data)).toEqual(expectedMessage);
+        expect(AccountsRedactedService.applyRedaction(data)).toEqual(expectedMessage);
     });
 });
