@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { TestHelper } from '../test-helpers/test-helper';
-import {RedactedService} from "../../services/redacted-service";
+import {AccountsRedactedService} from "../../services/redacted-service";
 import {IAuditEvent, IAuditEventUserMessage} from "../../models/audit-event";
 import {IRedactedAuditEvent} from "../../models/redacted-event";
 
@@ -40,7 +40,7 @@ describe('Unit test for app handler', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        const result = RedactedService.applyRedaction(data);
+        const result = AccountsRedactedService.applyRedaction(data);
             expect(result).toEqual(expectedResult);
     });
 
@@ -85,7 +85,7 @@ describe('Unit test for app handler', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        const result = RedactedService.applyRedaction(data);
+        const result = AccountsRedactedService.applyRedaction(data);
         expect(result).toEqual(expectedResult);
     });
 
@@ -129,7 +129,7 @@ describe('Unit test for app handler', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        const result = RedactedService.applyRedaction(data);
+        const result = AccountsRedactedService.applyRedaction(data);
         expect(result).toEqual(expectedResult);
     });
 
@@ -173,7 +173,7 @@ describe('Unit test for app handler', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        const result = RedactedService.applyRedaction(data);
+        const result = AccountsRedactedService.applyRedaction(data);
         expect(result).toEqual(expectedResult);
     });
 
