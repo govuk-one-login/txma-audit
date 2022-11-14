@@ -3021,7 +3021,7 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt  PublishToAccountsSQSDLQueue.Arn
         maxReceiveCount: 5
-      MessageRetentionPeriod: 604800 #7 day
+      MessageRetentionPeriod: 604800 #7 days
       RedriveAllowPolicy:
         redrivePermission: denyAll
 
@@ -3030,7 +3030,7 @@ Resources:
     Properties:
       QueueName: !Sub "PublishToAccountsSQSDLQueue-${Environment}"
       KmsMasterKeyId: !GetAtt SQSKMSKeyPublishAccount.Arn
-      MessageRetentionPeriod: 1209600 #14 day
+      MessageRetentionPeriod: 1209600 #14 days
       RedriveAllowPolicy:
         redrivePermission: allowAll
 
@@ -3127,7 +3127,7 @@ Resources:
       FunctionName: "PublishToAccountsRedactedFunction"
       CodeUri: ../event-processing/lambda
       PackageType: Zip
-      Handler: redacted-app.handler
+      Handler: accounts-redacted-app.handler
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt  PublishToAccountsAccessRole.Arn
@@ -3146,7 +3146,7 @@ Resources:
         Target: "es2020"
         Sourcemap: true
         EntryPoints:
-          - redacted-app.ts
+          - accounts-redacted-app.ts
 
   PublishToAccountsRetryLogGroup:
     Type: AWS::Logs::LogGroup

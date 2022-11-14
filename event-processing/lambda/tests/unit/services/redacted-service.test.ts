@@ -1,13 +1,11 @@
 /* eslint-disable */
-import { CleansingService } from '../../../services/cleansing-service';
 import { IEnrichedAuditEvent } from '../../../models/enriched-audit-event';
-import { ICleansedEvent } from '../../../models/cleansed-event';
 import {TestHelper} from "../../test-helpers/test-helper";
-import {RedactedService} from "../../../services/redacted-service";
+import {AccountsRedactedService} from "../../../services/redacted-service";
 import {IRedactedAuditEvent} from "../../../models/redacted-event";
 
-describe('Unit test for cleansing-service', function () {
-    it('returns a cleansed event', async () => {
+describe('Unit test for accountsredacted-service', function () {
+    it('returns a redacted event', async () => {
         const inputMessage: IEnrichedAuditEvent = {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
@@ -27,9 +25,13 @@ describe('Unit test for cleansing-service', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             event_id: '123456789',
             reIngestCount: 0,
+            user: {
+                govuk_signin_journey_id: "",
+                user_id: ""
+            }
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(inputMessage)).toString();
-        expect(RedactedService.applyRedaction(data)).toEqual(expectedMessage);
+        expect(AccountsRedactedService.applyRedaction(data)).toEqual(expectedMessage);
     });
 });
