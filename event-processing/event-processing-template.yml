@@ -148,8 +148,8 @@ Resources:
             Resource:
               - "*"
           - Effect: "Allow"
-            Principal: # TODO replace below value with AccountsTeam ARN
-              AWS: "{{resolve:ssm:AuditAccountARN}}"
+            Principal:
+              AWS: "{{resolve:ssm:AccountsARN}}"
             Action:
               - 'kms:Decrypt'
             Resource: '*'
@@ -3100,6 +3100,24 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+  PublishToAccountsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      "Queues": [
+          { "Ref" : "PublishToAccountsSQSQueue" }
+        ]
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'sqs:ChangeMessageVisibility'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:GetQueueAttributes'
+              - 'sqs:DeleteMessage'
+            Effect: "Allow"
+            Resource: !Sub "${PublishToAccountsSQSQueue.Arn}"
+            Principal:
+              AWS: "{{resolve:ssm:AccountsARN}}"
 
   PublishToAccountsRedactedLogGroup:
     Type: AWS::Logs::LogGroup
