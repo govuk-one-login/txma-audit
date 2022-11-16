@@ -26,7 +26,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8        
+          python-version: 3.8
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
       - name: Assume AWS role
@@ -68,7 +68,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8        
+          python-version: 3.8
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
       - name: Assume AWS role
