@@ -107,4 +107,3 @@ export class RedactedAuditEvent  implements  IRedactedAuditEvent {
             govuk_signin_journey_id: '',
         };
     }
-
