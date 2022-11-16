@@ -25,6 +25,7 @@ describe('Unit test for accountsredacted-service', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             event_id: '123456789',
             reIngestCount: 0,
+            client_id: 'An Example Client',
             user: {
                 govuk_signin_journey_id: "",
                 user_id: ""
