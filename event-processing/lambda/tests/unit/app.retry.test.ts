@@ -35,6 +35,7 @@ describe('Unit test for app retryHandler', function () {
             event_name: 'AUTH_AUTH_CODE_ISSUED',
             event_id: '1234',
             reIngestCount:0,
+            client_id: 'My-client-id',
         };
 
         const sqsEvent = TestHelper.createSQSEventWithEncodedMessage(TestHelper.encodeAuditEvent(exampleMessage));

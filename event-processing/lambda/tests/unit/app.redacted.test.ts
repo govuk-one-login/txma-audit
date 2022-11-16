@@ -29,6 +29,7 @@ describe('Unit test for app handler', function () {
 
         const expectedResult: IRedactedAuditEvent = {
             event_id: '123456789',
+            client_id: 'My-client-id',
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
@@ -74,6 +75,7 @@ describe('Unit test for app handler', function () {
 
         const expectedResult: IRedactedAuditEvent = {
             event_id: '123456789',
+            client_id: 'My-client-id',
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
@@ -118,6 +120,7 @@ describe('Unit test for app handler', function () {
 
         const expectedResult: IRedactedAuditEvent = {
             event_id: '123456789',
+            client_id: 'My-client-id',
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
@@ -162,6 +165,7 @@ describe('Unit test for app handler', function () {
 
         const expectedResult: IRedactedAuditEvent = {
             event_id: '123456789',
+            client_id: 'My-client-id',
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
