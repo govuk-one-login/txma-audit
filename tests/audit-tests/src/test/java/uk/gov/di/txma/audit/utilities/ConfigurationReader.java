@@ -30,4 +30,12 @@ public class ConfigurationReader {
         }
         return AppURL;
     }
+
+    public static String getAuthURL() {
+        String AppURL = System.getenv("CFN_AuthURL");
+        if (AppURL == null) {
+            throw new IllegalArgumentException("Environment variable CFN_AuthURL is not set");
+        }
+        return AppURL;
+    }
 }
