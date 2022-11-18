@@ -25,13 +25,15 @@ jobs:
       run:
         working-directory: ${{ env.eventProcessorDirectory }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
       - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v1
+        uses: aws-actions/setup-sam@v2
       - name: Assume AWS role
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_EVENT_PROCESSING }}
           aws-region:  ${{ env.awsRegion }}
@@ -88,13 +90,15 @@ jobs:
       run:
         working-directory: ${{ env.auditDirectory }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
       - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v1
+        uses: aws-actions/setup-sam@v2
       - name: Assume AWS role
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_AUDIT }}
           aws-region:  ${{ env.awsRegion }}
@@ -151,11 +155,11 @@ jobs:
       run:
         working-directory: ${{ env.analysisDirectory }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v1
+        uses: aws-actions/setup-sam@v2
       - name: Assume AWS role
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_ANALYSIS }}
           aws-region: ${{ env.awsRegion }}

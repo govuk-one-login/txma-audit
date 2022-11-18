@@ -166,3 +166,4 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       |         |          |           | DCMAW_CRI_ABORT     |
       |         |          |           | DCMAW_CRI_4XXERROR  |
       |         |          |           | DCMAW_CRI_5XXERROR  |
+
