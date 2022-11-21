@@ -584,7 +584,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         expect(consoleMock).toHaveBeenCalledTimes(3);
         expect(consoleMock).toHaveBeenNthCalledWith(
             1,
-            '[WARN] UNKNOWN FIELDS\n{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"1609462861","message":"Unknown fields in message.","unknownFields":[{"key":"new_unknown_field","fieldName":"AuditEvent"},{"key":"unknown_user_field","fieldName":"User"}]}',
+            '[WARN] UNKNOWN FIELDS\n{"resourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","timestamp":"1609462861","message":"Unknown fields in message.","unknownFields":[{"key":"new_unknown_field","fieldName":"AuditEvent"},{"key":"unknown_user_field","fieldName":"User"}]}',
         );
         expect(consoleMock).toHaveBeenNthCalledWith(2, 'Topic ARN: SOME-SNS-TOPIC');
         expect(consoleMock).toHaveBeenNthCalledWith(3, 'MessageID is 1');
@@ -781,7 +781,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 2');
         expect(consoleMock).toHaveBeenNthCalledWith(
             5,
-            '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"","timestamp":"1609462861","requiredField":"event_name","message":"event_name is a required field."}}',
+            '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"resourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"","timestamp":"1609462861","requiredField":"event_name","message":"event_name is a required field."}}',
         );
         expect(snsMock).toHaveReceivedCommandWith(PublishCommand, {
             Message: JSON.stringify(expectedResult),
@@ -896,7 +896,7 @@ describe('Unit test for app eventProcessorHandler', function () {
         expect(consoleMock).toHaveBeenNthCalledWith(4, 'MessageID is 2');
         expect(consoleMock).toHaveBeenNthCalledWith(
             5,
-            '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"sqsResourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","requiredField":"timestamp","message":"timestamp is a required field."}}',
+            '[ERROR] VALIDATION ERROR\n{"requireFieldError":{"resourceName":"arn:aws:sqs:us-west-2:123456789012:SQSQueue","eventId":"66258f3e-82fc-4f61-9ba0-62424e1f06b4","eventName":"AUTHENTICATION_ATTEMPT","requiredField":"timestamp","message":"timestamp is a required field."}}',
         );
         expect(snsMock).toHaveReceivedCommandWith(PublishCommand, {
             Message: JSON.stringify(expectedResult),
