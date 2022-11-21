@@ -3021,7 +3021,7 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt  PublishToAccountsSQSDLQueue.Arn
         maxReceiveCount: 5
-      MessageRetentionPeriod: 3600 #604800 #7 days
+      MessageRetentionPeriod: 604800 #7 days
       RedriveAllowPolicy:
         redrivePermission: denyAll
 
