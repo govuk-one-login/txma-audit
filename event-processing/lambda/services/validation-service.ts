@@ -54,7 +54,7 @@ export class ValidationService {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
                 error: {
-                    sqsResourceName: eventSource,
+                    resourceName: eventSource,
                     eventId: eventMessage.event_id,
                     eventName: eventMessage.event_name,
                     timestamp: eventMessage.timestamp.toString(),
@@ -69,7 +69,7 @@ export class ValidationService {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
                 error: {
-                    sqsResourceName: eventSource,
+                    resourceName: eventSource,
                     eventId: eventMessage.event_id,
                     eventName: eventMessage.event_name,
                     timestamp: undefined,
@@ -84,7 +84,7 @@ export class ValidationService {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
                 error: {
-                    sqsResourceName: eventSource,
+                    resourceName: eventSource,
                     eventId: eventMessage.event_id,
                     eventName: eventMessage.event_name,
                     timestamp: eventMessage.timestamp.toString(),
@@ -99,7 +99,7 @@ export class ValidationService {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
                 error: {
-                    sqsResourceName: eventSource,
+                    resourceName: eventSource,
                     eventId: eventMessage.event_id,
                     eventName: eventMessage.event_name,
                     timestamp: eventMessage.timestamp.toString(),
@@ -114,7 +114,7 @@ export class ValidationService {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
                 error: {
-                    sqsResourceName: eventSource,
+                    resourceName: eventSource,
                     eventId: eventMessage.event_id,
                     eventName: eventMessage.event_name,
                     timestamp: eventMessage.timestamp.toString(),
