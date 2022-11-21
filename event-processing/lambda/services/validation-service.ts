@@ -1,4 +1,4 @@
-import { SQSRecord } from 'aws-lambda';
+import { SNSEventRecord, SQSRecord } from 'aws-lambda';
 import { IAuditEvent, AuditEvent } from '../models/audit-event';
 import { IValidationResponse } from '../models/validation-response.interface';
 import { IUnknownFieldsError } from '../models/unknown-fields-error.interface';
@@ -11,10 +11,20 @@ export class ValidationService {
     static async validateSQSRecord(record: SQSRecord): Promise<IValidationResponse> {
         const message = record.body;
 
-        return await this.isValidEventMessage(message, record.eventSourceARN);
+        return await this.isValidEventMessage(message, record.eventSourceARN, false);
     }
 
-    private static async isValidEventMessage(message: string, eventSource: string): Promise<IValidationResponse> {
+    static async validateSNSRecord(record: SNSEventRecord): Promise<IValidationResponse> {
+        const message = record.Sns.Message;
+
+        return await this.isValidEventMessage(message, record.EventSubscriptionArn, true);
+    }
+
+    private static async isValidEventMessage(
+        message: string,
+        eventSource: string,
+        isAccounts: boolean,
+    ): Promise<IValidationResponse> {
         const eventMessage = AuditEvent.fromJSONString(message) as IAuditEventUnknownFields;
         const eventMessageUser = eventMessage.user as IUserUnknownFields;
         if (
@@ -22,7 +32,7 @@ export class ValidationService {
             (eventMessageUser?._unknownFields && eventMessageUser?._unknownFields.size > 0)
         ) {
             const unknownFieldsError: IUnknownFieldsError = {
-                sqsResourceName: eventSource,
+                resourceName: eventSource,
                 eventId: eventMessage.event_id,
                 eventName: eventMessage.event_name,
                 timestamp: eventMessage.timestamp.toString(),
@@ -65,6 +75,51 @@ export class ValidationService {
                     timestamp: undefined,
                     requiredField: RequiredFieldsEnum.timestamp,
                     message: 'timestamp is a required field.',
+                },
+            };
+        }
+
+        if (isAccounts && !eventMessage.client_id) {
+            return {
+                isValid: false,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent),
+                error: {
+                    sqsResourceName: eventSource,
+                    eventId: eventMessage.event_id,
+                    eventName: eventMessage.event_name,
+                    timestamp: eventMessage.timestamp.toString(),
+                    requiredField: RequiredFieldsEnum.clientId,
+                    message: 'client_id is a required field.',
+                },
+            };
+        }
+
+        if (isAccounts && !eventMessage.user?.user_id) {
+            return {
+                isValid: false,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent),
+                error: {
+                    sqsResourceName: eventSource,
+                    eventId: eventMessage.event_id,
+                    eventName: eventMessage.event_name,
+                    timestamp: eventMessage.timestamp.toString(),
+                    requiredField: RequiredFieldsEnum.userId,
+                    message: 'user_id is a required field.',
+                },
+            };
+        }
+
+        if (isAccounts && !eventMessage.user?.govuk_signin_journey_id) {
+            return {
+                isValid: false,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent),
+                error: {
+                    sqsResourceName: eventSource,
+                    eventId: eventMessage.event_id,
+                    eventName: eventMessage.event_name,
+                    timestamp: eventMessage.timestamp.toString(),
+                    requiredField: RequiredFieldsEnum.journeyId,
+                    message: 'govuk_signin_journey_id is a required field.',
                 },
             };
         }
