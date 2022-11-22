@@ -21,7 +21,7 @@ export const handler = async (event: SNSEvent): Promise<void> => {
             const validationResponse = await ValidationService.validateSNSRecord(record as SNSEventRecord);
             if (!validationResponse.isValid) {
                 console.log(
-                    'VALIDATION ERROR\n' +
+                    '[ERROR] VALIDATION ERROR\n' +
                         JSON.stringify(
                             new ValidationException(
                                 'An event message failed validation.',
@@ -37,7 +37,7 @@ export const handler = async (event: SNSEvent): Promise<void> => {
         }
     } catch (error) {
         const errorWithMessage = ErrorService.toErrorWithMessage(error);
-        console.log('ERROR SQS Publish :\n Error: ${errorWithMessage.message}', errorWithMessage.stack);
+        console.log('[ERROR] SQS Publish ERROR :\n  ${errorWithMessage.message}', errorWithMessage.stack);
         throw error;
     }
 
