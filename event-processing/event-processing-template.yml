@@ -3182,7 +3182,7 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       Statistic: Sum
-      Period: 86400
+      Period: 86400 #Every one day
       Threshold: 1
       MetricName: "Unknown Fields PublishToAccounts"
       Namespace: "lambda/di/txma/errors"
@@ -3192,7 +3192,7 @@ Resources:
       - PublishToAccountsRedactedFunction
     Type: AWS::Logs::MetricFilter
     Properties:
-      FilterPattern: "VALIDATION ERROR"
+      FilterPattern: "ERROR VALIDATION ERROR"
       LogGroupName: "/aws/lambda/PublishToAccountsRedactedFunction"
       MetricTransformations:
         - MetricValue: "1"
@@ -3209,9 +3209,9 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       Statistic: Sum
-      Period: 86400
+      Period: 86400 #Every one day
       Threshold: 1
-      MetricName: "Validation Errors PublishtToAccounts"
+      MetricName: "Validation Errors PublishToAccounts"
       Namespace: "lambda/di/txma/errors"
 
   PublishToAccountsSQSEventFailureErrorMetric:
@@ -3219,7 +3219,7 @@ Resources:
       - PublishToAccountsRedactedFunction
     Type: AWS::Logs::MetricFilter
     Properties:
-      FilterPattern: "ERROR SQS Publish"
+      FilterPattern: "ERROR SQS Publish ERROR"
       LogGroupName: "/aws/lambda/PublishToAccountsRedactedFunction"
       MetricTransformations:
         - MetricValue: "1"
@@ -3236,7 +3236,7 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       EvaluationPeriods: 1
       Statistic: Sum
-      Period: 86400
+      Period: 3600 #86400 #Every one day
       Threshold: 1
       MetricName: "Accounts SQS Publish Failed Errors"
       Namespace: "lambda/di/txma/errors"
