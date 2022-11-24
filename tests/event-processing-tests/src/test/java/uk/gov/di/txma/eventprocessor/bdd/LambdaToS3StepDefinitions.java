@@ -685,14 +685,14 @@ public class LambdaToS3StepDefinitions {
 //        List<Message> messages = sqs.receiveMessage(SqsUrl).getMessages();
     }
 
-    public class AuthtoAccounts {
-        @Given("the SQS data file {string} is available for the {string} team")
-        public void theDataFileIsAvailableForTheTeam(String fileName, String account) throws IOException {
-            JSONObject rawJSON = new JSONObject(readJSONFile(fileName));
-            JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
-            lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
-        }
+    @Given("the SQS data file {string} is available for the {string} team")
+    public void the_sqs_data_file_is_available_for_the_team(String fileName, String account) throws IOException {
+        // Write code here that turns the phrase above into concrete actions
+        JSONObject rawJSON = new JSONObject(readJSONFile(fileName));
+        JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
     }
+
 
     public static void changeMessageVisibilitySingle(
             String queueName, int timeout) {
