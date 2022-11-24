@@ -1,10 +1,10 @@
 package uk.gov.di.txma.eventprocessor.bdd;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.cucumber.datatable.DataTable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
@@ -23,9 +23,23 @@ import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
 import software.amazon.awssdk.services.lambda.model.LambdaException;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,6 +69,7 @@ public class LambdaToS3StepDefinitions {
     JSONObject rawJSON;
 
     JSONObject enrichedJSON;
+    String SqsUrl="https://sqs.eu-west-2.amazonaws.com/750703655225/PublishToAccountsSQSQueue-build";
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -658,4 +673,49 @@ public class LambdaToS3StepDefinitions {
         createGZIP(rawJSON.toString(), pathOfFileToBeSentToS3);
         sendToS3Bucket("event-processing-" + System.getenv("TEST_ENVIRONMENT") + "-" + teamName + "-splunk-fail", pathOfFileToBeSentToS3);
     }
+
+    @Then("the SQS queue below should have a new event matching the output file {string} in the {string} folder")
+    public void theSQSQueueBelowShouldHaveANewEventMatchingTheOutputFileInTheFolder(String arg0, String arg1) throws InterruptedException {
+
+    }
+
+    @And("the the SQS queue below should have a new event matching the output file {string} in the {string} folder")
+    public void theTheSQSQueueBelowShouldHaveANewEventMatchingTheOutputFileInTheFolder(String arg0, String arg1) {
+        changeMessageVisibilitySingle(SqsUrl,30);
+//        List<Message> messages = sqs.receiveMessage(SqsUrl).getMessages();
+    }
+
+    public class AuthtoAccounts {
+        @Given("the SQS data file {string} is available for the {string} team")
+        public void theDataFileIsAvailableForTheTeam(String fileName, String account) throws IOException {
+            JSONObject rawJSON = new JSONObject(readJSONFile(fileName));
+            JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
+            lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
+        }
+    }
+
+    public static void changeMessageVisibilitySingle(
+            String queueName, int timeout) {
+        SqsClient sqs = SqsClient.builder().build();
+
+        // Get the receipt handle for the first message in the queue
+        ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
+                .queueUrl(queueName)
+                .build();
+        String receipt = sqs.receiveMessage(receiveRequest)
+                .messages()
+                .get(0)
+                .receiptHandle();
+        System.out.println(receipt);
+
+
+        ChangeMessageVisibilityRequest visibilityRequest = ChangeMessageVisibilityRequest.builder()
+                .queueUrl(queueName)
+                .receiptHandle(receipt)
+                .visibilityTimeout(timeout)
+                .build();
+        sqs.changeMessageVisibility(visibilityRequest);
+    }
+
+
 }
