@@ -3249,6 +3249,24 @@ Resources:
       MetricName: "Accounts SQS Publish Failed Errors"
       Namespace: "lambda/di/txma/errors"
 
+
+  PublishToAccountsSQSOldestMessageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Accounts SQS Publish OldestMessage Alarm"
+      AlarmName: "OldestMessageAlarm-PublishToAccounts"
+      MetricName: "ApproximateAgeOfOldestMessage"
+      Namespace: "AWS/SQS"
+      Dimensions:
+        - Name: "QueueName"
+          Value: !GetAtt PublishToAccountsSQSQueue.QueueName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 3600 #Message Older than an Hour
+      Threshold: 1
+
+
   PublishToAccountsRedactedFunctionTestInvokePermission:
     Type: AWS::Lambda::Permission
     Condition: DeployTestRolePolicy
