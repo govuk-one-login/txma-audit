@@ -3353,6 +3353,10 @@ Resources:
       AlarmDescription: "TxMATwoAudit Event Processor Unknown Fields Alarm"
       AlarmName: "UnknownFieldsAlarm-TxMATwoAudit"
       ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
       MetricName: "Unknown Fields TxMATwoAudit"
       Namespace: "lambda/di/txma/errors"
 
@@ -3640,10 +3644,6 @@ Resources:
         - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
         - BucketName: !Ref PublishToAccountsConsumeFailureMessageBucket
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 86400
-      Threshold: 1
       TreatMissingData: notBreaching
       MetricName: "PutRequests"
       Namespace: "AWS/S3"
@@ -3672,7 +3672,6 @@ Resources:
       Tags:
         - Key: CheckovRulesToSkip
           Value: CKV_AWS_18
-
 
   PublishToAccountsConsumeFailureBucketLogsBucketPolicy:
     Type: AWS::S3::BucketPolicy
