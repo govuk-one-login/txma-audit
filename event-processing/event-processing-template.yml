@@ -147,12 +147,15 @@ Resources:
               - "kms:*"
             Resource:
               - "*"
-          - Effect: "Allow"
-            Principal:
-              AWS: "{{resolve:ssm:AccountsARN}}"
-            Action:
-              - 'kms:Decrypt'
-            Resource: '*'
+          - !If
+            - IsProductionOrStaging
+            - Effect: "Allow"
+              Principal:
+                AWS: "{{resolve:ssm:AccountsARN}}"
+              Action:
+                - 'kms:Decrypt'
+              Resource: '*'
+            - !Ref "AWS::NoValue"
 
   SQSKMSKeyPublishAccountAlias:
     Type: AWS::KMS::Alias
