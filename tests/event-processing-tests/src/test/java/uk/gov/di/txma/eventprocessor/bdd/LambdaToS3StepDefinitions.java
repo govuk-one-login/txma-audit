@@ -1,13 +1,15 @@
 package uk.gov.di.txma.eventprocessor.bdd;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.cucumber.datatable.DataTable;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -19,23 +21,28 @@ import software.amazon.awssdk.services.cloudwatchlogs.model.DescribeLogStreamsRe
 import software.amazon.awssdk.services.cloudwatchlogs.model.GetLogEventsRequest;
 import software.amazon.awssdk.services.cloudwatchlogs.model.LogStream;
 import software.amazon.awssdk.services.cloudwatchlogs.model.OutputLogEvent;
-import software.amazon.awssdk.services.kms.KmsClient;
-import software.amazon.awssdk.services.kms.model.DecryptRequest;
-import software.amazon.awssdk.services.kms.model.DecryptResponse;
-import software.amazon.awssdk.services.kms.model.KmsException;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
 import software.amazon.awssdk.services.lambda.model.LambdaException;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,6 +72,9 @@ public class LambdaToS3StepDefinitions {
     JSONObject rawJSON;
 
     JSONObject enrichedJSON;
+
+    static String sqsoutputtext;
+    static String SqsUrl ="https://sqs.eu-west-2.amazonaws.com/750703655225/PublishToAccountsSQSQueue-build";
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -685,73 +695,34 @@ public class LambdaToS3StepDefinitions {
     }
 
 
-    public static void changeMessageVisibilitySingle(
-            String queueName, int timeout) {
+    public static void receiveSqsMessage(String queueName, int timeout) {
         SqsClient sqs = SqsClient.builder().build();
 
         // Get the receipt handle for the first message in the queue
         ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
                 .queueUrl(queueName)
                 .build();
-        String receipt = sqs.receiveMessage(receiveRequest)
+        Message message = sqs.receiveMessage(receiveRequest)
                 .messages()
-                .get(0)
-                .receiptHandle();
-        System.out.println("sqsoutput " +receipt);
-        decrypt(receipt);
-
-
-        ChangeMessageVisibilityRequest visibilityRequest = ChangeMessageVisibilityRequest.builder()
-                .queueUrl(queueName)
-                .receiptHandle(receipt)
-                .visibilityTimeout(timeout)
-                .build();
-        sqs.changeMessageVisibility(visibilityRequest);
+                .get(0);
+        sqsoutputtext = message.body();
+        System.out.println("sqsoutput " +sqsoutputtext);
     }
 
 
-    @And("the SQS below should have a new event matching the respective {string} output file {string} in the {string} folder")
-    public void theSQSBelowShouldHaveANewEventMatchingTheRespectiveOutputFileInTheFolder(String arg0, String arg1, String arg2) {
-        changeMessageVisibilitySingle(SqsUrl,30);
+    @Then("the SQS below should have a new event matching the respective {string} output file {string} in the {string} folder")
+    public void theSQSBelowShouldHaveANewEventMatchingTheRespectiveOutputFileInTheFolder(String arg0, String arg1, String arg2) throws JSONException, IOException {
+        receiveSqsMessage(SqsUrl,30);
+
+        Path expectedJson = Path.of(new File("/Users/dennythampi/IdeaProjects/di-txma-audit/tests/event-processing-tests/src/test/resources/Test Data/AuthOIDC/Accounts_expected.json").getAbsolutePath());
+        String file1 = Files.readString(expectedJson);
+        String file2 = sqsoutputtext;
+        JSONObject json1 = new JSONObject(file1);
+        JSONObject json2= new JSONObject(file2);
+
+       JSONAssert.assertEquals(json2.toString(),json1.toString(), JSONCompareMode.NON_EXTENSIBLE);
+       System.out.println("expectedoutput "+expectedJson);
+
     }
 
-    public static void decrypt(String data) {
-        System.out.println("hello");
-        String keyId = "f8f220ea-089c-4b86-a97d-ab86c59081ed";
-        Region region = Region.EU_WEST_2;
-        ProfileCredentialsProvider profileCredentialsProvider= ProfileCredentialsProvider.create();
-        System.out.println(profileCredentialsProvider.resolveCredentials().accessKeyId());
-        System.out.println(profileCredentialsProvider.resolveCredentials().secretAccessKey());
-
-////        KmsClient AWSKMS_CLIENT = KmsClient.builder()
-//                .region(region)
-//                .credentialsProvider(profileCredentialsProvider)
-//                .build();
-        KmsClient AWSKMS_CLIENT = KmsClient.create();
-
-        byte[] base64EncodedValue = Base64.getDecoder().decode(data);
-        ByteBuffer plaintext = ByteBuffer.wrap(base64EncodedValue);
-        DecryptResponse decryptResponse =null;
-        try {
-            DecryptRequest decryptRequest = DecryptRequest.builder()
-                    .ciphertextBlob(SdkBytes.fromUtf8String(data))
-                    .keyId(keyId)
-                    .build();
-
-            decryptResponse = AWSKMS_CLIENT.decrypt(decryptRequest);
-            if (decryptResponse == null)
-            System.out.println("decrypt response is null");
-//            decryptResponse.plaintext();
-            System.out.println("decryptout" +decryptResponse.toString());
-
-        } catch (KmsException e) {
-            System.out.println("catch");
-            System.out.println(e.getMessage());
-        }
-//        DecryptRequest dereq = new DecryptRequest().withCiphertextBlob(plaintext);
-//        DecryptResponse de = AWSKMS_CLIENT.decrypt(dereq);
-//        String decryptedData = StandardCharsets.UTF_8.decode(de.getPlaintext()).toString();
-//        return decryptedData;
-//        return decryptResponse.plaintext().toString();
-    }
 }
