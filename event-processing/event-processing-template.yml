@@ -147,12 +147,15 @@ Resources:
               - "kms:*"
             Resource:
               - "*"
-          - Effect: "Allow"
-            Principal:
-              AWS: "{{resolve:ssm:AccountsARN}}"
-            Action:
-              - 'kms:Decrypt'
-            Resource: '*'
+          - !If
+            - IsProductionOrStaging
+            - Effect: "Allow"
+              Principal:
+                AWS: "{{resolve:ssm:AccountsARN}}"
+              Action:
+                - 'kms:Decrypt'
+              Resource: '*'
+            - !Ref "AWS::NoValue"
 
   SQSKMSKeyPublishAccountAlias:
     Type: AWS::KMS::Alias
@@ -3111,15 +3114,27 @@ Resources:
         ]
       PolicyDocument:
         Statement:
+          # allow txma access
           - Action:
-              - 'sqs:ChangeMessageVisibility'
-              - 'sqs:ReceiveMessage'
-              - 'sqs:GetQueueAttributes'
-              - 'sqs:DeleteMessage'
+              - 'sqs:*'
             Effect: "Allow"
             Resource: !Sub "${PublishToAccountsSQSQueue.Arn}"
             Principal:
-              AWS: "{{resolve:ssm:AccountsARN}}"
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+          # allow accounts access
+          - !If
+            - IsProductionOrStaging
+            - Action:
+                - 'sqs:ChangeMessageVisibility'
+                - 'sqs:ReceiveMessage'
+                - 'sqs:GetQueueAttributes'
+                - 'sqs:DeleteMessage'
+              Effect: "Allow"
+              Resource: !Sub "${PublishToAccountsSQSQueue.Arn}"
+              # AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+              Principal:
+                AWS: "{{resolve:ssm:AccountsARN}}"
+            - !Ref "AWS::NoValue"
 
   PublishToAccountsRedactedLogGroup:
     Type: AWS::Logs::LogGroup
@@ -3248,6 +3263,24 @@ Resources:
       Threshold: 1
       MetricName: "Accounts SQS Publish Failed Errors"
       Namespace: "lambda/di/txma/errors"
+
+
+  PublishToAccountsSQSOldestMessageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Accounts SQS Publish OldestMessage Alarm"
+      AlarmName: "OldestMessageAlarm-PublishToAccounts"
+      MetricName: "ApproximateAgeOfOldestMessage"
+      Namespace: "AWS/SQS"
+      Dimensions:
+        - Name: "QueueName"
+          Value: !GetAtt PublishToAccountsSQSQueue.QueueName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 3600 #Message Older than an Hour
+      Threshold: 1
+
 
   PublishToAccountsRedactedFunctionTestInvokePermission:
     Type: AWS::Lambda::Permission
