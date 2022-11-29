@@ -7,6 +7,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -18,6 +19,10 @@ import software.amazon.awssdk.services.cloudwatchlogs.model.DescribeLogStreamsRe
 import software.amazon.awssdk.services.cloudwatchlogs.model.GetLogEventsRequest;
 import software.amazon.awssdk.services.cloudwatchlogs.model.LogStream;
 import software.amazon.awssdk.services.cloudwatchlogs.model.OutputLogEvent;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.model.DecryptRequest;
+import software.amazon.awssdk.services.kms.model.DecryptResponse;
+import software.amazon.awssdk.services.kms.model.KmsException;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
@@ -40,6 +45,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -679,11 +685,7 @@ public class LambdaToS3StepDefinitions {
 
     }
 
-    @And("the the SQS queue below should have a new event matching the output file {string} in the {string} folder")
-    public void theTheSQSQueueBelowShouldHaveANewEventMatchingTheOutputFileInTheFolder(String arg0, String arg1) {
-        changeMessageVisibilitySingle(SqsUrl,30);
-//        List<Message> messages = sqs.receiveMessage(SqsUrl).getMessages();
-    }
+
 
     @Given("the SQS data file {string} is available for the {string} team")
     public void the_sqs_data_file_is_available_for_the_team(String fileName, String account) throws IOException {
@@ -706,7 +708,8 @@ public class LambdaToS3StepDefinitions {
                 .messages()
                 .get(0)
                 .receiptHandle();
-        System.out.println(receipt);
+        System.out.println("sqsoutput " +receipt);
+        decrypt(receipt);
 
 
         ChangeMessageVisibilityRequest visibilityRequest = ChangeMessageVisibilityRequest.builder()
@@ -718,4 +721,48 @@ public class LambdaToS3StepDefinitions {
     }
 
 
+    @And("the SQS below should have a new event matching the respective {string} output file {string} in the {string} folder")
+    public void theSQSBelowShouldHaveANewEventMatchingTheRespectiveOutputFileInTheFolder(String arg0, String arg1, String arg2) {
+        changeMessageVisibilitySingle(SqsUrl,30);
+    }
+
+    public static void decrypt(String data) {
+        System.out.println("hello");
+        String keyId = "f8f220ea-089c-4b86-a97d-ab86c59081ed";
+        Region region = Region.EU_WEST_2;
+        ProfileCredentialsProvider profileCredentialsProvider= ProfileCredentialsProvider.create();
+        System.out.println(profileCredentialsProvider.resolveCredentials().accessKeyId());
+        System.out.println(profileCredentialsProvider.resolveCredentials().secretAccessKey());
+
+////        KmsClient AWSKMS_CLIENT = KmsClient.builder()
+//                .region(region)
+//                .credentialsProvider(profileCredentialsProvider)
+//                .build();
+        KmsClient AWSKMS_CLIENT = KmsClient.create();
+
+        byte[] base64EncodedValue = Base64.getDecoder().decode(data);
+        ByteBuffer plaintext = ByteBuffer.wrap(base64EncodedValue);
+        DecryptResponse decryptResponse =null;
+        try {
+            DecryptRequest decryptRequest = DecryptRequest.builder()
+                    .ciphertextBlob(SdkBytes.fromUtf8String(data))
+                    .keyId(keyId)
+                    .build();
+
+            decryptResponse = AWSKMS_CLIENT.decrypt(decryptRequest);
+            if (decryptResponse == null)
+            System.out.println("decrypt response is null");
+//            decryptResponse.plaintext();
+            System.out.println("decryptout" +decryptResponse.toString());
+
+        } catch (KmsException e) {
+            System.out.println("catch");
+            System.out.println(e.getMessage());
+        }
+//        DecryptRequest dereq = new DecryptRequest().withCiphertextBlob(plaintext);
+//        DecryptResponse de = AWSKMS_CLIENT.decrypt(dereq);
+//        String decryptedData = StandardCharsets.UTF_8.decode(de.getPlaintext()).toString();
+//        return decryptedData;
+//        return decryptResponse.plaintext().toString();
+    }
 }
