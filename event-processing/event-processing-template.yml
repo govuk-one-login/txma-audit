@@ -232,6 +232,7 @@ Resources:
       - AuthOIDCLambdaAccessRole
       - AuthAccountMgmtLambdaAccessRole
       - TxMATwoAuditLambdaAccessRole
+      - TxMATwoQueryResultsLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
@@ -246,6 +247,7 @@ Resources:
         - !Ref AuthOIDCLambdaAccessRole
         - !Ref AuthAccountMgmtLambdaAccessRole
         - !Ref TxMATwoAuditLambdaAccessRole
+        - !Ref TxMATwoQueryResultsLambdaAccessRole
       PolicyName: sns_publish_policy
       PolicyDocument:
         Version: 2012-10-17
@@ -3449,9 +3451,163 @@ Resources:
       FunctionName: !Ref TxMATwoAuditEventProcessorFunction
       Principal: !Ref TestRoleArn
 
-  # update SNSPublishPolicy with depends on and ref to lambda access role
-
   # TXMA2 audit resources end
+
+  # TXMA2 QueryResults resources start
+  TxMATwoQueryResultsEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-TxMATwoQueryResults"
+      RetentionInDays: 7
+
+  TxMATwoQueryResultsEventProcessorFunction:
+    DependsOn:
+      - TxMATwoQueryResultsEventProcessorLogGroup
+      - TxMATwoQueryResultsLambdaAccessRole
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "EventProcessorFunction-TxMATwoQueryResults"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: event-processor-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt TxMATwoQueryResultsLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+          defaultComponentId: "TXMA"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - event-processor-app.ts
+
+  TxMATwoQueryResultsEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - TxMATwoQueryResultsEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-TxMATwoQueryResults"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields TxMATwoQueryResults"
+
+  TxMATwoQueryResultsEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - TxMATwoQueryResultsEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "TxMATwoQueryResults Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-TxMATwoQueryResults"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields TxMATwoQueryResults"
+      Namespace: "lambda/di/txma/errors"
+
+  TxMATwoQueryResultsEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - TxMATwoQueryResultsEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-TxMATwoQueryResults"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors TxMATwoQueryResults"
+
+  TxMATwoQueryResultsEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - TxMATwoQueryResultsEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "TxMATwoQueryResults Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-TxMATwoQueryResults"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors TxMATwoQueryResults"
+      Namespace: "lambda/di/txma/errors"
+
+  TxMATwoQueryResultsLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-TxMATwoQueryResults"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  TxMATwoQueryResultsLambdaEventSourceMapping:
+    DependsOn:
+      - TxMATwoQueryResultsEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:TxMATwoQueryResultsQueueARN}}"
+      FunctionName: !Ref TxMATwoQueryResultsEventProcessorFunction
+
+  TxMATwoQueryResultsKMSPolicy:
+    DependsOn:
+      - TxMATwoQueryResultsLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref TxMATwoQueryResultsLambdaAccessRole
+      PolicyName: TxMATwoQueryResults_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:TxMATwoQueryResultsKmsArn}}"
+
+  CSLSTxMATwoQueryResultsLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "TxMATwoQueryResultsEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  TxMATwoQueryResultsTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref TxMATwoQueryResultsEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+
+  # TXMA2 QueryResults resources end
 
   PublishToAccountsConsumeFailureMessageBucket:
     DependsOn:
@@ -3488,10 +3644,6 @@ Resources:
         - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
         - BucketName: !Ref PublishToAccountsConsumeFailureMessageBucket
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 86400
-      Threshold: 1
       TreatMissingData: notBreaching
       MetricName: "PutRequests"
       Namespace: "AWS/S3"
