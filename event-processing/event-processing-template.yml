@@ -3114,15 +3114,27 @@ Resources:
         ]
       PolicyDocument:
         Statement:
+          # allow txma access
           - Action:
-              - 'sqs:ChangeMessageVisibility'
-              - 'sqs:ReceiveMessage'
-              - 'sqs:GetQueueAttributes'
-              - 'sqs:DeleteMessage'
+              - 'sqs:*'
             Effect: "Allow"
-            Resource: !Sub "${PublishToAccountsSQSQueue.Arn}"
+            Resource: !Sub "${PublishToAccountsSQSQueue.Arn}" 
             Principal:
-              AWS: "{{resolve:ssm:AccountsARN}}"
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+          # allow accounts access
+          - !If
+            - IsProductionOrStaging
+            - Action:
+                - 'sqs:ChangeMessageVisibility'
+                - 'sqs:ReceiveMessage'
+                - 'sqs:GetQueueAttributes'
+                - 'sqs:DeleteMessage'
+              Effect: "Allow"
+              Resource: !Sub "${PublishToAccountsSQSQueue.Arn}" 
+              # AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+              Principal:
+                AWS: "{{resolve:ssm:AccountsARN}}"
+            - !Ref "AWS::NoValue"
 
   PublishToAccountsRedactedLogGroup:
     Type: AWS::Logs::LogGroup
