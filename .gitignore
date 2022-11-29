@@ -8,3 +8,5 @@
 .idea/vcs.xml
 
 event-processing/invoke-event-processor-payload.json
+event-processing/cf-template.yaml
+event-processing/template.zip
