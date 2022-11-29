@@ -17,6 +17,7 @@ dependencies {
     implementation 'software.amazon.awssdk:cloudwatch'
     implementation 'org.json:json:20220924'
     implementation 'software.amazon.awssdk:sqs'
+    implementation 'software.amazon.awssdk:kms'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.8.1'
     testImplementation 'org.junit.platform:junit-platform-suite:1.9.0'
