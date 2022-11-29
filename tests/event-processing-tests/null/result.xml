@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<testsuite errors="0" failures="0" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="1" time="3.933">
-    <testcase classname="Event data journey from event processing lambda to Accounts SQS queue" name="Check auth message lands successfully in thee Accounts SQS queue" time="3.755">
-        <system-out><![CDATA[Given the SQS data file "AuthOIDC/AuthtoAccounts" is available for the "AuthOIDC" team.passed
+<testsuite errors="0" failures="1" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="1" time="1.442">
+    <testcase classname="Event data journey from event processing lambda to Accounts SQS queue" name="Check auth message lands successfully in thee Accounts SQS queue" time="1.267">
+        <failure message="&#10;Expected: reIngestCount&#10;     but none found&#10; ; timestamp&#10;Expected: 1669393884727&#10;     got: 1647969131&#10;" type="java.lang.AssertionError"><![CDATA[Given the SQS data file "AuthOIDC/AuthtoAccounts" is available for the "AuthOIDC" team.passed
 When the "AuthOIDC" lambda is invoked.......................................passed
-And the SQS below should have a new event matching the respective "AuthOIDC" output file "Accounts_expected" in the "AuthOIDC" folder.passed
-]]></system-out>
+Then the SQS below should have a new event matching the respective "AuthOIDC" output file "Accounts_expected" in the "AuthOIDC" folder.failed
+
+StackTrace:
+java.lang.AssertionError: 
+Expected: reIngestCount
+     but none found
+ ; timestamp
+Expected: 1669393884727
+     got: 1647969131
+
+	at org.skyscreamer.jsonassert.JSONAssert.assertEquals(JSONAssert.java:417)
+	at org.skyscreamer.jsonassert.JSONAssert.assertEquals(JSONAssert.java:394)
+	at uk.gov.di.txma.eventprocessor.bdd.LambdaToS3StepDefinitions.theSQSBelowShouldHaveANewEventMatchingTheRespectiveOutputFileInTheFolder(LambdaToS3StepDefinitions.java:723)
+	at ✽.the SQS below should have a new event matching the respective "AuthOIDC" output file "Accounts_expected" in the "AuthOIDC" folder(classpath:features/Account.feature:8)
+]]></failure>
     </testcase>
 </testsuite>
