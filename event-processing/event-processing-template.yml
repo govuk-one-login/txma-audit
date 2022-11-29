@@ -228,6 +228,7 @@ Resources:
       - AppLambdaAccessRole
       - AuthOIDCLambdaAccessRole
       - AuthAccountMgmtLambdaAccessRole
+      - TxMATwoAuditLambdaAccessRole
     Type: AWS::IAM::Policy
     Properties:
       Roles:
@@ -241,6 +242,7 @@ Resources:
         - !Ref AppLambdaAccessRole
         - !Ref AuthOIDCLambdaAccessRole
         - !Ref AuthAccountMgmtLambdaAccessRole
+        - !Ref TxMATwoAuditLambdaAccessRole
       PolicyName: sns_publish_policy
       PolicyDocument:
         Version: 2012-10-17
@@ -2442,6 +2444,10 @@ Resources:
           - DCMAW_APP_START
           - DCMAW_APP_END
           - DCMAW_WEB_END
+          - TXMA_AUDIT_QUERY_DATA_REQUEST
+          - TXMA_AUDIT_QUERY_OUTPUT_GENERATED
+          - TXMA_AUDIT_QUERY_OUTPUT_ACCESSED
+          - TXMA_AUDIT_QUERY_ILLEGAL_REQUEST
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -2556,6 +2562,8 @@ Resources:
           - DCMAW_APP_START
           - DCMAW_APP_END
           - DCMAW_WEB_END
+          - TXMA_AUDIT_QUERY_DATA_REQUEST
+          - TXMA_AUDIT_QUERY_OUTPUT_GENERATED
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
@@ -3248,3 +3256,160 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref PublishToAccountsRedactedFunction
       Principal: !Ref TestRoleArn
+
+  # TXMA2 audit resources start
+  TxMATwoAuditEventProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/EventProcessorFunction-TxMATwoAudit"
+      RetentionInDays: 7
+
+  TxMATwoAuditEventProcessorFunction:
+    DependsOn:
+      - TxMATwoAuditEventProcessorLogGroup
+      - TxMATwoAuditLambdaAccessRole
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "EventProcessorFunction-TxMATwoAudit"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: event-processor-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt TxMATwoAuditLambdaAccessRole.Arn
+      Environment:
+        Variables:
+          topicArn: !Ref epSNSTopic
+          defaultComponentId: "TXMA"
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - event-processor-app.ts
+
+  TxMATwoAuditEventProcessorUnknownFieldsErrorMetric:
+    DependsOn:
+      - TxMATwoAuditEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-TxMATwoAudit"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields TxMATwoAudit"
+
+  TxMATwoAuditEventProcessorUnknownFieldsAlarm:
+    DependsOn:
+      - TxMATwoAuditEventProcessorUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "TxMATwoAudit Event Processor Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-TxMATwoAudit"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields TxMATwoAudit"
+      Namespace: "lambda/di/txma/errors"
+
+  TxMATwoAuditEventProcessorRequiredFieldsErrorMetric:
+    DependsOn:
+      - TxMATwoAuditEventProcessorFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/EventProcessorFunction-TxMATwoAudit"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors TxMATwoAudit"
+
+  TxMATwoAuditEventProcessorRequiredFieldsAlarm:
+    DependsOn:
+      - TxMATwoAuditEventProcessorRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "TxMATwoAudit Event Processor Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-TxMATwoAudit"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors TxMATwoAudit"
+      Namespace: "lambda/di/txma/errors"
+
+  TxMATwoAuditLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-TxMATwoAudit"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+
+  TxMATwoAuditLambdaEventSourceMapping:
+    DependsOn:
+      - TxMATwoAuditEventProcessorFunction
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsProductionOrStaging
+    Properties:
+      EventSourceArn: "{{resolve:ssm:TxMATwoAuditQueueARN}}"
+      FunctionName: !Ref TxMATwoAuditEventProcessorFunction
+
+  TxMATwoAuditKMSPolicy:
+    DependsOn:
+      - TxMATwoAuditLambdaAccessRole
+    Type: AWS::IAM::Policy
+    Condition: IsProductionOrStaging
+    Properties:
+      Roles:
+        - !Ref TxMATwoAuditLambdaAccessRole
+      PolicyName: TxMATwoAudit_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource:
+              - "{{resolve:ssm:TxMATwoAuditKmsArn}}"
+
+  CSLSTxMATwoAuditLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: "TxMATwoAuditEventProcessorLogGroup"
+      FilterPattern: ""
+      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+  TxMATwoAuditTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref TxMATwoAuditEventProcessorFunction
+      Principal: !Ref TestRoleArn
+
+  # update SNSPublishPolicy with depends on and ref to lambda access role
+
+  # TXMA2 audit resources end
