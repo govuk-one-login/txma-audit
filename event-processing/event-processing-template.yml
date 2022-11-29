@@ -3124,7 +3124,7 @@ Resources:
           - Action:
               - 'sqs:*'
             Effect: "Allow"
-            Resource: !Sub "${PublishToAccountsSQSQueue.Arn}" 
+            Resource: !Sub "${PublishToAccountsSQSQueue.Arn}"
             Principal:
               AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
           # allow accounts access
@@ -3136,7 +3136,7 @@ Resources:
                 - 'sqs:GetQueueAttributes'
                 - 'sqs:DeleteMessage'
               Effect: "Allow"
-              Resource: !Sub "${PublishToAccountsSQSQueue.Arn}" 
+              Resource: !Sub "${PublishToAccountsSQSQueue.Arn}"
               # AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
               Principal:
                 AWS: "{{resolve:ssm:AccountsARN}}"
