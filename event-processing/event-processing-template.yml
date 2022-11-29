@@ -3644,6 +3644,10 @@ Resources:
         - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
         - BucketName: !Ref PublishToAccountsConsumeFailureMessageBucket
       ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
       TreatMissingData: notBreaching
       MetricName: "PutRequests"
       Namespace: "AWS/S3"
