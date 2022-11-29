@@ -7,7 +7,6 @@ export interface IRedactedAuditEvent {
     event_name: string;
     client_id: string;
     user?: IRedactedAuditEventUserMessage | undefined;
-    reIngestCount: number;
 }
 
 export interface IRedactedAuditEventUserMessage {
@@ -23,7 +22,6 @@ function createBaseRedactedAuditEvent(): IRedactedAuditEvent {
         event_name: '',
         client_id: '',
         user: createBaseRedactedAuditEventUserMessage(),
-        reIngestCount: 0,
     };
 }
 
@@ -34,7 +32,6 @@ export class RedactedAuditEvent implements IRedactedAuditEvent {
     readonly timestamp: number;
     readonly timestamp_formatted: string;
     readonly user?: IRedactedAuditEventUserMessage | undefined;
-    readonly reIngestCount: number;
 
     constructor(
         event_id: string,
@@ -42,7 +39,6 @@ export class RedactedAuditEvent implements IRedactedAuditEvent {
         client_id: string,
         timestamp: number,
         timestamp_formatted: string,
-        reIngestCount: number,
         user?: unknown | undefined,
     ) {
         this.event_id = event_id;
@@ -50,7 +46,6 @@ export class RedactedAuditEvent implements IRedactedAuditEvent {
         this.client_id = client_id;
         this.timestamp = timestamp;
         this.timestamp_formatted = timestamp_formatted;
-        this.reIngestCount = reIngestCount;
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -82,10 +77,6 @@ export class RedactedAuditEvent implements IRedactedAuditEvent {
             json: snsMessage,
         })[0];
 
-        redactedAuditData.reIngestCount = JSONPath({
-            path: '$.reIngestCount',
-            json: snsMessage,
-        })[0];
 
         const userId = JSONPath({
             path: '$.user.user_id',

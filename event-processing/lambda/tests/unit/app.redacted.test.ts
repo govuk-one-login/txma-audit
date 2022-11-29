@@ -24,7 +24,6 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
-            reIngestCount: 0,
         };
 
         const expectedResult: IRedactedAuditEvent = {
@@ -33,7 +32,6 @@ describe('Unit test for app handler', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            reIngestCount: 0,
             user: {
                 govuk_signin_journey_id: "",
                 user_id: ""
@@ -67,7 +65,6 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
-            reIngestCount: 0,
             user,
 
         };
@@ -79,7 +76,6 @@ describe('Unit test for app handler', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            reIngestCount:0,
             user: {
                 user_id: 'some_user_id',
                 govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
@@ -112,7 +108,6 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
-            reIngestCount: 0,
             user,
 
         };
@@ -124,7 +119,6 @@ describe('Unit test for app handler', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            reIngestCount:0,
             user: {
                 govuk_signin_journey_id: '',
                 user_id: 'some_user_id',
@@ -157,7 +151,6 @@ describe('Unit test for app handler', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             component_id: 'AUTH',
-            reIngestCount: 0,
             user,
 
         };
@@ -169,7 +162,6 @@ describe('Unit test for app handler', function () {
             event_name: 'AUTHENTICATION_ATTEMPT',
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
-            reIngestCount:0,
             user: {
                 govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
                 user_id: ""

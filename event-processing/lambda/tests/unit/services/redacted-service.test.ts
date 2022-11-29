@@ -16,7 +16,6 @@ describe('Unit test for accountsredacted-service', function () {
             user: {
                 transaction_id: 'a52f6f87',
             },
-            reIngestCount: 0,
         };
 
         const expectedMessage: IRedactedAuditEvent = {
@@ -24,7 +23,6 @@ describe('Unit test for accountsredacted-service', function () {
             timestamp_formatted: '2021-01-23T15:43:21.842',
             event_name: 'AUTHENTICATION_ATTEMPT',
             event_id: '123456789',
-            reIngestCount: 0,
             client_id: 'An Example Client',
             user: {
                 govuk_signin_journey_id: "",
