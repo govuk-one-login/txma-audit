@@ -3298,6 +3298,93 @@ Resources:
       FunctionName: !Ref PublishToAccountsRedactedFunction
       Principal: !Ref TestRoleArn
 
+  PublishToAccountsConsumeFailureMessageBucket:
+    DependsOn:
+      - PublishToAccountsConsumeFailureBucketLogsBucket
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-publish-to-accounts-failure"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref  PublishToAccountsConsumeFailureBucketLogsBucket
+        LogFilePrefix: "event-processing/publish-to-accounts-failure/"
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  PublishToAccountsConsumeFailureBucketObjectPutAlarm:
+    DependsOn:
+      - PublishToAccountsConsumeFailureMessageBucket
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub
+        - "S3PutObjectsAlarm-${BucketName}"
+        - BucketName: !Ref PublishToAccountsConsumeFailureMessageBucket
+      AlarmDescription: !Sub
+        - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
+        - BucketName: !Ref PublishToAccountsConsumeFailureMessageBucket
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      TreatMissingData: notBreaching
+      MetricName: "PutRequests"
+      Namespace: "AWS/S3"
+      Dimensions:
+        - Name: BucketName
+          Value: !Ref PublishToAccountsConsumeFailureMessageBucket
+        - Name: FilterId
+          Value: EntireBucket
+
+  PublishToAccountsConsumeFailureBucketLogsBucket:
+    Type: AWS::S3::Bucket
+    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-publish-to-accounts-failure-logs"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
+
+  PublishToAccountsConsumeFailureBucketLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PublishToAccountsConsumeFailureBucketLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${PublishToAccountsConsumeFailureBucketLogsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+
   # TXMA2 audit resources start
   TxMATwoAuditEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -3608,90 +3695,3 @@ Resources:
 
 
   # TXMA2 QueryResults resources end
-
-  PublishToAccountsConsumeFailureMessageBucket:
-    DependsOn:
-      - PublishToAccountsConsumeFailureBucketLogsBucket
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-publish-to-accounts-failure"
-      VersioningConfiguration:
-        Status: "Enabled"
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      LoggingConfiguration:
-        DestinationBucketName: !Ref  PublishToAccountsConsumeFailureBucketLogsBucket
-        LogFilePrefix: "event-processing/publish-to-accounts-failure/"
-      MetricsConfigurations:
-        - Id: EntireBucket
-
-  PublishToAccountsConsumeFailureBucketObjectPutAlarm:
-    DependsOn:
-      - PublishToAccountsConsumeFailureMessageBucket
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: !Sub
-        - "S3PutObjectsAlarm-${BucketName}"
-        - BucketName: !Ref PublishToAccountsConsumeFailureMessageBucket
-      AlarmDescription: !Sub
-        - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
-        - BucketName: !Ref PublishToAccountsConsumeFailureMessageBucket
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 86400
-      Threshold: 1
-      TreatMissingData: notBreaching
-      MetricName: "PutRequests"
-      Namespace: "AWS/S3"
-      Dimensions:
-        - Name: BucketName
-          Value: !Ref PublishToAccountsConsumeFailureMessageBucket
-        - Name: FilterId
-          Value: EntireBucket
-
-  PublishToAccountsConsumeFailureBucketLogsBucket:
-    Type: AWS::S3::Bucket
-    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
-    Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-publish-to-accounts-failure-logs"
-      VersioningConfiguration:
-        Status: "Enabled"
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      Tags:
-        - Key: CheckovRulesToSkip
-          Value: CKV_AWS_18
-
-  PublishToAccountsConsumeFailureBucketLogsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref PublishToAccountsConsumeFailureBucketLogsBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
-            Resource:
-              - !Sub "${PublishToAccountsConsumeFailureBucketLogsBucket.Arn}/*"
-            Principal:
-              Service: "logging.s3.amazonaws.com"
-            Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
