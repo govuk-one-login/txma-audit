@@ -59,7 +59,7 @@ public class Driver {
                     chromeOptions.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
                     chromeOptions.addArguments("--headless");
                     chromeOptions.addArguments("--whitelisted-ips=");
-                    
+
                     System.out.println("The value of environment variable DRIVER: " + REMOTE_DRIVER_EMV_VAR);
                     if (REMOTE_DRIVER_EMV_VAR.equals(SELENIUM_HUB_URL)) {
                         System.out.println("[INFO]: using selenium grid remotedriver to run the tests");

@@ -701,3 +701,4 @@ public class LambdaToS3StepDefinitions {
         lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithEventAdded);
     }
 }
+
