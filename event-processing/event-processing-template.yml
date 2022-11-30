@@ -133,6 +133,34 @@ Resources:
       AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SNSKMSKey"
       TargetKeyId: !Ref SNSKMSKey
 
+  SQSKMSKeyPublishAccount:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              AWS: "{{resolve:ssm:AccountsARN}}"
+            Action:
+              - 'kms:Decrypt'
+            Resource: '*'
+
+  SQSKMSKeyPublishAccountAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SQSKMSKeyPublishAccount"
+      TargetKeyId: !Ref SQSKMSKeyPublishAccount
+
+
   LambdaKMSKey:
     Type: AWS::KMS::Key
     Properties:
@@ -1719,10 +1747,10 @@ Resources:
   FraudSplunkDeliveryFailureBucketObjectPutAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub 
+      AlarmName: !Sub
         - "S3PutObjectsAlarm-${BucketName}"
         - BucketName: !Ref FraudSplunkDeliveryFailureBucket
-      AlarmDescription: !Sub  
+      AlarmDescription: !Sub
         - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
         - BucketName: !Ref FraudSplunkDeliveryFailureBucket
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -1738,7 +1766,7 @@ Resources:
         Value: !Ref FraudSplunkDeliveryFailureBucket
       - Name: FilterId
         Value: EntireBucket
-    
+
   FraudSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Condition: DeployTestBucketPolicy
@@ -1835,12 +1863,12 @@ Resources:
   PerformanceSplunkDeliveryFailureBucketObjectPutAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub 
+      AlarmName: !Sub
         - "S3PutObjectsAlarm-${BucketName}"
         - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket
-      AlarmDescription: !Sub  
+      AlarmDescription: !Sub
         - "An alarm where is a PutRequest event occurs in the bucket ${BucketName}"
-        - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket 
+        - BucketName: !Ref PerformanceSplunkDeliveryFailureBucket
       ComparisonOperator: GreaterThanOrEqualToThreshold
       EvaluationPeriods: 1
       Statistic: Sum
@@ -2953,3 +2981,270 @@ Resources:
         Ref: "ReIngestLogGroup"
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+
+   #AccountsData changes
+  PublishToAccountsLambdaSNSSubscriptionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: sns_lambda_access_policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - 'lambda:InvokeFunction'
+                  - 'lambda:GetFunctionConfiguration'
+                Effect: Allow
+                Resource:
+                  - !GetAtt PublishToAccountsRedactedFunction.Arn
+
+  PublishToAccountsSQSQueue:
+    DependsOn:
+      - PublishToAccountsSQSDLQueue
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "PublishToAccountsSQSQueue-${Environment}"
+      KmsMasterKeyId: !GetAtt SQSKMSKeyPublishAccount.Arn
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt  PublishToAccountsSQSDLQueue.Arn
+        maxReceiveCount: 5
+      MessageRetentionPeriod: 604800 #7 days
+      RedriveAllowPolicy:
+        redrivePermission: denyAll
+
+  PublishToAccountsSQSDLQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "PublishToAccountsSQSDLQueue-${Environment}"
+      KmsMasterKeyId: !GetAtt SQSKMSKeyPublishAccount.Arn
+      MessageRetentionPeriod: 1209600 #14 days
+      RedriveAllowPolicy:
+        redrivePermission: allowAll
+
+  PublishToAccountsSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref epSNSTopic
+      Endpoint: !GetAtt  PublishToAccountsRedactedFunction.Arn #Lambda
+      Protocol: lambda
+      FilterPolicy:
+        eventName:
+          - AUTH_AUTH_CODE_ISSUED
+
+  PublishToAccountsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref PublishToAccountsAccessRole
+      PolicyName: publish_to_accounts_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'sqs:SendMessage'
+            Resource:
+              - !Sub "${PublishToAccountsSQSQueue.Arn}"
+          - Effect: Allow
+            Action:
+              - 'sqs:DeleteMessage'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:GetQueueAttributes'
+              - 'sqs:SendMessage'
+            Resource:
+              - !Sub "${PublishToAccountsSQSDLQueue.Arn}"
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: !GetAtt SQSKMSKeyPublishAccount.Arn
+
+  PublishToAccountsAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sqs.amazonaws.com
+                - lambda.amazonaws.com
+                - s3.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+  PublishToAccountsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      "Queues": [
+          { "Ref" : "PublishToAccountsSQSQueue" }
+        ]
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'sqs:ChangeMessageVisibility'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:GetQueueAttributes'
+              - 'sqs:DeleteMessage'
+            Effect: "Allow"
+            Resource: !Sub "${PublishToAccountsSQSQueue.Arn}"
+            Principal:
+              AWS: "{{resolve:ssm:AccountsARN}}"
+
+  PublishToAccountsRedactedLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/PublishToAccountsRedactedFunction"
+      RetentionInDays: 7
+
+  PublishToAccountsRedactedFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PublishToAccountsRedactedFunction
+      Principal: sns.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn: !Ref epSNSTopic
+
+  PublishToAccountsRedactedFunction:
+    DependsOn:
+      - PublishToAccountsRedactedLogGroup
+      - PublishToAccountsAccessRole
+      - PublishToAccountsSQSQueue
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "PublishToAccountsRedactedFunction"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: accounts-redacted-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt  PublishToAccountsAccessRole.Arn
+      Environment:
+        Variables:
+          publishToAccountsARN: !GetAtt PublishToAccountsSQSQueue.Arn
+          defaultComponentId: "ACCOUNTS"
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt PublishToAccountsSQSQueue.QueueName
+      KmsKeyArn: !GetAtt  SQSKMSKeyPublishAccount.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - accounts-redacted-app.ts
+
+  PublishToAccountsUnknownFieldsErrorMetric:
+    DependsOn:
+      - PublishToAccountsRedactedFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/PublishToAccountsRedactedFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields PublishToAccounts"
+
+  PublishToAccountsUnknownFieldsAlarm:
+    DependsOn:
+      - PublishToAccountsUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Publish To Accounts Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-PublishToAccounts"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Unknown Fields PublishToAccounts"
+      Namespace: "lambda/di/txma/errors"
+
+  PublishToAccountsRequiredFieldsErrorMetric:
+    DependsOn:
+      - PublishToAccountsRedactedFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/PublishToAccountsRedactedFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors PublishToAccounts"
+
+  PublishToAccountsRequiredFieldsAlarm:
+    DependsOn:
+      - PublishToAccountsRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Publish To Accounts Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-PublishToAccounts"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Validation Errors PublishtToAccounts"
+      Namespace: "lambda/di/txma/errors"
+
+  PublishToAccountsSQSEventFailureErrorMetric:
+    DependsOn:
+      - PublishToAccountsRedactedFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR SQS Publish"
+      LogGroupName: "/aws/lambda/PublishToAccountsRedactedFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Accounts SQS Publish Failed Errors"
+
+  PublishToAccountsSQSEventFailureAlarm:
+    DependsOn:
+      - PublishToAccountsSQSEventFailureErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Accounts SQS Publish Failed Alarm"
+      AlarmName: "SQSPublishToAccountsFailedAlarm"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      MetricName: "Accounts SQS Publish Failed Errors"
+      Namespace: "lambda/di/txma/errors"
+
+  PublishToAccountsRedactedFunctionTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PublishToAccountsRedactedFunction
+      Principal: !Ref TestRoleArn

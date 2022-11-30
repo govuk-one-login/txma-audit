@@ -67,10 +67,13 @@ echo "Environment: $TEST_ENVIRONMENT"
 export CFN_OrchestrationStubURL="https://staging-di-ipv-orchestrator-stub.london.cloudapps.digital/"
 echo "Environment: $TEST_ENVIRONMENT"
 
+export CFN_AuthURL="https://di-auth-stub-relying-party-staging.london.cloudapps.digital/"
+echo "Environment: $TEST_ENVIRONMENT"
+
 
 echo "Current Working Directory: $PWD"
 
-# gradle -q test --info
+ gradle -q test --info
 
 echo "Successfully generated report"
 

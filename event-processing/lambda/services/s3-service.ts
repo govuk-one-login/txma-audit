@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, S3Client, PutObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
 import { ErrorService } from './error-service';
 import { unzip } from 'zlib';
@@ -67,4 +67,27 @@ export class S3Service {
             }
         });
     }
+
+
+    static async putObject(bucketName: string, filename: string, data: string): Promise<boolean> {
+        return new Promise<boolean>(async (resolve, reject) => {
+            try {
+                const uploadParams: PutObjectCommandInput = {
+                    Bucket: bucketName,
+                    Key: filename,
+                    Body: data,
+                };
+
+                await this.client.send(new PutObjectCommand(uploadParams));
+            }catch(error) {
+                const errorWithMessage = ErrorService.toErrorWithMessage(error);
+                console.log(
+                    '[ERROR] PUT TO S3 ERROR:\n Error: ${errorWithMessage.message}',
+                    errorWithMessage.stack,
+                );
+                return reject(error);
+            }
+        });
+    }
+
 }
