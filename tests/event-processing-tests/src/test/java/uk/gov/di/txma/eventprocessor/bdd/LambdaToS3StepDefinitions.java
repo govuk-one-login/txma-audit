@@ -101,7 +101,6 @@ public class LambdaToS3StepDefinitions {
     @When("the {string} lambda is invoked")
     public void invokeAccountsLambda(String account) {
         String functionName = "EventProcessorFunction-" + account;
-//        String functionName = "EventProcessorFunction-App";
 
         // Opens the lambda client
         try (LambdaClient awsLambda = LambdaClient.builder()
