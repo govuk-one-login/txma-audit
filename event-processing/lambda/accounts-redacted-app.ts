@@ -6,6 +6,7 @@ import { ErrorService } from './services/error-service';
 import { ValidationService } from './services/validation-service';
 import { ValidationException } from './exceptions/validation-exception';
 import { IRequiredFieldError } from './models/required-field-error.interface';
+import { S3Service } from './services/s3-service';
 export const handler = async (event: SNSEvent): Promise<void> => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -15,31 +16,48 @@ export const handler = async (event: SNSEvent): Promise<void> => {
     const accountId = arn.split(':')[4];
     const queueName: string = arn.split(':')[5];
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const failureBucketARN: string = process.env.publishToAccountsFailureBucketARN;
+    const failureBucketName: string = failureBucketARN.split(':')[5];
+
     const queueUrl = 'https://sqs.' + region + '.amazonaws.com/' + accountId + '/' + queueName;
     try {
         for (const record of event.Records) {
-            const validationResponse = await ValidationService.validateSNSRecord(record as SNSEventRecord);
-            if (!validationResponse.isValid) {
-                console.log(
-                    'VALIDATION ERROR\n' +
-                        JSON.stringify(
-                            new ValidationException(
-                                'An event message failed validation.',
-                                validationResponse.error as IRequiredFieldError,
+            try {
+                const validationResponse = await ValidationService.validateSNSRecord(record as SNSEventRecord);
+                if (!validationResponse.isValid) {
+                    console.log(
+                        '[ERROR] VALIDATION ERROR\n' +
+                            JSON.stringify(
+                                new ValidationException(
+                                    'An event message failed validation.',
+                                    validationResponse.error as IRequiredFieldError,
+                                ),
                             ),
-                        ),
+                    );
+                    await S3Service.putObject(failureBucketName, record.Sns.MessageId, record.Sns.Message);
+                } else {
+                    const redactedMessage: IRedactedAuditEvent = AccountsRedactedService.applyRedaction(
+                        record.Sns.Message,
+                    );
+                    console.log('Message Id ' + record.Sns.MessageId);
+                    await SqsService.sendMessageToSQS(redactedMessage, queueUrl);
+                }
+            } catch (error) {
+                const errorWithMessage = ErrorService.toErrorWithMessage(error);
+                console.log(
+                    '[ERROR] SQS Message Publish ERROR :\n  ${errorWithMessage.message}',
+                    errorWithMessage.stack,
                 );
-            } else {
-                const redactedMessage: IRedactedAuditEvent = AccountsRedactedService.applyRedaction(record.Sns.Message);
-                console.log('Message Id ' + record.Sns.MessageId);
-                await SqsService.sendMessageToSQS(redactedMessage, queueUrl);
+                await S3Service.putObject(failureBucketName, record.Sns.MessageId, record.Sns.Message);
+                throw error;
             }
         }
     } catch (error) {
         const errorWithMessage = ErrorService.toErrorWithMessage(error);
-        console.log('ERROR SQS Publish :\n Error: ${errorWithMessage.message}', errorWithMessage.stack);
+        console.log('[ERROR] SQS Publish ERROR :\n  ${errorWithMessage.message}', errorWithMessage.stack);
         throw error;
     }
-
     return;
 };

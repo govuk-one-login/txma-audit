@@ -15,7 +15,7 @@ repos:
     hooks:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-        exclude: package.lock.json
+        exclude: "package.lock.json|event-processing/event-processor-template.template"
 -   repo: local
     hooks:
     -   id: husky-pre-commit
