@@ -9,3 +9,4 @@ Feature: Event data journey from event processing lambda to Accounts SQS queue
     Examples:
       | account         |
       | AuthOIDC        |
+#    And the message is deleted from the SQS queue
