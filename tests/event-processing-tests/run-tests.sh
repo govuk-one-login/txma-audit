@@ -4,7 +4,7 @@ set -eu
 
 gradle -v
 
-cd /
+#cd /
 
 mkdir $TEST_ENVIRONMENT
 
