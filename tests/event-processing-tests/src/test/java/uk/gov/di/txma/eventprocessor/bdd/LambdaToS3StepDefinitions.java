@@ -35,6 +35,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
@@ -54,6 +55,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -119,7 +121,7 @@ public class LambdaToS3StepDefinitions {
      * @param account The service team account name for their corresponding lambda
      */
     @When("the {string} lambda is invoked")
-    public void invokeAccountsLambda(String account) {
+    public void invokeAccountsLambda(String account) throws InterruptedException {
         String functionName = "EventProcessorFunction-" + account;
 
         // Opens the lambda client
@@ -134,6 +136,7 @@ public class LambdaToS3StepDefinitions {
                     .logType("Tail")
                     .payload(payload)
                     .build();
+            System.out.println("payload" +lambdaInput);
             InvokeResponse invokedResponse = awsLambda.invoke(request);
 
             // Checks the data is sent, and records the Request ID to track it
@@ -145,6 +148,7 @@ public class LambdaToS3StepDefinitions {
             System.err.println(e.getMessage());
             System.exit(1);
         }
+        TimeUnit.MINUTES.sleep(1);
     }
 
     /**
@@ -706,7 +710,30 @@ public class LambdaToS3StepDefinitions {
                 .messages()
                 .get(0);
         sqsoutputtext = message.body();
+        DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
+                .queueUrl(queueName)
+                .receiptHandle(message.receiptHandle())
+                .build();
+        sqs.deleteMessage(deleteMessageRequest);
         System.out.println("sqsoutput " +sqsoutputtext);
+    }
+
+    public void deleteSqsMessage(Message message) {
+        SqsClient sqs = SqsClient.builder().build();
+        // Get the receipt handle for the first message in the queue
+//        ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
+//                .queueUrl(queueName)
+//                .build();
+//        Message message = sqs.receiveMessage(receiveRequest)
+//                .messages()
+//                .get(0);
+
+        DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
+                .queueUrl(SqsUrl)
+                .receiptHandle(message.receiptHandle())
+                .build();
+        sqs.deleteMessage(deleteMessageRequest);
+
     }
 
 
@@ -719,6 +746,8 @@ public class LambdaToS3StepDefinitions {
         String file2 = sqsoutputtext;
         JSONObject json1 = new JSONObject(file1);
         JSONObject json2= new JSONObject(file2);
+//        Timestamp nowtime = new Timestamp(System.currentTimeMillis(),0L);
+        json1.put("timestamp",json2.get("timestamp"));
 
        JSONAssert.assertEquals(json2.toString(),json1.toString(), JSONCompareMode.NON_EXTENSIBLE);
        System.out.println("expectedoutput "+expectedJson);
