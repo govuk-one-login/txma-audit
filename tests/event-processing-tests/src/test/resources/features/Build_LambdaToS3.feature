@@ -1,7 +1,8 @@
 @build @dev
 Feature: Raw event data journey from the lambda to S3 for build (and dev) environment
 
-#  Fails to run on AWS only. works locally
+  Fails to run on AWS only. works locally
+
 #  Scenario Outline: Check messages pass through lambda to S3
 #    Given the SQS file "lambda_through_to_s3" is available in the "<account>" folder
 #    And the output file "s3_expected" in the "<account>" folder is available
@@ -20,11 +21,11 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 #      | IPV             |
 #      | IPVCI           |
 #      | IPVPass         |
+#      | DCMAW           |
 #      | KBV             |
 #      | KBVAddress      |
 #      | KBVFraud        |
 #      | SPOT            |
-
 
   Scenario Outline: Check messages don't pass through lambda if missing event_name
     Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "<account>" team
@@ -147,3 +148,31 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
       | teamName | otherTeam |
       | fraud    | perf      |
       | perf     | fraud     |
+
+  Scenario Outline: Check all DCMAW (Document Check Mobile And Web) events are processed
+    Given the DCMAW baseFile is available in the DCMAW folder
+    And the event "<eventName>" has been added
+    When the "<account>" lambda is invoked
+    Then there should be a message in the "<account>" lambda logs
+#    And the S3 for "<teamName>" will contain the event
+#    And the S3 for "<otherTeam>" will not contain the event
+    Examples:
+      | account | teamName | otherTeam | eventName           |
+      | IPV     | fraud    | perf      | DCMAW_CRI_START     |
+      | IPV     | perf     | fraud     | DCMAW_CRI_START     |
+      | IPV     | fraud    | perf      | DCMAW_APP_START     |
+      | IPV     | perf     | fraud     | DCMAW_APP_START     |
+      | IPV     | fraud    | perf      | DCMAW_APP_END       |
+      | IPV     | perf     | fraud     | DCMAW_APP_END       |
+      | IPV     | fraud    | perf      | DCMAW_WEB_END       |
+      | IPV     | perf     | fraud     | DCMAW_WEB_END       |
+      | IPV     | fraud    | perf      | DCMAW_CRI_VC_ISSUED |
+      | IPV     | perf     | fraud     | DCMAW_CRI_VC_ISSUED |
+      | IPV     | fraud    | perf      | DCMAW_CRI_END       |
+      | IPV     | perf     | fraud     | DCMAW_CRI_END       |
+      | IPV     | fraud    | perf      | DCMAW_CRI_ABORT     |
+      | IPV     | perf     | fraud     | DCMAW_CRI_ABORT     |
+      | IPV     | fraud    | perf      | DCMAW_CRI_4XXERROR  |
+      | IPV     | perf     | fraud     | DCMAW_CRI_4XXERROR  |
+      | IPV     | fraud    | perf      | DCMAW_CRI_5XXERROR  |
+      | IPV     | perf     | fraud     | DCMAW_CRI_5XXERROR  |
