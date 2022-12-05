@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<testsuite errors="0" failures="0" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="1" time="61.879">
-    <testcase classname="Event data journey from event processing lambda to Accounts SQS queue" name="Check auth message lands successfully in thee Accounts SQS queue" time="61.696">
+<testsuite errors="0" failures="0" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="1" time="63.292">
+    <testcase classname="Event data journey from event processing lambda to Accounts SQS queue" name="Check auth message lands successfully in thee Accounts SQS queue" time="63.088">
         <system-out><![CDATA[Given the SQS data file "AuthOIDC/AuthtoAccounts" is available for the "AuthOIDC" team.passed
 When the "AuthOIDC" lambda is invoked.......................................passed
 Then the SQS below should have a new event matching the respective "AuthOIDC" output file "Accounts_expected" in the "AuthOIDC" folder.passed

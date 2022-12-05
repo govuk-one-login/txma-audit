@@ -38,6 +38,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import uk.gov.di.txma.eventprocessor.bdd.utilities.ConfigurationReader;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -76,7 +77,7 @@ public class LambdaToS3StepDefinitions {
     JSONObject enrichedJSON;
 
     static String sqsoutputtext;
-    static String SqsUrl ="https://sqs.eu-west-2.amazonaws.com/750703655225/PublishToAccountsSQSQueue-build";
+
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -699,47 +700,29 @@ public class LambdaToS3StepDefinitions {
     }
 
 
-    public static void receiveSqsMessage(String queueName, int timeout) {
+    public static void receiveSqsMessage(String CFN_SqsURL, int timeout) {
         SqsClient sqs = SqsClient.builder().build();
-
         // Get the receipt handle for the first message in the queue
         ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
-                .queueUrl(queueName)
+                .queueUrl(CFN_SqsURL)
                 .build();
         Message message = sqs.receiveMessage(receiveRequest)
                 .messages()
                 .get(0);
         sqsoutputtext = message.body();
         DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
-                .queueUrl(queueName)
+                .queueUrl(CFN_SqsURL)
                 .receiptHandle(message.receiptHandle())
                 .build();
         sqs.deleteMessage(deleteMessageRequest);
         System.out.println("sqsoutput " +sqsoutputtext);
     }
 
-    public void deleteSqsMessage(Message message) {
-        SqsClient sqs = SqsClient.builder().build();
-        // Get the receipt handle for the first message in the queue
-//        ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
-//                .queueUrl(queueName)
-//                .build();
-//        Message message = sqs.receiveMessage(receiveRequest)
-//                .messages()
-//                .get(0);
-
-        DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
-                .queueUrl(SqsUrl)
-                .receiptHandle(message.receiptHandle())
-                .build();
-        sqs.deleteMessage(deleteMessageRequest);
-
-    }
 
 
     @Then("the SQS below should have a new event matching the respective {string} output file {string} in the {string} folder")
     public void theSQSBelowShouldHaveANewEventMatchingTheRespectiveOutputFileInTheFolder(String arg0, String arg1, String arg2) throws JSONException, IOException {
-        receiveSqsMessage(SqsUrl,30);
+        receiveSqsMessage(ConfigurationReader.getSqsUrl(),30);
 
         Path expectedJson = Path.of(new File("/Users/dennythampi/IdeaProjects/di-txma-audit/tests/event-processing-tests/src/test/resources/Test Data/AuthOIDC/Accounts_expected.json").getAbsolutePath());
         String file1 = Files.readString(expectedJson);
