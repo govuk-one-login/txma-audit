@@ -1,10 +1,10 @@
 package uk.gov.di.txma.eventprocessor.bdd;
 
-import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.cucumber.datatable.DataTable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
@@ -23,23 +23,9 @@ import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
 import software.amazon.awssdk.services.lambda.model.LambdaException;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
-import software.amazon.awssdk.services.s3.model.S3Exception;
-import software.amazon.awssdk.services.s3.model.S3Object;
-import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityRequest;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,7 +55,6 @@ public class LambdaToS3StepDefinitions {
     JSONObject rawJSON;
 
     JSONObject enrichedJSON;
-    String SqsUrl="https://sqs.eu-west-2.amazonaws.com/750703655225/PublishToAccountsSQSQueue-build";
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -88,8 +73,8 @@ public class LambdaToS3StepDefinitions {
     @Given("the SQS file {string} is available in the {string} folder")
     public void checkSQSInputFileIsAvailableInFolder(String fileName, String account) throws IOException {
         JSONObject rawJSON = new JSONObject(readJSONFile(account + "/" + fileName));
-        JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
-        lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
+        JSONObject JSONWithComponentIdAndTimestampFields = addComponentIdAndTimestampFields(rawJSON, account);
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithComponentIdAndTimestampFields);
     }
 
     /**
@@ -431,7 +416,7 @@ public class LambdaToS3StepDefinitions {
         return false;
     }
 
-    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws IOException, InterruptedException {
+    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws InterruptedException {
 
         while (count < 11) {
             // Checks for latest key and saves the contents in the output variable
@@ -673,51 +658,6 @@ public class LambdaToS3StepDefinitions {
         sendToS3Bucket("event-processing-" + System.getenv("TEST_ENVIRONMENT") + "-" + teamName + "-splunk-fail", pathOfFileToBeSentToS3);
     }
 
-    @Then("the SQS queue below should have a new event matching the output file {string} in the {string} folder")
-    public void theSQSQueueBelowShouldHaveANewEventMatchingTheOutputFileInTheFolder(String arg0, String arg1) throws InterruptedException {
-
-    }
-
-    @And("the the SQS queue below should have a new event matching the output file {string} in the {string} folder")
-    public void theTheSQSQueueBelowShouldHaveANewEventMatchingTheOutputFileInTheFolder(String arg0, String arg1) {
-        changeMessageVisibilitySingle(SqsUrl,30);
-//        List<Message> messages = sqs.receiveMessage(SqsUrl).getMessages();
-    }
-
-    @Given("the SQS data file {string} is available for the {string} team")
-    public void the_sqs_data_file_is_available_for_the_team(String fileName, String account) throws IOException {
-        // Write code here that turns the phrase above into concrete actions
-        JSONObject rawJSON = new JSONObject(readJSONFile(fileName));
-        JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
-        lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
-    }
-
-
-    public static void changeMessageVisibilitySingle(
-            String queueName, int timeout) {
-        SqsClient sqs = SqsClient.builder().build();
-
-        // Get the receipt handle for the first message in the queue
-        ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
-                .queueUrl(queueName)
-                .build();
-        String receipt = sqs.receiveMessage(receiveRequest)
-                .messages()
-                .get(0)
-                .receiptHandle();
-        System.out.println(receipt);
-
-
-        ChangeMessageVisibilityRequest visibilityRequest = ChangeMessageVisibilityRequest.builder()
-                .queueUrl(queueName)
-                .receiptHandle(receipt)
-                .visibilityTimeout(timeout)
-                .build();
-        sqs.changeMessageVisibility(visibilityRequest);
-    }
-
-
-
     @When("the {string} is processed by the {string} lambda")
     public void addEventNameAndSendEventToS3(String eventName, String teamName) {
         enrichedJSON = addEventName(rawJSON, eventName);
@@ -759,6 +699,5 @@ public class LambdaToS3StepDefinitions {
         JSONObject JSONWithEventAdded = addEventName(rawJSON, eventName);
         lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithEventAdded);
     }
-
-
 }
+

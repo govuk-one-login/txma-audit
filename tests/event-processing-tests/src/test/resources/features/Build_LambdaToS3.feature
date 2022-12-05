@@ -21,11 +21,11 @@ Feature: Raw event data journey from the lambda to S3 for build (and dev) enviro
 #      | IPV             |
 #      | IPVCI           |
 #      | IPVPass         |
+#      | DCMAW           |
 #      | KBV             |
 #      | KBVAddress      |
 #      | KBVFraud        |
 #      | SPOT            |
-
 
   Scenario Outline: Check messages don't pass through lambda if missing event_name
     Given the SQS file "lambdaToCloudwatchTests/lambda_missing_event_name" is available for the "<account>" team
