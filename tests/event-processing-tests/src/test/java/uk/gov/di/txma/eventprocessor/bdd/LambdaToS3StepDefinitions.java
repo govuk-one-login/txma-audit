@@ -700,8 +700,10 @@ public class LambdaToS3StepDefinitions {
     }
 
 
+
     public static void receiveSqsMessage(String CFN_SqsURL, int timeout) {
         SqsClient sqs = SqsClient.builder().build();
+
         // Get the receipt handle for the first message in the queue
         ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
                 .queueUrl(CFN_SqsURL)
