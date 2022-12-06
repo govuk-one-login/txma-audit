@@ -29,7 +29,6 @@ public class ConfigurationReader {
             String queueRegion = arnArray[3];
             sqsUrl = "https://sqs." + queueRegion + ".amazonaws.com" + '/' +accountId + '/' +queueName;
 
-
         } catch (SsmException e) {
             System.err.println(e.getMessage());
             System.exit(1);

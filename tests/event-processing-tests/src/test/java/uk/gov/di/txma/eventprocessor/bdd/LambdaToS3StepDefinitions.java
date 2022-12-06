@@ -731,7 +731,6 @@ public class LambdaToS3StepDefinitions {
         String file2 = sqsoutputtext;
         JSONObject json1 = new JSONObject(file1);
         JSONObject json2= new JSONObject(file2);
-//        Timestamp nowtime = new Timestamp(System.currentTimeMillis(),0L);
         json1.put("timestamp",json2.get("timestamp"));
 
        JSONAssert.assertEquals(json2.toString(),json1.toString(), JSONCompareMode.NON_EXTENSIBLE);
