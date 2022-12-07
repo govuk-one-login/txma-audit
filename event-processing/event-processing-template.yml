@@ -3717,7 +3717,7 @@ Resources:
             - IsProductionOrStaging
             - Effect: "Allow"
               Principal:
-                AWS: "{{resolve:ssm:AccountsARN}}" #TODO  Change to BillingARN
+                AWS: "{{resolve:ssm:BillingARN}}"
               Action:
                 - 'kms:Decrypt'
               Resource: '*'
@@ -3873,7 +3873,7 @@ Resources:
               Resource: !Sub "${PublishToBillingSQSQueue.Arn}"
               # AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
               Principal:
-                AWS: "{{resolve:ssm:AccountsARN}}" #TODO  Change to BillingARN
+                AWS: "{{resolve:ssm:BillingARN}}"
             - !Ref "AWS::NoValue"
 
   PublishToBillingRedactedLogGroup:
