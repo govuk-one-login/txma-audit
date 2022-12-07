@@ -3061,7 +3061,7 @@ Resources:
     Type: AWS::IAM::Policy
     Properties:
       Roles:
-        - !Ref PublishToAccountsAccessRole
+        - !Ref PublishToAccessRole
       PolicyName: publish_to_accounts_policy
       PolicyDocument:
         Version: 2012-10-17
@@ -3092,27 +3092,6 @@ Resources:
             Resource:
               - !GetAtt PublishToAccountsConsumeFailureMessageBucket.Arn
               - !Sub "${PublishToAccountsConsumeFailureMessageBucket.Arn}/*"
-
-  PublishToAccountsAccessRole:
-    Type: AWS::IAM::Role
-    Properties:
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - sqs.amazonaws.com
-                - lambda.amazonaws.com
-                - s3.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 
   PublishToAccountsQueuePolicy:
     Type: AWS::SQS::QueuePolicy
@@ -3163,7 +3142,7 @@ Resources:
   PublishToAccountsRedactedFunction:
     DependsOn:
       - PublishToAccountsRedactedLogGroup
-      - PublishToAccountsAccessRole
+      - PublishToAccessRole
       - PublishToAccountsSQSQueue
     Type: AWS::Serverless::Function
     Properties:
@@ -3173,7 +3152,7 @@ Resources:
       Handler: accounts-redacted-app.handler
       Runtime: nodejs14.x
       Timeout: 30
-      Role: !GetAtt  PublishToAccountsAccessRole.Arn
+      Role: !GetAtt  PublishToAccessRole.Arn
       Environment:
         Variables:
           publishToAccountsARN: !GetAtt PublishToAccountsSQSQueue.Arn
@@ -3697,3 +3676,445 @@ Resources:
 
 
   # TXMA2 QueryResults resources end
+
+  #BillingData changes
+  PublishToBillingAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sqs.amazonaws.com
+                - lambda.amazonaws.com
+                - s3.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+  SQSKMSKeyPublishBilling:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - !If
+            - IsProductionOrStaging
+            - Effect: "Allow"
+              Principal:
+                AWS: "{{resolve:ssm:BillingARN}}"
+              Action:
+                - 'kms:Decrypt'
+              Resource: '*'
+            - !Ref "AWS::NoValue"
+
+  SQSKMSKeyPublishBillingAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SQSKMSKeyPublishBilling"
+      TargetKeyId: !Ref SQSKMSKeyPublishBilling
+  PublishToBillingLambdaSNSSubscriptionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: sns_lambda_billing_access_policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - 'lambda:InvokeFunction'
+                  - 'lambda:GetFunctionConfiguration'
+                Effect: Allow
+                Resource:
+                  - !GetAtt PublishToBillingRedactedFunction.Arn
+
+  PublishToBillingSQSQueue:
+    DependsOn:
+      - PublishToBillingSQSDLQueue
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "PublishToBillingSQSQueue-${Environment}"
+      KmsMasterKeyId: !GetAtt SQSKMSKeyPublishBilling.Arn
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt  PublishToBillingSQSDLQueue.Arn
+        maxReceiveCount: 5
+      MessageRetentionPeriod: 604800 #7 days
+      RedriveAllowPolicy:
+        redrivePermission: denyAll
+
+  PublishToBillingSQSDLQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "PublishToBillingSQSDLQueue-${Environment}"
+      KmsMasterKeyId: !GetAtt SQSKMSKeyPublishBilling.Arn
+      MessageRetentionPeriod: 1209600 #14 days
+      RedriveAllowPolicy:
+        redrivePermission: allowAll
+
+  PublishToBillingSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref epSNSTopic
+      Endpoint: !GetAtt  PublishToBillingRedactedFunction.Arn #Lambda
+      Protocol: lambda
+      FilterPolicy:
+        eventName:
+          - IPV_KBV_CRI_REQUEST_SENT
+
+  PublishToBillingPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref PublishToAccessRole
+      PolicyName: publish_to_billing_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'sqs:SendMessage'
+            Resource:
+              - !Sub "${PublishToBillingSQSQueue.Arn}"
+          - Effect: Allow
+            Action:
+              - 'sqs:DeleteMessage'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:GetQueueAttributes'
+              - 'sqs:SendMessage'
+            Resource:
+              - !Sub "${PublishToBillingSQSDLQueue.Arn}"
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: !GetAtt SQSKMSKeyPublishBilling.Arn
+          - Effect: Allow
+            Action:
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt PublishToBillingConsumeFailureMessageBucket.Arn
+              - !Sub "${PublishToBillingConsumeFailureMessageBucket.Arn}/*"
+
+  PublishToAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sqs.amazonaws.com
+                - lambda.amazonaws.com
+                - s3.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+  PublishToBillingQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      "Queues": [
+        { "Ref" : "PublishToBillingSQSQueue" }
+      ]
+      PolicyDocument:
+        Statement:
+          # allow txma access
+          - Action:
+              - 'sqs:*'
+            Effect: "Allow"
+            Resource: !Sub "${PublishToBillingSQSQueue.Arn}"
+            Principal:
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+          # allow billing access
+          - !If
+            - IsProductionOrStaging
+            - Action:
+                - 'sqs:ChangeMessageVisibility'
+                - 'sqs:ReceiveMessage'
+                - 'sqs:GetQueueAttributes'
+                - 'sqs:DeleteMessage'
+              Effect: "Allow"
+              Resource: !Sub "${PublishToBillingSQSQueue.Arn}"
+              # AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+              Principal:
+                AWS: "{{resolve:ssm:BillingARN}}"
+            - !Ref "AWS::NoValue"
+
+  PublishToBillingRedactedLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: "/aws/lambda/PublishToBillingRedactedFunction"
+      RetentionInDays: 7
+
+  PublishToBillingRedactedFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PublishToBillingRedactedFunction
+      Principal: sns.amazonaws.com
+      SourceAccount: !Sub "${AWS::AccountId}"
+      SourceArn: !Ref epSNSTopic
+
+  PublishToBillingRedactedFunction:
+    DependsOn:
+      - PublishToBillingRedactedLogGroup
+      - PublishToAccessRole
+      - PublishToBillingSQSQueue
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "PublishToBillingRedactedFunction"
+      CodeUri: ../event-processing/lambda
+      PackageType: Zip
+      Handler: billing-redacted-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt  PublishToAccessRole.Arn
+      Environment:
+        Variables:
+          publishToBillingARN: !GetAtt PublishToBillingSQSQueue.Arn
+          defaultComponentId: "BILLING"
+          publishToBillingFailureBucketARN: !GetAtt PublishToBillingConsumeFailureMessageBucket.Arn
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt PublishToBillingSQSQueue.QueueName
+      KmsKeyArn: !GetAtt  SQSKMSKeyPublishBilling.Arn
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - billing-redacted-app.ts
+
+  PublishToBillingUnknownFieldsErrorMetric:
+    DependsOn:
+      - PublishToBillingRedactedFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "WARN UNKNOWN FIELDS"
+      LogGroupName: "/aws/lambda/PublishToBillingRedactedFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Unknown Fields PublishToBilling"
+
+  PublishToBillingUnknownFieldsAlarm:
+    DependsOn:
+      - PublishToBillingUnknownFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Publish To Billing Unknown Fields Alarm"
+      AlarmName: "UnknownFieldsAlarm-PublishToBilling"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400 #Every one day
+      Threshold: 1
+      MetricName: "Unknown Fields PublishToBilling"
+      Namespace: "lambda/di/txma/errors"
+
+  PublishToBillingRequiredFieldsErrorMetric:
+    DependsOn:
+      - PublishToBillingRedactedFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR VALIDATION ERROR"
+      LogGroupName: "/aws/lambda/PublishToBillingRedactedFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Validation Errors PublishToBilling"
+
+  PublishToBillingRequiredFieldsAlarm:
+    DependsOn:
+      - PublishToBillingRequiredFieldsErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Publish To Billing Required Fields Alarm"
+      AlarmName: "RequiredFieldsAlarm-PublishToBilling"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400 #Every one day
+      Threshold: 1
+      MetricName: "Validation Errors PublishToBilling"
+      Namespace: "lambda/di/txma/errors"
+
+  PublishToBillingSQSEventFailureErrorMetric:
+    DependsOn:
+      - PublishToBillingRedactedFunction
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: "ERROR SQS Publish ERROR"
+      LogGroupName: "/aws/lambda/PublishToBillingRedactedFunction"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "lambda/di/txma/errors"
+          MetricName: "Billing SQS Publish Failed Errors"
+
+  PublishToBillingSQSEventFailureAlarm:
+    DependsOn:
+      - PublishToBillingSQSEventFailureErrorMetric
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Billing SQS Publish Failed Alarm"
+      AlarmName: "SQSPublishToBillingFailedAlarm"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 3600 #86400 #Every one day
+      Threshold: 1
+      MetricName: "Billing SQS Publish Failed Errors"
+      Namespace: "lambda/di/txma/errors"
+
+
+  PublishToBillingSQSOldestMessageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Billing SQS Publish OldestMessage Alarm"
+      AlarmName: "OldestMessageAlarm-PublishToBilling"
+      MetricName: "ApproximateAgeOfOldestMessage"
+      Namespace: "AWS/SQS"
+      Dimensions:
+        - Name: "QueueName"
+          Value: !GetAtt PublishToBillingSQSQueue.QueueName
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 3600 #Message Older than an Hour
+      Threshold: 1
+
+
+  PublishToBillingRedactedFunctionTestInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PublishToBillingRedactedFunction
+      Principal: !Ref TestRoleArn
+
+  PublishToBillingConsumeFailureMessageBucket:
+    DependsOn:
+      - PublishToBillingConsumeFailureBucketLogsBucket
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-publish-to-billing-failure"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref  PublishToBillingConsumeFailureBucketLogsBucket
+        LogFilePrefix: "event-processing/publish-to-billing-failure/"
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  PublishToBillingConsumeFailureBucketObjectPutAlarm:
+    DependsOn:
+      - PublishToBillingConsumeFailureMessageBucket
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub
+        - "S3PutObjectsAlarm-${BucketName}"
+        - BucketName: !Ref PublishToBillingConsumeFailureMessageBucket
+      AlarmDescription: !Sub
+        - "An alarm where a PutRequest event occurs in the bucket ${BucketName}"
+        - BucketName: !Ref PublishToBillingConsumeFailureMessageBucket
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 1
+      TreatMissingData: notBreaching
+      MetricName: "PutRequests"
+      Namespace: "AWS/S3"
+      Dimensions:
+        - Name: BucketName
+          Value: !Ref PublishToBillingConsumeFailureMessageBucket
+        - Name: FilterId
+          Value: EntireBucket
+
+  PublishToBillingConsumeFailureBucketLogsBucket:
+    Type: AWS::S3::Bucket
+    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-publish-to-billing-failure-logs"
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
+
+  PublishToBillingConsumeFailureBucketLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PublishToBillingConsumeFailureBucketLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${PublishToBillingConsumeFailureBucketLogsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+  #BillingData changes ends.

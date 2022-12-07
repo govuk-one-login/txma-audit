@@ -10,20 +10,25 @@ import { IUnknownFieldDetails } from '../models/unknown-field-details.interface'
 export class ValidationService {
     static async validateSQSRecord(record: SQSRecord): Promise<IValidationResponse> {
         const message = record.body;
-
-        return await this.isValidEventMessage(message, record.eventSourceARN, false);
+        return await this.isValidEventMessage(message, record.eventSourceARN, "NONE");
     }
 
-    static async validateSNSRecord(record: SNSEventRecord): Promise<IValidationResponse> {
+    static async validateSNSRecordForAccounts(record: SNSEventRecord): Promise<IValidationResponse> {
         const message = record.Sns.Message;
 
-        return await this.isValidEventMessage(message, record.EventSubscriptionArn, true);
+        return await this.isValidEventMessage(message, record.EventSubscriptionArn, "ACCOUNTS");
+    }
+
+    static async validateSNSRecordForBilling(record: SNSEventRecord): Promise<IValidationResponse> {
+        const message = record.Sns.Message;
+
+        return await this.isValidEventMessage(message, record.EventSubscriptionArn, "BILLLING");
     }
 
     private static async isValidEventMessage(
         message: string,
         eventSource: string,
-        isAccounts: boolean,
+        validationFor: string,
     ): Promise<IValidationResponse> {
         const eventMessage = AuditEvent.fromJSONString(message) as IAuditEventUnknownFields;
         const eventMessageUser = eventMessage.user as IUserUnknownFields;
@@ -79,7 +84,22 @@ export class ValidationService {
             };
         }
 
-        if (isAccounts && !eventMessage.client_id) {
+        if ((validationFor === 'ACCOUNTS' || validationFor === 'BILLING') && !eventMessage.timestamp_formatted ) {
+            return {
+                isValid: false,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent),
+                error: {
+                    resourceName: eventSource,
+                    eventId: eventMessage.event_id,
+                    eventName: eventMessage.event_name,
+                    timestamp: undefined,
+                    requiredField: RequiredFieldsEnum.timestampFormatted,
+                    message: 'timestamp_formatted is a required field.',
+                },
+            };
+        }
+
+        if ((validationFor === 'ACCOUNTS' || validationFor === 'BILLING') && !eventMessage.client_id) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
@@ -94,7 +114,22 @@ export class ValidationService {
             };
         }
 
-        if (isAccounts && !eventMessage.user?.user_id) {
+        if ( validationFor === 'BILLING' && !eventMessage.component_id) {
+            return {
+                isValid: false,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent),
+                error: {
+                    resourceName: eventSource,
+                    eventId: eventMessage.event_id,
+                    eventName: eventMessage.event_name,
+                    timestamp: eventMessage.timestamp.toString(),
+                    requiredField: RequiredFieldsEnum.componentId,
+                    message: 'component_id is a required field.',
+                },
+            };
+        }
+
+        if ( (validationFor === 'ACCOUNTS')  && !eventMessage.user?.user_id) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
@@ -109,7 +144,7 @@ export class ValidationService {
             };
         }
 
-        if (isAccounts && !eventMessage.user?.govuk_signin_journey_id) {
+        if (validationFor === 'ACCOUNTS'  && !eventMessage.user?.govuk_signin_journey_id) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
@@ -123,6 +158,22 @@ export class ValidationService {
                 },
             };
         }
+
+        if ( validationFor === 'BILLING' && !eventMessage.user?.transaction_id) {
+            return {
+                isValid: false,
+                message: AuditEvent.toJSON(eventMessage as IAuditEvent),
+                error: {
+                    resourceName: eventSource,
+                    eventId: eventMessage.event_id,
+                    eventName: eventMessage.event_name,
+                    timestamp: eventMessage.timestamp.toString(),
+                    requiredField: RequiredFieldsEnum.transactionId,
+                    message: 'transaction_id is a required field.',
+                },
+            };
+        }
+
 
         return {
             isValid: true,
