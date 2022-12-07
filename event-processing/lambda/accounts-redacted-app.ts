@@ -25,7 +25,7 @@ export const handler = async (event: SNSEvent): Promise<void> => {
     try {
         for (const record of event.Records) {
             try {
-                const validationResponse = await ValidationService.validateSNSRecord(record as SNSEventRecord);
+                const validationResponse = await ValidationService.validateSNSRecordForAccounts(record as SNSEventRecord);
                 if (!validationResponse.isValid) {
                     console.log(
                         '[ERROR] VALIDATION ERROR\n' +
