@@ -5,13 +5,13 @@ import { IRedactedAuditEvent } from '../models/redacted-event';
 
 export class SqsService {
     static sqsClient = new SQSClient({ region: 'eu-west-2' });
-    static async sendMessageToSQS(message: IRedactedAuditEvent, queueURL: string | undefined): Promise<void> {
+    static async sendMessageToSQS(eventName:string, message: unknown, queueURL: string | undefined): Promise<void> {
         const cleanMessage = ObjectHelper.removeEmpty(message);
         const params = {
             MessageAttributes: {
                 eventName: {
                     DataType: 'String',
-                    StringValue: message.event_name,
+                    StringValue: eventName,
                 },
                 MaxNumberOfMessages: {
                     DataType: 'Number',

@@ -1,8 +1,8 @@
 /* eslint-disable */
 import { TestHelper } from '../test-helpers/test-helper';
-import {AccountsRedactedService} from "../../services/redacted-service";
+import {RedactedService} from "../../services/redacted-service";
 import {IAuditEvent, IAuditEventUserMessage} from "../../models/audit-event";
-import {IRedactedAuditEvent} from "../../models/redacted-event";
+import {IRedactedAuditEvent} from "../../models/redacted-event-accounts";
 
 
 describe('Unit test for app handler', function () {
@@ -39,7 +39,7 @@ describe('Unit test for app handler', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        const result = AccountsRedactedService.applyRedaction(data);
+        const result = RedactedService.applyRedactionForAccounts(data);
         expect(result).toEqual(expectedResult);
     });
 
@@ -83,7 +83,7 @@ describe('Unit test for app handler', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        const result = AccountsRedactedService.applyRedaction(data);
+        const result = RedactedService.applyRedactionForAccounts(data);
         expect(result).toEqual(expectedResult);
     });
 
@@ -126,7 +126,7 @@ describe('Unit test for app handler', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        const result = AccountsRedactedService.applyRedaction(data);
+        const result = RedactedService.applyRedactionForAccounts(data);
         expect(result).toEqual(expectedResult);
     });
 
@@ -169,7 +169,7 @@ describe('Unit test for app handler', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(exampleMessage)).toString();
-        const result = AccountsRedactedService.applyRedaction(data);
+        const result = RedactedService.applyRedactionForAccounts(data);
         expect(result).toEqual(expectedResult);
     });
 
