@@ -1,7 +1,7 @@
 import { ObjectHelper } from '../utilities/object-helper';
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { ErrorService } from './error-service';
-import { IRedactedAuditEvent } from '../models/redacted-event';
+import { IRedactedAuditEvent } from '../models/redacted-event-accounts';
 
 export class SqsService {
     static sqsClient = new SQSClient({ region: 'eu-west-2' });
