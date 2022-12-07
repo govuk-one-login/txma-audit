@@ -1,8 +1,8 @@
 /* eslint-disable */
 import { IEnrichedAuditEvent } from '../../../models/enriched-audit-event';
 import {TestHelper} from "../../test-helpers/test-helper";
-import {AccountsRedactedService} from "../../../services/redacted-service";
-import {IRedactedAuditEvent} from "../../../models/redacted-event";
+import {RedactedService} from "../../../services/redacted-service";
+import {IRedactedAuditEvent} from "../../../models/redacted-event-accounts";
 
 describe('Unit test for accountsredacted-service', function () {
     it('returns a redacted event', async () => {
@@ -32,6 +32,6 @@ describe('Unit test for accountsredacted-service', function () {
         };
 
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(inputMessage)).toString();
-        expect(AccountsRedactedService.applyRedaction(data)).toEqual(expectedMessage);
+        expect(RedactedService.applyRedactionForAccounts(data)).toEqual(expectedMessage);
     });
 });

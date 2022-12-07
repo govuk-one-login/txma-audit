@@ -11,7 +11,7 @@ import { AuditEvent as UnknownAuditEvent } from '../test-events/unknown-audit-ev
 import { ICleansedEvent } from '../../models/cleansed-event';
 import { IEnrichedAuditEvent } from '../../models/enriched-audit-event';
 import {SNSMessage} from "aws-lambda/trigger/sns";
-import {IRedactedAuditEvent} from "../../models/redacted-event";
+import {IRedactedAuditEvent} from "../../models/redacted-event-accounts";
 
 export class TestHelper {
     private static sqsRecord: SQSRecord = {
