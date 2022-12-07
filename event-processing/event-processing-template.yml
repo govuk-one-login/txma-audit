@@ -2453,6 +2453,8 @@ Resources:
           - TXMA_AUDIT_QUERY_OUTPUT_GENERATED
           - TXMA_AUDIT_QUERY_OUTPUT_ACCESSED
           - TXMA_AUDIT_QUERY_ILLEGAL_REQUEST
+          - IPV_IDENTITY_REUSE_COMPLETE
+          - IPV_IDENTITY_REUSE_RESET
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -2569,6 +2571,8 @@ Resources:
           - DCMAW_WEB_END
           - TXMA_AUDIT_QUERY_DATA_REQUEST
           - TXMA_AUDIT_QUERY_OUTPUT_GENERATED
+          - IPV_IDENTITY_REUSE_COMPLETE
+          - IPV_IDENTITY_REUSE_RESET
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
