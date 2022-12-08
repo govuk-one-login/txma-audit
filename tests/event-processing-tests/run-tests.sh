@@ -4,7 +4,7 @@ set -eu
 
 gradle -v
 
-cd /
+#cd /
 
 mkdir $TEST_ENVIRONMENT
 
@@ -12,7 +12,7 @@ echo "Environment: $TEST_ENVIRONMENT"
 
 echo "Current Working Directory: $PWD"
 
-# gradle -q test --info --stacktrace
+gradle -q test --info --stacktrace
 
 cp null/result.json $TEST_ENVIRONMENT/result.json
 cp null/result.xml $TEST_ENVIRONMENT/result.xml
