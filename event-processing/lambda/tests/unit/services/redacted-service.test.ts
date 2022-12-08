@@ -3,6 +3,7 @@ import { IEnrichedAuditEvent } from '../../../models/enriched-audit-event';
 import {TestHelper} from "../../test-helpers/test-helper";
 import {RedactedService} from "../../../services/redacted-service";
 import {IRedactedAuditEvent} from "../../../models/redacted-event-accounts";
+import { ObjectHelper } from '../../../utilities/object-helper';
 
 describe('Unit test for accountsredacted-service', function () {
     it('returns a redacted event', async () => {
@@ -30,7 +31,7 @@ describe('Unit test for accountsredacted-service', function () {
                 user_id: ""
             }
         };
-
+        
         const data: string = Buffer.from(TestHelper.encodeAuditEvent(inputMessage)).toString();
         expect(RedactedService.applyRedactionForAccounts(data)).toEqual(expectedMessage);
     });

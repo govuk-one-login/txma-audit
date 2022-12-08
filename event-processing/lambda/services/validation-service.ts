@@ -7,22 +7,25 @@ import { IUserUnknownFields } from '../models/user-unknown-fields.interface';
 import { RequiredFieldsEnum } from '../enums/required-fields.enum';
 import { IUnknownFieldDetails } from '../models/unknown-field-details.interface';
 
+// @ts-ignore
 export class ValidationService {
     static async validateSQSRecord(record: SQSRecord): Promise<IValidationResponse> {
         const message = record.body;
-        return await this.isValidEventMessage(message, record.eventSourceARN, "NONE");
+        return await this.isValidEventMessage(message, record.eventSourceARN, 'NONE');
     }
 
     static async validateSNSRecordForAccounts(record: SNSEventRecord): Promise<IValidationResponse> {
         const message = record.Sns.Message;
 
-        return await this.isValidEventMessage(message, record.EventSubscriptionArn, "ACCOUNTS");
+        return await this.isValidEventMessage(message, record.EventSubscriptionArn, 'ACCOUNTS');
     }
 
     static async validateSNSRecordForBilling(record: SNSEventRecord): Promise<IValidationResponse> {
         const message = record.Sns.Message;
+        console.log("Message body " + message);
 
-        return await this.isValidEventMessage(message, record.EventSubscriptionArn, "BILLLING");
+
+        return await this.isValidEventMessage(message, record.EventSubscriptionArn, 'BILLING');
     }
 
     private static async isValidEventMessage(
@@ -30,6 +33,7 @@ export class ValidationService {
         eventSource: string,
         validationFor: string,
     ): Promise<IValidationResponse> {
+        console.log('ValidationFor value ' + validationFor);
         const eventMessage = AuditEvent.fromJSONString(message) as IAuditEventUnknownFields;
         const eventMessageUser = eventMessage.user as IUserUnknownFields;
         if (
@@ -84,7 +88,7 @@ export class ValidationService {
             };
         }
 
-        if ((validationFor === 'ACCOUNTS' || validationFor === 'BILLING') && !eventMessage.timestamp_formatted ) {
+        if ((validationFor.localeCompare('ACCOUNTS') ==0 || validationFor.localeCompare('BILLING') ==0) && !eventMessage.timestamp_formatted ) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
@@ -99,7 +103,7 @@ export class ValidationService {
             };
         }
 
-        if ((validationFor === 'ACCOUNTS' || validationFor === 'BILLING') && !eventMessage.client_id) {
+        if ((validationFor.localeCompare('ACCOUNTS') ==0 || validationFor.localeCompare('BILLING') ==0) && !eventMessage.client_id) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
@@ -114,7 +118,7 @@ export class ValidationService {
             };
         }
 
-        if ( validationFor === 'BILLING' && !eventMessage.component_id) {
+        if (validationFor.localeCompare('BILLING') ==0 && !eventMessage.component_id) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
@@ -129,7 +133,7 @@ export class ValidationService {
             };
         }
 
-        if ( (validationFor === 'ACCOUNTS')  && !eventMessage.user?.user_id) {
+        if (validationFor.localeCompare('ACCOUNTS') ==0  && !eventMessage.user?.user_id) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
@@ -144,7 +148,7 @@ export class ValidationService {
             };
         }
 
-        if (validationFor === 'ACCOUNTS'  && !eventMessage.user?.govuk_signin_journey_id) {
+        if (validationFor.localeCompare('ACCOUNTS') ==0  && !eventMessage.user?.govuk_signin_journey_id) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
@@ -159,7 +163,7 @@ export class ValidationService {
             };
         }
 
-        if ( validationFor === 'BILLING' && !eventMessage.user?.transaction_id) {
+        if ( validationFor.localeCompare('BILLING') ==0 && !eventMessage.user?.transaction_id) {
             return {
                 isValid: false,
                 message: AuditEvent.toJSON(eventMessage as IAuditEvent),
@@ -202,4 +206,5 @@ export class ValidationService {
     private static isDate = (timestamp: number): boolean => {
         return new Date(timestamp * 1000).getTime() > 0;
     };
+
 }
