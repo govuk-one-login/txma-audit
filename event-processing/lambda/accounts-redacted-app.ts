@@ -7,21 +7,15 @@ import { ValidationService } from './services/validation-service';
 import { ValidationException } from './exceptions/validation-exception';
 import { IRequiredFieldError } from './models/required-field-error.interface';
 import { S3Service } from './services/s3-service';
+import { ObjectHelper } from './utilities/object-helper';
 export const handler = async (event: SNSEvent): Promise<void> => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const arn: string = process.env.publishToAccountsARN;
-
-    const region = arn.split(':')[3];
-    const accountId = arn.split(':')[4];
-    const queueName: string = arn.split(':')[5];
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const failureBucketARN: string = process.env.publishToAccountsFailureBucketARN;
-    const failureBucketName: string = failureBucketARN.split(':')[5];
-
-    const queueUrl = 'https://sqs.' + region + '.amazonaws.com/' + accountId + '/' + queueName;
+    const queueUrl = ObjectHelper.getSQSURL(arn);
+    const failureBucketName: string = ObjectHelper.getBucketName(failureBucketARN);
     try {
         for (const record of event.Records) {
             try {
