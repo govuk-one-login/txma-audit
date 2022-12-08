@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id "io.qameta.allure" version "2.10.0"
 }
 
 version '1.0-SNAPSHOT'
@@ -20,6 +21,9 @@ dependencies {
     testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.3.4'
     testImplementation 'org.junit.platform:junit-platform-suite:1.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation 'io.qameta.allure:allure-maven:2.11.2'
+    implementation group: 'io.qameta.allure', name: 'allure-cucumber7-jvm', version: '2.18.1'
+    implementation 'com.github.automatedowl:allure-environment-writer:1.0.0'
 }
 
 task cucumber(type: Test) {
