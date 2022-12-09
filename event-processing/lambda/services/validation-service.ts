@@ -22,7 +22,7 @@ export class ValidationService {
     static async validateSNSRecordForBilling(record: SNSEventRecord): Promise<IValidationResponse> {
         const message = record.Sns.Message;
 
-        return await this.isValidEventMessage(message, record.EventSubscriptionArn, "BILLING");
+        return await this.isValidEventMessage(message, record.EventSubscriptionArn, "NONE");
     }
 
     private static async isValidEventMessage(
