@@ -751,7 +751,6 @@ public class LambdaToS3StepDefinitions {
                 .receiptHandle(message.receiptHandle())
                 .build();
         sqs.deleteMessage(deleteMessageRequest);
-        System.out.println("sqsoutput " +sqsoutputtext);
     }
 
 
@@ -759,7 +758,7 @@ public class LambdaToS3StepDefinitions {
     public void theSQSBelowShouldHaveANewEventMatchingTheRespectiveOutputFileInTheFolder(String arg0, String arg1, String arg2) throws JSONException, IOException {
         receiveSqsMessage(ConfigurationReader.getSqsUrl(),30);
 
-        Path expectedJson = Path.of(new File("/Users/dennythampi/IdeaProjects/di-txma-audit/tests/event-processing-tests/src/test/resources/Test Data/AuthOIDC/Accounts_expected.json").getAbsolutePath());
+        Path expectedJson = Path.of(new File("src/test/resources/Test Data/AuthOIDC/Accounts_expected.json").getAbsolutePath());
         String file1 = Files.readString(expectedJson);
         String file2 = sqsoutputtext;
         JSONObject json1 = new JSONObject(file1);
@@ -767,7 +766,6 @@ public class LambdaToS3StepDefinitions {
         json1.put("timestamp",json2.get("timestamp"));
 
         JSONAssert.assertEquals(json2.toString(),json1.toString(), JSONCompareMode.NON_EXTENSIBLE);
-        System.out.println("expectedoutput "+expectedJson);
 
     }
 

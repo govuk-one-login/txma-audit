@@ -22,7 +22,6 @@ public class ConfigurationReader {
                     .build();
 
             GetParameterResponse parameterResponse = ssmClient.getParameter(parameterRequest);
-            System.out.println("paramenter requested" +parameterResponse.parameter().value());
             String[] arnArray = parameterResponse.parameter().value().split(":");
             String accountId = arnArray[4];
             String queueName = arnArray[5];

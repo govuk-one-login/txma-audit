@@ -1,4 +1,4 @@
-@build @dev
+#@build @dev
 Feature: Raw event data journey from the lambda to S3 for build (and dev) environment
 
   Fails to run on AWS only. works locally
