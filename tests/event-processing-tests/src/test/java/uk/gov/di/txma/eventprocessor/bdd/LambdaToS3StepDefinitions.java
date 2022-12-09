@@ -1,12 +1,15 @@
 package uk.gov.di.txma.eventprocessor.bdd;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.cucumber.datatable.DataTable;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -23,9 +26,25 @@ import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
 import software.amazon.awssdk.services.lambda.model.LambdaException;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import uk.gov.di.txma.eventprocessor.bdd.utilities.ConfigurationReader;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,8 +72,12 @@ public class LambdaToS3StepDefinitions {
     String requestID;
     int count = 0;
     JSONObject rawJSON;
+    JSONObject s3ExpectedJSON;
 
     JSONObject enrichedJSON;
+
+    static String sqsoutputtext;
+
 
     /**
      * Checks that the input test data is present. And changes it to look like an SQS message
@@ -73,8 +96,8 @@ public class LambdaToS3StepDefinitions {
     @Given("the SQS file {string} is available in the {string} folder")
     public void checkSQSInputFileIsAvailableInFolder(String fileName, String account) throws IOException {
         JSONObject rawJSON = new JSONObject(readJSONFile(account + "/" + fileName));
-        JSONObject JSONWithComponentIdAndTimestampFields = addComponentIdAndTimestampFields(rawJSON, account);
-        lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithComponentIdAndTimestampFields);
+        JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
     }
 
     /**
@@ -416,7 +439,7 @@ public class LambdaToS3StepDefinitions {
         return false;
     }
 
-    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws InterruptedException {
+    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws IOException, InterruptedException {
 
         while (count < 11) {
             // Checks for latest key and saves the contents in the output variable
@@ -692,6 +715,8 @@ public class LambdaToS3StepDefinitions {
         rawJSON = new JSONObject(readJSONFile("DCMAW/baseFile"));
         JSONObject JSONWithComponentIdAndTimestampFields = addComponentIdAndTimestampFields(rawJSON, "DCMAW");
         lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithComponentIdAndTimestampFields);
+        s3ExpectedJSON = JSONWithComponentIdAndTimestampFields;
+        System.out.println("JSONWithComponentIdAndTimestampFields = " + JSONWithComponentIdAndTimestampFields);
     }
 
     @And("the event {string} has been added")
@@ -699,5 +724,49 @@ public class LambdaToS3StepDefinitions {
         JSONObject JSONWithEventAdded = addEventName(rawJSON, eventName);
         lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithEventAdded);
     }
-}
 
+    @Given("the SQS data file {string} is available for the {string} team")
+    public void the_sqs_data_file_is_available_for_the_team(String fileName, String account) throws IOException {
+        // Write code here that turns the phrase above into concrete actions
+        JSONObject rawJSON = new JSONObject(readJSONFile(fileName));
+        JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
+    }
+
+
+
+    public static void receiveSqsMessage(String CFN_SqsURL, int timeout) {
+        SqsClient sqs = SqsClient.builder().build();
+
+        // Get the receipt handle for the first message in the queue
+        ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
+                .queueUrl(CFN_SqsURL)
+                .build();
+        Message message = sqs.receiveMessage(receiveRequest)
+                .messages()
+                .get(0);
+        sqsoutputtext = message.body();
+        DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
+                .queueUrl(CFN_SqsURL)
+                .receiptHandle(message.receiptHandle())
+                .build();
+        sqs.deleteMessage(deleteMessageRequest);
+    }
+
+
+    @Then("the SQS below should have a new event matching the respective {string} output file {string} in the {string} folder")
+    public void theSQSBelowShouldHaveANewEventMatchingTheRespectiveOutputFileInTheFolder(String arg0, String arg1, String arg2) throws JSONException, IOException {
+        receiveSqsMessage(ConfigurationReader.getSqsUrl(),30);
+
+        Path expectedJson = Path.of(new File("src/test/resources/Test Data/AuthOIDC/Accounts_expected.json").getAbsolutePath());
+        String file1 = Files.readString(expectedJson);
+        String file2 = sqsoutputtext;
+        JSONObject json1 = new JSONObject(file1);
+        JSONObject json2= new JSONObject(file2);
+        json1.put("timestamp",json2.get("timestamp"));
+
+        JSONAssert.assertEquals(json2.toString(),json1.toString(), JSONCompareMode.NON_EXTENSIBLE);
+
+    }
+
+}
