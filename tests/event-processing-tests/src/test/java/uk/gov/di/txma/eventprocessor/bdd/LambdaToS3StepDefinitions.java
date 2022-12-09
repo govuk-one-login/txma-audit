@@ -53,6 +53,7 @@ public class LambdaToS3StepDefinitions {
     String requestID;
     int count = 0;
     JSONObject rawJSON;
+    JSONObject s3ExpectedJSON;
 
     JSONObject enrichedJSON;
 
@@ -73,8 +74,8 @@ public class LambdaToS3StepDefinitions {
     @Given("the SQS file {string} is available in the {string} folder")
     public void checkSQSInputFileIsAvailableInFolder(String fileName, String account) throws IOException {
         JSONObject rawJSON = new JSONObject(readJSONFile(account + "/" + fileName));
-        JSONObject JSONWithComponentIdAndTimestampFields = addComponentIdAndTimestampFields(rawJSON, account);
-        lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithComponentIdAndTimestampFields);
+        JSONObject enrichedJSON = addComponentIdAndTimestampFields(rawJSON, account);
+        lambdaInput = wrapJSONObjectAsAnSQSMessage(enrichedJSON);
     }
 
     /**
@@ -416,7 +417,7 @@ public class LambdaToS3StepDefinitions {
         return false;
     }
 
-    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws InterruptedException {
+    public boolean isJSONObjectFoundInS3(String endpoint, JSONObject expectedS3) throws IOException, InterruptedException {
 
         while (count < 11) {
             // Checks for latest key and saves the contents in the output variable
@@ -692,6 +693,8 @@ public class LambdaToS3StepDefinitions {
         rawJSON = new JSONObject(readJSONFile("DCMAW/baseFile"));
         JSONObject JSONWithComponentIdAndTimestampFields = addComponentIdAndTimestampFields(rawJSON, "DCMAW");
         lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithComponentIdAndTimestampFields);
+        s3ExpectedJSON = JSONWithComponentIdAndTimestampFields;
+        System.out.println("JSONWithComponentIdAndTimestampFields = " + JSONWithComponentIdAndTimestampFields);
     }
 
     @And("the event {string} has been added")
@@ -700,4 +703,3 @@ public class LambdaToS3StepDefinitions {
         lambdaInput = wrapJSONObjectAsAnSQSMessage(JSONWithEventAdded);
     }
 }
-

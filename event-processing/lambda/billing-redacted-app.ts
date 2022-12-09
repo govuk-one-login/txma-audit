@@ -1,6 +1,6 @@
 import { SNSEvent, SNSEventRecord, SQSRecord } from 'aws-lambda';
 import { SqsService } from './services/sqs-service';
-import { IRedactedAuditEvent } from './models/redacted-event-accounts';
+import { IRedactedBillingAuditEvent } from './models/redacted-event-billing';
 import { RedactedService } from './services/redacted-service';
 import { ErrorService } from './services/error-service';
 import { ValidationService } from './services/validation-service';
@@ -11,15 +11,16 @@ import { ObjectHelper } from './utilities/object-helper';
 export const handler = async (event: SNSEvent): Promise<void> => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const arn: string = process.env.publishToAccountsARN;
+    const arn: string = process.env.publishToBillingARN;
     // @ts-ignore
-    const failureBucketARN: string = process.env.publishToAccountsFailureBucketARN;
+    const failureBucketARN: string = process.env.publishToBillingFailureBucketARN;
     const queueUrl = ObjectHelper.getSQSURL(arn);
     const failureBucketName: string = ObjectHelper.getBucketName(failureBucketARN);
+
     try {
         for (const record of event.Records) {
             try {
-                const validationResponse = await ValidationService.validateSNSRecordForAccounts(record as SNSEventRecord);
+                const validationResponse = await ValidationService.validateSNSRecordForBilling(record as SNSEventRecord);
                 if (!validationResponse.isValid) {
                     console.log(
                         '[ERROR] VALIDATION ERROR\n' +
@@ -32,7 +33,7 @@ export const handler = async (event: SNSEvent): Promise<void> => {
                     );
                     await S3Service.putObject(failureBucketName, record.Sns.MessageId, record.Sns.Message);
                 } else {
-                    const redactedMessage: IRedactedAuditEvent = RedactedService.applyRedactionForAccounts(
+                    const redactedMessage: IRedactedBillingAuditEvent = RedactedService.applyRedactionForBilling(
                         record.Sns.Message,
                     );
                     console.log('Message Id ' + record.Sns.MessageId);
