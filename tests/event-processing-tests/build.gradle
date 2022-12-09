@@ -10,20 +10,30 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.cucumber:cucumber-java:7.2.3'
+    implementation 'io.cucumber:cucumber-java:7.8.1'
     implementation platform('software.amazon.awssdk:bom:2.17.179')
     implementation 'software.amazon.awssdk:lambda'
     implementation 'software.amazon.awssdk:s3'
     implementation 'software.amazon.awssdk:cloudwatchlogs'
     implementation 'software.amazon.awssdk:cloudwatch'
-    implementation 'org.json:json:20171018'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.3.4'
-    testImplementation 'org.junit.platform:junit-platform-suite:1.8.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-    implementation 'io.qameta.allure:allure-maven:2.11.2'
+    implementation 'org.json:json:20220924'
+    implementation 'software.amazon.awssdk:sqs'
+    implementation 'software.amazon.awssdk:kms'
+    implementation 'org.testng:testng:7.6.1'
+    implementation 'org.testng:testng:7.6.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testImplementation 'org.skyscreamer:jsonassert:1.5.1'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.8.1'
+    testImplementation 'org.junit.platform:junit-platform-suite:1.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    implementation 'software.amazon.awssdk:ssm'
+    implementation 'software.amazon.awssdk:ssm:SimpleSystemsManagement'
+    implementation 'io.qameta.allure:allure-maven:2.12.0'
     implementation group: 'io.qameta.allure', name: 'allure-cucumber7-jvm', version: '2.18.1'
     implementation 'com.github.automatedowl:allure-environment-writer:1.0.0'
+
+
+
 }
 
 task cucumber(type: Test) {
