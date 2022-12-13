@@ -3682,27 +3682,6 @@ Resources:
   # TXMA2 QueryResults resources end
 
   #BillingData changes
-  PublishToBillingAccessRole:
-    Type: AWS::IAM::Role
-    Properties:
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - sqs.amazonaws.com
-                - lambda.amazonaws.com
-                - s3.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-
   SQSKMSKeyPublishBilling:
     Type: AWS::KMS::Key
     Properties:
