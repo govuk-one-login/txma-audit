@@ -2455,6 +2455,9 @@ Resources:
           - TXMA_AUDIT_QUERY_ILLEGAL_REQUEST
           - IPV_IDENTITY_REUSE_COMPLETE
           - IPV_IDENTITY_REUSE_RESET
+          - DCMAW_DRIVING_LICENCE_SELECTED
+          - DCMAW_PASSPORT_SELECTED
+          - DCMAW_APP_HANDOFF_START
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -2573,6 +2576,9 @@ Resources:
           - TXMA_AUDIT_QUERY_OUTPUT_GENERATED
           - IPV_IDENTITY_REUSE_COMPLETE
           - IPV_IDENTITY_REUSE_RESET
+          - DCMAW_DRIVING_LICENCE_SELECTED
+          - DCMAW_PASSPORT_SELECTED
+          - DCMAW_APP_HANDOFF_START
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
