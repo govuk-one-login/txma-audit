@@ -113,6 +113,13 @@ Resources:
               - "*"
           - Effect: "Allow"
             Principal:
+              Service: "sqs.amazonaws.com"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
             Action:
               - 'kms:Decrypt'
