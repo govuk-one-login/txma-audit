@@ -10,6 +10,12 @@ These tests do not cover what the unit tests, within [the Event Processing code]
 The tests will test the configuration in the `dev`, `build`, and `staging` environments.
 
 ## Prerequisites
+Following tools and version are used in TxMA.
+
+Java:  Java 11
+
+Gradle: 7.4.2
+
 
 ### GDS use
 
@@ -59,13 +65,13 @@ Mac:
 ```bash
 export TEST_ENVIRONMENT="build"
 export TEST_REPORT_DIR="report"
-./gradlew clean test
+sh run-tests.sh
 ```
 Windows:
 ```bash
 set TEST_ENVIRONMENT="build"
 set TEST_REPORT_DIR="report"
-gradlew.bat clean
+
 ```
 
 To view the report produced, run the following command:
