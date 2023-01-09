@@ -54,13 +54,14 @@ Mac:
 ```bash
 export TEST_ENVIRONMENT="build"
 export TEST_REPORT_DIR="report"
-./gradlew clean test
+export BROWSER="chrome"
+sh run-tests.sh
 ```
 Windows:
 ```bash
 set TEST_ENVIRONMENT="build"
 set TEST_REPORT_DIR="report"
-gradlew.bat clean
+set BROWSER="chrome"
 ```
 
 To view the report produced, run the following command:
