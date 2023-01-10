@@ -2465,6 +2465,7 @@ Resources:
           - DCMAW_DRIVING_LICENCE_SELECTED
           - DCMAW_PASSPORT_SELECTED
           - DCMAW_APP_HANDOFF_START
+          - DCMAW_APP_HANDOFF_FAILURE
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -2586,6 +2587,7 @@ Resources:
           - DCMAW_DRIVING_LICENCE_SELECTED
           - DCMAW_PASSPORT_SELECTED
           - DCMAW_APP_HANDOFF_START
+          - DCMAW_APP_HANDOFF_FAILURE
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
