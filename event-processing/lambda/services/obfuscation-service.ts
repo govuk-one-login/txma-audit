@@ -30,13 +30,11 @@ export class ObfuscationService {
         return auditEvent;
     }
 
-    static async obfuscateCleansedEvent(cleansedEvent: ICleansedEvent, hmacKey: string): Promise<ICleansedEvent> {
+    static obfuscateCleansedEvent(cleansedEvent: ICleansedEvent, hmacKey: string): ICleansedEvent {
         if (cleansedEvent.user) {
-            if ((cleansedEvent.user as ICleansedUserEvent).user_id) {
-                (cleansedEvent.user as ICleansedUserEvent).user_id = this.obfuscateField(
-                    (cleansedEvent.user as ICleansedUserEvent).user_id,
-                    hmacKey,
-                );
+            const user = cleansedEvent.user as any;
+            if (user.user_id) {
+                user.user_id = this.obfuscateField(user.user_id, hmacKey);
             }
         }
 

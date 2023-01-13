@@ -5,8 +5,9 @@ export class KeyService {
     static client = new SecretsManagerClient({ region: 'eu-west-2' });
 
     static async getHmacKey(service: string): Promise<string> {
-        const secretArn: string | undefined =
-            service == 'cleanser' ? process.env.CLEANSER_SECRET_ARN : process.env.SECRET_ARN;
+        // const secretArn: string | undefined =
+        //     service == 'cleanser' ? process.env.CLEANSER_SECRET_ARN : process.env.SECRET_ARN;
+        const secretArn: string | undefined = process.env.SECRET_ARN;
         let secret: string;
         let data: GetSecretValueResponse;
 

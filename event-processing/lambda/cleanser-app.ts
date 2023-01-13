@@ -17,16 +17,16 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
     let hmacKey = '';
 
     try {
-        hmacKey = await KeyService.getHmacKey('cleanser');
+        hmacKey = await KeyService.getHmacKey('obfuscation');
     } catch (e) {
         transformationResult = 'ProcessingFailed';
-        console.log('An error occurred getting the hmac key.  Failed with ' + e);
+        console.log('An error occurred getting the cleanser hmac key.  Failed with ' + e);
     }
 
     const output = event.records.map((record: FirehoseTransformationEventRecord) => {
         const plaintextData: string = Buffer.from(record.data, 'base64').toString('utf-8');
         const events: unknown[] = JSON.parse(plaintextData);
-        const cleansedEvents: ICleansedEvent[] = [];
+        const cleansedEvents: unknown[] = [];
         let data: string;
 
         if (transformationResult === 'ProcessingFailed')
@@ -47,7 +47,9 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
         } else {
             const auditEvent: IEnrichedAuditEvent = EnrichedAuditEvent.fromJSONString(plaintextData);
             const cleansedEvent = CleansingService.cleanseEvent(auditEvent);
-            data = Buffer.from(JSON.stringify(cleansedEvent)).toString('base64');
+            const obfuscatedEvent = ObfuscationService.obfuscateCleansedEvent(cleansedEvent, hmacKey);
+            console.log(obfuscatedEvent);
+            data = Buffer.from(JSON.stringify(obfuscatedEvent)).toString('base64');
         }
 
         return {

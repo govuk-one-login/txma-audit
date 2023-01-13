@@ -14,6 +14,14 @@ describe('Unit test for cleansing-service', function () {
             client_id: 'An Example Client',
             user: {
                 transaction_id: 'a52f6f87',
+                user_id: 'some_user_id',
+                email: 'foo@bar.com',
+                phone: '07711223344',
+                ip_address: '100.100.100.100',
+                session_id: 'c222c1ec',
+                persistent_session_id: 'some session id',
+                govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+                device_id: 'some known device',
             },
             reIngestCount: 0,
         };
@@ -25,6 +33,10 @@ describe('Unit test for cleansing-service', function () {
             event_id: '123456789',
             component_id: '1234',
             client_id: 'An Example Client',
+            user: {
+                user_id: 'some_user_id',
+                govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
+            },
             reIngestCount: 0,
         };
 

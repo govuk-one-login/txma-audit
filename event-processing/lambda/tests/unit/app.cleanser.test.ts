@@ -5,12 +5,45 @@ import { IEnrichedAuditEvent, IAuditEventUserMessage } from '../../models/enrich
 import { ICleansedEvent } from '../../models/cleansed-event';
 import { TestHelper } from '../test-helpers/test-helper';
 import { CleanserHelper } from '../test-helpers/cleanser-helper';
+import { mockClient } from 'aws-sdk-client-mock';
+import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import { ObfuscationService } from '../../services/obfuscation-service';
 
 describe('Unit test for app handler', function () {
     let consoleWarningMock: jest.SpyInstance;
+    const secretManagerMock = mockClient(SecretsManagerClient);
 
     beforeEach(() => {
         consoleWarningMock = jest.spyOn(global.console, 'log');
+        secretManagerMock.reset();
+
+        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'no-data-secret' }).resolves({});
+
+        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'secret-binary' }).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            },
+            SecretBinary: Buffer.from(Buffer.from('secret-1-value').toString('base64')),
+        });
+
+        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'secret-string' }).resolves({
+            $metadata: {
+                httpStatusCode: 200,
+                requestId: '1',
+                extendedRequestId: '1',
+                cfId: '1',
+                attempts: 1,
+            },
+            SecretString: 'secret-1-value',
+        });
+
+        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'unknown_arn' }).rejects(new Error('secret not found'));
+
+        process.env.SECRET_ARN = 'secret-string';
     });
 
     afterEach(() => {
@@ -91,6 +124,7 @@ describe('Unit test for app handler', function () {
             reIngestCount: 0,
             user: {
                 govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
+                user_id: ObfuscationService.obfuscateField('some_user_id', 'secret-1-value'),
             },
         };
 
@@ -108,14 +142,14 @@ describe('Unit test for app handler', function () {
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(
             TestHelper.encodeAuditEvent(exampleMessage),
         );
-
+            console.log(outputMessage)
         const result = await handler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });
 
     it('cleanses all messages when receiving an array including evidence to be kept in the extensions field', async () => {
         const expectedData: string = Buffer.from(
-            TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessage()),
+            TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedAndObfuscatedMessage()),
         ).toString('base64');
         const expectedResult: FirehoseTransformationResult = {
             records: [
@@ -138,7 +172,7 @@ describe('Unit test for app handler', function () {
 
     it('cleanses all messages when receiving an array including one piece evidence to be kept in the extensions field and one to be removed', async () => {
         const expectedData: string = Buffer.from(
-            TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessage()),
+            TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedAndObfuscatedMessage()),
         ).toString('base64');
         const expectedResult: FirehoseTransformationResult = {
             records: [
