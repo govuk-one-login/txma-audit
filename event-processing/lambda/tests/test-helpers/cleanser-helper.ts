@@ -2,6 +2,7 @@
 
 import { IEnrichedAuditEvent } from '../../models/enriched-audit-event';
 import { ICleansedEvent } from '../../models/cleansed-event';
+import { ObfuscationService } from '../../services/obfuscation-service';
 
 export class CleanserHelper {
     static exampleEnrichedMessage(): IEnrichedAuditEvent {
@@ -103,7 +104,7 @@ export class CleanserHelper {
             reIngestCount: 0,
             user: {
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
-                user_id: '96230e596aa2cef0da34164b91d9f091cbe036c65e537d1347d898118faf085e',
+                user_id: ObfuscationService.obfuscateField('some_user_id', 'secret-1-value'),
             },
             extensions: {
                 evidence: [
@@ -176,7 +177,7 @@ export class CleanserHelper {
             reIngestCount: 0,
             user: {
                 govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
-                user_id: '96230e596aa2cef0da34164b91d9f091cbe036c65e537d1347d898118faf085e',
+                user_id: ObfuscationService.obfuscateField('some_user_id', 'secret-1-value'),
             },
             extensions: {
                 evidence: [
