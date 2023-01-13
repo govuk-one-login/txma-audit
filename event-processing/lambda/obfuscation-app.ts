@@ -16,7 +16,7 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
     let hmacKey = '';
 
     try {
-        hmacKey = await KeyService.getHmacKey();
+        hmacKey = await KeyService.getHmacKey('obfuscation');
     } catch (e) {
         transformationResult = 'ProcessingFailed';
         console.log('An error occurred getting the hmac key.  Failed with ' + e);

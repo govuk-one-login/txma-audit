@@ -1,5 +1,6 @@
 import { IAuditEvent } from '../models/audit-event';
 import { createHmac } from 'crypto';
+import { ICleansedEvent, ICleansedUserEvent } from '../models/cleansed-event';
 
 export class ObfuscationService {
     static async obfuscateEvent(auditEvent: IAuditEvent, hmacKey: string): Promise<IAuditEvent> {
@@ -27,6 +28,19 @@ export class ObfuscationService {
         }
 
         return auditEvent;
+    }
+
+    static async obfuscateCleansedEvent(cleansedEvent: ICleansedEvent, hmacKey: string): Promise<ICleansedEvent> {
+        if (cleansedEvent.user) {
+            if ((cleansedEvent.user as ICleansedUserEvent).user_id) {
+                (cleansedEvent.user as ICleansedUserEvent).user_id = this.obfuscateField(
+                    (cleansedEvent.user as ICleansedUserEvent).user_id,
+                    hmacKey,
+                );
+            }
+        }
+
+        return cleansedEvent;
     }
 
     public static obfuscateObject(value: any, key: string): any {
