@@ -1,11 +1,13 @@
 import { HmacException } from '../exceptions/hmac-exception';
 import { GetSecretValueCommand, GetSecretValueResponse, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import { HmacKeysEnum } from '../enums/hmac-key.enum';
 
 export class KeyService {
     static client = new SecretsManagerClient({ region: 'eu-west-2' });
 
-    static async getHmacKey(): Promise<string> {
-        const secretArn: string | undefined = process.env.SECRET_ARN;
+    static async getHmacKey(hmacKey: HmacKeysEnum): Promise<string> {
+        const secretArn: string | undefined =
+            hmacKey == HmacKeysEnum.performance ? process.env.PERFORMANCE_SECRET_ARN : process.env.SECRET_ARN;
         let secret: string;
         let data: GetSecretValueResponse;
 
