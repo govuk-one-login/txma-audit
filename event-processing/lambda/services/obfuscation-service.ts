@@ -1,6 +1,6 @@
 import { IAuditEvent } from '../models/audit-event';
 import { createHmac } from 'crypto';
-import { ICleansedEvent, ICleansedUserEvent } from '../models/cleansed-event';
+import { ICleansedEvent } from '../models/cleansed-event';
 
 export class ObfuscationService {
     static async obfuscateEvent(auditEvent: IAuditEvent, hmacKey: string): Promise<IAuditEvent> {

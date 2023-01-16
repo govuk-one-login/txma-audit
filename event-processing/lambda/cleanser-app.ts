@@ -5,7 +5,7 @@ import {
     FirehoseTransformationResult,
     FirehoseTransformationResultRecord,
 } from 'aws-lambda';
-import { ICleansedEvent } from './models/cleansed-event';
+import { HmacKeysEnum } from './enums/hmac-key.enum';
 import { EnrichedAuditEvent, IEnrichedAuditEvent } from './models/enriched-audit-event';
 import { CleansingService } from './services/cleansing-service';
 import { KeyService } from './services/key-service';
@@ -17,7 +17,7 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
     let hmacKey = '';
 
     try {
-        hmacKey = await KeyService.getHmacKey('obfuscation');
+        hmacKey = await KeyService.getHmacKey(HmacKeysEnum.performance);
     } catch (e) {
         transformationResult = 'ProcessingFailed';
         console.log('An error occurred getting the cleanser hmac key.  Failed with ' + e);
@@ -48,7 +48,6 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
             const auditEvent: IEnrichedAuditEvent = EnrichedAuditEvent.fromJSONString(plaintextData);
             const cleansedEvent = CleansingService.cleanseEvent(auditEvent);
             const obfuscatedEvent = ObfuscationService.obfuscateCleansedEvent(cleansedEvent, hmacKey);
-            console.log(obfuscatedEvent);
             data = Buffer.from(JSON.stringify(obfuscatedEvent)).toString('base64');
         }
 
