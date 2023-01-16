@@ -43,7 +43,7 @@ describe('Unit test for app handler', function () {
 
         secretManagerMock.on(GetSecretValueCommand, { SecretId: 'unknown_arn' }).rejects(new Error('secret not found'));
 
-        process.env.SECRET_ARN = 'secret-string';
+        process.env.PERFORMANCE_SECRET_ARN = 'secret-string';
     });
 
     afterEach(() => {
@@ -142,7 +142,6 @@ describe('Unit test for app handler', function () {
         const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(
             TestHelper.encodeAuditEvent(exampleMessage),
         );
-            console.log(outputMessage)
         const result = await handler(firehoseEvent);
         expect(result).toEqual(expectedResult);
     });

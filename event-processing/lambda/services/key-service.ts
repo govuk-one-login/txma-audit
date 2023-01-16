@@ -7,7 +7,7 @@ export class KeyService {
 
     static async getHmacKey(hmacKey: HmacKeysEnum): Promise<string> {
         const secretArn: string | undefined =
-            hmacKey == HmacKeysEnum.performance ? process.env.SECRET_ARN : process.env.SECRET_ARN;
+            hmacKey == HmacKeysEnum.performance ? process.env.PERFORMANCE_SECRET_ARN : process.env.SECRET_ARN;
         let secret: string;
         let data: GetSecretValueResponse;
 
