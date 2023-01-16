@@ -164,7 +164,6 @@ Resources:
               Resource: '*'
             - !Ref "AWS::NoValue"
     
-
   SQSKMSKeyPublishAccountAlias:
     Type: AWS::KMS::Alias
     Properties:
