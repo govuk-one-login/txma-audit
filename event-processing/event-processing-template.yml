@@ -142,6 +142,27 @@ Resources:
 
   SQSKMSKeyPublishAccount:
     Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - !If
+            - IsProductionOrStaging
+            - Effect: "Allow"
+              Principal:
+                AWS: "{{resolve:ssm:AccountsARN}}"
+              Action:
+                - 'kms:Decrypt'
+              Resource: '*'
+            - !Ref "AWS::NoValue"
     
 
   SQSKMSKeyPublishAccountAlias:
