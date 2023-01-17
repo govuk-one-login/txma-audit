@@ -5,7 +5,7 @@ import {
     FirehoseTransformationResult,
     FirehoseTransformationResultRecord,
 } from 'aws-lambda';
-import { KeyService } from './services/key-service';
+import { getHmacKey } from './services/key-service';
 import { AuditEvent, IAuditEvent } from './models/audit-event';
 import { ObfuscationService } from './services/obfuscation-service';
 import { ObjectHelper } from './utilities/object-helper';
@@ -17,7 +17,7 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
     let hmacKey = '';
 
     try {
-        hmacKey = await KeyService.getHmacKey(HmacKeysEnum.obfuscation);
+        hmacKey = await getHmacKey(HmacKeysEnum.obfuscation);
     } catch (e) {
         transformationResult = 'ProcessingFailed';
         console.log('An error occurred getting the hmac key.  Failed with ' + e);

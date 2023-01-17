@@ -5,45 +5,22 @@ import { IEnrichedAuditEvent, IAuditEventUserMessage } from '../../models/enrich
 import { ICleansedEvent } from '../../models/cleansed-event';
 import { TestHelper } from '../test-helpers/test-helper';
 import { CleanserHelper } from '../test-helpers/cleanser-helper';
-import { mockClient } from 'aws-sdk-client-mock';
-import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
 import { ObfuscationService } from '../../services/obfuscation-service';
+import { getHmacKey } from '../../services/key-service';
+
+jest.mock('../../services/key-service', () => ({
+    getHmacKey: jest.fn()
+  }))
+
+const mockGetHmacKey = getHmacKey as jest.Mock<Promise<string>>
 
 describe('Unit test for app handler', function () {
     let consoleWarningMock: jest.SpyInstance;
-    const secretManagerMock = mockClient(SecretsManagerClient);
 
     beforeEach(() => {
+        jest.resetAllMocks()
         consoleWarningMock = jest.spyOn(global.console, 'log');
-        secretManagerMock.reset();
-
-        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'no-data-secret' }).resolves({});
-
-        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'secret-binary' }).resolves({
-            $metadata: {
-                httpStatusCode: 200,
-                requestId: '1',
-                extendedRequestId: '1',
-                cfId: '1',
-                attempts: 1,
-            },
-            SecretBinary: Buffer.from(Buffer.from('secret-1-value').toString('base64')),
-        });
-
-        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'secret-string' }).resolves({
-            $metadata: {
-                httpStatusCode: 200,
-                requestId: '1',
-                extendedRequestId: '1',
-                cfId: '1',
-                attempts: 1,
-            },
-            SecretString: 'secret-1-value',
-        });
-
-        secretManagerMock.on(GetSecretValueCommand, { SecretId: 'unknown_arn' }).rejects(new Error('secret not found'));
-
-        process.env.PERFORMANCE_SECRET_ARN = 'secret-string';
+        mockGetHmacKey.mockResolvedValue('secret-1-value')
     });
 
     afterEach(() => {

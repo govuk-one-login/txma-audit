@@ -8,7 +8,7 @@ import {
 import { HmacKeysEnum } from './enums/hmac-key.enum';
 import { EnrichedAuditEvent, IEnrichedAuditEvent } from './models/enriched-audit-event';
 import { CleansingService } from './services/cleansing-service';
-import { KeyService } from './services/key-service';
+import { getHmacKey } from './services/key-service';
 import { ObfuscationService } from './services/obfuscation-service';
 
 export const handler = async (event: FirehoseTransformationEvent): Promise<FirehoseTransformationResult> => {
@@ -17,7 +17,7 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
     let hmacKey = '';
 
     try {
-        hmacKey = await KeyService.getHmacKey(HmacKeysEnum.performance);
+        hmacKey = await getHmacKey(HmacKeysEnum.performance);
     } catch (e) {
         transformationResult = 'ProcessingFailed';
         console.log('An error occurred getting the cleanser hmac key.  Failed with ' + e);
