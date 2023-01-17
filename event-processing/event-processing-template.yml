@@ -2751,9 +2751,8 @@ Resources:
             Action: "secretsmanager:GetSecretValue"
             Effect: Allow
             Principal:
-              AWS: !GetAtt PerformanceFunctionRole.Arn
-
-  
+              AWS: !GetAtt CleanserFunctionRole.Arn
+              
   ReIngestLogGroup:
     DependsOn:
       - ReIngestFunction
