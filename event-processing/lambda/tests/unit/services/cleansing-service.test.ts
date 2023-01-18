@@ -24,17 +24,23 @@ const inputMessage: IEnrichedAuditEvent = {
 
 describe('Unit test for cleansing-service', function () {
 
-    it('returns a cleansed event with all required user information', async () => {
+    afterEach(() => {
         inputMessage.user = {
             transaction_id: 'a52f6f87',
-            user_id: 'some_user_id',
             email: 'foo@bar.com',
             phone: '07711223344',
             ip_address: '100.100.100.100',
             session_id: 'c222c1ec',
             persistent_session_id: 'some session id',
-            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             device_id: 'some known device',
+        };
+    })
+
+    it('returns a cleansed event with all required user information', async () => {
+        inputMessage.user = {
+            ...inputMessage.user,
+            user_id: 'some_user_id',
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1'
         };
         
         const expectedMessage: ICleansedEvent = {
@@ -56,14 +62,8 @@ describe('Unit test for cleansing-service', function () {
 
     it('returns a cleansed event with only user_id', async () => {
         inputMessage.user = {
-            transaction_id: 'a52f6f87',
-            user_id: 'some_user_id',
-            email: 'foo@bar.com',
-            phone: '07711223344',
-            ip_address: '100.100.100.100',
-            session_id: 'c222c1ec',
-            persistent_session_id: 'some session id',
-            device_id: 'some known device',
+            ...inputMessage.user,
+            user_id: 'some_user_id'
         };
 
 
@@ -85,14 +85,8 @@ describe('Unit test for cleansing-service', function () {
 
     it('returns a cleansed event with only govuk_signin_journey_id', async () => {
         inputMessage.user = {
-            transaction_id: 'a52f6f87',
-            email: 'foo@bar.com',
-            phone: '07711223344',
-            ip_address: '100.100.100.100',
-            session_id: 'c222c1ec',
-            persistent_session_id: 'some session id',
-            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
-            device_id: 'some known device',
+            ...inputMessage.user,
+            govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1'
         };
 
         const expectedMessage: ICleansedEvent = {
@@ -112,16 +106,6 @@ describe('Unit test for cleansing-service', function () {
     });
 
     it('returns a cleansed event with no user information if required fields not present', async () => {
-        inputMessage.user = {
-            transaction_id: 'a52f6f87',
-            email: 'foo@bar.com',
-            phone: '07711223344',
-            ip_address: '100.100.100.100',
-            session_id: 'c222c1ec',
-            persistent_session_id: 'some session id',
-            device_id: 'some known device',
-        };
-        
         const expectedMessage: ICleansedEvent = {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
