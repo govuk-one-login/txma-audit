@@ -73,7 +73,7 @@ jobs:
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
       - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v2
+        uses: alphagov/di-devplatform-upload-action@v3
         with:
           artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_EVENT_PROCESSING }}
@@ -138,7 +138,7 @@ jobs:
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
       - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v2
+        uses: alphagov/di-devplatform-upload-action@v3
         with:
           artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
@@ -170,7 +170,7 @@ jobs:
         run: |
           sam build --template-file analysis-template.yml --config-file config/samconfig-analysis.toml --config-env ${{ env.environment }} --use-container --beta-features
       - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v2
+        uses: alphagov/di-devplatform-upload-action@v3
         with:
           artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_ANALYSIS }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
