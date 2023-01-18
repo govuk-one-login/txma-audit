@@ -2646,7 +2646,6 @@ Resources:
       Environment:
         Variables:
           SECRET_ARN: "{{resolve:ssm:HMACSecretArn}}"
-          PERFORMANCE_SECRET_ARN: "{{resolve:ssm:PerformanceHMACSecretArn}}"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -2727,7 +2726,6 @@ Resources:
       Role: !GetAtt CleanserFunctionRole.Arn
       Environment:
         Variables:
-          SECRET_ARN: "{{resolve:ssm:HMACSecretArn}}"
           PERFORMANCE_SECRET_ARN: "{{resolve:ssm:PerformanceHMACSecretArn}}"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
