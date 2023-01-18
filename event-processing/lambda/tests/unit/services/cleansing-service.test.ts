@@ -10,14 +10,19 @@ const inputMessage: IEnrichedAuditEvent = {
     event_id: '123456789',
     component_id: '1234',
     client_id: 'An Example Client',
+    user: {
+        transaction_id: 'a52f6f87',
+        email: 'foo@bar.com',
+        phone: '07711223344',
+        ip_address: '100.100.100.100',
+        session_id: 'c222c1ec',
+        persistent_session_id: 'some session id',
+        device_id: 'some known device',
+    },
     reIngestCount: 0,
 };
 
 describe('Unit test for cleansing-service', function () {
-
-    afterEach(() => {
-        inputMessage.user = {};
-    });
 
     it('returns a cleansed event with all required user information', async () => {
         inputMessage.user = {
@@ -31,7 +36,7 @@ describe('Unit test for cleansing-service', function () {
             govuk_signin_journey_id: '43143-233Ds-2823-283-dj299j1',
             device_id: 'some known device',
         };
-
+        
         const expectedMessage: ICleansedEvent = {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
@@ -60,6 +65,7 @@ describe('Unit test for cleansing-service', function () {
             persistent_session_id: 'some session id',
             device_id: 'some known device',
         };
+
 
         const expectedMessage: ICleansedEvent = {
             timestamp: 1609462861,
@@ -115,7 +121,7 @@ describe('Unit test for cleansing-service', function () {
             persistent_session_id: 'some session id',
             device_id: 'some known device',
         };
-
+        
         const expectedMessage: ICleansedEvent = {
             timestamp: 1609462861,
             timestamp_formatted: '2021-01-23T15:43:21.842',
