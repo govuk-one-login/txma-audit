@@ -10,21 +10,12 @@ const inputMessage: IEnrichedAuditEvent = {
     event_id: '123456789',
     component_id: '1234',
     client_id: 'An Example Client',
-    user: {
-        transaction_id: 'a52f6f87',
-        email: 'foo@bar.com',
-        phone: '07711223344',
-        ip_address: '100.100.100.100',
-        session_id: 'c222c1ec',
-        persistent_session_id: 'some session id',
-        device_id: 'some known device',
-    },
     reIngestCount: 0,
 };
 
 describe('Unit test for cleansing-service', function () {
 
-    afterEach(() => {
+    beforeEach(() => {
         inputMessage.user = {
             transaction_id: 'a52f6f87',
             email: 'foo@bar.com',
