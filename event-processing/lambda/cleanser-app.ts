@@ -6,6 +6,7 @@ import {
     FirehoseTransformationResultRecord,
 } from 'aws-lambda';
 import { HmacKeysEnum } from './enums/hmac-key.enum';
+import { ICleansedEvent } from './models/cleansed-event';
 import { EnrichedAuditEvent, IEnrichedAuditEvent } from './models/enriched-audit-event';
 import { CleansingService } from './services/cleansing-service';
 import { getHmacKey } from './services/key-service';
@@ -26,7 +27,7 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
     const output = event.records.map((record: FirehoseTransformationEventRecord) => {
         const plaintextData: string = Buffer.from(record.data, 'base64').toString('utf-8');
         const events: unknown[] = JSON.parse(plaintextData);
-        const cleansedEvents: unknown[] = [];
+        const cleansedEvents: ICleansedEvent[] = [];
         let data: string;
 
         if (transformationResult === 'ProcessingFailed')
