@@ -14,6 +14,7 @@ export interface ICleansedExtensionsEvent {
 
 export interface ICleansedUserEvent {
     govuk_signin_journey_id?: string;
+    user_id?: string;
 }
 
 export interface ICleansedEvent {
@@ -59,9 +60,14 @@ export class CleansedEvent implements ICleansedEvent {
         this.reIngestCount = reIngestCount;
 
         if (user != undefined && (user as ICleansedUserEvent).govuk_signin_journey_id) {
-            this.user = {
-                govuk_signin_journey_id: (user as ICleansedUserEvent).govuk_signin_journey_id,
-            } as ICleansedUserEvent;
+            const cleansedUser = {} as ICleansedUserEvent;
+            if ((user as ICleansedUserEvent).govuk_signin_journey_id) {
+                cleansedUser.govuk_signin_journey_id = (user as ICleansedUserEvent).govuk_signin_journey_id;
+            }
+            if ((user as ICleansedUserEvent).user_id) {
+                cleansedUser.user_id = (user as ICleansedUserEvent).user_id;
+            }
+            this.user = cleansedUser;
         }
 
         if (extensions != undefined && (extensions as ICleansedExtensionsEvent).evidence != undefined) {
