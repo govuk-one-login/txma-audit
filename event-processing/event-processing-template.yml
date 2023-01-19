@@ -2467,6 +2467,10 @@ Resources:
           - DCMAW_PASSPORT_SELECTED
           - DCMAW_APP_HANDOFF_START
           - DCMAW_APP_HANDOFF_FAILURE
+          - DCMAW_ABORT_WEB
+          - DCMAW_REDIRECT_SUCCESS
+          - DCMAW_ABORT_APP
+          - DCMAW_REDIRECT_ABORT
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -2590,6 +2594,10 @@ Resources:
           - DCMAW_PASSPORT_SELECTED
           - DCMAW_APP_HANDOFF_START
           - DCMAW_APP_HANDOFF_FAILURE
+          - DCMAW_ABORT_WEB
+          - DCMAW_REDIRECT_SUCCESS
+          - DCMAW_ABORT_APP
+          - DCMAW_REDIRECT_ABORT
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
@@ -2706,7 +2714,7 @@ Resources:
             Action:
               - 'kms:Decrypt'
             Resource: "{{resolve:ssm:HMACKeyKMSKeyArn}}"
-  
+
   CleanserLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -2752,7 +2760,7 @@ Resources:
             Effect: Allow
             Principal:
               AWS: !GetAtt CleanserFunctionRole.Arn
-              
+
   ReIngestLogGroup:
     DependsOn:
       - ReIngestFunction
