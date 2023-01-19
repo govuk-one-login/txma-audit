@@ -247,29 +247,30 @@ Resources:
   S3NoReceivedObjectsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "Audit S3 Received No Objects Alarm"
-      AlarmName: "S3NoReceivedObjectsAlarmAlarm"
+      AlarmDescription: Audit S3 Received No Objects Alarm
+      AlarmName: S3NoReceivedObjectsAlarm
       ComparisonOperator: LessThanThreshold
       EvaluationPeriods: 1
       Statistic: Maximum
       Period: 86400
       Threshold: 1
       TreatMissingData: breaching
-      MetricName: "PutRequests"
-      Namespace: "AWS/S3"
+      MetricName: PutRequests
+      Namespace: AWS/S3
       AlarmActions:
-        - !Ref SNSAlarmTopic
+        - !Ref SNSCriticalAlarmTopic
       Dimensions:
       - Name: BucketName
         Value: !Ref MessageBatchBucket
       - Name: FilterId
         Value: EntireBucket
-      - Name: "EventName"
-        Value: "PutObject"
+      - Name: EventName
+        Value: PutObject
 
   SNSCriticalAlarmTopic:
     Type: AWS::SNS::Topic
     Properties:
+      KmsMasterKeyId: '{{resolve:ssm:CoreSnsKmsKeyArn}}'
       TopicName: "PutEventAlarm"
 
   SNSAlarmPolicy:
@@ -282,10 +283,10 @@ Resources:
           Principal:
             Service: cloudwatch.amazonaws.com
           Action: 'sns:Publish'
-          Resource: !GetAtt SNSCriticalAlarmTopic
+          Resource: !GetAtt SNSCriticalAlarmTopic.TopicArn
           Condition:
             ArnLike:
-              aws:SourceArn: !Sub arn:aws:cloudwatch::${AWS::AccountId}:alarm:*
+              aws:SourceArn: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*
             StringEquals:
               aws:SourceAccount: !Sub ${AWS::AccountId} 
       Topics:
