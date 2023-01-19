@@ -59,7 +59,10 @@ export class CleansedEvent implements ICleansedEvent {
         this.client_id = client_id;
         this.reIngestCount = reIngestCount;
 
-        if (user != undefined && (user as ICleansedUserEvent).govuk_signin_journey_id) {
+        if (
+            user != undefined &&
+            ((user as ICleansedUserEvent).govuk_signin_journey_id || (user as ICleansedUserEvent).user_id)
+        ) {
             const cleansedUser = {} as ICleansedUserEvent;
             if ((user as ICleansedUserEvent).govuk_signin_journey_id) {
                 cleansedUser.govuk_signin_journey_id = (user as ICleansedUserEvent).govuk_signin_journey_id;
