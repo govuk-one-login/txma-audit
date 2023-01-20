@@ -32,6 +32,10 @@ Conditions:
   UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
   UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
   UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
+  IsPagerDutyEnvironment: !Or [
+    !Equals [ !Ref Environment, staging ],
+    !Equals [ !Ref Environment, production ]
+  ]
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
@@ -273,7 +277,7 @@ Resources:
       KmsMasterKeyId: '{{resolve:ssm:CoreSnsKmsKeyArn}}'
       TopicName: "PutEventAlarm"
 
-  SNSAlarmPolicy:
+  SNSCriticalAlarmTopicPolicy:
     Type: AWS::SNS::TopicPolicy
     Properties:
       PolicyDocument:
@@ -291,6 +295,14 @@ Resources:
               aws:SourceAccount: !Sub ${AWS::AccountId} 
       Topics:
         - !Ref SNSCriticalAlarmTopic
+
+  PagerDutySubscription:
+    Type: AWS::SNS::Subscription
+    Condition: IsPagerDutyEnvironment
+    Properties:
+      TopicArn: !Ref SNSCriticalAlarmTopic
+      Protocol: https
+      Endpoint: '{{resolve:secretsmanager:PagerDutyEndpoint}}'
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
