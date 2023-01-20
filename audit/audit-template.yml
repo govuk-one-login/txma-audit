@@ -32,6 +32,10 @@ Conditions:
   UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
   UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
   UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
+  IsPagerDutyEnvironment: !Or [
+    !Equals [ !Ref Environment, staging ],
+    !Equals [ !Ref Environment, production ]
+  ]
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
@@ -247,21 +251,58 @@ Resources:
   S3NoReceivedObjectsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "Audit S3 Received No Objects Alarm"
-      AlarmName: "S3NoReceivedObjectsAlarmAlarm"
+      AlarmDescription: Audit S3 Received No Objects Alarm
+      AlarmName: S3NoReceivedObjectsAlarm
       ComparisonOperator: LessThanThreshold
       EvaluationPeriods: 1
       Statistic: Maximum
       Period: 86400
       Threshold: 1
       TreatMissingData: breaching
-      MetricName: "PutRequests"
-      Namespace: "AWS/S3"
+      MetricName: PutRequests
+      Namespace: AWS/S3
+      AlarmActions:
+        - !Ref SNSCriticalAlarmTopic
       Dimensions:
       - Name: BucketName
         Value: !Ref MessageBatchBucket
       - Name: FilterId
         Value: EntireBucket
+      - Name: EventName
+        Value: PutObject
+
+  SNSCriticalAlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      KmsMasterKeyId: '{{resolve:ssm:CoreSnsKmsKeyArn}}'
+      TopicName: "PutEventAlarm"
+
+  SNSCriticalAlarmTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement: 
+        - Effect: Allow
+          Principal:
+            Service: cloudwatch.amazonaws.com
+          Action: 'sns:Publish'
+          Resource: !GetAtt SNSCriticalAlarmTopic.TopicArn
+          Condition:
+            ArnLike:
+              aws:SourceArn: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*
+            StringEquals:
+              aws:SourceAccount: !Sub ${AWS::AccountId} 
+      Topics:
+        - !Ref SNSCriticalAlarmTopic
+
+  PagerDutySubscription:
+    Type: AWS::SNS::Subscription
+    Condition: IsPagerDutyEnvironment
+    Properties:
+      TopicArn: !Ref SNSCriticalAlarmTopic
+      Protocol: https
+      Endpoint: '{{resolve:secretsmanager:PagerDutyEndpoint}}'
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
