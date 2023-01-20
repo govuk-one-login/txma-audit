@@ -6,7 +6,8 @@
   "component_id": "https://review-k.integration.account.gov.uk",
   "client_id": "NO_KBV_CLIENT_ID_YET",
   "user": {
-    "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd"
+    "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd",
+    "user_id": "102cfa0a8ee9ebaaa4c9c56e249a764f4a4b0f48f8b4cea670b11794b545135c"
   },
   "reIngestCount": 0
 }

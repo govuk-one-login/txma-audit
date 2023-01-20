@@ -6,7 +6,8 @@
   "component_id": "https://review-f.integration.account.gov.uk",
   "client_id": "NO_FRAUD_CLIENT_ID_YET",
   "user": {
-    "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd"
+    "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd",
+    "user_id": "6f3a135d57fe3fc9e88cdd3c68435acf674df65e0748ca72876938565181805e"
   },
   "reIngestCount": 0
 }

@@ -2467,6 +2467,10 @@ Resources:
           - DCMAW_PASSPORT_SELECTED
           - DCMAW_APP_HANDOFF_START
           - DCMAW_APP_HANDOFF_FAILURE
+          - DCMAW_ABORT_WEB
+          - DCMAW_REDIRECT_SUCCESS
+          - DCMAW_ABORT_APP
+          - DCMAW_REDIRECT_ABORT
 
   PerformanceDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -2590,6 +2594,10 @@ Resources:
           - DCMAW_PASSPORT_SELECTED
           - DCMAW_APP_HANDOFF_START
           - DCMAW_APP_HANDOFF_FAILURE
+          - DCMAW_ABORT_WEB
+          - DCMAW_REDIRECT_SUCCESS
+          - DCMAW_ABORT_APP
+          - DCMAW_REDIRECT_ABORT
 
   ObfuscationFunctionRole:
     Type: AWS::IAM::Role
@@ -2691,6 +2699,22 @@ Resources:
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
 
+  CleanserHmacKmsPolicy:
+    DependsOn:
+      - CleanserFunctionRole
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref CleanserFunctionRole
+      PolicyName: hmac_kms_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: "{{resolve:ssm:HMACKeyKMSKeyArn}}"
+
   CleanserLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -2708,6 +2732,9 @@ Resources:
       Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt CleanserFunctionRole.Arn
+      Environment:
+        Variables:
+          PERFORMANCE_SECRET_ARN: "{{resolve:ssm:PerformanceHMACSecretArn}}"
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -2717,6 +2744,22 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - cleanser-app.ts
+
+  PerformanceHMACSecretAuthAccessPolicy:
+    DependsOn:
+      - CleanserFunctionRole
+    Type: AWS::SecretsManager::ResourcePolicy
+    Properties:
+      BlockPublicPolicy: True
+      SecretId: "{{resolve:ssm:PerformanceHMACSecretArn}}"
+      ResourcePolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Resource: "{{resolve:ssm:PerformanceHMACSecretArn}}"
+            Action: "secretsmanager:GetSecretValue"
+            Effect: Allow
+            Principal:
+              AWS: !GetAtt CleanserFunctionRole.Arn
 
   ReIngestLogGroup:
     DependsOn:
