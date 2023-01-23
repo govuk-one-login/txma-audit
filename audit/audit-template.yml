@@ -263,8 +263,6 @@ Resources:
       Namespace: AWS/S3
       AlarmActions:
         - !Ref SNSCriticalAlarmTopic
-      OKActions:
-        - !Ref SNSCriticalAlarmTopic
       Dimensions:
       - Name: BucketName
         Value: !Ref MessageBatchBucket
