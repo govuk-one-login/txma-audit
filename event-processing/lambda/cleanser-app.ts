@@ -5,13 +5,24 @@ import {
     FirehoseTransformationResult,
     FirehoseTransformationResultRecord,
 } from 'aws-lambda';
+import { HmacKeysEnum } from './enums/hmac-key.enum';
 import { ICleansedEvent } from './models/cleansed-event';
 import { EnrichedAuditEvent, IEnrichedAuditEvent } from './models/enriched-audit-event';
 import { CleansingService } from './services/cleansing-service';
+import { getHmacKey } from './services/key-service';
+import { ObfuscationService } from './services/obfuscation-service';
 
 export const handler = async (event: FirehoseTransformationEvent): Promise<FirehoseTransformationResult> => {
     /* Process the list of records and transform them */
-    const transformationResult: FirehoseRecordTransformationStatus = 'Ok';
+    let transformationResult: FirehoseRecordTransformationStatus = 'Ok';
+    let hmacKey = '';
+
+    try {
+        hmacKey = await getHmacKey(HmacKeysEnum.performance);
+    } catch (e) {
+        transformationResult = 'ProcessingFailed';
+        console.log('An error occurred getting the cleanser hmac key.  Failed with ' + e);
+    }
 
     const output = event.records.map((record: FirehoseTransformationEventRecord) => {
         const plaintextData: string = Buffer.from(record.data, 'base64').toString('utf-8');
@@ -19,16 +30,26 @@ export const handler = async (event: FirehoseTransformationEvent): Promise<Fireh
         const cleansedEvents: ICleansedEvent[] = [];
         let data: string;
 
+        if (transformationResult === 'ProcessingFailed')
+            return {
+                recordId: record.recordId,
+                result: transformationResult,
+                data: record.data,
+            } as FirehoseTransformationResultRecord;
+
         if (events.length > 0) {
             for (const k in events) {
                 const auditEvent: IEnrichedAuditEvent = EnrichedAuditEvent.fromJSONString(JSON.stringify(events[k]));
-                cleansedEvents.push(CleansingService.cleanseEvent(auditEvent));
+                const cleansedEvent = CleansingService.cleanseEvent(auditEvent);
+                const obfuscatedEvent = ObfuscationService.obfuscateCleansedEvent(cleansedEvent, hmacKey);
+                cleansedEvents.push(obfuscatedEvent);
             }
             data = Buffer.from(JSON.stringify(cleansedEvents)).toString('base64');
         } else {
             const auditEvent: IEnrichedAuditEvent = EnrichedAuditEvent.fromJSONString(plaintextData);
             const cleansedEvent = CleansingService.cleanseEvent(auditEvent);
-            data = Buffer.from(JSON.stringify(cleansedEvent)).toString('base64');
+            const obfuscatedEvent = ObfuscationService.obfuscateCleansedEvent(cleansedEvent, hmacKey);
+            data = Buffer.from(JSON.stringify(obfuscatedEvent)).toString('base64');
         }
 
         return {

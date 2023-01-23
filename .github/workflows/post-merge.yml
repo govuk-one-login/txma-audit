@@ -8,80 +8,14 @@ on:
 env:
   environment: "build"
   awsRegion: "eu-west-2"
-  eventProcessorDirectory: "event-processing"
   testDirectory: "tests"
   auditDirectory: "audit"
   analysisDirectory: "analysis"
 
-# A workflow to build the event processor and audit infrastructure and deploy to the development (CI) environment
+# A workflow to build the audit infrastructure and deploy to the development (CI) environment
 # This may be subject to change if we can make re-usable actions to reference (This will need to be in concert with other GDS DI teams)
 jobs:
-  validate_and_build_event_processor:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    defaults:
-      run:
-        working-directory: ${{ env.eventProcessorDirectory }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2
-      - name: Assume AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_EVENT_PROCESSING }}
-          aws-region:  ${{ env.awsRegion }}
-      - name: Use Node.js 14
-        uses: actions/setup-node@v3.0.0
-        with:
-          node-version: '14.x'
-      - name: Install Lambda Dependencies
-        working-directory: ${{ env.eventProcessorDirectory }}/lambda
-        run: yarn install --immutable --immutable-cache --check-cache
-      - name: SAM Validate
-        run: |
-          sam validate --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }}
-      - name: SAM Build
-        run: |
-          sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env ${{ env.environment }} --use-container --beta-features
-      - name: Test Lambdas
-        working-directory: ${{ env.eventProcessorDirectory }}/lambda
-        run: yarn test
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      - name: Build, tag, and push testing image to Amazon ECR
-        working-directory: ${{ env.testDirectory }}
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_EVENT_PROCESSING }}
-          ECR_REPOSITORY_STAGING: ${{ secrets.ECR_REPOSITORY_EVENT_PROCESSING_STAGING }}
-          IMAGE_TAG: latest
-        run: |
-          docker build \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            --build-arg GIT_REPO=$GITHUB_REPOSITORY \
-            --build-arg COMMIT_SHA=$GITHUB_SHA \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./event-processing-tests/
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
-      - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v2
-        with:
-          artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_EVENT_PROCESSING }}
-          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_EVENT_PROCESSING }}
-          working-directory: ${{ env.eventProcessorDirectory }}
-          template-file: event-processing-template.yml
-
   validate_and_build_audit:
-    needs: validate_and_build_event_processor
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -138,7 +72,7 @@ jobs:
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
       - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v2
+        uses: alphagov/di-devplatform-upload-action@v3
         with:
           artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
@@ -146,7 +80,6 @@ jobs:
           template-file: audit-template.yml
 
   validate_and_build_analysis:
-    needs: validate_and_build_audit
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -170,7 +103,7 @@ jobs:
         run: |
           sam build --template-file analysis-template.yml --config-file config/samconfig-analysis.toml --config-env ${{ env.environment }} --use-container --beta-features
       - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v2
+        uses: alphagov/di-devplatform-upload-action@v3
         with:
           artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_ANALYSIS }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}

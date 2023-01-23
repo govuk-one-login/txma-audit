@@ -6,7 +6,8 @@
   "component_id": "https://www.review-b.staging.account.gov.uk",
   "client_id": "authOrchestratorDocApp",
   "user": {
-    "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd"
+    "govuk_signin_journey_id": "915b-e4a4-6bg2-b8dd",
+    "user_id": "ddada05cdefcd15b3ff59d860248f43a5110d6f1e0dbc4404b43c185e6bb4b84"
   },
   "reIngestCount": 0
 }
