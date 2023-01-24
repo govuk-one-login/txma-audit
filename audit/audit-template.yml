@@ -253,11 +253,11 @@ Resources:
     Properties:
       AlarmDescription: Audit S3 Received No Objects Alarm
       AlarmName: S3NoReceivedObjectsAlarm
-      ComparisonOperator: LessThanThreshold
+      ComparisonOperator: LessThanOrEqualToThreshold
       EvaluationPeriods: 1
-      Statistic: Maximum
+      Statistic: Sum
       Period: 86400
-      Threshold: 1
+      Threshold: 0
       TreatMissingData: breaching
       MetricName: PutRequests
       Namespace: AWS/S3
@@ -268,8 +268,6 @@ Resources:
         Value: !Ref MessageBatchBucket
       - Name: FilterId
         Value: EntireBucket
-      - Name: EventName
-        Value: PutObject
 
   SNSCriticalAlarmTopic:
     Type: AWS::SNS::Topic
