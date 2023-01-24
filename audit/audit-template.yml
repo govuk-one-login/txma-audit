@@ -670,12 +670,10 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref TemporaryMessageBucketLogsBucket
         LogFilePrefix: "audit/temporary-message-batch-bucket/"
-      # NotificationConfiguration:
-      #   QueueConfigurations:
-      #     !If
-      #     - IsProductionOrStaging
-      #     - - Event: "s3:ObjectCreated:*"
-      #         Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: "s3:ObjectCreated:*"
+            Queue: !GetAtt InitiateCopyTemporaryToPermanentQueue.Arn
       #       - Event: "s3:ObjectRestore:*"
       #         Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
       #     - - !Ref AWS::NoValue
@@ -768,121 +766,119 @@ Resources:
                 - 's3:List*'
             - !Ref AWS::NoValue
   
-  PermanentMessageBatchBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-permanent-message-batch"
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: "Enabled"
-      LoggingConfiguration:
-        DestinationBucketName: !Ref PermanentMessageBucketLogsBucket
-        LogFilePrefix: "audit/permanent-message-batch-bucket/"
-      # NotificationConfiguration:
-      #   QueueConfigurations:
-      #     !If
-      #     - IsProductionOrStaging
-      #     - - Event: "s3:ObjectCreated:*"
-      #         Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-      #       - Event: "s3:ObjectRestore:*"
-      #         Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-      #     - - !Ref AWS::NoValue
-      # OwnershipControls:
-      #   Rules:
-      #     - ObjectOwnership: BucketOwnerPreferred
-      # MetricsConfigurations:
-      #   - Id: EntireBucket
+  # PermanentMessageBatchBucket:
+  #   Type: AWS::S3::Bucket
+  #   Properties:
+  #     BucketName: !Sub "${AWS::StackName}-${Environment}-permanent-message-batch"
+  #     BucketEncryption:
+  #       ServerSideEncryptionConfiguration:
+  #         - ServerSideEncryptionByDefault:
+  #             SSEAlgorithm: AES256
+  #     PublicAccessBlockConfiguration:
+  #       BlockPublicAcls: true
+  #       BlockPublicPolicy: true
+  #       IgnorePublicAcls: true
+  #       RestrictPublicBuckets: true
+  #     VersioningConfiguration:
+  #       Status: "Enabled"
+  #     LoggingConfiguration:
+  #       DestinationBucketName: !Ref PermanentMessageBucketLogsBucket
+  #       LogFilePrefix: "audit/permanent-message-batch-bucket/"
+  #     # NotificationConfiguration:
+  #     #   QueueConfigurations:
+  #     #     - Event: "s3:ObjectCreated:*"
+  #     #       Queue: !GetAtt InitiateCopyTemporaryToPermanentQueue.Arn
+  #           # - Event: "s3:ObjectRestore:*"
+  #           #   Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+  #         # - - !Ref AWS::NoValue
+  #     # OwnershipControls:
+  #     #   Rules:
+  #     #     - ObjectOwnership: BucketOwnerPreferred
+  #     # MetricsConfigurations:
+  #     #   - Id: EntireBucket
 
-  PermanentMessageBucketLogsBucket:
-    Type: AWS::S3::Bucket
-    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
-    Properties:
-      VersioningConfiguration:
-        Status: "Enabled"
-      BucketName: !Sub "${AWS::StackName}-${Environment}-permanent-bucket-logs"
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      Tags:
-        - Key: CheckovRulesToSkip
-          Value: CKV_AWS_18
+  # PermanentMessageBucketLogsBucket:
+  #   Type: AWS::S3::Bucket
+  #   # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
+  #   Properties:
+  #     VersioningConfiguration:
+  #       Status: "Enabled"
+  #     BucketName: !Sub "${AWS::StackName}-${Environment}-permanent-bucket-logs"
+  #     BucketEncryption:
+  #       ServerSideEncryptionConfiguration:
+  #         - ServerSideEncryptionByDefault:
+  #             SSEAlgorithm: AES256
+  #     PublicAccessBlockConfiguration:
+  #       BlockPublicAcls: true
+  #       BlockPublicPolicy: true
+  #       IgnorePublicAcls: true
+  #       RestrictPublicBuckets: true
+  #     Tags:
+  #       - Key: CheckovRulesToSkip
+  #         Value: CKV_AWS_18
 
-  PermanentS3AccessLogsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref PermanentMessageBucketLogsBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
-            Resource:
-              - !Sub "${PermanentMessageBucketLogsBucket.Arn}/*"
-            Principal:
-              Service: "logging.s3.amazonaws.com"
-            Action:
-              - "s3:PutObject"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+  # PermanentS3AccessLogsBucketPolicy:
+  #   Type: AWS::S3::BucketPolicy
+  #   Properties:
+  #     Bucket: !Ref PermanentMessageBucketLogsBucket
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Sid: "EnableS3Logging"
+  #           Effect: "Allow"
+  #           Resource:
+  #             - !Sub "${PermanentMessageBucketLogsBucket.Arn}/*"
+  #           Principal:
+  #             Service: "logging.s3.amazonaws.com"
+  #           Action:
+  #             - "s3:PutObject"
+  #           Condition:
+  #             StringEquals:
+  #               "aws:SourceAccount": !Sub "${AWS::AccountId}"
 
-  PermanentMessageBatchBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: DeployMessageBucketPolicy
-    Properties:
-      Bucket: !Ref PermanentMessageBatchBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Deny"
-            Action:
-              - "s3:DeleteObject"
-              - "s3:DeleteObjectVersion"
-              - "s3:DeleteBucket"
-              - "s3:DeleteBucketPolicy"
-            Resource:
-              - !GetAtt PermanentMessageBatchBucket.Arn
-              - !Sub "${PermanentMessageBatchBucket.Arn}/*"
-            Principal:
-              AWS: "*"
-          - !If
-            - DeployTestRolePolicy
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt PermanentMessageBatchBucket.Arn
-                - !Sub '${PermanentMessageBatchBucket.Arn}/*'
-              Principal:
-                AWS: !Ref TestRoleArn
-              Action:
-                - 's3:GetObject'
-                - 's3:ListBucket'
-            - !Ref AWS::NoValue
-          - !If
-            - IsProductionOrStaging
-            - Effect: 'Allow'
-              Resource:
-                - !GetAtt PermanentMessageBatchBucket.Arn
-                - !Sub '${PermanentMessageBatchBucket.Arn}/*'
-              Principal:
-                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-              Action:
-                - 's3:Get*'
-                - 's3:List*'
-            - !Ref AWS::NoValue
+  # PermanentMessageBatchBucketPolicy:
+  #   Type: AWS::S3::BucketPolicy
+  #   Condition: DeployMessageBucketPolicy
+  #   Properties:
+  #     Bucket: !Ref PermanentMessageBatchBucket
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: "Deny"
+  #           Action:
+  #             - "s3:DeleteObject"
+  #             - "s3:DeleteObjectVersion"
+  #             - "s3:DeleteBucket"
+  #             - "s3:DeleteBucketPolicy"
+  #           Resource:
+  #             - !GetAtt PermanentMessageBatchBucket.Arn
+  #             - !Sub "${PermanentMessageBatchBucket.Arn}/*"
+  #           Principal:
+  #             AWS: "*"
+  #         - !If
+  #           - DeployTestRolePolicy
+  #           - Effect: 'Allow'
+  #             Resource:
+  #               - !GetAtt PermanentMessageBatchBucket.Arn
+  #               - !Sub '${PermanentMessageBatchBucket.Arn}/*'
+  #             Principal:
+  #               AWS: !Ref TestRoleArn
+  #             Action:
+  #               - 's3:GetObject'
+  #               - 's3:ListBucket'
+  #           - !Ref AWS::NoValue
+  #         - !If
+  #           - IsProductionOrStaging
+  #           - Effect: 'Allow'
+  #             Resource:
+  #               - !GetAtt PermanentMessageBatchBucket.Arn
+  #               - !Sub '${PermanentMessageBatchBucket.Arn}/*'
+  #             Principal:
+  #               AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+  #             Action:
+  #               - 's3:Get*'
+  #               - 's3:List*'
+  #           - !Ref AWS::NoValue
 
   CopyTemporaryToPermanentFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
@@ -912,7 +908,7 @@ Resources:
             Queue: !GetAtt InitiateCopyTemporaryToPermanentQueue.Arn
             BatchSize: 1
       FunctionName: !Sub ${AWS::StackName}-copy-temporary-to-permanent
-      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
       Policies:
         - Statement:
             - Sid: S3Read
