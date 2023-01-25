@@ -1,5 +1,4 @@
 import { S3Client, PutObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3';
-import consumers from 'stream/consumers';
 import { Readable } from 'stream';
 
 export const putS3Object = async (bucket: string, fileKey: string, data: string): Promise<string> => {
