@@ -673,7 +673,7 @@ Resources:
       NotificationConfiguration:
         QueueConfigurations:
           - Event: "s3:ObjectCreated:*"
-            Queue: !GetAtt InitiateCopyTemporaryToPermanentQueue.Arn
+            Queue: !GetAtt InitiateCopyAndEncryptQueue.Arn
       #       - Event: "s3:ObjectRestore:*"
       #         Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
       #     - - !Ref AWS::NoValue
@@ -880,16 +880,16 @@ Resources:
   #               - 's3:List*'
   #           - !Ref AWS::NoValue
 
-  CopyTemporaryToPermanentFunction:
+  InitiateCopyAndEncryptFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     #checkov:skip=CKV_AWS_117:VPC not required
     Type: AWS::Serverless::Function
     Properties:
-      Handler: lambda/copyTemporaryToPermanent/handler.handler
-      # Environment:
-      #   Variables:
-      #     AWS_ACCOUNT_ID: !Ref AWS::AccountId
-      #     AUDIT_BUCKET_NAME: '{{resolve:ssm:MessageBatchBucketTXMA2Name}}'
+      Handler: lambda/initiateCopyAndEncrypt/handler.handler
+      Environment:
+        Variables:
+          AWS_ACCOUNT_ID: !Ref AWS::AccountId
+          AUDIT_BUCKET_NAME: '{{resolve:ssm:MessageBatchBucketTXMA2Name}}'
       #     ANALYSIS_BUCKET_ARN: !GetAtt AnalysisBucket.Arn
       #     ANALYSIS_BUCKET_NAME: !Ref AnalysisBucket
       #     BATCH_JOB_MANIFEST_BUCKET_ARN: '{{resolve:ssm:BatchJobManifestBucketArn}}'
@@ -902,12 +902,12 @@ Resources:
       #     ZENDESK_API_SECRETS_ARN: '{{resolve:ssm:ZendeskSecretSetArn}}'
       #     DATABASE_TTL_HOURS: '{{resolve:ssm:DatabaseTtlHours}}'
       Events:
-        InitiateCopyTemporaryToPermanentEvent:
+        InitiateCopyAndEncryptEvent:
           Type: SQS
           Properties:
-            Queue: !GetAtt InitiateCopyTemporaryToPermanentQueue.Arn
+            Queue: !GetAtt InitiateCopyAndEncryptQueue.Arn
             BatchSize: 1
-      FunctionName: !Sub ${AWS::StackName}-copy-temporary-to-permanent
+      FunctionName: !Sub ${AWS::StackName}-initiate-copy-and-encrypt
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
       Policies:
         - Statement:
@@ -941,7 +941,7 @@ Resources:
                 - logs:CreateLogGroup
                 - logs:CreateLogStream
                 - logs:PutLogEvents
-              Resource: !GetAtt CopyTemporaryToPermanentLogs.Arn
+              Resource: !GetAtt InitiateCopyAndEncryptLogs.Arn
             # - Sid: ReadSecrets
             #   Effect: Allow
             #   Action:
@@ -978,24 +978,24 @@ Resources:
             #   Resource: '{{resolve:ssm:SqsKmsKeyArn}}'
       DeadLetterQueue:
         Type: SQS
-        TargetArn: !GetAtt CopyTemporaryToPermanentDeadLetterQueue.Arn
+        TargetArn: !GetAtt InitiateCopyAndEncryptDeadLetterQueue.Arn
 
-  CopyTemporaryToPermanentLogs:
+  InitiateCopyAndEncryptLogs:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
-      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-copy-temporary-to-permanent'
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-initiate-copy-and-encrypt'
       RetentionInDays: 30
 
-  InitiateCopyTemporaryToPermanentQueue:
+  InitiateCopyAndEncryptQueue:
     Type: AWS::SQS::Queue
     Properties:
       # KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt InitiateCopyTemporaryToPermanentDeadLetterQueue.Arn
+        deadLetterTargetArn: !GetAtt InitiateCopyAndEncryptDeadLetterQueue.Arn
         maxReceiveCount: 5
 
-  InitiateCopyTemporaryToPermanentDeadLetterQueue:
+  InitiateCopyAndEncryptDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
       # KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
