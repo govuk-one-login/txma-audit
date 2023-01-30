@@ -1,5 +1,5 @@
 import { S3Client, GetObjectCommand, GetObjectCommandInput } from '@aws-sdk/client-s3';
-import consumers from 'stream/consumers';
+// import consumers from 'stream/consumers';
 import { Readable } from 'stream';
 
 export const getS3ObjectAsString = async (bucket: string, fileKey: string): Promise<string> => {
@@ -12,5 +12,14 @@ export const getS3ObjectAsString = async (bucket: string, fileKey: string): Prom
 
     const { Body } = await client.send(new GetObjectCommand(input));
 
-    return consumers.text(Body as Readable);
+    const dataChunks = [];
+    for await (const chunk of Body as Readable) {
+        dataChunks.push(chunk);
+    }
+    const data = Buffer.concat(dataChunks);
+
+    return data.toString();
+
+    // Note - consumers not availble in Node 14, only from Node 16.
+    // return consumers.text(Body as Readable);
 };
