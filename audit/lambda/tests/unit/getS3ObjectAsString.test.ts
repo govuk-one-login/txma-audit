@@ -1,6 +1,6 @@
 import { GetObjectCommand, GetObjectCommandInput, GetObjectCommandOutput, S3Client } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
-import { getS3ObjectAsString } from '../../initiateCopyAndEncrypt/getS3ObjectAsString';
+import { getS3ObjectAsString } from '../../s3Services/getS3ObjectAsString';
 import 'aws-sdk-client-mock-jest';
 import { Readable } from 'stream';
 

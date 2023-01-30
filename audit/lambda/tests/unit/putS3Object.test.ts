@@ -1,6 +1,6 @@
 import { PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
-import { putS3Object } from '../../initiateCopyAndEncrypt/putS3Object';
+import { putS3Object } from '../../s3Services/putS3Object';
 import 'aws-sdk-client-mock-jest';
 import { Readable } from 'stream';
 

@@ -36,10 +36,10 @@
         "typescript": "4.5.5"
     },
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.257.0",
+        "@aws-sdk/client-s3": "3.257.0",
         "aws-sdk": "2.1136.0",
-        "aws-sdk-client-mock": "^2.0.1",
-        "aws-sdk-client-mock-jest": "^2.0.1",
+        "aws-sdk-client-mock": "2.0.1",
+        "aws-sdk-client-mock-jest": "2.0.1",
         "esbuild": "0.14.14"
     },
     "lint-staged": {
