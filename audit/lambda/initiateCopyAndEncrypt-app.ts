@@ -1,5 +1,6 @@
 import { SQSEvent } from 'aws-lambda';
-import { getS3ObjectAsString } from './s3Services/getS3ObjectAsString';
+import { deleteS3Object } from './s3Services/deleteS3Object';
+import { getS3ObjectAsString } from './s3Services/getS3Object';
 import { putS3Object } from './s3Services/putS3Object';
 
 export const handler = async (event: SQSEvent): Promise<void> => {
@@ -35,9 +36,9 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 
     const permanentBucket = !process.env.PERMANENT_BUCKET_NAME ? '' : process.env.PERMANENT_BUCKET_NAME;
 
-    console.log(permanentBucket);
-
     await putS3Object(permanentBucket, key, temporaryData);
+
+    await deleteS3Object(bucket, key);
 
     return;
 };

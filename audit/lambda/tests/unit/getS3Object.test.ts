@@ -1,6 +1,6 @@
 import { GetObjectCommand, GetObjectCommandInput, GetObjectCommandOutput, S3Client } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
-import { getS3ObjectAsString } from '../../s3Services/getS3ObjectAsString';
+import { getS3ObjectAsString } from '../../s3Services/getS3Object';
 import 'aws-sdk-client-mock-jest';
 import { Readable } from 'stream';
 
@@ -21,8 +21,8 @@ const givenDataAvailable = () => {
     s3Mock.on(GetObjectCommand).resolves({ Body: createDataStream() } as GetObjectCommandOutput);
 };
 
-describe('getS3ObjectAsString', () => {
-    it('returns a string read from the file', async () => {
+describe('getS3Object - ', () => {
+    it('getS3ObjectAsString returns a string read from the file', async () => {
         givenDataAvailable();
 
         const returnedData = await getS3ObjectAsString('testBucket', 'testKey');

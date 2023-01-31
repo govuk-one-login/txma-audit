@@ -720,14 +720,14 @@ Resources:
         Statement:
           - Effect: "Allow"
             Action:
-              - sqs:SendMessage
+              - sqs:*
             Resource:
               - !GetAtt InitiateCopyAndEncryptQueue.Arn
             Principal:
               AWS: "*"
             Condition:
               ArnLike:
-                aws:SourceArn: !Sub "arn:aws:s3:::${AWS::StackName}-${Environment}-temporary-message-batch"
+                aws:SourceArn: !Sub "arn:aws:s3:*:*:${AWS::StackName}-${Environment}-temporary-message-batch"
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
 
@@ -753,24 +753,26 @@ Resources:
         - Key: CheckovRulesToSkip
           Value: CKV_AWS_18
 
-  # TemporaryS3AccessLogsBucketPolicy:
-  #   Type: AWS::S3::BucketPolicy
-  #   Properties:
-  #     Bucket: !Ref TemporaryMessageBucketLogsBucket
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: "EnableTempS3Logging"
-  #           Effect: "Allow"
-  #           Resource:
-  #             - !Sub "${TemporaryMessageBucketLogsBucket.Arn}/*"
-  #           Principal:
-  #             Service: "logging.s3.amazonaws.com"
-  #           Action:
-  #             - "s3:PutObject"
-  #           Condition:
-  #             StringEquals:
-  #               "aws:SourceAccount": !Sub "${AWS::AccountId}"
+  TemporaryS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TemporaryMessageBucketLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableTempS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${TemporaryMessageBucketLogsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+              Bool:
+                "aws:SecureTransport": "true"
 
   TemporaryMessageBatchBucket:
     Type: AWS::S3::Bucket
@@ -790,10 +792,10 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref TemporaryMessageBucketLogsBucket
         LogFilePrefix: "audit/temporary-message-batch-bucket/"
-      # NotificationConfiguration:
-      #   QueueConfigurations:
-      #     - Event: s3:ObjectCreated:*
-      #       Queue: !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${AWS::StackName}-${Environment}-initiate-copy-and-encrypt-queue"
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: "s3:ObjectCreated:*"
+            Queue: !GetAtt InitiateCopyAndEncryptQueue.Arn
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -802,7 +804,6 @@ Resources:
 
   TemporaryMessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
-    # Condition: DeployMessageBucketPolicy
     Properties:
       Bucket: !Ref TemporaryMessageBatchBucket
       PolicyDocument:
@@ -812,6 +813,7 @@ Resources:
             Effect: Allow
             Action:
               - s3:GetObject
+              - s3:DeleteObject
             Resource:
               - !GetAtt TemporaryMessageBatchBucket.Arn
               - !Sub "${TemporaryMessageBatchBucket.Arn}/*"
@@ -872,24 +874,26 @@ Resources:
         - Key: CheckovRulesToSkip
           Value: CKV_AWS_18
 
-  # PermanentS3AccessLogsBucketPolicy:
-  #   Type: AWS::S3::BucketPolicy
-  #   Properties:
-  #     Bucket: !Ref PermanentMessageBucketLogsBucket
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Sid: "EnableS3Logging"
-  #           Effect: "Allow"
-  #           Resource:
-  #             - !Sub "${PermanentMessageBucketLogsBucket.Arn}/*"
-  #           Principal:
-  #             Service: "logging.s3.amazonaws.com"
-  #           Action:
-  #             - "s3:PutObject"
-  #           Condition:
-  #             StringEquals:
-  #               "aws:SourceAccount": !Sub "${AWS::AccountId}"
+  PermanentS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PermanentMessageBucketLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${PermanentMessageBucketLogsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+              Bool:
+                "aws:SecureTransport": "true"
 
   PermanentMessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
