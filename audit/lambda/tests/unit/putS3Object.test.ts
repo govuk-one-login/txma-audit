@@ -2,20 +2,13 @@ import { PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/clie
 import { mockClient } from 'aws-sdk-client-mock';
 import { putS3Object } from '../../s3Services/putS3Object';
 import 'aws-sdk-client-mock-jest';
-import { Readable } from 'stream';
 
 const s3Mock = mockClient(S3Client);
-const createDataStream = (data: string) => {
-    const dataStream = new Readable();
-    dataStream.push(data);
-    dataStream.push(null);
-    return dataStream;
-};
-const testBody = createDataStream('encryptedData');
+
 const putObjectCommandInput: PutObjectCommandInput = {
     Bucket: 'testBucket',
     Key: 'testKey',
-    Body: testBody,
+    Body: 'encryptedData',
 };
 
 describe('putS3Object', () => {

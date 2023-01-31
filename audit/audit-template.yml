@@ -800,37 +800,26 @@ Resources:
       MetricsConfigurations:
         - Id: EntireBucket
 
-  # TemporaryMessageBatchBucketPolicy:
-  #   Type: AWS::S3::BucketPolicy
-  #   # Condition: DeployMessageBucketPolicy
-  #   Properties:
-  #     Bucket: !Ref TemporaryMessageBatchBucket
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: "Deny"
-  #           Action:
-  #             - "s3:DeleteObject"
-  #             - "s3:DeleteObjectVersion"
-  #             - "s3:DeleteBucket"
-  #             - "s3:DeleteBucketPolicy"
-  #           Resource:
-  #             - !GetAtt TemporaryMessageBatchBucket.Arn
-  #             - !Sub "${TemporaryMessageBatchBucket.Arn}/*"
-  #           Principal:
-  #             AWS: "*"
-  #         - !If
-  #           - DeployTestRolePolicy
-  #           - Effect: "Allow"
-  #             Resource:
-  #               - !GetAtt TemporaryMessageBatchBucket.Arn
-  #               - !Sub "${TemporaryMessageBatchBucket.Arn}/*"
-  #             Principal:
-  #               AWS: !Ref TestRoleArn
-  #             Action:
-  #               - "s3:GetObject"
-  #               - "s3:ListBucket"
-  #           - !Ref AWS::NoValue
+  TemporaryMessageBatchBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    # Condition: DeployMessageBucketPolicy
+    Properties:
+      Bucket: !Ref TemporaryMessageBatchBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowBucketAccess
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - !GetAtt TemporaryMessageBatchBucket.Arn
+              - !Sub "${TemporaryMessageBatchBucket.Arn}/*"
+            Principal:
+              AWS: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
+            Condition:
+              Bool:
+                "aws:SecureTransport": "true"
 
   PermanentMessageBatchBucket:
     Type: AWS::S3::Bucket
@@ -850,6 +839,13 @@ Resources:
       LoggingConfiguration:
         DestinationBucketName: !Ref PermanentMessageBucketLogsBucket
         LogFilePrefix: "audit/permanent-message-batch-bucket/"
+      LifecycleConfiguration:
+        Rules:
+          - Id: AuditGlacierRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: GLACIER
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -895,49 +891,25 @@ Resources:
   #             StringEquals:
   #               "aws:SourceAccount": !Sub "${AWS::AccountId}"
 
-  # PermanentMessageBatchBucketPolicy:
-  #   Type: AWS::S3::BucketPolicy
-  #   Condition: DeployMessageBucketPolicy
-  #   Properties:
-  #     Bucket: !Ref PermanentMessageBatchBucket
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: "Deny"
-  #           Action:
-  #             - "s3:DeleteObject"
-  #             - "s3:DeleteObjectVersion"
-  #             - "s3:DeleteBucket"
-  #             - "s3:DeleteBucketPolicy"
-  #           Resource:
-  #             - !GetAtt PermanentMessageBatchBucket.Arn
-  #             - !Sub "${PermanentMessageBatchBucket.Arn}/*"
-  #           Principal:
-  #             AWS: "*"
-  #         - !If
-  #           - DeployTestRolePolicy
-  #           - Effect: 'Allow'
-  #             Resource:
-  #               - !GetAtt PermanentMessageBatchBucket.Arn
-  #               - !Sub '${PermanentMessageBatchBucket.Arn}/*'
-  #             Principal:
-  #               AWS: !Ref TestRoleArn
-  #             Action:
-  #               - 's3:GetObject'
-  #               - 's3:ListBucket'
-  #           - !Ref AWS::NoValue
-  #         - !If
-  #           - IsProductionOrStaging
-  #           - Effect: 'Allow'
-  #             Resource:
-  #               - !GetAtt PermanentMessageBatchBucket.Arn
-  #               - !Sub '${PermanentMessageBatchBucket.Arn}/*'
-  #             Principal:
-  #               AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-  #             Action:
-  #               - 's3:Get*'
-  #               - 's3:List*'
-  #           - !Ref AWS::NoValue
+  PermanentMessageBatchBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PermanentMessageBatchBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowPermanentBucketAccess
+            Effect: "Allow"
+            Action:
+              - "s3:PutObject"
+            Resource:
+              - !GetAtt PermanentMessageBatchBucket.Arn
+              - !Sub "${PermanentMessageBatchBucket.Arn}/*"
+            Principal:
+              AWS: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
+            Condition:
+              Bool:
+                "aws:SecureTransport": "true"
 
   # lambdas
 
@@ -966,17 +938,22 @@ Resources:
                 - lambda.amazonaws.com
             Action: "sts:AssumeRole"
       Policies:
-        - PolicyName: InitiateAllowCopyAndEncryptActions
+        - PolicyName: InitiateCopyAndEncryptActions
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Sid: S3Read
+              - Sid: TemporaryS3Read
                 Effect: Allow
                 Action:
-                  - s3:ListBucket
                   - s3:GetObject
                 Resource:
                   - !GetAtt TemporaryMessageBatchBucket.Arn
+              - Sid: PermanentS3Write
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !GetAtt PermanentMessageBatchBucket.Arn
               - Sid: UseSqsKmsKey
                 Effect: Allow
                 Action:
@@ -1015,7 +992,8 @@ Resources:
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
       Environment:
         Variables:
-          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBucketLogsBucket
+          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
+          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
       Events:
         InitiateCopyAndEncryptEvent:
           Type: SQS

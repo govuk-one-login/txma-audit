@@ -1,25 +1,19 @@
 import { S3Client, PutObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3';
-import { Readable } from 'stream';
 
-export const putS3Object = async (bucket: string, fileKey: string, data: string): Promise<string> => {
+export const putS3Object = async (bucket: string, fileKey: string, data: string): Promise<void> => {
     const client = new S3Client({ region: 'eu-west-2' });
-
-    const body = createDataStream(data);
 
     const input = {
         Bucket: bucket,
         Key: fileKey,
-        Body: body,
+        Body: data,
     } as PutObjectCommandInput;
 
-    await client.send(new PutObjectCommand(input));
+    console.log(input);
 
-    return 'done';
-};
+    const result = await client.send(new PutObjectCommand(input));
 
-const createDataStream = (data: string) => {
-    const dataStream = new Readable();
-    dataStream.push(data);
-    dataStream.push(null);
-    return dataStream;
+    console.log(result);
+
+    return;
 };

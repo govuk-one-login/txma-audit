@@ -1,7 +1,8 @@
 import { SQSEvent } from 'aws-lambda';
 import { getS3ObjectAsString } from './s3Services/getS3ObjectAsString';
+import { putS3Object } from './s3Services/putS3Object';
 
-export const handler = async (event: SQSEvent): Promise<string> => {
+export const handler = async (event: SQSEvent): Promise<void> => {
     /* copy and encrypt data */
     console.log('Handling initiate copy and encrypt SQS event', JSON.stringify(event, null, 2));
 
@@ -26,15 +27,19 @@ export const handler = async (event: SQSEvent): Promise<string> => {
         throw new Error(`Incorrect source bucket - ${bucket}`);
     }
 
-    console.log(`Bucket: ${bucket}, Key: ${key}`);
+    const temporaryData = await getS3ObjectAsString(bucket, key);
 
-    const temporaryData = getS3ObjectAsString(bucket, key);
+    console.log(`TemporaryData: ${temporaryData}`);
 
     // //to do - encrypt temporaryData;
 
-    // putS3Object(temporaryData);
+    const permanentBucket = !process.env.PERMANENT_BUCKET_NAME ? '' : process.env.PERMANENT_BUCKET_NAME;
 
-    return temporaryData;
+    console.log(permanentBucket);
+
+    await putS3Object(permanentBucket, key, temporaryData);
+
+    return;
 };
 
 const tryParseJSON = (jsonString: string) => {
