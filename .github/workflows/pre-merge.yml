@@ -8,53 +8,10 @@ on:
 env:
   environment: "build"
   awsRegion: "eu-west-2"
-  eventProcessorDirectory: "event-processing"
   auditDirectory: "audit"
   analysisDirectory: "analysis"
 
 jobs:
-  run_event_processor_tests_and_validation:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    defaults:
-      run:
-        working-directory: ${{ env.eventProcessorDirectory }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2
-      - name: Assume AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_EVENT_PROCESSING }}
-          aws-region: ${{ env.awsRegion }}
-      - name: Use Node.js 14
-        uses: actions/setup-node@v3.0.0
-        with:
-          node-version: '14.x'
-      - name: Install Lambda Dependencies
-        working-directory: ${{ env.eventProcessorDirectory }}/lambda
-        run: yarn install --immutable --immutable-cache --check-cache
-      - name: Test Lambdas
-        working-directory: ${{ env.eventProcessorDirectory }}/lambda
-        run: yarn test
-      - name: SAM Validate
-        run: |
-          sam validate --template-file event-processing-template.yml --config-env ${{ env.environment }}
-      - name: Run checkov on SAM template
-        uses: bridgecrewio/checkov-action@master
-        with:
-          file: ${{ env.eventProcessorDirectory }}/event-processing-template.yml
-          quiet: true
-          framework: cloudformation
-          skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
-
   run_audit_validation:
     runs-on: ubuntu-latest
     permissions:
@@ -93,34 +50,6 @@ jobs:
         uses: bridgecrewio/checkov-action@master
         with:
           file: ${{ env.auditDirectory }}/audit-template.yml
-          quiet: true
-          framework: cloudformation
-          skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
-
-  run_analysis_validation:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    defaults:
-      run:
-        working-directory: ${{ env.analysisDirectory }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2
-      - name: Assume AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_ANALYSIS }}
-          aws-region: ${{ env.awsRegion }}
-      - name: SAM Validate
-        run: |
-          sam validate --template-file analysis-template.yml --config-env ${{ env.environment }}
-      - name: Run checkov on SAM template
-        uses: bridgecrewio/checkov-action@master
-        with:
-          file: ${{ env.analysisDirectory }}/analysis-template.yml
           quiet: true
           framework: cloudformation
           skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117

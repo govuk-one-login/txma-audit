@@ -5,12 +5,22 @@ import { IEnrichedAuditEvent, IAuditEventUserMessage } from '../../models/enrich
 import { ICleansedEvent } from '../../models/cleansed-event';
 import { TestHelper } from '../test-helpers/test-helper';
 import { CleanserHelper } from '../test-helpers/cleanser-helper';
+import { ObfuscationService } from '../../services/obfuscation-service';
+import { getHmacKey } from '../../services/key-service';
+
+jest.mock('../../services/key-service', () => ({
+    getHmacKey: jest.fn()
+  }))
+
+const mockGetHmacKey = getHmacKey as jest.Mock<Promise<string>>
 
 describe('Unit test for app handler', function () {
     let consoleWarningMock: jest.SpyInstance;
 
     beforeEach(() => {
+        jest.resetAllMocks()
         consoleWarningMock = jest.spyOn(global.console, 'log');
+        mockGetHmacKey.mockResolvedValue('secret-1-value')
     });
 
     afterEach(() => {
@@ -91,6 +101,7 @@ describe('Unit test for app handler', function () {
             reIngestCount: 0,
             user: {
                 govuk_signin_journey_id: 'aaaa-bbbb-cccc-dddd-1234',
+                user_id: ObfuscationService.obfuscateField('some_user_id', 'secret-1-value'),
             },
         };
 
@@ -115,7 +126,7 @@ describe('Unit test for app handler', function () {
 
     it('cleanses all messages when receiving an array including evidence to be kept in the extensions field', async () => {
         const expectedData: string = Buffer.from(
-            TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessage()),
+            TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedAndObfuscatedMessage()),
         ).toString('base64');
         const expectedResult: FirehoseTransformationResult = {
             records: [
@@ -138,7 +149,7 @@ describe('Unit test for app handler', function () {
 
     it('cleanses all messages when receiving an array including one piece evidence to be kept in the extensions field and one to be removed', async () => {
         const expectedData: string = Buffer.from(
-            TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedMessage()),
+            TestHelper.encodeAuditEventArray(CleanserHelper.exampleCleansedAndObfuscatedMessage()),
         ).toString('base64');
         const expectedResult: FirehoseTransformationResult = {
             records: [

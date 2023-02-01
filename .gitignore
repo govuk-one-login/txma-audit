@@ -7,6 +7,9 @@
 .idea/modules.xml
 .idea/vcs.xml
 
+audit/cf-template.yaml
+audit/template.zip
+
 event-processing/invoke-event-processor-payload.json
 event-processing/cf-template.yaml
 event-processing/template.zip
