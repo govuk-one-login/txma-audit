@@ -18,9 +18,6 @@ export const handler = async (event: SQSEvent): Promise<void> => {
     }
 
     const s3data = eventData.Records[0].s3;
-
-    console.log(s3data);
-
     const bucket = s3data.bucket.name;
     const key = s3data.object.key;
 
@@ -29,8 +26,6 @@ export const handler = async (event: SQSEvent): Promise<void> => {
     }
 
     const temporaryData = await getS3ObjectAsString(bucket, key);
-
-    console.log(`TemporaryData: ${temporaryData}`);
 
     // //to do - encrypt temporaryData;
 
