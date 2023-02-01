@@ -78,34 +78,3 @@ jobs:
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
           working-directory: ${{ env.auditDirectory }}
           template-file: audit-template.yml
-
-  validate_and_build_analysis:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    defaults:
-      run:
-        working-directory: ${{ env.analysisDirectory }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2
-      - name: Assume AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_ANALYSIS }}
-          aws-region: ${{ env.awsRegion }}
-      - name: SAM Validate
-        run: |
-          sam validate --template-file analysis-template.yml --config-file config/samconfig-analysis.toml --config-env ${{ env.environment }}
-      - name: SAM Build
-        run: |
-          sam build --template-file analysis-template.yml --config-file config/samconfig-analysis.toml --config-env ${{ env.environment }} --use-container --beta-features
-      - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v3
-        with:
-          artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_ANALYSIS }}
-          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
-          working-directory: ${{ env.analysisDirectory }}
-          template-file: analysis-template.yml
