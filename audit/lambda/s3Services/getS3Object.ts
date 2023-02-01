@@ -3,7 +3,7 @@ import { S3Client, GetObjectCommand, GetObjectCommandInput } from '@aws-sdk/clie
 import { Readable } from 'stream';
 
 export const getS3ObjectAsString = async (bucket: string, fileKey: string): Promise<string> => {
-    const client = new S3Client({ region: 'eu-west-2' });
+    const client = new S3Client({ region: process.env.AWS_REGION });
 
     const input = {
         Bucket: bucket,

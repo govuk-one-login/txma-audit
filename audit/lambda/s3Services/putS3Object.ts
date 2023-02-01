@@ -1,7 +1,7 @@
 import { S3Client, PutObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3';
 
 export const putS3Object = async (bucket: string, fileKey: string, data: string): Promise<void> => {
-    const client = new S3Client({ region: 'eu-west-2' });
+    const client = new S3Client({ region: process.env.AWS_REGION });
 
     const input = {
         Bucket: bucket,
