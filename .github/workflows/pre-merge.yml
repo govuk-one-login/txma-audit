@@ -53,31 +53,3 @@ jobs:
           quiet: true
           framework: cloudformation
           skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
-
-  run_analysis_validation:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    defaults:
-      run:
-        working-directory: ${{ env.analysisDirectory }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2
-      - name: Assume AWS role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_ANALYSIS }}
-          aws-region: ${{ env.awsRegion }}
-      - name: SAM Validate
-        run: |
-          sam validate --template-file analysis-template.yml --config-env ${{ env.environment }}
-      - name: Run checkov on SAM template
-        uses: bridgecrewio/checkov-action@master
-        with:
-          file: ${{ env.analysisDirectory }}/analysis-template.yml
-          quiet: true
-          framework: cloudformation
-          skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
