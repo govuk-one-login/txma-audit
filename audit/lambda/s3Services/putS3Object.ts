@@ -9,11 +9,7 @@ export const putS3Object = async (bucket: string, fileKey: string, data: string)
         Body: data,
     } as PutObjectCommandInput;
 
-    console.log(input);
-
-    const result = await client.send(new PutObjectCommand(input));
-
-    console.log(result);
+    await client.send(new PutObjectCommand(input));
 
     return;
 };

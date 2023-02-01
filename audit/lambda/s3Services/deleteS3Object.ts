@@ -8,9 +8,7 @@ export const deleteS3Object = async (bucket: string, fileKey: string): Promise<v
         Key: fileKey,
     } as DeleteObjectCommandInput;
 
-    const result = await client.send(new DeleteObjectCommand(input));
-
-    console.log(result);
+    await client.send(new DeleteObjectCommand(input));
 
     return;
 };

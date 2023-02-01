@@ -2,6 +2,7 @@ import { SQSEvent } from 'aws-lambda';
 import { deleteS3Object } from './s3Services/deleteS3Object';
 import { getS3ObjectAsString } from './s3Services/getS3Object';
 import { putS3Object } from './s3Services/putS3Object';
+import { tryParseJSON } from './utils/helpers';
 
 export const handler = async (event: SQSEvent): Promise<void> => {
     /* copy and encrypt data */
@@ -36,13 +37,4 @@ export const handler = async (event: SQSEvent): Promise<void> => {
     await deleteS3Object(bucket, key);
 
     return;
-};
-
-const tryParseJSON = (jsonString: string) => {
-    try {
-        return JSON.parse(jsonString);
-    } catch (error) {
-        console.error('Error parsing JSON: ', error);
-        return {};
-    }
 };
