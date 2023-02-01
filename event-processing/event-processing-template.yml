@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: "A template to create all the Event Processing infrastructure."
 
@@ -29,18 +29,18 @@ Parameters:
     AllowedPattern: "(none)|(arn:aws:iam::.*:role/.*)"
 
 Conditions:
-  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
-  UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
-  UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
+  UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, "none"]]
+  UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, "none"]]
+  UseTestRole: !Not [!Equals [!Ref TestRoleArn, "none"]]
   IsProductionOrStaging: !And
-    - !Not [!Equals [ !Ref Environment, dev]]
-    - !Not [!Equals [ !Ref Environment, build]]
+    - !Not [!Equals [!Ref Environment, dev]]
+    - !Not [!Equals [!Ref Environment, build]]
   IsBuildOrDev: !Or
-    - !Equals [ !Ref Environment, dev ]
-    - !Equals [ !Ref Environment, build ]
+    - !Equals [!Ref Environment, dev]
+    - !Equals [!Ref Environment, build]
   IsPipelineTestStage: !Or
-    - !Equals [ !Ref Environment, build ]
-    - !Equals [ !Ref Environment, staging ]
+    - !Equals [!Ref Environment, build]
+    - !Equals [!Ref Environment, staging]
   DeployTestRolePolicy: !And
     - !Condition IsPipelineTestStage
     - !Condition UseTestRole
@@ -60,6 +60,7 @@ Globals:
       - !Ref AWS::NoValue
     Architectures:
       - x86_64
+    Runtime: nodejs18.x
 
 Resources:
   LogsKmsKey:
@@ -122,17 +123,17 @@ Resources:
             Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
             Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource: '*'
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
+            Resource: "*"
           - Effect: "Allow"
             Principal:
               AWS: "{{resolve:ssm:AuditAccountARN}}"
             Action:
-              - 'kms:Decrypt'
-            Resource: '*'
+              - "kms:Decrypt"
+            Resource: "*"
 
   SNSKMSKeyAlias:
     Type: AWS::KMS::Alias
@@ -160,8 +161,8 @@ Resources:
               Principal:
                 AWS: "{{resolve:ssm:AccountsARN}}"
               Action:
-                - 'kms:Decrypt'
-              Resource: '*'
+                - "kms:Decrypt"
+              Resource: "*"
             - !Ref "AWS::NoValue"
 
   SQSKMSKeyPublishAccountAlias:
@@ -169,7 +170,6 @@ Resources:
     Properties:
       AliasName: !Sub "alias/${AWS::StackName}/${Environment}/SQSKMSKeyPublishAccount"
       TargetKeyId: !Ref SQSKMSKeyPublishAccount
-
 
   LambdaKMSKey:
     Type: AWS::KMS::Key
@@ -189,8 +189,8 @@ Resources:
             Principal:
               Service: "lambda.amazonaws.com"
             Action:
-              - 'kms:Decrypt'
-            Resource: '*'
+              - "kms:Decrypt"
+            Resource: "*"
 
   LambdaKMSKeyAlias:
     Type: AWS::KMS::Alias
@@ -216,7 +216,7 @@ Resources:
           - Sid: SNSSubscribePolicy-1
             Effect: Allow
             Action:
-              - 'sns:Subscribe'
+              - "sns:Subscribe"
             Principal:
               AWS:
                 - "{{resolve:ssm:AuditAccountARN}}"
@@ -261,12 +261,12 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'sns:Publish'
+              - "sns:Publish"
             Resource: !Ref epSNSTopic
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
-              - 'kms:GenerateDataKey*'
+              - "kms:Decrypt"
+              - "kms:GenerateDataKey*"
             Resource: !GetAtt SNSKMSKey.Arn
 
   KBVEventProcessorLogGroup:
@@ -286,7 +286,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVLambdaAccessRole.Arn
       Environment:
@@ -368,12 +367,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -400,7 +399,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:KbvKmsArn}}"
 
@@ -421,7 +420,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVAddressLambdaAccessRole.Arn
       Environment:
@@ -503,12 +501,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -535,7 +533,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:KbvAddressKmsArn}}"
 
@@ -556,7 +554,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt KBVFraudLambdaAccessRole.Arn
       Environment:
@@ -638,12 +635,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -670,7 +667,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:KbvFraudKmsArn}}"
 
@@ -691,7 +688,7 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
+
       Timeout: 30
       Role: !GetAtt IPVLambdaAccessRole.Arn
       Environment:
@@ -707,7 +704,6 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - event-processor-app.ts
-
 
   IPVEventProcessorUnknownFieldsErrorMetric:
     DependsOn:
@@ -774,12 +770,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -806,7 +802,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:IPVCoreKmsArn}}"
 
@@ -827,7 +823,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVPassLambdaAccessRole.Arn
       Environment:
@@ -909,12 +904,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -941,7 +936,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:IPVPassportKmsArn}}"
 
@@ -962,7 +957,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt IPVCILambdaAccessRole.Arn
       Environment:
@@ -1044,12 +1038,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -1076,7 +1070,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:IPVCIKmsArn}}"
 
@@ -1097,7 +1091,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt SPOTLambdaAccessRole.Arn
       Environment:
@@ -1179,12 +1172,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -1211,8 +1204,8 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
-            Resource: '{{resolve:ssm:SPOTKmsArn}}'
+              - "kms:Decrypt"
+            Resource: "{{resolve:ssm:SPOTKmsArn}}"
 
   AppEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1231,7 +1224,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt AppLambdaAccessRole.Arn
       Environment:
@@ -1313,12 +1305,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -1345,7 +1337,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:AppKmsArn}}"
 
@@ -1366,7 +1358,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt AuthOIDCLambdaAccessRole.Arn
       Environment:
@@ -1448,12 +1439,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -1480,7 +1471,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:AuthOIDCKmsArn}}"
 
@@ -1501,7 +1492,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt AuthAccountMgmtLambdaAccessRole.Arn
       Environment:
@@ -1583,12 +1573,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -1615,7 +1605,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:AuthAccountMgmtKmsArn}}"
 
@@ -1637,19 +1627,19 @@ Resources:
             Principal:
               Service: "firehose.amazonaws.com"
             Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource: '*'
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
+            Resource: "*"
           - Effect: "Allow"
             Principal:
               Service: "lambda.amazonaws.com"
             Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
             Resource:
               - "*"
             Condition:
@@ -1712,15 +1702,15 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: 'Allow'
+          - Effect: "Allow"
             Resource:
               - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
-              - !Sub '${FraudSplunkDeliveryFailureBucket.Arn}/*'
+              - !Sub "${FraudSplunkDeliveryFailureBucket.Arn}/*"
             Principal:
               AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
             Action:
-              - 's3:Get*'
-              - 's3:List*'
+              - "s3:Get*"
+              - "s3:List*"
 
   FraudSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
@@ -1746,8 +1736,7 @@ Resources:
             Status: Enabled
             ExpirationInDays: 7
       NotificationConfiguration:
-        QueueConfigurations:
-          !If
+        QueueConfigurations: !If
           - IsProductionOrStaging
           - - Event: "s3:ObjectRestore:*"
               Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
@@ -1776,10 +1765,10 @@ Resources:
       MetricName: "PutRequests"
       Namespace: "AWS/S3"
       Dimensions:
-      - Name: BucketName
-        Value: !Ref FraudSplunkDeliveryFailureBucket
-      - Name: FilterId
-        Value: EntireBucket
+        - Name: BucketName
+          Value: !Ref FraudSplunkDeliveryFailureBucket
+        - Name: FilterId
+          Value: EntireBucket
 
   FraudSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -1789,16 +1778,16 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: 'Allow'
+          - Effect: "Allow"
             Resource:
               - !GetAtt FraudSplunkDeliveryTestBucket.Arn
-              - !Sub '${FraudSplunkDeliveryTestBucket.Arn}/*'
+              - !Sub "${FraudSplunkDeliveryTestBucket.Arn}/*"
             Principal:
               AWS: !Ref TestRoleArn
             Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:DeleteObject'
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:DeleteObject"
 
   FraudSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
@@ -1828,15 +1817,15 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: 'Allow'
+          - Effect: "Allow"
             Resource:
               - !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
-              - !Sub '${PerformanceSplunkDeliveryFailureBucket.Arn}/*'
+              - !Sub "${PerformanceSplunkDeliveryFailureBucket.Arn}/*"
             Principal:
               AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
             Action:
-              - 's3:Get*'
-              - 's3:List*'
+              - "s3:Get*"
+              - "s3:List*"
 
   PerformanceSplunkDeliveryFailureBucket:
     Type: AWS::S3::Bucket
@@ -1862,8 +1851,7 @@ Resources:
             Status: Enabled
             ExpirationInDays: 7
       NotificationConfiguration:
-        QueueConfigurations:
-          !If
+        QueueConfigurations: !If
           - IsProductionOrStaging
           - - Event: "s3:ObjectRestore:*"
               Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
@@ -1892,10 +1880,10 @@ Resources:
       MetricName: "PutRequests"
       Namespace: "AWS/S3"
       Dimensions:
-      - Name: BucketName
-        Value: !Ref PerformanceSplunkDeliveryFailureBucket
-      - Name: FilterId
-        Value: EntireBucket
+        - Name: BucketName
+          Value: !Ref PerformanceSplunkDeliveryFailureBucket
+        - Name: FilterId
+          Value: EntireBucket
 
   PerformanceSplunkDeliveryTestBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -1905,16 +1893,16 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: 'Allow'
+          - Effect: "Allow"
             Resource:
               - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
-              - !Sub '${PerformanceSplunkDeliveryTestBucket.Arn}/*'
+              - !Sub "${PerformanceSplunkDeliveryTestBucket.Arn}/*"
             Principal:
               AWS: !Ref TestRoleArn
             Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:DeleteObject'
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:DeleteObject"
 
   PerformanceSplunkDeliveryTestBucket:
     Type: AWS::S3::Bucket
@@ -1985,12 +1973,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - firehose.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
 
   FraudDeliveryStreamPolicy:
     DependsOn:
@@ -2005,41 +1993,41 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 's3:AbortMultipartUpload'
-              - 's3:GetBucketLocation'
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:ListBucketMultipartUploads'
-              - 's3:PutObject'
+              - "s3:AbortMultipartUpload"
+              - "s3:GetBucketLocation"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:PutObject"
             Resource:
               - !GetAtt FraudSplunkDeliveryFailureBucket.Arn
               - !Join
-                - ''
-                - - 'arn:aws:s3:::'
+                - ""
+                - - "arn:aws:s3:::"
                   - !Ref FraudSplunkDeliveryFailureBucket
-                  - '*'
+                  - "*"
           - Effect: Allow
             Action:
-              - 'firehose:DescribeDeliveryStream'
-              - 'firehose:ListDeliveryStreams'
-              - 'firehose:ListTagsForDeliveryStream'
-              - 'firehose:PutRecord'
-              - 'firehose:PutRecordBatch'
+              - "firehose:DescribeDeliveryStream"
+              - "firehose:ListDeliveryStreams"
+              - "firehose:ListTagsForDeliveryStream"
+              - "firehose:PutRecord"
+              - "firehose:PutRecordBatch"
             Resource:
               - !GetAtt FraudDeliveryStream.Arn
           - Effect: Allow
             Action:
-              - 'lambda:InvokeFunction'
-              - 'lambda:GetFunctionConfiguration'
+              - "lambda:InvokeFunction"
+              - "lambda:GetFunctionConfiguration"
             Resource:
               - !Sub "${ObfuscationFunction.Arn}*"
           - Effect: Allow
             Action:
-              - 'logs:CreateLogGroup'
-              - 'logs:PutLogEvents'
-              - 'logs:CreateLogStream'
+              - "logs:CreateLogGroup"
+              - "logs:PutLogEvents"
+              - "logs:CreateLogStream"
             Resource:
-              - '*'
+              - "*"
 
   FraudDeliveryStreamTestPolicy:
     DependsOn:
@@ -2055,19 +2043,19 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 's3:AbortMultipartUpload'
-              - 's3:GetBucketLocation'
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:ListBucketMultipartUploads'
-              - 's3:PutObject'
+              - "s3:AbortMultipartUpload"
+              - "s3:GetBucketLocation"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:PutObject"
             Resource:
               - !GetAtt FraudSplunkDeliveryTestBucket.Arn
               - !Join
-                - ''
-                - - 'arn:aws:s3:::'
+                - ""
+                - - "arn:aws:s3:::"
                   - !Ref FraudSplunkDeliveryTestBucket
-                  - '*'
+                  - "*"
 
   PerformanceDeliveryStreamRole:
     Type: AWS::IAM::Role
@@ -2079,12 +2067,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
-                - 'firehose.amazonaws.com'
-            Action: 'sts:AssumeRole'
+                - "firehose.amazonaws.com"
+            Action: "sts:AssumeRole"
 
   PerformanceStreamPolicy:
     DependsOn:
@@ -2099,41 +2087,41 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 's3:AbortMultipartUpload'
-              - 's3:GetBucketLocation'
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:ListBucketMultipartUploads'
-              - 's3:PutObject'
+              - "s3:AbortMultipartUpload"
+              - "s3:GetBucketLocation"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:PutObject"
             Resource:
               - !GetAtt PerformanceSplunkDeliveryFailureBucket.Arn
               - !Join
-                - ''
-                - - 'arn:aws:s3:::'
+                - ""
+                - - "arn:aws:s3:::"
                   - !Ref PerformanceSplunkDeliveryFailureBucket
-                  - '*'
+                  - "*"
           - Effect: Allow
             Action:
-              - 'firehose:DescribeDeliveryStream'
-              - 'firehose:ListDeliveryStreams'
-              - 'firehose:ListTagsForDeliveryStream'
-              - 'firehose:PutRecord'
-              - 'firehose:PutRecordBatch'
+              - "firehose:DescribeDeliveryStream"
+              - "firehose:ListDeliveryStreams"
+              - "firehose:ListTagsForDeliveryStream"
+              - "firehose:PutRecord"
+              - "firehose:PutRecordBatch"
             Resource:
               - !GetAtt PerformanceDeliveryStream.Arn
           - Effect: Allow
             Action:
-              - 'lambda:InvokeFunction'
-              - 'lambda:GetFunctionConfiguration'
+              - "lambda:InvokeFunction"
+              - "lambda:GetFunctionConfiguration"
             Resource:
               - !Sub "${CleanserFunction.Arn}*"
           - Effect: Allow
             Action:
-              - 'logs:CreateLogGroup'
-              - 'logs:PutLogEvents'
-              - 'logs:CreateLogStream'
+              - "logs:CreateLogGroup"
+              - "logs:PutLogEvents"
+              - "logs:CreateLogStream"
             Resource:
-              - '*'
+              - "*"
 
   PerformanceDeliveryStreamTestPolicy:
     DependsOn:
@@ -2149,19 +2137,19 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 's3:AbortMultipartUpload'
-              - 's3:GetBucketLocation'
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:ListBucketMultipartUploads'
-              - 's3:PutObject'
+              - "s3:AbortMultipartUpload"
+              - "s3:GetBucketLocation"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:PutObject"
             Resource:
               - !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
               - !Join
-                - ''
-                - - 'arn:aws:s3:::'
+                - ""
+                - - "arn:aws:s3:::"
                   - !Ref PerformanceSplunkDeliveryTestBucket
-                  - '*'
+                  - "*"
 
   FireHoseSNSSubscriptionRole:
     Type: AWS::IAM::Role
@@ -2171,7 +2159,7 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -2182,14 +2170,14 @@ Resources:
       Policies:
         - PolicyName: sns_kinesis_firehose_access_policy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Action:
-                  - 'firehose:DescribeDeliveryStream'
-                  - 'firehose:ListDeliveryStreams'
-                  - 'firehose:ListTagsForDeliveryStream'
-                  - 'firehose:PutRecord'
-                  - 'firehose:PutRecordBatch'
+                  - "firehose:DescribeDeliveryStream"
+                  - "firehose:ListDeliveryStreams"
+                  - "firehose:ListTagsForDeliveryStream"
+                  - "firehose:PutRecord"
+                  - "firehose:PutRecordBatch"
                 Effect: Allow
                 Resource:
                   - !GetAtt FraudDeliveryStream.Arn
@@ -2209,8 +2197,7 @@ Resources:
       SplunkDestinationConfiguration:
         Fn::If:
           - IsProductionOrStaging
-          -
-            HECAcknowledgmentTimeoutInSeconds: 300
+          - HECAcknowledgmentTimeoutInSeconds: 300
             HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
             HECEndpointType: Raw
             HECToken: "{{resolve:ssm:HECTICFToken}}"
@@ -2246,8 +2233,7 @@ Resources:
       ExtendedS3DestinationConfiguration:
         Fn::If:
           - IsBuildOrDev
-          -
-            Prefix: "firehose/"
+          - Prefix: "firehose/"
             BucketARN: !GetAtt FraudSplunkDeliveryTestBucket.Arn
             BufferingHints:
               IntervalInSeconds: 60
@@ -2283,8 +2269,7 @@ Resources:
       SplunkDestinationConfiguration:
         Fn::If:
           - IsProductionOrStaging
-          -
-            HECAcknowledgmentTimeoutInSeconds: 300
+          - HECAcknowledgmentTimeoutInSeconds: 300
             HECEndpoint: "{{resolve:ssm:HECEndpoint}}"
             HECEndpointType: Raw
             HECToken: "{{resolve:ssm:HECPerformanceToken}}"
@@ -2320,8 +2305,7 @@ Resources:
       ExtendedS3DestinationConfiguration:
         Fn::If:
           - IsBuildOrDev
-          -
-            Prefix: "firehose/"
+          - Prefix: "firehose/"
             BucketARN: !GetAtt PerformanceSplunkDeliveryTestBucket.Arn
             BufferingHints:
               IntervalInSeconds: 60
@@ -2605,7 +2589,7 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -2629,7 +2613,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource: "{{resolve:ssm:HMACKeyKMSKeyArn}}"
 
   ObfuscationLogGroup:
@@ -2646,7 +2630,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: obfuscation-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt ObfuscationFunctionRole.Arn
       Environment:
@@ -2670,7 +2653,7 @@ Resources:
       BlockPublicPolicy: True
       SecretId: "{{resolve:ssm:HMACSecretArn}}"
       ResourcePolicy:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Resource: "{{resolve:ssm:HMACSecretArn}}"
             Action: "secretsmanager:GetSecretValue"
@@ -2686,7 +2669,7 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -2710,7 +2693,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource: "{{resolve:ssm:HMACKeyKMSKeyArn}}"
 
   CleanserLogGroup:
@@ -2727,7 +2710,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: cleanser-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt CleanserFunctionRole.Arn
       Environment:
@@ -2751,7 +2733,7 @@ Resources:
       BlockPublicPolicy: True
       SecretId: "{{resolve:ssm:PerformanceHMACSecretArn}}"
       ResourcePolicy:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Resource: "{{resolve:ssm:PerformanceHMACSecretArn}}"
             Action: "secretsmanager:GetSecretValue"
@@ -2775,7 +2757,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: re-ingest-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
       Environment:
@@ -2790,12 +2771,12 @@ Resources:
           Type: S3
           Properties:
             Bucket: !Ref FraudSplunkDeliveryFailureBucket
-            Events: 's3:ObjectCreated:*'
+            Events: "s3:ObjectCreated:*"
         PerformanceBucket:
           Type: S3
           Properties:
             Bucket: !Ref PerformanceSplunkDeliveryFailureBucket
-            Events: 's3:ObjectCreated:*'
+            Events: "s3:ObjectCreated:*"
       Policies:
         - S3CrudPolicy:
             BucketName: !Sub "${AWS::StackName}-${Environment}-fraud-splunk-fail"
@@ -3057,7 +3038,7 @@ Resources:
       FilterPattern: ""
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
-   #AccountsData changes
+    #AccountsData changes
   PublishToAccountsLambdaSNSSubscriptionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -3066,7 +3047,7 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -3077,11 +3058,11 @@ Resources:
       Policies:
         - PolicyName: sns_lambda_access_policy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Action:
-                  - 'lambda:InvokeFunction'
-                  - 'lambda:GetFunctionConfiguration'
+                  - "lambda:InvokeFunction"
+                  - "lambda:GetFunctionConfiguration"
                 Effect: Allow
                 Resource:
                   - !GetAtt PublishToAccountsRedactedFunction.Arn
@@ -3094,7 +3075,7 @@ Resources:
       QueueName: !Sub "PublishToAccountsSQSQueue-${Environment}"
       KmsMasterKeyId: !GetAtt SQSKMSKeyPublishAccount.Arn
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt  PublishToAccountsSQSDLQueue.Arn
+        deadLetterTargetArn: !GetAtt PublishToAccountsSQSDLQueue.Arn
         maxReceiveCount: 5
       MessageRetentionPeriod: 604800 #7 days
       RedriveAllowPolicy:
@@ -3113,7 +3094,7 @@ Resources:
     Type: AWS::SNS::Subscription
     Properties:
       TopicArn: !Ref epSNSTopic
-      Endpoint: !GetAtt  PublishToAccountsRedactedFunction.Arn #Lambda
+      Endpoint: !GetAtt PublishToAccountsRedactedFunction.Arn #Lambda
       Protocol: lambda
       FilterPolicy:
         eventName:
@@ -3130,27 +3111,27 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'sqs:SendMessage'
+              - "sqs:SendMessage"
             Resource:
               - !Sub "${PublishToAccountsSQSQueue.Arn}"
           - Effect: Allow
             Action:
-              - 'sqs:DeleteMessage'
-              - 'sqs:ReceiveMessage'
-              - 'sqs:GetQueueAttributes'
-              - 'sqs:SendMessage'
+              - "sqs:DeleteMessage"
+              - "sqs:ReceiveMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:SendMessage"
             Resource:
               - !Sub "${PublishToAccountsSQSDLQueue.Arn}"
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
             Resource: !GetAtt SQSKMSKeyPublishAccount.Arn
           - Effect: Allow
             Action:
-              - 's3:PutObject'
+              - "s3:PutObject"
             Resource:
               - !GetAtt PublishToAccountsConsumeFailureMessageBucket.Arn
               - !Sub "${PublishToAccountsConsumeFailureMessageBucket.Arn}/*"
@@ -3158,14 +3139,12 @@ Resources:
   PublishToAccountsQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
-      "Queues": [
-          { "Ref" : "PublishToAccountsSQSQueue" }
-        ]
+      "Queues": [{ "Ref": "PublishToAccountsSQSQueue" }]
       PolicyDocument:
         Statement:
           # allow txma access
           - Action:
-              - 'sqs:*'
+              - "sqs:*"
             Effect: "Allow"
             Resource: !Sub "${PublishToAccountsSQSQueue.Arn}"
             Principal:
@@ -3174,10 +3153,10 @@ Resources:
           - !If
             - IsProductionOrStaging
             - Action:
-                - 'sqs:ChangeMessageVisibility'
-                - 'sqs:ReceiveMessage'
-                - 'sqs:GetQueueAttributes'
-                - 'sqs:DeleteMessage'
+                - "sqs:ChangeMessageVisibility"
+                - "sqs:ReceiveMessage"
+                - "sqs:GetQueueAttributes"
+                - "sqs:DeleteMessage"
               Effect: "Allow"
               Resource: !Sub "${PublishToAccountsSQSQueue.Arn}"
               # AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
@@ -3212,9 +3191,8 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: accounts-redacted-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
-      Role: !GetAtt  PublishToAccessRole.Arn
+      Role: !GetAtt PublishToAccessRole.Arn
       Environment:
         Variables:
           publishToAccountsARN: !GetAtt PublishToAccountsSQSQueue.Arn
@@ -3223,7 +3201,7 @@ Resources:
       Policies:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt PublishToAccountsSQSQueue.QueueName
-      KmsKeyArn: !GetAtt  SQSKMSKeyPublishAccount.Arn
+      KmsKeyArn: !GetAtt SQSKMSKeyPublishAccount.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -3314,7 +3292,6 @@ Resources:
       MetricName: "Accounts SQS Publish Failed Errors"
       Namespace: "lambda/di/txma/errors"
 
-
   PublishToAccountsSQSOldestMessageAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -3330,7 +3307,6 @@ Resources:
       Statistic: Sum
       Period: 3600 #Message Older than an Hour
       Threshold: 1
-
 
   PublishToAccountsRedactedFunctionTestInvokePermission:
     Type: AWS::Lambda::Permission
@@ -3358,7 +3334,7 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       LoggingConfiguration:
-        DestinationBucketName: !Ref  PublishToAccountsConsumeFailureBucketLogsBucket
+        DestinationBucketName: !Ref PublishToAccountsConsumeFailureBucketLogsBucket
         LogFilePrefix: "event-processing/publish-to-accounts-failure/"
       MetricsConfigurations:
         - Id: EntireBucket
@@ -3427,7 +3403,6 @@ Resources:
               StringEquals:
                 "aws:SourceAccount": !Sub "${AWS::AccountId}"
 
-
   # TXMA2 audit resources start
   TxMATwoAuditEventProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -3446,7 +3421,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt TxMATwoAuditLambdaAccessRole.Arn
       Environment:
@@ -3528,12 +3502,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -3560,7 +3534,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:TxMATwoAuditKmsArn}}"
 
@@ -3601,7 +3575,6 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: event-processor-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt TxMATwoQueryResultsLambdaAccessRole.Arn
       Environment:
@@ -3683,12 +3656,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ''
+          - Sid: ""
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
 
@@ -3715,7 +3688,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
+              - "kms:Decrypt"
             Resource:
               - "{{resolve:ssm:TxMATwoQueryResultsKmsArn}}"
 
@@ -3735,7 +3708,6 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref TxMATwoQueryResultsEventProcessorFunction
       Principal: !Ref TestRoleArn
-
 
   # TXMA2 QueryResults resources end
 
@@ -3760,8 +3732,8 @@ Resources:
               Principal:
                 AWS: "{{resolve:ssm:BillingARN}}"
               Action:
-                - 'kms:Decrypt'
-              Resource: '*'
+                - "kms:Decrypt"
+              Resource: "*"
             - !Ref "AWS::NoValue"
 
   SQSKMSKeyPublishBillingAlias:
@@ -3777,7 +3749,7 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -3788,11 +3760,11 @@ Resources:
       Policies:
         - PolicyName: sns_lambda_billing_access_policy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Action:
-                  - 'lambda:InvokeFunction'
-                  - 'lambda:GetFunctionConfiguration'
+                  - "lambda:InvokeFunction"
+                  - "lambda:GetFunctionConfiguration"
                 Effect: Allow
                 Resource:
                   - !GetAtt PublishToBillingRedactedFunction.Arn
@@ -3805,7 +3777,7 @@ Resources:
       QueueName: !Sub "PublishToBillingSQSQueue-${Environment}"
       KmsMasterKeyId: !GetAtt SQSKMSKeyPublishBilling.Arn
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt  PublishToBillingSQSDLQueue.Arn
+        deadLetterTargetArn: !GetAtt PublishToBillingSQSDLQueue.Arn
         maxReceiveCount: 5
       MessageRetentionPeriod: 604800 #7 days
       RedriveAllowPolicy:
@@ -3824,7 +3796,7 @@ Resources:
     Type: AWS::SNS::Subscription
     Properties:
       TopicArn: !Ref epSNSTopic
-      Endpoint: !GetAtt  PublishToBillingRedactedFunction.Arn #Lambda
+      Endpoint: !GetAtt PublishToBillingRedactedFunction.Arn #Lambda
       Protocol: lambda
       FilterPolicy:
         eventName:
@@ -3841,27 +3813,27 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'sqs:SendMessage'
+              - "sqs:SendMessage"
             Resource:
               - !Sub "${PublishToBillingSQSQueue.Arn}"
           - Effect: Allow
             Action:
-              - 'sqs:DeleteMessage'
-              - 'sqs:ReceiveMessage'
-              - 'sqs:GetQueueAttributes'
-              - 'sqs:SendMessage'
+              - "sqs:DeleteMessage"
+              - "sqs:ReceiveMessage"
+              - "sqs:GetQueueAttributes"
+              - "sqs:SendMessage"
             Resource:
               - !Sub "${PublishToBillingSQSDLQueue.Arn}"
           - Effect: Allow
             Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
             Resource: !GetAtt SQSKMSKeyPublishBilling.Arn
           - Effect: Allow
             Action:
-              - 's3:PutObject'
+              - "s3:PutObject"
             Resource:
               - !GetAtt PublishToBillingConsumeFailureMessageBucket.Arn
               - !Sub "${PublishToBillingConsumeFailureMessageBucket.Arn}/*"
@@ -3874,7 +3846,7 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -3890,14 +3862,12 @@ Resources:
   PublishToBillingQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
-      "Queues": [
-        { "Ref" : "PublishToBillingSQSQueue" }
-      ]
+      "Queues": [{ "Ref": "PublishToBillingSQSQueue" }]
       PolicyDocument:
         Statement:
           # allow txma access
           - Action:
-              - 'sqs:*'
+              - "sqs:*"
             Effect: "Allow"
             Resource: !Sub "${PublishToBillingSQSQueue.Arn}"
             Principal:
@@ -3906,10 +3876,10 @@ Resources:
           - !If
             - IsProductionOrStaging
             - Action:
-                - 'sqs:ChangeMessageVisibility'
-                - 'sqs:ReceiveMessage'
-                - 'sqs:GetQueueAttributes'
-                - 'sqs:DeleteMessage'
+                - "sqs:ChangeMessageVisibility"
+                - "sqs:ReceiveMessage"
+                - "sqs:GetQueueAttributes"
+                - "sqs:DeleteMessage"
               Effect: "Allow"
               Resource: !Sub "${PublishToBillingSQSQueue.Arn}"
               # AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
@@ -3944,9 +3914,8 @@ Resources:
       CodeUri: ../event-processing/lambda
       PackageType: Zip
       Handler: billing-redacted-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
-      Role: !GetAtt  PublishToAccessRole.Arn
+      Role: !GetAtt PublishToAccessRole.Arn
       Environment:
         Variables:
           publishToBillingARN: !GetAtt PublishToBillingSQSQueue.Arn
@@ -3955,7 +3924,7 @@ Resources:
       Policies:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt PublishToBillingSQSQueue.QueueName
-      KmsKeyArn: !GetAtt  SQSKMSKeyPublishBilling.Arn
+      KmsKeyArn: !GetAtt SQSKMSKeyPublishBilling.Arn
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -4046,7 +4015,6 @@ Resources:
       MetricName: "Billing SQS Publish Failed Errors"
       Namespace: "lambda/di/txma/errors"
 
-
   PublishToBillingSQSOldestMessageAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -4062,7 +4030,6 @@ Resources:
       Statistic: Sum
       Period: 3600 #Message Older than an Hour
       Threshold: 1
-
 
   PublishToBillingRedactedFunctionTestInvokePermission:
     Type: AWS::Lambda::Permission
@@ -4090,7 +4057,7 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       LoggingConfiguration:
-        DestinationBucketName: !Ref  PublishToBillingConsumeFailureBucketLogsBucket
+        DestinationBucketName: !Ref PublishToBillingConsumeFailureBucketLogsBucket
         LogFilePrefix: "event-processing/publish-to-billing-failure/"
       MetricsConfigurations:
         - Id: EntireBucket
