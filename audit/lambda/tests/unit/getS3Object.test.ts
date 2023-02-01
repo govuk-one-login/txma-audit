@@ -3,13 +3,14 @@ import { mockClient } from 'aws-sdk-client-mock';
 import { getS3ObjectAsString } from '../../s3Services/getS3Object';
 import 'aws-sdk-client-mock-jest';
 import { Readable } from 'stream';
+import { TEST_TEMPORARY_BUCKET_NAME, TEST_S3_OBJECT_KEY, TEST_S3_OBJECT_DATA_STRING } from '../testConstants';
 
 const s3Mock = mockClient(S3Client);
 const getObjectCommandInput: GetObjectCommandInput = {
-    Bucket: 'testBucket',
-    Key: 'testKey',
+    Bucket: TEST_TEMPORARY_BUCKET_NAME,
+    Key: TEST_S3_OBJECT_KEY,
 };
-const testData = 'event1\nevent2';
+const testData = TEST_S3_OBJECT_DATA_STRING;
 
 const createDataStream = () => {
     const dataStream = new Readable();
@@ -25,7 +26,7 @@ describe('getS3Object - ', () => {
     it('getS3ObjectAsString returns a string read from the file', async () => {
         givenDataAvailable();
 
-        const returnedData = await getS3ObjectAsString('testBucket', 'testKey');
+        const returnedData = await getS3ObjectAsString(TEST_TEMPORARY_BUCKET_NAME, TEST_S3_OBJECT_KEY);
 
         expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, getObjectCommandInput);
         expect(returnedData).toEqual(testData);
