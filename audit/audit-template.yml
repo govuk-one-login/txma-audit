@@ -31,11 +31,12 @@ Parameters:
 Conditions:
   UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
   UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
-  UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
-  IsPagerDutyEnvironment: !Or [
-    !Equals [ !Ref Environment, staging ],
-    !Equals [ !Ref Environment, production ]
-  ]
+  UseTestRole: !Not [ !Equals [!Ref TestRoleArn, "none"] ]
+  IsPagerDutyEnvironment:
+    !Or [
+      !Equals [ !Ref Environment, staging ],
+      !Equals [ !Ref Environment, production ],
+    ]
   IsProductionOrStaging: !And
     - !Not [!Equals [ !Ref Environment, dev]]
     - !Not [!Equals [ !Ref Environment, build]]
@@ -126,6 +127,45 @@ Resources:
       AliasName: !Sub "alias/${AWS::StackName}/${Environment}/FireHoseKMSKey"
       TargetKeyId: !Ref FireHoseKMSKey
 
+  AuditFileReadyToEncryptQueueKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service: "s3.amazonaws.com"
+            Action:
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
+            Resource: "*"
+          - Effect: "Allow"
+            Principal:
+              Service: "sqs.amazonaws.com"
+            Action:
+              - "kms:Decrypt"
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
+            Resource: "*"
+
+  AuditFileReadyToEncryptQueueKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/audit-file-ready-to-encrypt-queue-kms-key"
+      TargetKeyId: !Ref AuditFileReadyToEncryptQueueKmsKey
+
   MessageBucketLogsBucket:
     Type: AWS::S3::Bucket
     # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
@@ -191,7 +231,7 @@ Resources:
               - TransitionInDays: 90
                 StorageClass: GLACIER
       NotificationConfiguration:
-        QueueConfigurations:
+        QueueConfigurations: 
           !If
           - IsProductionOrStaging
           - - Event: "s3:ObjectCreated:*"
@@ -328,10 +368,10 @@ Resources:
       AlarmActions:
         - !Ref SNSCriticalAlarmTopic
       Dimensions:
-      - Name: BucketName
-        Value: !Ref MessageBatchBucket
-      - Name: FilterId
-        Value: EntireBucket
+        - Name: BucketName
+          Value: !Ref MessageBatchBucket
+        - Name: FilterId
+          Value: EntireBucket
 
   SNSCriticalAlarmTopic:
     Type: AWS::SNS::Topic
@@ -344,7 +384,7 @@ Resources:
     Properties:
       PolicyDocument:
         Version: "2012-10-17"
-        Statement:
+        Statement: 
         - Effect: Allow
           Principal:
             Service: cloudwatch.amazonaws.com
@@ -354,7 +394,7 @@ Resources:
             ArnLike:
               aws:SourceArn: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*
             StringEquals:
-              aws:SourceAccount: !Sub ${AWS::AccountId}
+              aws:SourceAccount: !Sub ${AWS::AccountId} 
       Topics:
         - !Ref SNSCriticalAlarmTopic
 
@@ -712,9 +752,336 @@ Resources:
       MetricsConfigurations:
         - Id: EntireBucket
 
-  #
-  # CSLS
-  #
+  ##########################################
+  # Resources for revised encryption cycle #
+  ##########################################
+
+  # SQS
+
+  AuditFileReadyToEncryptQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-queue"
+      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
+        maxReceiveCount: 5
+
+  AuditFileReadyToEncryptDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ"
+      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+
+  AuditFileReadyToEncryptQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref AuditFileReadyToEncryptQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - sqs:*
+            Resource:
+              - !GetAtt AuditFileReadyToEncryptQueue.Arn
+            Principal:
+              AWS: "*"
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub "arn:aws:s3:*:*:${AWS::StackName}-${Environment}-temporary-message-batch"
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+
+  # S3 resources
+
+  TemporaryMessageBucketLogsBucket:
+    Type: AWS::S3::Bucket
+    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
+    Properties:
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-temporary-bucket-logs"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
+
+  TemporaryS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TemporaryMessageBucketLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableTempS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${TemporaryMessageBucketLogsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+              Bool:
+                "aws:SecureTransport": "true"
+
+  TemporaryMessageBatchBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-temporary-message-batch"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: "Enabled"
+      LoggingConfiguration:
+        DestinationBucketName: !Ref TemporaryMessageBucketLogsBucket
+        LogFilePrefix: "audit/temporary-message-batch-bucket/"
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: "s3:ObjectCreated:*"
+            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  TemporaryMessageBatchBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TemporaryMessageBatchBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowBucketAccess
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:DeleteObject
+            Resource:
+              - !GetAtt TemporaryMessageBatchBucket.Arn
+              - !Sub "${TemporaryMessageBatchBucket.Arn}/*"
+            Principal:
+              AWS: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
+            Condition:
+              Bool:
+                "aws:SecureTransport": "true"
+
+  PermanentMessageBatchBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-${Environment}-permanent-message-batch"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: "Enabled"
+      LoggingConfiguration:
+        DestinationBucketName: !Ref PermanentMessageBucketLogsBucket
+        LogFilePrefix: "audit/permanent-message-batch-bucket/"
+      LifecycleConfiguration:
+        Rules:
+          - Id: AuditGlacierRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: GLACIER
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  PermanentMessageBucketLogsBucket:
+    Type: AWS::S3::Bucket
+    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
+    Properties:
+      VersioningConfiguration:
+        Status: "Enabled"
+      BucketName: !Sub "${AWS::StackName}-${Environment}-permanent-bucket-logs"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: CheckovRulesToSkip
+          Value: CKV_AWS_18
+
+  PermanentS3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PermanentMessageBucketLogsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "EnableS3Logging"
+            Effect: "Allow"
+            Resource:
+              - !Sub "${PermanentMessageBucketLogsBucket.Arn}/*"
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+              Bool:
+                "aws:SecureTransport": "true"
+
+  PermanentMessageBatchBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PermanentMessageBatchBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowPermanentBucketAccess
+            Effect: "Allow"
+            Action:
+              - "s3:PutObject"
+            Resource:
+              - !GetAtt PermanentMessageBatchBucket.Arn
+              - !Sub "${PermanentMessageBatchBucket.Arn}/*"
+            Principal:
+              AWS: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
+            Condition:
+              Bool:
+                "aws:SecureTransport": "true"
+
+  # lambdas
+
+  InitiateCopyAndEncryptLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: !Sub "/aws/lambda/InitiateCopyAndEncryptFunction"
+      RetentionInDays: 7
+
+  InitiateCopyAndEncryptLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-InitiateCopyAndEncrypt"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ""
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: InitiateCopyAndEncryptActions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: TemporaryS3Read
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !GetAtt TemporaryMessageBatchBucket.Arn
+              - Sid: PermanentS3Write
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !GetAtt PermanentMessageBatchBucket.Arn
+              - Sid: UseSqsKmsKey
+                Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:GenerateDataKey*
+                  - kms:ReEncrypt*
+                Resource:
+                  - !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+              - Sid: Logs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt InitiateCopyAndEncryptLogs.Arn
+              - Sid: sqsReceive
+                Effect: Allow
+                Action:
+                  - sqs:*
+                Resource: !GetAtt AuditFileReadyToEncryptQueue.Arn
+
+  InitiateCopyAndEncryptFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    #checkov:skip=CKV_AWS_117:VPC not required
+    DependsOn:
+      - InitiateCopyAndEncryptLogs
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "InitiateCopyAndEncryptFunction"
+      CodeUri: ../audit/lambda
+      PackageType: Zip
+      Handler: initiateCopyAndEncrypt-app.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Role: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+      Environment:
+        Variables:
+          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
+          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+      Events:
+        AuditFileReadyToEncryptEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
+            BatchSize: 1
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - initiateCopyAndEncrypt-app.ts
+    DeadLetterQueue:
+      Type: SQS
+      TargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
+
+  ########
+  # CSLS #
+  ########
 
   CSLSFireHoseLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
