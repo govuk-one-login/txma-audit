@@ -64,6 +64,7 @@ Globals:
       - !Ref AWS::NoValue
     Architectures:
       - x86_64
+    Runtime: nodejs18.x
 
 Resources:
   LogsKmsKey:
@@ -343,7 +344,7 @@ Resources:
     Properties:
       PolicyDocument:
         Version: "2012-10-17"
-        Statement: 
+        Statement:
         - Effect: Allow
           Principal:
             Service: cloudwatch.amazonaws.com
@@ -353,7 +354,7 @@ Resources:
             ArnLike:
               aws:SourceArn: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*
             StringEquals:
-              aws:SourceAccount: !Sub ${AWS::AccountId} 
+              aws:SourceAccount: !Sub ${AWS::AccountId}
       Topics:
         - !Ref SNSCriticalAlarmTopic
 
@@ -580,7 +581,6 @@ Resources:
       CodeUri: ../audit/lambda
       PackageType: Zip
       Handler: delimiter-app.handler
-      Runtime: nodejs14.x
       Timeout: 30
       Role: !GetAtt DelimiterLambdaAccessRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
@@ -635,7 +635,6 @@ Resources:
       CodeUri: ../audit/lambda
       PackageType: Zip
       Handler: firehoseTester-app.handler
-      Runtime: nodejs14.x
       Timeout: 60
       Role: !GetAtt firehoseTesterLambdaAccessRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
