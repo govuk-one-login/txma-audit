@@ -127,7 +127,7 @@ Resources:
       AliasName: !Sub "alias/${AWS::StackName}/${Environment}/FireHoseKMSKey"
       TargetKeyId: !Ref FireHoseKMSKey
 
-  AuditSqsKmsKey:
+  AuditFileReadyToEncryptQueueKmsKey:
     Type: AWS::KMS::Key
     Properties:
       EnableKeyRotation: true
@@ -160,11 +160,11 @@ Resources:
               - "kms:DescribeKey"
             Resource: "*"
 
-  AuditSqsKmsKeyAlias:
+  AuditFileReadyToEncryptQueueKmsKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/AuditSqsKmsKey"
-      TargetKeyId: !Ref AuditSqsKmsKey
+      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/audit-file-ready-to-encrypt-queue-kms-key"
+      TargetKeyId: !Ref AuditFileReadyToEncryptQueueKmsKey
 
   MessageBucketLogsBucket:
     Type: AWS::S3::Bucket
@@ -694,26 +694,26 @@ Resources:
 
   # SQS
 
-  InitiateCopyAndEncryptQueue:
+  AuditFileReadyToEncryptQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "${AWS::StackName}-${Environment}-initiate-copy-and-encrypt-queue"
-      KmsMasterKeyId: !GetAtt AuditSqsKmsKey.Arn
+      QueueName: !Sub "${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-queue"
+      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt InitiateCopyAndEncryptDeadLetterQueue.Arn
+        deadLetterTargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
         maxReceiveCount: 5
 
-  InitiateCopyAndEncryptDeadLetterQueue:
+  AuditFileReadyToEncryptDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "${AWS::StackName}-${Environment}-initiate-copy-and-encrypt-DLQ"
-      KmsMasterKeyId: !GetAtt AuditSqsKmsKey.Arn
+      QueueName: !Sub "${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ"
+      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
 
-  InitiateCopyAndEncryptQueuePolicy:
+  AuditFileReadyToEncryptQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-        - !Ref InitiateCopyAndEncryptQueue
+        - !Ref AuditFileReadyToEncryptQueue
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -721,7 +721,7 @@ Resources:
             Action:
               - sqs:*
             Resource:
-              - !GetAtt InitiateCopyAndEncryptQueue.Arn
+              - !GetAtt AuditFileReadyToEncryptQueue.Arn
             Principal:
               AWS: "*"
             Condition:
@@ -794,7 +794,7 @@ Resources:
       NotificationConfiguration:
         QueueConfigurations:
           - Event: "s3:ObjectCreated:*"
-            Queue: !GetAtt InitiateCopyAndEncryptQueue.Arn
+            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -964,7 +964,7 @@ Resources:
                   - kms:GenerateDataKey*
                   - kms:ReEncrypt*
                 Resource:
-                  - !GetAtt AuditSqsKmsKey.Arn
+                  - !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
               - Sid: Logs
                 Effect: Allow
                 Action:
@@ -976,7 +976,7 @@ Resources:
                 Effect: Allow
                 Action:
                   - sqs:*
-                Resource: !GetAtt InitiateCopyAndEncryptQueue.Arn
+                Resource: !GetAtt AuditFileReadyToEncryptQueue.Arn
 
   InitiateCopyAndEncryptFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
@@ -998,10 +998,10 @@ Resources:
           TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
       Events:
-        InitiateCopyAndEncryptEvent:
+        AuditFileReadyToEncryptEvent:
           Type: SQS
           Properties:
-            Queue: !GetAtt InitiateCopyAndEncryptQueue.Arn
+            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
             BatchSize: 1
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -1013,7 +1013,7 @@ Resources:
           - initiateCopyAndEncrypt-app.ts
     DeadLetterQueue:
       Type: SQS
-      TargetArn: !GetAtt InitiateCopyAndEncryptDeadLetterQueue.Arn
+      TargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
 
   ########
   # CSLS #
