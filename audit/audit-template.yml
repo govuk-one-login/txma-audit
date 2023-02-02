@@ -270,7 +270,7 @@ Resources:
           projection.datetime.format: yyyy/MM/dd/HH
           projection.datetime.interval: 1
           projection.datetime.interval.unit: HOURS
-          storage.location.template: !Join [ '', [ s3://, !Ref MessageBatchBucket, /firehose/${datetime}/ ]]
+          storage.location.template: !Join [ '', [ s3://, !Ref MessageBatchBucket, '/firehose/${datetime}/' ]]
         PartitionKeys:
           - Name: datetime
             Type: string
