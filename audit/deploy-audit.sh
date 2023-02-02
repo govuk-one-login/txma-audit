@@ -11,7 +11,7 @@ sam build --template-file audit-template.yml --config-file config/samconfig-audi
 echo "\x1b[32m sam build: complete \x1b[0m"
 
 echo "\x1b[33m sam package: running \x1b[0m"
-sam package --region eu-west-2 --s3-bucket="audit-pipeline-artifact-bucket" --output-template-file=cf-template.yaml --signing-profiles DelimiterFunction="SigningProfile_qK5A76J3Mq0E" firehoseTesterFunction="SigningProfile_qK5A76J3Mq0E"
+sam package --region eu-west-2 --s3-bucket="audit-pipeline-artifact-bucket" --output-template-file=cf-template.yaml --signing-profiles DelimiterFunction="SigningProfile_qK5A76J3Mq0E" firehoseTesterFunction="SigningProfile_qK5A76J3Mq0E" InitiateCopyAndEncryptFunction="SigningProfile_qK5A76J3Mq0E"
 echo "\x1b[32m sam package: complete \x1b[0m"
 
 echo "\x1b[33m zip template: running \x1b[0m"
