@@ -29,23 +29,23 @@ Parameters:
     AllowedPattern: "(none)|(arn:aws:iam::.*:role/.*)"
 
 Conditions:
-  UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, "none"]]
-  UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, "none"]]
-  UseTestRole: !Not [!Equals [!Ref TestRoleArn, "none"]]
+  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
+  UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
+  UseTestRole: !Not [ !Equals [!Ref TestRoleArn, "none"] ]
   IsPagerDutyEnvironment:
     !Or [
-      !Equals [!Ref Environment, staging],
-      !Equals [!Ref Environment, production],
+      !Equals [ !Ref Environment, staging ],
+      !Equals [ !Ref Environment, production ],
     ]
   IsProductionOrStaging: !And
-    - !Not [!Equals [!Ref Environment, dev]]
-    - !Not [!Equals [!Ref Environment, build]]
+    - !Not [!Equals [ !Ref Environment, dev]]
+    - !Not [!Equals [ !Ref Environment, build]]
   IsPipelineTestStage: !Or
-    - !Equals [!Ref Environment, build]
-    - !Equals [!Ref Environment, staging]
+    - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
   IsTestableEnv: !Or
     - !Condition IsPipelineTestStage
-    - !Equals [!Ref Environment, dev]
+    - !Equals [ !Ref Environment, dev ]
   DeployTestRolePolicy: !And
     - !Condition IsPipelineTestStage
     - !Condition UseTestRole
@@ -115,11 +115,11 @@ Resources:
             Principal:
               Service: "firehose.amazonaws.com"
             Action:
-              - "kms:Decrypt"
-              - "kms:Encrypt"
-              - "kms:GenerateDataKey*"
-              - "kms:DescribeKey"
-            Resource: "*"
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
 
   FireHoseKMSKeyAlias:
     Type: AWS::KMS::Alias
@@ -231,7 +231,8 @@ Resources:
               - TransitionInDays: 90
                 StorageClass: GLACIER
       NotificationConfiguration:
-        QueueConfigurations: !If
+        QueueConfigurations: 
+          !If
           - IsProductionOrStaging
           - - Event: "s3:ObjectCreated:*"
               Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
@@ -265,27 +266,27 @@ Resources:
               AWS: "*"
           - !If
             - DeployTestRolePolicy
-            - Effect: "Allow"
+            - Effect: 'Allow'
               Resource:
                 - !GetAtt MessageBatchBucket.Arn
-                - !Sub "${MessageBatchBucket.Arn}/*"
+                - !Sub '${MessageBatchBucket.Arn}/*'
               Principal:
                 AWS: !Ref TestRoleArn
               Action:
-                - "s3:GetObject"
-                - "s3:ListBucket"
+                - 's3:GetObject'
+                - 's3:ListBucket'
             - !Ref AWS::NoValue
           - !If
             - IsProductionOrStaging
-            - Effect: "Allow"
+            - Effect: 'Allow'
               Resource:
                 - !GetAtt MessageBatchBucket.Arn
-                - !Sub "${MessageBatchBucket.Arn}/*"
+                - !Sub '${MessageBatchBucket.Arn}/*'
               Principal:
                 AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
               Action:
-                - "s3:Get*"
-                - "s3:List*"
+                - 's3:Get*'
+                - 's3:List*'
             - !Ref AWS::NoValue
 
   S3NoReceivedObjectsAlarm:
@@ -312,7 +313,7 @@ Resources:
   SNSCriticalAlarmTopic:
     Type: AWS::SNS::Topic
     Properties:
-      KmsMasterKeyId: "{{resolve:ssm:CoreSnsKmsKeyArn}}"
+      KmsMasterKeyId: '{{resolve:ssm:CoreSnsKmsKeyArn}}'
       TopicName: "PutEventAlarm"
 
   SNSCriticalAlarmTopicPolicy:
@@ -320,7 +321,7 @@ Resources:
     Properties:
       PolicyDocument:
         Version: "2012-10-17"
-        Statement:
+        Statement: 
         - Effect: Allow
           Principal:
             Service: cloudwatch.amazonaws.com
@@ -330,7 +331,7 @@ Resources:
             ArnLike:
               aws:SourceArn: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*
             StringEquals:
-              aws:SourceAccount: !Sub ${AWS::AccountId}
+              aws:SourceAccount: !Sub ${AWS::AccountId} 
       Topics:
         - !Ref SNSCriticalAlarmTopic
 
@@ -340,7 +341,7 @@ Resources:
     Properties:
       TopicArn: !Ref SNSCriticalAlarmTopic
       Protocol: https
-      Endpoint: "{{resolve:secretsmanager:PagerDutyEndpoint}}"
+      Endpoint: '{{resolve:secretsmanager:PagerDutyEndpoint}}'
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
@@ -397,7 +398,7 @@ Resources:
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn: "{{resolve:ssm:EventProcessorSNSTopicARN}}"
+      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
       Endpoint: !GetAtt AuditDeliveryStream.Arn #FireHose
       Protocol: firehose
       RawMessageDelivery: true
@@ -413,12 +414,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ""
+          - Sid: ''
             Effect: Allow
             Principal:
               Service:
                 - firehose.amazonaws.com
-            Action: "sts:AssumeRole"
+            Action: 'sts:AssumeRole'
 
   DeliveryStreamPolicy:
     Type: AWS::IAM::Policy
@@ -431,32 +432,32 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - "s3:AbortMultipartUpload"
-              - "s3:GetBucketLocation"
-              - "s3:GetObject"
-              - "s3:ListBucket"
-              - "s3:ListBucketMultipartUploads"
-              - "s3:PutObject"
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
             Resource:
               - !GetAtt MessageBatchBucket.Arn
               - !Join
-                - ""
-                - - "arn:aws:s3:::"
+                - ''
+                - - 'arn:aws:s3:::'
                   - !Ref MessageBatchBucket
-                  - "*"
+                  - '*'
           - Effect: Allow
             Action:
-              - "lambda:InvokeFunction"
-              - "lambda:GetFunctionConfiguration"
+              - 'lambda:InvokeFunction'
+              - 'lambda:GetFunctionConfiguration'
             Resource:
               - !Sub "${DelimiterFunction.Arn}*"
           - Effect: Allow
             Action:
-              - "logs:CreateLogGroup"
-              - "logs:PutLogEvents"
-              - "logs:CreateLogStream"
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
             Resource:
-              - "*"
+              - '*'
 
   SNSTopicSubscriptionRole:
     Type: AWS::IAM::Role
@@ -466,7 +467,7 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
@@ -477,21 +478,21 @@ Resources:
       Policies:
         - PolicyName: sns_kinesis_firehose_access_policy
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - "firehose:DescribeDeliveryStream"
-                  - "firehose:ListDeliveryStreams"
-                  - "firehose:ListTagsForDeliveryStream"
-                  - "firehose:PutRecord"
-                  - "firehose:PutRecordBatch"
+                  - 'firehose:DescribeDeliveryStream'
+                  - 'firehose:ListDeliveryStreams'
+                  - 'firehose:ListTagsForDeliveryStream'
+                  - 'firehose:PutRecord'
+                  - 'firehose:PutRecordBatch'
                 Resource:
                   - !GetAtt AuditDeliveryStream.Arn
               - Effect: Allow
                 Action:
-                  - "kms:Decrypt"
-                Resource: "{{resolve:ssm:SNSKMSKeyARN}}"
+                  - 'kms:Decrypt'
+                Resource: '{{resolve:ssm:SNSKMSKeyARN}}'
 
   LambdaKMSKey:
     Type: AWS::KMS::Key
@@ -511,8 +512,8 @@ Resources:
             Principal:
               Service: "lambda.amazonaws.com"
             Action:
-              - "kms:Decrypt"
-            Resource: "*"
+              - 'kms:Decrypt'
+            Resource: '*'
 
   LambdaKMSKeyAlias:
     Type: AWS::KMS::Alias
@@ -538,12 +539,12 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ""
+          - Sid: ''
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: "sts:AssumeRole"
+            Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
 
@@ -581,20 +582,20 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ""
+          - Sid: ''
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: "sts:AssumeRole"
+            Action: 'sts:AssumeRole'
       Policies:
         - PolicyName: lambda_kinesis_firehose_PutRecord_policy
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - "firehose:PutRecord"
+                  - 'firehose:PutRecord'
                 Resource:
                   - !GetAtt AuditDeliveryStream.Arn
 
@@ -672,7 +673,7 @@ Resources:
               NoncurrentDays: 1
             TagFilters:
               - Key: autoTest
-                Value: "true"
+                Value: 'true'
       # NotificationConfiguration:
       #   QueueConfigurations:
       #     !If
@@ -1038,6 +1039,7 @@ Resources:
       DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
 
 Outputs:
+
   IPVCoreStubURL:
     Value: !ImportValue IPVCoreStubURL
 
