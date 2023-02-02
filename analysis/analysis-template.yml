@@ -29,12 +29,12 @@ Parameters:
     AllowedPattern: "(none)|(arn:aws:iam::.*:role/.*)"
 
 Conditions:
-  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
-  UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
-  UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, "none" ]]
+  UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, "none"]]
+  UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, "none"]]
+  UseTestRole: !Not [!Equals [!Ref TestRoleArn, "none"]]
   IsProductionOrStaging: !And
-    - !Not [ !Equals [ !Ref Environment, dev ] ]
-    - !Not [ !Equals [ !Ref Environment, build ] ]
+    - !Not [!Equals [!Ref Environment, dev]]
+    - !Not [!Equals [!Ref Environment, build]]
 
 Globals:
   Function:
@@ -48,6 +48,7 @@ Globals:
       - !Ref AWS::NoValue
     Architectures:
       - x86_64
+    Runtime: nodejs18.x
 
 Resources:
   AuditEventDatabase:
@@ -70,31 +71,44 @@ Resources:
           has_encrypted_data: true
           projection.enabled: true
           projection.datetime.type: date
-          projection.datetime.range: '2022/08/01/00,NOW'
-          projection.datetime.format: 'yyyy/MM/dd/HH'
+          projection.datetime.range: "2022/08/01/00,NOW"
+          projection.datetime.format: "yyyy/MM/dd/HH"
           projection.datetime.interval: 1
           projection.datetime.interval.unit: HOURS
-          storage.location.template: !Join [ "", [ "s3://audit-", !Ref Environment, "-message-batch/firehose/${datetime}/" ]]
+          storage.location.template:
+            !Join [
+              "",
+              [
+                "s3://audit-",
+                !Ref Environment,
+                "-message-batch/firehose/${datetime}/",
+              ],
+            ]
         PartitionKeys:
-          - {Name: "datetime", Type: string}
+          - { Name: "datetime", Type: string }
         StorageDescriptor:
           Columns:
-            - {Name: "event_id", Type: string}
-            - {Name: "client_id", Type: string}
-            - {Name: "timestamp", Type: bigint}
-            - {Name: "timestamp_formatted", Type: string}
-            - {Name: "event_name", Type: string}
-            - {Name: "component_id", Type: string}
-            - {Name: "user", Type: string}
-            - {Name: "platform", Type: string}
-            - {Name: "restricted", Type: string}
-            - {Name: "extensions", Type: string}
+            - { Name: "event_id", Type: string }
+            - { Name: "client_id", Type: string }
+            - { Name: "timestamp", Type: bigint }
+            - { Name: "timestamp_formatted", Type: string }
+            - { Name: "event_name", Type: string }
+            - { Name: "component_id", Type: string }
+            - { Name: "user", Type: string }
+            - { Name: "platform", Type: string }
+            - { Name: "restricted", Type: string }
+            - { Name: "extensions", Type: string }
           Compressed: true
           InputFormat: "org.apache.hadoop.mapred.TextInputFormat"
           Location: !Sub "s3://audit-${Environment}-message-batch/firehose/"
           OutputFormat: "org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat"
           SerdeInfo:
-            Parameters: {"ignore.malformed.json": true,"serialization.format": 1,"field.delim":""}
+            Parameters:
+              {
+                "ignore.malformed.json": true,
+                "serialization.format": 1,
+                "field.delim": "",
+              }
             SerializationLibrary: "org.openx.data.jsonserde.JsonSerDe"
           StoredAsSubDirectories: false
         TableType: EXTERNAL_TABLE
@@ -110,12 +124,11 @@ Resources:
         ResultConfiguration:
           EncryptionConfiguration:
             EncryptionOption: "SSE_S3"
-          OutputLocation:
-            !Join
-            - ''
-            - - 's3://'
+          OutputLocation: !Join
+            - ""
+            - - "s3://"
               - !Ref AthenaQueryResultsBucket
-              - '/'
+              - "/"
 
   AthenaQueryResultsBucket:
     Type: AWS::S3::Bucket
@@ -139,36 +152,36 @@ Resources:
         Rules:
           - ExpirationInDays: 7
             Status: Enabled
-#      NotificationConfiguration:
-#        QueueConfigurations:
-#          !If
-#          - IsProductionOrStaging
-#          - - Event: "s3:ObjectCreated:*"
-#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-#            - Event: "s3:ObjectRestore:*"
-#              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-#          - - !Ref AWS::NoValue
+      #      NotificationConfiguration:
+      #        QueueConfigurations:
+      #          !If
+      #          - IsProductionOrStaging
+      #          - - Event: "s3:ObjectCreated:*"
+      #              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+      #            - Event: "s3:ObjectRestore:*"
+      #              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+      #          - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
 
-#  AthenaQueryResultsBucketPolicy:
-#    Type: AWS::S3::BucketPolicy
-#    Condition: IsProductionOrStaging
-#    Properties:
-#      Bucket: !Ref AthenaQueryResultsBucket
-#      PolicyDocument:
-#        Version: "2012-10-17"
-#        Statement:
-#          - Effect: 'Allow'
-#            Resource:
-#              - !GetAtt AthenaQueryResultsBucket.Arn
-#              - !Sub '${AthenaQueryResultsBucket.Arn}/*'
-#            Principal:
-#              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
-#            Action:
-#              - 's3:Get*'
-#              - 's3:List*'
+  #  AthenaQueryResultsBucketPolicy:
+  #    Type: AWS::S3::BucketPolicy
+  #    Condition: IsProductionOrStaging
+  #    Properties:
+  #      Bucket: !Ref AthenaQueryResultsBucket
+  #      PolicyDocument:
+  #        Version: "2012-10-17"
+  #        Statement:
+  #          - Effect: 'Allow'
+  #            Resource:
+  #              - !GetAtt AthenaQueryResultsBucket.Arn
+  #              - !Sub '${AthenaQueryResultsBucket.Arn}/*'
+  #            Principal:
+  #              AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+  #            Action:
+  #              - 's3:Get*'
+  #              - 's3:List*'
 
   AthenaQueryResultsBucketAccessLogsBucket:
     Type: AWS::S3::Bucket
