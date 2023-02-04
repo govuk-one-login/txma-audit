@@ -1,0 +1,12 @@
+version=0.1
+
+[default.deploy.parameters]
+stack_name = "audit"
+region = "eu-west-2"
+capabilities = "CAPABILITY_NAMED_IAM"
+tags = "Product=\"GOV.UK Sign In\" System=\"TxMA\" Environment=\"dev\" Owner=\"di-txma-team-2@digital.cabinet-office.gov.uk\""
+parameter_overrides=[
+    "Environment=dev",
+    "CodeSigningConfigArn=none",
+    "PermissionsBoundary=none"
+]

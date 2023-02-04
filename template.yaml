@@ -55,17 +55,22 @@ Conditions:
 
 Globals:
   Function:
+    Architectures:
+      - x86_64
     CodeSigningConfigArn: !If
       - UseCodeSigning
       - !Ref CodeSigningConfigArn
       - !Ref AWS::NoValue
+    CodeUri: dist/
+    Environment:
+      Variables:
+        NODE_OPTIONS: --enable-source-maps
     PermissionsBoundary: !If
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
-    Architectures:
-      - x86_64
     Runtime: nodejs18.x
+    Timeout: 30
 
 Resources:
   LogsKmsKey:
@@ -616,26 +621,12 @@ Resources:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole'
 
   DelimiterFunction:
-    DependsOn:
-      - DelimiterLogGroup
-      - DelimiterLambdaAccessRole
-    Type: 'AWS::Serverless::Function'
+    Type: AWS::Serverless::Function
     Properties:
-      FunctionName: 'DelimiterFunction'
-      CodeUri: ../audit/lambda
-      PackageType: Zip
-      Handler: delimiter-app.handler
-      Timeout: 30
+      FunctionName: DelimiterFunction
+      Handler: delimiter.handler
       Role: !GetAtt DelimiterLambdaAccessRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: 'es2020'
-        Sourcemap: true
-        EntryPoints:
-          - delimiter-app.ts
 
   AddFirehoseRecordFunctionInvokePermission:
     Type: AWS::Lambda::Permission
@@ -1000,16 +991,10 @@ Resources:
   InitiateCopyAndEncryptFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     #checkov:skip=CKV_AWS_117:VPC not required
-    DependsOn:
-      - InitiateCopyAndEncryptLogs
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: 'InitiateCopyAndEncryptFunction'
-      CodeUri: ../audit/lambda
-      PackageType: Zip
-      Handler: initiateCopyAndEncrypt-app.handler
-      Runtime: nodejs14.x
-      Timeout: 30
+      FunctionName: InitiateCopyAndEncryptFunction
+      Handler: initiateCopyAndEncrypt.handler
       Role: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
       Environment:
@@ -1022,14 +1007,6 @@ Resources:
           Properties:
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
             BatchSize: 1
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: 'es2020'
-        Sourcemap: true
-        EntryPoints:
-          - initiateCopyAndEncrypt-app.ts
     DeadLetterQueue:
       Type: SQS
       TargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
