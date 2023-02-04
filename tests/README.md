@@ -1,18 +1,80 @@
-# di-txma-audit Tests
+# di-txma-audit Audit Tests
 
 ## In this directory
 
-This directory contains two sets of automation tests for the di-txma-audit project. One for the event-processing service, and another for the audit service.
-The tests have been written to ensure that all the components within the TxMA service are connected and any messages which pass through are manipulated as expected. i.e. that the [Event Processing service](https://github.com/alphagov/di-txma-audit/tree/main/event-processing) and [Audit service](https://github.com/alphagov/di-txma-audit/tree/main/audit) pass messages through as expected.
-
-These tests do not cover what the unit tests cover. See the [audit unit tests](https://github.com/alphagov/di-txma-audit/tree/main/audit/lambda/tests/unit) and [event-processing unit tests](https://github.com/alphagov/di-txma-audit/tree/main/event-processing/lambda/tests/unit) to see what is covered there.
+This directory contains the automation tests for the Audit side of the TxMA service.
+The tests have been written to ensure that all the components within the TxMA Audit account are connected and any messages which pass through are manipulated as expected.
 
 The tests will test the configuration in the `dev`, `build`, and `staging` environments.
 
-## Running the tests
+## Prerequisites
 
-The tests run on an individual basis. So steps will need to be followed to test each side of the service individually. These steps are located at the directory level of the test.
+### GDS use
 
-For [Audit tests](https://github.com/alphagov/di-txma-audit/tree/main/tests/audit-tests)
+1. [A GDS AWS account](https://gds-request-an-aws-account.cloudapps.digital/)
+2. [The GDS CLI configured](https://github.com/alphagov/gds-cli)
 
-For [Event Processing tests](https://github.com/alphagov/di-txma-audit/tree/main/tests/event-processing-tests)
+### Private use
+
+1. [An AWS account](https://portal.aws.amazon.com/billing/signup?nc2=h_ct&src=header_signup&redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start/email)
+
+## Running locally
+
+### Create your project
+
+Firstly, clone the `di-txma-audit` repository, you will need to [deploy the audit AWS services](https://github.com/alphagov/di-txma-audit/blob/main/audit/README.md). Note, for GDS users, this is only needed for `dev` environment as all others will be deployed using the AWS Pipeline.
+
+After this, navigate to the `di-txma-audit/tests/audit-tests` in your terminal or command line.
+
+### Setting up your temporary credentials
+
+You need to set your environment variables to match temporary credentials for your AWS account.
+
+#### Using the GDS CLI
+
+You can generate your temporary credentials for the build environment by using the following command:
+
+```bash
+gds aws di-txma-audit-build -e
+```
+
+and setting the access key, secret access key, and session token in the terminal. <br>
+To do this, copy the output of the previous command and run them (paste) in the terminal or command line.
+
+Our other event-processing accounts for these tests are:
+`di-txma-audit-dev`
+`di-txma-audit-staging`
+
+#### Private use
+
+For a private account, follow these [steps to set up temporary credentials](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_use-resources.html).
+
+## Running the script
+
+Then, use the following gradle command to run the tests in the build environment. <br>
+The `TEST_ENVIRONMENT` is the environment you are running the test in. <br>
+The `TEST_REPORT_DIR` is the location of the output the reports
+
+Mac:
+
+```bash
+export TEST_ENVIRONMENT="build"
+export TEST_REPORT_DIR="report"
+./gradlew clean test
+```
+
+Windows:
+
+```bash
+set TEST_ENVIRONMENT="build"
+set TEST_REPORT_DIR="report"
+gradlew.bat clean
+```
+
+To view the report produced, run the following command:
+
+```bash
+open build/reports/tests/test/index.html
+```
+
+Or view one of the other produced reports in the `TEST_REPORT_DIR` directory.
