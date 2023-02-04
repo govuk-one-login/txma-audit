@@ -2,27 +2,21 @@ name: Post Merge Build, Test and Deploy
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    branches:
+      - main
+  workflow_dispatch: {}
 
 env:
-  environment: 'build'
-  awsRegion: 'eu-west-2'
-  testDirectory: 'tests'
-  auditDirectory: 'audit'
-  analysisDirectory: 'analysis'
+  AWS_REGION: eu-west-2
+  ENVIRONMENT: build
 
-# A workflow to build the audit infrastructure and deploy to the development (CI) environment
-# This may be subject to change if we can make re-usable actions to reference (This will need to be in concert with other GDS DI teams)
 jobs:
-  validate_and_build_audit:
+  validate-deploy:
+    name: Validate at deploy
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
-    defaults:
-      run:
-        working-directory: ${{ env.auditDirectory }}
     steps:
       - uses: actions/checkout@v3
       - name: Setup Python
@@ -34,47 +28,26 @@ jobs:
       - name: Assume AWS role
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_AUDIT }}
-          aws-region: ${{ env.awsRegion }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
       - name: Setup NodeJS
-        uses: actions/setup-node@v3.0.0
+        uses: actions/setup-node@v3
         with:
-          node-version: '18'
-      - name: Install Lambda Dependencies
-        working-directory: ${{ env.auditDirectory }}/lambda
-        run: yarn install --immutable --immutable-cache --check-cache
-      - name: SAM Validate
-        run: |
-          sam validate --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }}
-      - name: SAM Build
-        run: |
-          sam build --template-file audit-template.yml --config-file config/samconfig-audit.toml --config-env ${{ env.environment }} --use-container --beta-features
-      - name: Test Lambdas
-        working-directory: ${{ env.auditDirectory }}/lambda
+          node-version: 18
+          cache: yarn
+      - name: Node - Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install
+      - name: Validate SAM template
+        run: sam validate
+      - name: Build Lambda functions
+        run: yarn build
+      - name: Run tests
         run: yarn test
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      - name: Build, tag, and push testing image to Amazon ECR
-        working-directory: ${{ env.testDirectory }}
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_AUDIT }}
-          ECR_REPOSITORY_STAGING: ${{ secrets.ECR_REPOSITORY_AUDIT_STAGING }}
-          IMAGE_TAG: latest
-        run: |
-          docker build \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            --build-arg GIT_REPO=$GITHUB_REPOSITORY \
-            --build-arg COMMIT_SHA=$GITHUB_SHA \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./audit-tests/
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY_STAGING:$IMAGE_TAG
       - name: Deploy SAM app
         uses: alphagov/di-devplatform-upload-action@v3
         with:
-          artifact-bucket-name: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME_AUDIT }}
-          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_AUDIT }}
-          working-directory: ${{ env.auditDirectory }}
-          template-file: audit-template.yml
+          artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
+          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME}}
+          working-directory: '.'

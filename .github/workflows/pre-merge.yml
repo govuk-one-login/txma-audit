@@ -2,24 +2,21 @@ name: Pre-merge Build and Test
 
 on:
   pull_request:
-    branches: [main]
-  workflow_dispatch:
+    branches:
+      - main
+  workflow_dispatch: {}
 
 env:
-  environment: 'build'
-  awsRegion: 'eu-west-2'
-  auditDirectory: 'audit'
-  analysisDirectory: 'analysis'
+  AWS_REGION: eu-west-2
+  ENVIRONMENT: build
 
 jobs:
-  run_audit_validation:
+  validate-build:
+    name: Validate build & run tests
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
-    defaults:
-      run:
-        working-directory: ${{ env.auditDirectory }}
     steps:
       - uses: actions/checkout@v3
       - name: Setup Python
@@ -31,25 +28,32 @@ jobs:
       - name: Assume AWS role
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN_AUDIT }}
-          aws-region: ${{ env.awsRegion }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
       - name: Setup NodeJS
-        uses: actions/setup-node@v3.0.0
+        uses: actions/setup-node@v3
         with:
-          node-version: '18'
-      - name: Install Lambda Dependencies
-        working-directory: ${{ env.auditDirectory }}/lambda
-        run: yarn install --immutable --immutable-cache --check-cache
-      - name: Test Lambdas
-        working-directory: ${{ env.auditDirectory }}/lambda
+          node-version: 18
+          cache: yarn
+      - name: Node - Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install
+      - name: Run linting
+        if: always()
+        run: yarn lint
+      - name: Run tests
+        if: always()
         run: yarn test
-      - name: SAM Validate
-        run: |
-          sam validate --template-file audit-template.yml --config-env ${{ env.environment }}
+      - name: Validate SAM template
+        if: always()
+        run: sam validate
       - name: Run checkov on SAM template
+        if: always()
         uses: bridgecrewio/checkov-action@master
         with:
-          file: ${{ env.auditDirectory }}/audit-template.yml
-          quiet: true
+          file: template.yaml
           framework: cloudformation
-          skip_check: CKV_AWS_115,CKV_AWS_111,CKV_AWS_116,CKV_AWS_117
+          quiet: true
+      - name: Build Lambda functions
+        run: yarn build
