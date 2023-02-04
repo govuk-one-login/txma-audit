@@ -1,15 +1,9 @@
-/*
- * For a detailed explanation regarding each configuration property and type check, visit:
- * https://jestjs.io/docs/configuration
- */
+import type { Config } from '@jest/types'
 
-export default {
-  transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  clearMocks: true,
-  collectCoverage: true,
-  coverageDirectory: 'coverage',
-  coverageProvider: 'babel'
+const config: Config.InitialOptions = {
+  coveragePathIgnorePatterns: ['/node_modules/', '/dist/'],
+  preset: 'ts-jest',
+  verbose: true
 }
+
+export default config
