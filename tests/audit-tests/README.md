@@ -31,10 +31,13 @@ After this, navigate to the `di-txma-audit/tests/audit-tests` in your terminal o
 You need to set your environment variables to match temporary credentials for your AWS account.
 
 #### Using the GDS CLI
+
 You can generate your temporary credentials for the build environment by using the following command:
+
 ```bash
 gds aws di-txma-audit-build -e
 ```
+
 and setting the access key, secret access key, and session token in the terminal. <br>
 To do this, copy the output of the previous command and run them (paste) in the terminal or command line.
 
@@ -43,20 +46,25 @@ Our other event-processing accounts for these tests are:
 `di-txma-audit-staging`
 
 #### Private use
+
 For a private account, follow these [steps to set up temporary credentials](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_use-resources.html).
 
 ## Running the script
+
 Then, use the following gradle command to run the tests in the build environment. <br>
 The `TEST_ENVIRONMENT` is the environment you are running the test in. <br>
 The `TEST_REPORT_DIR` is the location of the output the reports
 
 Mac:
+
 ```bash
 export TEST_ENVIRONMENT="build"
 export TEST_REPORT_DIR="report"
 ./gradlew clean test
 ```
+
 Windows:
+
 ```bash
 set TEST_ENVIRONMENT="build"
 set TEST_REPORT_DIR="report"
@@ -64,7 +72,9 @@ gradlew.bat clean
 ```
 
 To view the report produced, run the following command:
-``` bash
+
+```bash
 open build/reports/tests/test/index.html
 ```
+
 Or view one of the other produced reports in the `TEST_REPORT_DIR` directory.

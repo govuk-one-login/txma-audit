@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
 
 env:
-  environment: "build"
-  awsRegion: "eu-west-2"
-  auditDirectory: "audit"
-  analysisDirectory: "analysis"
+  environment: 'build'
+  awsRegion: 'eu-west-2'
+  auditDirectory: 'audit'
+  analysisDirectory: 'analysis'
 
 jobs:
   run_audit_validation:
@@ -36,7 +36,7 @@ jobs:
       - name: Setup NodeJS
         uses: actions/setup-node@v3.0.0
         with:
-          node-version: "18"
+          node-version: '18'
       - name: Install Lambda Dependencies
         working-directory: ${{ env.auditDirectory }}/lambda
         run: yarn install --immutable --immutable-cache --check-cache

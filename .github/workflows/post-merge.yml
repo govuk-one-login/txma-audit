@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
 
 env:
-  environment: "build"
-  awsRegion: "eu-west-2"
-  testDirectory: "tests"
-  auditDirectory: "audit"
-  analysisDirectory: "analysis"
+  environment: 'build'
+  awsRegion: 'eu-west-2'
+  testDirectory: 'tests'
+  auditDirectory: 'audit'
+  analysisDirectory: 'analysis'
 
 # A workflow to build the audit infrastructure and deploy to the development (CI) environment
 # This may be subject to change if we can make re-usable actions to reference (This will need to be in concert with other GDS DI teams)
@@ -39,7 +39,7 @@ jobs:
       - name: Setup NodeJS
         uses: actions/setup-node@v3.0.0
         with:
-          node-version: "18"
+          node-version: '18'
       - name: Install Lambda Dependencies
         working-directory: ${{ env.auditDirectory }}/lambda
         run: yarn install --immutable --immutable-cache --check-cache

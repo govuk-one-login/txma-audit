@@ -4,11 +4,11 @@
 .eslintignore
 .gitignore
 .husky
+.nvmrc
 .prettierignore
 .pnp.*
 .yarn
 CODEOWNERS
 coverage/
 dist/
-audit-template.yaml
 yarn.lock

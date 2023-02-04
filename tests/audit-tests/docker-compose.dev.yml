@@ -8,7 +8,7 @@ services:
       - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
-#      - AWS_SECURITY_TOKEN=$AWS_SECURITY_TOKEN
+      #      - AWS_SECURITY_TOKEN=$AWS_SECURITY_TOKEN
       - AWS_DEFAULT_REGION=eu-west-2
       - TEST_REPORT_DIR=null
       - TEST_REPORT_ABSOLUTE_DIR=null
@@ -19,10 +19,10 @@ services:
       dockerfile: dev.Dockerfile
       context: ./
     volumes:
-      - "./:/usr/src/"
+      - './:/usr/src/'
   chrome:
     # arm image for apple silicon
-#    image: seleniarm/node-chromium:105.0
+    #    image: seleniarm/node-chromium:105.0
     #The image below is for intel CPUs
     image: selenium/node-chrome:104.0
     shm_size: 2gb
@@ -34,11 +34,11 @@ services:
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
   selenium-hub:
     # arm image for apple silicon
-#    image: seleniarm/hub:4.4.0-20220903
+    #    image: seleniarm/hub:4.4.0-20220903
     #The below image is for intel CPUs
     image: selenium/hub:4.4.0
     container_name: selenium-hub
     ports:
-      - "4442:4442"
-      - "4443:4443"
-      - "4444:4444"
+      - '4442:4442'
+      - '4443:4443'
+      - '4444:4444'

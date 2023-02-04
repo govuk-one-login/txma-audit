@@ -1,4 +1,5 @@
 # di-txma-audit
+
 Digital Identity Auditing Services
 
 This project contains source code and supporting files for creating the Event Processor and Audit serverless architecture.
@@ -15,6 +16,7 @@ This project contains source code and supporting files for creating the Event Pr
 - [Yelp/detect-secrets](https://github.com/Yelp/detect-secrets) - For detecting secrets in codebase
 
 Enable Git Hooks to be used with Husky. In the root of the project run the following command:
+
 ```bash
 npx husky install
 pre-commit install
@@ -42,17 +44,17 @@ Kinesis FireHose implementation in order to hash any sensitve data before sendin
 
 The Event Processing account contains the following AWS Lambda functions:
 
-* Event Processor
-* Obfuscation
-* Re-Ingest
+- Event Processor
+- Obfuscation
+- Re-Ingest
 
 The remaining infrastructure covers the following AWS services:
 
-* SNS
-* KMS
-* Kinesis FireHose
-* Secret Manager
-* S3
+- SNS
+- KMS
+- Kinesis FireHose
+- Secret Manager
+- S3
 
 see: https://github.com/alphagov/di-txma-audit/tree/main/event-processing
 
@@ -66,14 +68,14 @@ Limited access will be granted in order to retrieve records that need to be audi
 
 The Audit account contains the following AWS Lambda functions:
 
-* Delimiter
-* FireHose Tester
+- Delimiter
+- FireHose Tester
 
 The Audit account contains the following infrastructure:
 
-* Kinesis FireHose
-* KMS
-* S3
+- Kinesis FireHose
+- KMS
+- S3
 
 see: https://github.com/alphagov/di-txma-audit/tree/main/audit
 
@@ -83,10 +85,10 @@ The Serverless Application Model Command Line Interface (SAM CLI) is an extensio
 
 To use the SAM CLI, you need the following tools.
 
-* SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-* Node.js - [Install Node.js 14](https://nodejs.org/en/), including the NPM package management tool.
-* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
-* Yarn - [Install Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
+- SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+- Node.js - [Install Node.js 14](https://nodejs.org/en/), including the NPM package management tool.
+- Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
+- Yarn - [Install Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
 
 To build and deploy your application for the first time, run the following in your shell whilst in either the event-processing or audit folders:
 
@@ -94,9 +96,10 @@ To build and deploy your application for the first time, run the following in yo
 sam build --template-file <account-name>-template.yml --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --use-container --beta-features
 sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
 ```
-*Note*: When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket to store the lambda zip.
 
-*Deploying Locally*: When deploying locally you can specify the profile to be used for deployment by adding the profile argument e.g.
+_Note_: When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket to store the lambda zip.
+
+_Deploying Locally_: When deploying locally you can specify the profile to be used for deployment by adding the profile argument e.g.
 
 ```bash
 sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --profile <aws profile name>
@@ -108,7 +111,7 @@ You can also provide overrides directly when calling sam deploy if you need to p
 sam deploy --config-file config/samconfig-event-processing.toml --config-env "develop" --profile di-dev-admin --resolve-s3 --parameter-overrides ParameterKey=AuditAccountARN,ParameterValue=<ARN of account IAM root> ParameterKey=Environment,ParameterValue=<Environment>
 ```
 
-*Note*: When calling SAM deploy against a template containing a Lambda function make sure to omit the template name argument. If this is not done, the source files will be deployed instead of the compiled files located in .aws-sam.
+_Note_: When calling SAM deploy against a template containing a Lambda function make sure to omit the template name argument. If this is not done, the source files will be deployed instead of the compiled files located in .aws-sam.
 
 #### Available Environments
 

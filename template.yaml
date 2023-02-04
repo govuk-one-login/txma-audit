@@ -1,51 +1,51 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: "A template to create all the Audit infrastructure."
+Description: 'A template to create all the Audit infrastructure.'
 
 Parameters:
   CodeSigningConfigArn:
     Type: String
-    Default: "none"
+    Default: 'none'
     Description: >
       The ARN of the Code Signing Config to use, provided by the deployment pipeline
   PermissionsBoundary:
-    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Description: 'The ARN of the permissions boundary to apply when creating IAM roles'
     Type: String
-    Default: "none"
+    Default: 'none'
   Environment:
-    Description: "The environment type"
-    Type: "String"
+    Description: 'The environment type'
+    Type: 'String'
     AllowedValues:
-      - "dev"
-      - "build"
-      - "staging"
-      - "integration"
-      - "production"
+      - 'dev'
+      - 'build'
+      - 'staging'
+      - 'integration'
+      - 'production'
     ConstraintDescription: must be dev, build, staging, integration or production
   TestRoleArn:
-    Type: "String"
-    Description: "The ARN of the role that will used for integration tests"
-    Default: "none"
-    AllowedPattern: "(none)|(arn:aws:iam::.*:role/.*)"
+    Type: 'String'
+    Description: 'The ARN of the role that will used for integration tests'
+    Default: 'none'
+    AllowedPattern: '(none)|(arn:aws:iam::.*:role/.*)'
 
 Conditions:
-  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, "none" ] ]
-  UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, "none" ] ]
-  UseTestRole: !Not [ !Equals [!Ref TestRoleArn, "none"] ]
+  UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, 'none']]
+  UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, 'none']]
+  UseTestRole: !Not [!Equals [!Ref TestRoleArn, 'none']]
   IsPagerDutyEnvironment:
     !Or [
-      !Equals [ !Ref Environment, staging ],
-      !Equals [ !Ref Environment, production ],
+      !Equals [!Ref Environment, staging],
+      !Equals [!Ref Environment, production]
     ]
   IsProductionOrStaging: !And
-    - !Not [!Equals [ !Ref Environment, dev]]
-    - !Not [!Equals [ !Ref Environment, build]]
+    - !Not [!Equals [!Ref Environment, dev]]
+    - !Not [!Equals [!Ref Environment, build]]
   IsPipelineTestStage: !Or
-    - !Equals [ !Ref Environment, build ]
-    - !Equals [ !Ref Environment, staging ]
+    - !Equals [!Ref Environment, build]
+    - !Equals [!Ref Environment, staging]
   IsTestableEnv: !Or
     - !Condition IsPipelineTestStage
-    - !Equals [ !Ref Environment, dev ]
+    - !Equals [!Ref Environment, dev]
   DeployTestRolePolicy: !And
     - !Condition IsPipelineTestStage
     - !Condition UseTestRole
@@ -73,47 +73,47 @@ Resources:
     Properties:
       EnableKeyRotation: true
       KeyPolicy:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
+          - Effect: 'Allow'
             Principal:
-              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+              AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:root'
             Action:
-              - "kms:*"
+              - 'kms:*'
             Resource:
-              - "*"
-          - Effect: "Allow"
+              - '*'
+          - Effect: 'Allow'
             Principal:
-              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+              Service: !Sub 'logs.${AWS::Region}.amazonaws.com'
             Action:
-              - "kms:Encrypt*"
-              - "kms:Decrypt*"
-              - "kms:ReEncrypt*"
-              - "kms:GenerateDataKey*"
-              - "kms:Describe*"
+              - 'kms:Encrypt*'
+              - 'kms:Decrypt*'
+              - 'kms:ReEncrypt*'
+              - 'kms:GenerateDataKey*'
+              - 'kms:Describe*'
             Resource:
-              - "*"
+              - '*'
             Condition:
               ArnLike:
-                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                'kms:EncryptionContext:aws:logs:arn': !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
 
   FireHoseKMSKey:
     Type: AWS::KMS::Key
     Properties:
       EnableKeyRotation: true
       KeyPolicy:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
+          - Effect: 'Allow'
             Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
             Action:
-              - "kms:*"
+              - 'kms:*'
             Resource:
-              - "*"
-          - Effect: "Allow"
+              - '*'
+          - Effect: 'Allow'
             Principal:
-              Service: "firehose.amazonaws.com"
+              Service: 'firehose.amazonaws.com'
             Action:
               - 'kms:Decrypt'
               - 'kms:Encrypt'
@@ -124,7 +124,7 @@ Resources:
   FireHoseKMSKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/FireHoseKMSKey"
+      AliasName: !Sub 'alias/${AWS::StackName}/${Environment}/FireHoseKMSKey'
       TargetKeyId: !Ref FireHoseKMSKey
 
   AuditFileReadyToEncryptQueueKmsKey:
@@ -132,38 +132,38 @@ Resources:
     Properties:
       EnableKeyRotation: true
       KeyPolicy:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
+          - Effect: 'Allow'
             Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
             Action:
-              - "kms:*"
+              - 'kms:*'
             Resource:
-              - "*"
-          - Effect: "Allow"
+              - '*'
+          - Effect: 'Allow'
             Principal:
-              Service: "s3.amazonaws.com"
+              Service: 's3.amazonaws.com'
             Action:
-              - "kms:Decrypt"
-              - "kms:Encrypt"
-              - "kms:GenerateDataKey*"
-              - "kms:DescribeKey"
-            Resource: "*"
-          - Effect: "Allow"
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
+          - Effect: 'Allow'
             Principal:
-              Service: "sqs.amazonaws.com"
+              Service: 'sqs.amazonaws.com'
             Action:
-              - "kms:Decrypt"
-              - "kms:Encrypt"
-              - "kms:GenerateDataKey*"
-              - "kms:DescribeKey"
-            Resource: "*"
+              - 'kms:Decrypt'
+              - 'kms:Encrypt'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
 
   AuditFileReadyToEncryptQueueKmsKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/audit-file-ready-to-encrypt-queue-kms-key"
+      AliasName: !Sub 'alias/${AWS::StackName}/${Environment}/audit-file-ready-to-encrypt-queue-kms-key'
       TargetKeyId: !Ref AuditFileReadyToEncryptQueueKmsKey
 
   MessageBucketLogsBucket:
@@ -171,8 +171,8 @@ Resources:
     # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
     Properties:
       VersioningConfiguration:
-        Status: "Enabled"
-      BucketName: !Sub "${AWS::StackName}-${Environment}-bucket-logs"
+        Status: 'Enabled'
+      BucketName: !Sub '${AWS::StackName}-${Environment}-bucket-logs'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -191,24 +191,24 @@ Resources:
     Properties:
       Bucket: !Ref MessageBucketLogsBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
+          - Sid: 'EnableS3Logging'
+            Effect: 'Allow'
             Resource:
-              - !Sub "${MessageBucketLogsBucket.Arn}/*"
+              - !Sub '${MessageBucketLogsBucket.Arn}/*'
             Principal:
-              Service: "logging.s3.amazonaws.com"
+              Service: 'logging.s3.amazonaws.com'
             Action:
-              - "s3:PutObject"
+              - 's3:PutObject'
             Condition:
               StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+                'aws:SourceAccount': !Sub '${AWS::AccountId}'
 
   MessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-message-batch"
+      BucketName: !Sub '${AWS::StackName}-${Environment}-message-batch'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -219,10 +219,10 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       VersioningConfiguration:
-        Status: "Enabled"
+        Status: 'Enabled'
       LoggingConfiguration:
         DestinationBucketName: !Ref MessageBucketLogsBucket
-        LogFilePrefix: "audit/message-batch-bucket/"
+        LogFilePrefix: 'audit/message-batch-bucket/'
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
@@ -231,13 +231,12 @@ Resources:
               - TransitionInDays: 90
                 StorageClass: GLACIER
       NotificationConfiguration:
-        QueueConfigurations: 
-          !If
+        QueueConfigurations: !If
           - IsProductionOrStaging
-          - - Event: "s3:ObjectCreated:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-            - Event: "s3:ObjectRestore:*"
-              Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
+          - - Event: 's3:ObjectCreated:*'
+              Queue: '{{resolve:ssm:CSLSS3QueueARN}}'
+            - Event: 's3:ObjectRestore:*'
+              Queue: '{{resolve:ssm:CSLSS3QueueARN}}'
           - - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
@@ -251,19 +250,19 @@ Resources:
     Properties:
       Bucket: !Ref MessageBatchBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Deny"
+          - Effect: 'Deny'
             Action:
-              - "s3:DeleteObject"
-              - "s3:DeleteObjectVersion"
-              - "s3:DeleteBucket"
-              - "s3:DeleteBucketPolicy"
+              - 's3:DeleteObject'
+              - 's3:DeleteObjectVersion'
+              - 's3:DeleteBucket'
+              - 's3:DeleteBucketPolicy'
             Resource:
               - !GetAtt MessageBatchBucket.Arn
-              - !Sub "${MessageBatchBucket.Arn}/*"
+              - !Sub '${MessageBatchBucket.Arn}/*'
             Principal:
-              AWS: "*"
+              AWS: '*'
           - !If
             - DeployTestRolePolicy
             - Effect: 'Allow'
@@ -283,7 +282,7 @@ Resources:
                 - !GetAtt MessageBatchBucket.Arn
                 - !Sub '${MessageBatchBucket.Arn}/*'
               Principal:
-                AWS: "{{resolve:ssm:CSLSS3LambdaARN}}"
+                AWS: '{{resolve:ssm:CSLSS3LambdaARN}}'
               Action:
                 - 's3:Get*'
                 - 's3:List*'
@@ -296,7 +295,8 @@ Resources:
       DatabaseName: '{{resolve:ssm:AuditDataAnalysisGlueDatabaseName}}'
       TableInput:
         Description: Table to analyse event message raw data from the audit bucket
-        Name: !Join [
+        Name:
+          !Join [
             '',
             [
               !Join ['', !Split ['-', !Ref AWS::StackName]],
@@ -311,7 +311,11 @@ Resources:
           projection.datetime.format: yyyy/MM/dd/HH
           projection.datetime.interval: 1
           projection.datetime.interval.unit: HOURS
-          storage.location.template: !Join [ '', [ s3://, !Ref MessageBatchBucket, '/firehose/${datetime}/' ]]
+          storage.location.template:
+            !Join [
+              '',
+              [s3://, !Ref MessageBatchBucket, '/firehose/${datetime}/']
+            ]
         PartitionKeys:
           - Name: datetime
             Type: string
@@ -377,24 +381,24 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       KmsMasterKeyId: '{{resolve:ssm:CoreSnsKmsKeyArn}}'
-      TopicName: "PutEventAlarm"
+      TopicName: 'PutEventAlarm'
 
   SNSCriticalAlarmTopicPolicy:
     Type: AWS::SNS::TopicPolicy
     Properties:
       PolicyDocument:
-        Version: "2012-10-17"
-        Statement: 
-        - Effect: Allow
-          Principal:
-            Service: cloudwatch.amazonaws.com
-          Action: 'sns:Publish'
-          Resource: !GetAtt SNSCriticalAlarmTopic.TopicArn
-          Condition:
-            ArnLike:
-              aws:SourceArn: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*
-            StringEquals:
-              aws:SourceAccount: !Sub ${AWS::AccountId} 
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudwatch.amazonaws.com
+            Action: 'sns:Publish'
+            Resource: !GetAtt SNSCriticalAlarmTopic.TopicArn
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*
+              StringEquals:
+                aws:SourceAccount: !Sub ${AWS::AccountId}
       Topics:
         - !Ref SNSCriticalAlarmTopic
 
@@ -410,7 +414,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: "/aws/firehose"
+      LogGroupName: '/aws/firehose'
       RetentionInDays: 7
 
   FirehoseLogStream:
@@ -419,7 +423,7 @@ Resources:
     Type: AWS::Logs::LogStream
     Properties:
       LogGroupName: !Ref FirehoseLogGroup
-      LogStreamName: "audit"
+      LogStreamName: 'audit'
 
   AuditDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
@@ -427,14 +431,14 @@ Resources:
       - DeliveryStreamPolicy
     Properties:
       DeliveryStreamName: !Sub
-        - "AuditFireHose-${EnvironmentName}"
+        - 'AuditFireHose-${EnvironmentName}'
         - EnvironmentName: !Ref Environment
       DeliveryStreamType: DirectPut
       DeliveryStreamEncryptionConfigurationInput:
         KeyARN: !GetAtt FireHoseKMSKey.Arn
-        KeyType: "CUSTOMER_MANAGED_CMK"
+        KeyType: 'CUSTOMER_MANAGED_CMK'
       ExtendedS3DestinationConfiguration:
-        Prefix: "firehose/"
+        Prefix: 'firehose/'
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
           IntervalInSeconds: !If
@@ -442,7 +446,7 @@ Resources:
             - 60
             - 900
           SizeInMBs: 128
-        CompressionFormat: "GZIP"
+        CompressionFormat: 'GZIP'
         RoleARN: !GetAtt DeliveryStreamRole.Arn
         CloudWatchLoggingOptions:
           Enabled: true
@@ -513,7 +517,7 @@ Resources:
               - 'lambda:InvokeFunction'
               - 'lambda:GetFunctionConfiguration'
             Resource:
-              - !Sub "${DelimiterFunction.Arn}*"
+              - !Sub '${DelimiterFunction.Arn}*'
           - Effect: Allow
             Action:
               - 'logs:CreateLogGroup'
@@ -562,18 +566,18 @@ Resources:
     Properties:
       EnableKeyRotation: true
       KeyPolicy:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
+          - Effect: 'Allow'
             Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
             Action:
-              - "kms:*"
+              - 'kms:*'
             Resource:
-              - "*"
-          - Effect: "Allow"
+              - '*'
+          - Effect: 'Allow'
             Principal:
-              Service: "lambda.amazonaws.com"
+              Service: 'lambda.amazonaws.com'
             Action:
               - 'kms:Decrypt'
             Resource: '*'
@@ -581,20 +585,20 @@ Resources:
   LambdaKMSKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: !Sub "alias/${AWS::StackName}/${Environment}/LambdaKMSKey"
+      AliasName: !Sub 'alias/${AWS::StackName}/${Environment}/LambdaKMSKey'
       TargetKeyId: !Ref LambdaKMSKey
 
   DelimiterLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: "/aws/lambda/DelimiterFunction"
+      LogGroupName: '/aws/lambda/DelimiterFunction'
       RetentionInDays: 7
 
   DelimiterLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-Delimiter"
+      RoleName: !Sub '${AWS::StackName}-LambdaAccessRole-Delimiter'
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -609,15 +613,15 @@ Resources:
                 - lambda.amazonaws.com
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole"
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole'
 
   DelimiterFunction:
     DependsOn:
       - DelimiterLogGroup
       - DelimiterLambdaAccessRole
-    Type: "AWS::Serverless::Function"
+    Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: "DelimiterFunction"
+      FunctionName: 'DelimiterFunction'
       CodeUri: ../audit/lambda
       PackageType: Zip
       Handler: delimiter-app.handler
@@ -628,7 +632,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: 'es2020'
         Sourcemap: true
         EntryPoints:
           - delimiter-app.ts
@@ -658,7 +662,7 @@ Resources:
     Type: AWS::S3::Bucket
     Condition: IsTestableEnv
     Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-message-batch-txma2"
+      BucketName: !Sub '${AWS::StackName}-${Environment}-message-batch-txma2'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -669,10 +673,10 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       VersioningConfiguration:
-        Status: "Enabled"
+        Status: 'Enabled'
       LoggingConfiguration:
         DestinationBucketName: !Ref MessageBucketLogsBucket
-        LogFilePrefix: "audit/txma2-message-batch-bucket/"
+        LogFilePrefix: 'audit/txma2-message-batch-bucket/'
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
@@ -712,7 +716,7 @@ Resources:
   AuditFileReadyToEncryptQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-queue"
+      QueueName: !Sub '${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-queue'
       KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
@@ -721,7 +725,7 @@ Resources:
   AuditFileReadyToEncryptDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ"
+      QueueName: !Sub '${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ'
       KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
 
   AuditFileReadyToEncryptQueuePolicy:
@@ -730,18 +734,18 @@ Resources:
       Queues:
         - !Ref AuditFileReadyToEncryptQueue
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
+          - Effect: 'Allow'
             Action:
               - sqs:*
             Resource:
               - !GetAtt AuditFileReadyToEncryptQueue.Arn
             Principal:
-              AWS: "*"
+              AWS: '*'
             Condition:
               ArnLike:
-                aws:SourceArn: !Sub "arn:aws:s3:*:*:${AWS::StackName}-${Environment}-temporary-message-batch"
+                aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-${Environment}-temporary-message-batch'
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
 
@@ -752,8 +756,8 @@ Resources:
     # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
     Properties:
       VersioningConfiguration:
-        Status: "Enabled"
-      BucketName: !Sub "${AWS::StackName}-${Environment}-temporary-bucket-logs"
+        Status: 'Enabled'
+      BucketName: !Sub '${AWS::StackName}-${Environment}-temporary-bucket-logs'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -772,26 +776,26 @@ Resources:
     Properties:
       Bucket: !Ref TemporaryMessageBucketLogsBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Sid: "EnableTempS3Logging"
-            Effect: "Allow"
+          - Sid: 'EnableTempS3Logging'
+            Effect: 'Allow'
             Resource:
-              - !Sub "${TemporaryMessageBucketLogsBucket.Arn}/*"
+              - !Sub '${TemporaryMessageBucketLogsBucket.Arn}/*'
             Principal:
-              Service: "logging.s3.amazonaws.com"
+              Service: 'logging.s3.amazonaws.com'
             Action:
-              - "s3:PutObject"
+              - 's3:PutObject'
             Condition:
               StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+                'aws:SourceAccount': !Sub '${AWS::AccountId}'
               Bool:
-                "aws:SecureTransport": "true"
+                'aws:SecureTransport': 'true'
 
   TemporaryMessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-temporary-message-batch"
+      BucketName: !Sub '${AWS::StackName}-${Environment}-temporary-message-batch'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -802,13 +806,13 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       VersioningConfiguration:
-        Status: "Enabled"
+        Status: 'Enabled'
       LoggingConfiguration:
         DestinationBucketName: !Ref TemporaryMessageBucketLogsBucket
-        LogFilePrefix: "audit/temporary-message-batch-bucket/"
+        LogFilePrefix: 'audit/temporary-message-batch-bucket/'
       NotificationConfiguration:
         QueueConfigurations:
-          - Event: "s3:ObjectCreated:*"
+          - Event: 's3:ObjectCreated:*'
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
       OwnershipControls:
         Rules:
@@ -821,7 +825,7 @@ Resources:
     Properties:
       Bucket: !Ref TemporaryMessageBatchBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Sid: AllowBucketAccess
             Effect: Allow
@@ -830,17 +834,17 @@ Resources:
               - s3:DeleteObject
             Resource:
               - !GetAtt TemporaryMessageBatchBucket.Arn
-              - !Sub "${TemporaryMessageBatchBucket.Arn}/*"
+              - !Sub '${TemporaryMessageBatchBucket.Arn}/*'
             Principal:
               AWS: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
             Condition:
               Bool:
-                "aws:SecureTransport": "true"
+                'aws:SecureTransport': 'true'
 
   PermanentMessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${AWS::StackName}-${Environment}-permanent-message-batch"
+      BucketName: !Sub '${AWS::StackName}-${Environment}-permanent-message-batch'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -851,10 +855,10 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       VersioningConfiguration:
-        Status: "Enabled"
+        Status: 'Enabled'
       LoggingConfiguration:
         DestinationBucketName: !Ref PermanentMessageBucketLogsBucket
-        LogFilePrefix: "audit/permanent-message-batch-bucket/"
+        LogFilePrefix: 'audit/permanent-message-batch-bucket/'
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
@@ -873,8 +877,8 @@ Resources:
     # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
     Properties:
       VersioningConfiguration:
-        Status: "Enabled"
-      BucketName: !Sub "${AWS::StackName}-${Environment}-permanent-bucket-logs"
+        Status: 'Enabled'
+      BucketName: !Sub '${AWS::StackName}-${Environment}-permanent-bucket-logs'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -893,41 +897,41 @@ Resources:
     Properties:
       Bucket: !Ref PermanentMessageBucketLogsBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Sid: "EnableS3Logging"
-            Effect: "Allow"
+          - Sid: 'EnableS3Logging'
+            Effect: 'Allow'
             Resource:
-              - !Sub "${PermanentMessageBucketLogsBucket.Arn}/*"
+              - !Sub '${PermanentMessageBucketLogsBucket.Arn}/*'
             Principal:
-              Service: "logging.s3.amazonaws.com"
+              Service: 'logging.s3.amazonaws.com'
             Action:
-              - "s3:PutObject"
+              - 's3:PutObject'
             Condition:
               StringEquals:
-                "aws:SourceAccount": !Sub "${AWS::AccountId}"
+                'aws:SourceAccount': !Sub '${AWS::AccountId}'
               Bool:
-                "aws:SecureTransport": "true"
+                'aws:SecureTransport': 'true'
 
   PermanentMessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref PermanentMessageBatchBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Sid: AllowPermanentBucketAccess
-            Effect: "Allow"
+            Effect: 'Allow'
             Action:
-              - "s3:PutObject"
+              - 's3:PutObject'
             Resource:
               - !GetAtt PermanentMessageBatchBucket.Arn
-              - !Sub "${PermanentMessageBatchBucket.Arn}/*"
+              - !Sub '${PermanentMessageBatchBucket.Arn}/*'
             Principal:
               AWS: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
             Condition:
               Bool:
-                "aws:SecureTransport": "true"
+                'aws:SecureTransport': 'true'
 
   # lambdas
 
@@ -935,13 +939,13 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: !Sub "/aws/lambda/InitiateCopyAndEncryptFunction"
+      LogGroupName: !Sub '/aws/lambda/InitiateCopyAndEncryptFunction'
       RetentionInDays: 7
 
   InitiateCopyAndEncryptLambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${AWS::StackName}-LambdaAccessRole-InitiateCopyAndEncrypt"
+      RoleName: !Sub '${AWS::StackName}-LambdaAccessRole-InitiateCopyAndEncrypt'
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -949,16 +953,16 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ""
+          - Sid: ''
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: "sts:AssumeRole"
+            Action: 'sts:AssumeRole'
       Policies:
         - PolicyName: InitiateCopyAndEncryptActions
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Sid: TemporaryS3Read
                 Effect: Allow
@@ -1000,7 +1004,7 @@ Resources:
       - InitiateCopyAndEncryptLogs
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: "InitiateCopyAndEncryptFunction"
+      FunctionName: 'InitiateCopyAndEncryptFunction'
       CodeUri: ../audit/lambda
       PackageType: Zip
       Handler: initiateCopyAndEncrypt-app.handler
@@ -1022,7 +1026,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: "es2020"
+        Target: 'es2020'
         Sourcemap: true
         EntryPoints:
           - initiateCopyAndEncrypt-app.ts
@@ -1039,21 +1043,20 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "FirehoseLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+        Ref: 'FirehoseLogGroup'
+      FilterPattern: ''
+      DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
   CSLSDelimiterLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: "DelimiterLogGroup"
-      FilterPattern: ""
-      DestinationArn: "{{resolve:ssm:CSLSLogsDestination}}"
+        Ref: 'DelimiterLogGroup'
+      FilterPattern: ''
+      DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
 Outputs:
-
   IPVCoreStubURL:
     Value: !ImportValue IPVCoreStubURL
 
