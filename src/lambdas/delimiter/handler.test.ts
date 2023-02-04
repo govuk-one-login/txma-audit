@@ -1,7 +1,5 @@
-/* eslint-disable */
-import { handler } from '../../delimiter-app';
-import { TestHelper } from '../test-helpers/test-helper';
-import { SNS } from 'aws-sdk';
+import { handler } from './handler';
+import { TestHelper } from '../../utils/tests/test-helpers/test-helper';
 import { FirehoseTransformationResult } from 'aws-lambda';
 
 jest.mock('aws-sdk', () => {
@@ -29,11 +27,9 @@ jest.mock('crypto', () => {
 
 describe('Unit test for app eventProcessorHandler', function () {
     let consoleMock: jest.SpyInstance;
-    let sns: SNS;
 
     beforeEach(() => {
         consoleMock = jest.spyOn(global.console, 'log');
-        sns = new SNS();
 
         process.env.topicArn = 'SOME-SNS-TOPIC';
         process.env.defaultComponentId = 'SOME-COMPONENT-ID';

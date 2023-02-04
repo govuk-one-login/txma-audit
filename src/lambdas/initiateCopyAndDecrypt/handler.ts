@@ -1,8 +1,8 @@
 import { SQSEvent } from 'aws-lambda';
-import { deleteS3Object } from './s3Services/deleteS3Object';
-import { getS3ObjectAsString } from './s3Services/getS3Object';
-import { putS3Object } from './s3Services/putS3Object';
-import { getEnv, tryParseJSON } from './utils/helpers';
+import { deleteS3Object } from '../../s3Services/deleteS3Object';
+import { getS3ObjectAsString } from '../../s3Services/getS3Object';
+import { putS3Object } from '../../s3Services/putS3Object';
+import { getEnv, tryParseJSON } from '../../utils/helpers';
 
 export const handler = async (event: SQSEvent): Promise<void> => {
     console.log('Handling initiate copy and encrypt SQS event', JSON.stringify(event, null, 2));

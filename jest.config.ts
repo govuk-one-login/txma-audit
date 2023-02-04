@@ -12,5 +12,4 @@ export default {
     collectCoverage: true,
     coverageDirectory: 'coverage',
     coverageProvider: 'babel',
-    testMatch: ['**/tests/unit/*/*.test.ts', '**/tests/unit/*.test.ts'],
 };

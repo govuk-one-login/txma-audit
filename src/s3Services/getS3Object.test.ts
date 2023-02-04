@@ -1,10 +1,15 @@
 import { GetObjectCommand, GetObjectCommandInput, GetObjectCommandOutput, S3Client } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
-import { getS3ObjectAsString } from '../../s3Services/getS3Object';
+import { getS3ObjectAsString } from './getS3Object';
 import 'aws-sdk-client-mock-jest';
 import { Readable } from 'stream';
-import { TEST_TEMPORARY_BUCKET_NAME, TEST_S3_OBJECT_KEY, TEST_S3_OBJECT_DATA_STRING } from '../testConstants';
+import {
+    TEST_TEMPORARY_BUCKET_NAME,
+    TEST_S3_OBJECT_KEY,
+    TEST_S3_OBJECT_DATA_STRING,
+} from '../utils/tests/testConstants';
 
+process.env.AWS_REGION = 'eu-west-2';
 const s3Mock = mockClient(S3Client);
 const getObjectCommandInput: GetObjectCommandInput = {
     Bucket: TEST_TEMPORARY_BUCKET_NAME,

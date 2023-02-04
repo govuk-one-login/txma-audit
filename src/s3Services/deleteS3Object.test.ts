@@ -1,9 +1,10 @@
 import { DeleteObjectCommand, DeleteObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
-import { deleteS3Object } from '../../s3Services/deleteS3Object';
-import { TEST_TEMPORARY_BUCKET_NAME, TEST_S3_OBJECT_KEY } from '../testConstants';
+import { deleteS3Object } from './deleteS3Object';
+import { TEST_TEMPORARY_BUCKET_NAME, TEST_S3_OBJECT_KEY } from '../utils/tests/testConstants';
 import 'aws-sdk-client-mock-jest';
 
+process.env.AWS_REGION = 'eu-west-2';
 const s3Mock = mockClient(S3Client);
 
 const putObjectCommandInput: DeleteObjectCommandInput = {
