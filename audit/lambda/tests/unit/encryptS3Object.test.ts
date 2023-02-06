@@ -17,12 +17,11 @@ jest.mock('@aws-crypto/client-node', () => ({
     CommitmentPolicy: { REQUIRE_ENCRYPT_REQUIRE_DECRYPT: 'REQUIRE_ENCRYPT_REQUIRE_DECRYPT' },
 }));
 
-const mockKmsKeyringNode = KmsKeyringNode as jest.Mock;
-process.env.GENERATOR_KEY_ID = TEST_GENERATOR_KEY_ID;
-
 describe('encryptS3Object', () => {
+    process.env.GENERATOR_KEY_ID = TEST_GENERATOR_KEY_ID;
+
     it('returns a buffer of encrypted data', async () => {
-        when(mockKmsKeyringNode).mockImplementation(() => ({ generatorKeyId: TEST_GENERATOR_KEY_ID }));
+        when(KmsKeyringNode as jest.Mock).mockImplementation(() => ({ generatorKeyId: TEST_GENERATOR_KEY_ID }));
         when(buildClient().encrypt).mockResolvedValue({
             result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
             messageHeader: {} as MessageHeader,
