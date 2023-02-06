@@ -1,5 +1,7 @@
 /* istanbul ignore file */
 import { FirehoseTransformationEvent, FirehoseTransformationEventRecord } from 'aws-lambda';
+import { Readable } from 'stream';
+import { TEST_S3_OBJECT_DATA_STRING } from '../testConstants';
 
 export class TestHelper {
     private static firehoseTransformationEvent: FirehoseTransformationEvent = {
@@ -33,3 +35,10 @@ export class TestHelper {
         return JSON.stringify(message);
     }
 }
+
+export const createDataStream = (testData: string) => {
+    const dataStream = new Readable();
+    dataStream.push(testData);
+    dataStream.push(null);
+    return dataStream;
+};

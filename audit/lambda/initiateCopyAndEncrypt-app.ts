@@ -1,6 +1,7 @@
 import { SQSEvent } from 'aws-lambda';
+import { encryptS3Object } from './kmsServices/encryptS3Object';
 import { deleteS3Object } from './s3Services/deleteS3Object';
-import { getS3ObjectAsString } from './s3Services/getS3Object';
+import { getS3ObjectAsStream } from './s3Services/getS3Object';
 import { putS3Object } from './s3Services/putS3Object';
 import { getEnv, tryParseJSON } from './utils/helpers';
 
@@ -28,11 +29,11 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         throw new Error(`Incorrect source bucket - ${eventBucket}`);
     }
 
-    const temporaryData = await getS3ObjectAsString(eventBucket, eventKey);
+    const temporaryDataStream = await getS3ObjectAsStream(eventBucket, eventKey);
 
-    // //to do - encrypt temporaryData;
+    const encryptedData = await encryptS3Object(temporaryDataStream);
 
-    await putS3Object(permanentBucket, eventKey, temporaryData);
+    await putS3Object(permanentBucket, eventKey, encryptedData);
 
     await deleteS3Object(eventBucket, eventKey);
 
