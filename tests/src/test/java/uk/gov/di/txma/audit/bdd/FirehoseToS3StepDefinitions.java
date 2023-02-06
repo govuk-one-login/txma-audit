@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class FirehoseToS3StepDefinitions {
-    String SNSInput;
+    JSONObject SNSInput;
     JSONObject expectedS3;
     Long timestamp = Instant.now().toEpochMilli();
     Region region = Region.EU_WEST_2;
@@ -41,7 +41,7 @@ public class FirehoseToS3StepDefinitions {
     @Given("the SNS file {string} is available")
     public void checkSNSInputFileIsAvailable(String fileName) throws IOException {
         JSONObject json = new JSONObject(readJSONFile(fileName));
-        SNSInput = addTimestampField(json).toString();
+        SNSInput = addTimestampField(json);
     }
 
     /**
@@ -60,15 +60,19 @@ public class FirehoseToS3StepDefinitions {
      */
     @When("the message is sent to firehose")
     public void sendMessageToFirehose() {
-        String functionName = "firehoseTester";
+        String functionName = "txma-audit-dev-tools-add-firehose-record";
 
         // Opens the lambda client
         try (LambdaClient awsLambda = LambdaClient.builder()
                 .region(region)
                 .build()){
 
+            JSONObject firehoseLambdaParams = new JSONObject();
+            firehoseLambdaParams.put("firehose", "AuditFireHose-" + System.getenv("TEST_ENVIRONMENT"));
+            firehoseLambdaParams.put("data", SNSInput);
+
             // Invoke the lambda with the input data
-            SdkBytes payload = SdkBytes.fromUtf8String(SNSInput);
+            SdkBytes payload = SdkBytes.fromUtf8String(firehoseLambdaParams.toString());
             InvokeRequest request = InvokeRequest.builder()
                     .functionName(functionName)
                     .logType("Tail")

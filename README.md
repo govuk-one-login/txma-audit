@@ -7,19 +7,17 @@ This project contains source code and supporting files for creating the Event Pr
 ## PreRequisites
 
 - [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) - Used to build and deploy the application
-- [Node.js](https://nodejs.org/en/) version 14 - Recommended way to install is via [NVM](https://github.com/nvm-sh/nvm)
+- [Node.js](https://nodejs.org/en/) version 18 - Recommended way to install is via [NVM](https://github.com/nvm-sh/nvm)
 - [Docker](https://docs.docker.com/get-docker/) - Required to run SAM locally and run integration tests
 - [Yarn](https://yarnpkg.com/getting-started/install) version 3 - The package manager for the project
 - [Checkov](https://www.checkov.io/) - Scans cloud infrastructure configurations to find misconfigurations before they're deployed. Added as a Husky pre-commit hook.
 - [Husky](https://typicode.github.io/husky/#/?id=install) - For pre-push validations
-- [pre-commit](https://pre-commit.com/) - For pre-commit validation
 - [Yelp/detect-secrets](https://github.com/Yelp/detect-secrets) - For detecting secrets in codebase
 
 Enable Git Hooks to be used with Husky. In the root of the project run the following command:
 
 ```bash
-npx husky install
-pre-commit install
+yarn husky install
 ```
 
 Also, if running on Linux you may need to make sure the Husky scripts are executable:
@@ -27,36 +25,7 @@ Also, if running on Linux you may need to make sure the Husky scripts are execut
 ```bash
 chmod ug+x .husky/*
 chmod ug+x .git/hooks/*
-chmod ug+x pre-commit
 ```
-
-## Event Processing
-
-Event Processing allows for various services to integrate into the TxMA journey. We do this by pulling messages from an SQS queue owned by the various services owners. <br>
-These Messages are then asynchronously processed by a Lambda function in order to validate the message body. If a message fails validation it will not be processed. If a message is successfully validated it will be published to an SNS topic in order to fan out to a number of other services:
-
-1. Audit account - Storage for RAW messages in S3.
-2. TiCF - Splunk Index containing redacted data.
-3. Performance - Splunk Index containing redacted data.
-
-Redaction of the raw data in the case of TiCF and Performance is undertaken by the Obfuscation Lambda. This function runs during the processing step of our
-Kinesis FireHose implementation in order to hash any sensitve data before sending to Splunk.
-
-The Event Processing account contains the following AWS Lambda functions:
-
-- Event Processor
-- Obfuscation
-- Re-Ingest
-
-The remaining infrastructure covers the following AWS services:
-
-- SNS
-- KMS
-- Kinesis FireHose
-- Secret Manager
-- S3
-
-see: https://github.com/alphagov/di-txma-audit/tree/main/event-processing
 
 ## Audit
 
@@ -66,18 +35,12 @@ Access to this account is restricted in order to prevent access to the sensitive
 
 Limited access will be granted in order to retrieve records that need to be audited. We will allow these records to be viewed for a limited time frame using the AWS Athena tool.
 
-The Audit account contains the following AWS Lambda functions:
-
-- Delimiter
-- FireHose Tester
-
 The Audit account contains the following infrastructure:
 
+- Lambda
 - Kinesis FireHose
 - KMS
 - S3
-
-see: https://github.com/alphagov/di-txma-audit/tree/main/audit
 
 ## Deploy the sample application
 
@@ -86,15 +49,15 @@ The Serverless Application Model Command Line Interface (SAM CLI) is an extensio
 To use the SAM CLI, you need the following tools.
 
 - SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-- Node.js - [Install Node.js 14](https://nodejs.org/en/), including the NPM package management tool.
+- Node.js - [Install Node.js 18](https://nodejs.org/en/), including the NPM package management tool.
 - Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 - Yarn - [Install Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
 
-To build and deploy your application for the first time, run the following in your shell whilst in either the event-processing or audit folders:
+To build and deploy your application for the first time, run the following from the root directory:
 
 ```bash
-sam build --template-file <account-name>-template.yml --config-file config/samconfig-<account-name>.toml --config-env "<environment name>" --use-container --beta-features
-sam deploy --config-file config/samconfig-<account-name>.toml --config-env "<environment name>"
+yarn build
+sam deploy --stack-name audit --parameter-overrides ParameterKey=Environment,ParameterValue=dev --resolve-s3 --capabilities CAPABILITY_NAMED_IAM
 ```
 
 _Note_: When deploying the event processor also include the `--resolve-s3` argument in order to automatically create an s3 bucket to store the lambda zip.
@@ -121,15 +84,7 @@ _Note_: When calling SAM deploy against a template containing a Lambda function 
 - integration
 - production
 
-## Use the SAM CLI to build and test locally
-
-Build your application with the `sam build` command.
-
-```bash
-event-processing$ sam build --template-file event-processing-template.yml --config-file config/samconfig-event-processing.toml --config-env "dev" --use-container --beta-features
-```
-
-The SAM CLI installs dependencies defined in `package.json`, compiles TypeScript with esbuild, creates a deployment package, and saves it in the `.aws-sam/build` folder.
+## Use the SAM CLI to test locally
 
 Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `invoke-events` folder in this project.
 
@@ -151,12 +106,10 @@ event-processor$ aws lambda invoke --function-name <function name> --invocation-
 
 ## Unit tests
 
-Tests are defined in the `lambda/tests` folder in this project. Use yarn to install the [Jest test framework](https://jestjs.io/) and run unit tests.
+Use yarn to install the [Jest test framework](https://jestjs.io/) and run unit tests.
 
 ```bash
-event-processor$ cd event-processor
-event-processor$ yarn install
-event-processor$ yarn run test
+yarn test
 ```
 
 ## Cleanup
@@ -167,10 +120,7 @@ To delete the sample application that you created, use the AWS CLI. Assuming you
 aws cloudformation delete-stack --stack-name <stack-name>
 ```
 
-You can find the stack names defined in the respective config files:
-
-- audit/config/samconfig-audit.toml
-- event-processing/config/samconfig-event-processing.toml
+You can find the stack name defined in the files: `samconfig.toml`
 
 ## Resources
 

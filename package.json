@@ -1,9 +1,11 @@
 {
-  "name": "delimiter",
+  "name": "di-txma-audit",
   "version": "1.0.0",
-  "description": "Delimiter for DI TxMA Audit",
-  "main": "delimiter-app.js",
-  "repository": "https://github.com/alphagov/di-txma-audit",
+  "description": "TxMA Audit",
+  "repository": {
+    "type": "git",
+    "repository": "https://github.com/alphagov/di-txma-audit"
+  },
   "author": "GDS",
   "license": "MIT",
   "scripts": {

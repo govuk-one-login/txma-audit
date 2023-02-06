@@ -24,7 +24,7 @@ The tests will test the configuration in the `dev`, `build`, and `staging` envir
 
 Firstly, clone the `di-txma-audit` repository, you will need to [deploy the audit AWS services](https://github.com/alphagov/di-txma-audit/blob/main/audit/README.md). Note, for GDS users, this is only needed for `dev` environment as all others will be deployed using the AWS Pipeline.
 
-After this, navigate to the `di-txma-audit/tests/audit-tests` in your terminal or command line.
+After this, navigate to the `tests` directory in your terminal or command line.
 
 ### Setting up your temporary credentials
 
