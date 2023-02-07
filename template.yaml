@@ -640,7 +640,7 @@ Resources:
     Properties:
       Name: !Sub /tests/${AWS::StackName}/IntegrationTestsAddFirehoseRecordFunctionName
       Type: String
-      Value: '{{resolve:ssm:/tests/IntegrationTestsAddFirehoseRecordFunctionName}}'
+      Value: '{{resolve:ssm:/tests/AddFirehoseRecordFunctionName}}'
 
   #
   # txma2 specific resources
