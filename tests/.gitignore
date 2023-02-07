@@ -1,0 +1,11 @@
+# Gradle
+.gradle/
+/build/
+/null/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IntelliJ
+/.idea/
+
+#  Miscellaneous
+.DS_Store

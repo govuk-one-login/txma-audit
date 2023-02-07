@@ -1,15 +1,31 @@
+# Build
+dist/
+
 # IntelliJ
 *.iml
-.idea/aws.xml
-.idea/*
-**/*.DS_Store
-.idea/di-txma-audit.iml
-.idea/modules.xml
-.idea/vcs.xml
+.idea/
 
-audit/cf-template.yaml
-audit/template.zip
+# Jest
+coverage/
 
-event-processing/invoke-event-processor-payload.json
-event-processing/cf-template.yaml
-event-processing/template.zip
+# Miscellaneous
+.DS_Store
+
+# NPM
+node_modules/
+
+# SAM
+.aws-sam
+cf-template.yaml
+outfile.txt
+template.zip
+tempMessageZip.gzip
+
+# Yarn
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versionsoutfile.txt

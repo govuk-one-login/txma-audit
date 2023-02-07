@@ -9,12 +9,19 @@ on:
 
 jobs:
   sonarcloud:
-    name: SonarCloud
+    name: Run Sonar scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: yarn install
+      - name: Generate coverage report
+        run: yarn test:cov
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:

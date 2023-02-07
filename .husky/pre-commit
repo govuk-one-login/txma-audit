@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+yarn lint-staged
+
+git diff --cached --name-only | if grep --quiet template.yaml
+then
+  echo "\nRunning Checkov hook...\n"
+  checkov -f template.yaml --framework cloudformation --quiet
+fi
+
+echo "\nRunning detect-secrets hook...\n"
+detect-secrets-hook --baseline .secrets.baseline
