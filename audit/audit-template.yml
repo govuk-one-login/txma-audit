@@ -289,6 +289,42 @@ Resources:
                 - 's3:List*'
             - !Ref AWS::NoValue
 
+  EncryptionGeneratorKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable Root access
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - kms:*
+            Resource: '*'
+          - Sid: Allow AWS Lambda access
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:GenerateDataKey
+              - kms:Decrypt
+            Resource: '*'
+
+  EncryptionGeneratorKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${AWS::StackName}/${Environment}/encryption-generator-kms-key
+      TargetKeyId: !Ref EncryptionGeneratorKmsKey
+
+  EncryptionGeneratorKmsKeyArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: EncryptionGeneratorKmsKeyArn
+      Type: String
+      Value: !GetAtt EncryptionGeneratorKmsKey.Arn
+
   AuditEventTable:
     Type: AWS::Glue::Table
     Properties:
@@ -1061,7 +1097,7 @@ Resources:
         Variables:
           TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
-          GENERATOR_KEY_ID: {{resolve:ssm:EncryptionGeneratorKmsKeyArn}}
+          GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn 
       Events:
         AuditFileReadyToEncryptEvent:
           Type: SQS
