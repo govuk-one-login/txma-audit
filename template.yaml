@@ -618,7 +618,8 @@ Resources:
   DelimiterFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     #checkov:skip=CKV_AWS_116:DLQ not required
-    #checkov:skip=CKV_AWS_117:VPC not required    Type: AWS::Serverless::Function
+    #checkov:skip=CKV_AWS_117:VPC not required
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: DelimiterFunction
       Handler: delimiter.handler
