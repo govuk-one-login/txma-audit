@@ -504,32 +504,27 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 's3:AbortMultipartUpload'
-              - 's3:GetBucketLocation'
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:ListBucketMultipartUploads'
-              - 's3:PutObject'
+              - s3:AbortMultipartUpload
+              - s3:GetBucketLocation
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:ListBucketMultipartUploads
+              - s3:PutObject
             Resource:
               - !GetAtt MessageBatchBucket.Arn
-              - !Join
-                - ''
-                - - 'arn:aws:s3:::'
-                  - !Ref MessageBatchBucket
-                  - '*'
+              - !Sub ${MessageBatchBucket.Arn}/*
           - Effect: Allow
             Action:
-              - 'lambda:InvokeFunction'
-              - 'lambda:GetFunctionConfiguration'
-            Resource:
-              - !Sub '${DelimiterFunction.Arn}*'
+              - lambda:InvokeFunction
+              - lambda:GetFunctionConfiguration
+            Resource: !Sub ${DelimiterFunction.Arn}*
           - Effect: Allow
             Action:
-              - 'logs:CreateLogGroup'
-              - 'logs:PutLogEvents'
-              - 'logs:CreateLogStream'
+              - logs:CreateLogGroup
+              - logs:PutLogEvents
+              - logs:CreateLogStream
             Resource:
-              - '*'
+              - !GetAtt FirehoseLogGroup.Arn
 
   SNSTopicSubscriptionRole:
     Type: AWS::IAM::Role
@@ -621,7 +616,9 @@ Resources:
         - 'arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole'
 
   DelimiterFunction:
-    Type: AWS::Serverless::Function
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    #checkov:skip=CKV_AWS_116:DLQ not required
+    #checkov:skip=CKV_AWS_117:VPC not required    Type: AWS::Serverless::Function
     Properties:
       FunctionName: DelimiterFunction
       Handler: delimiter.handler
@@ -990,6 +987,7 @@ Resources:
 
   InitiateCopyAndEncryptFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
+    #checkov:skip=CKV_AWS_116:DLQ not required
     #checkov:skip=CKV_AWS_117:VPC not required
     Type: AWS::Serverless::Function
     Properties:
