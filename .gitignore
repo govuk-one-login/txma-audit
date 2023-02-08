@@ -28,4 +28,4 @@ tempMessageZip.gzip
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
-!.yarn/versionsoutfile.txt
+!.yarn/versions

@@ -37,8 +37,8 @@ jobs:
           cache: yarn
       - name: Node - Enable Corepack
         run: corepack enable
-      - name: Install dependencies
-        run: yarn install
+      - name: Install ESBuild binaries
+        run: yarn unplug
       - name: Run linting
         if: always()
         run: yarn lint

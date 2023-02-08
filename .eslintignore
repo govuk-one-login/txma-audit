@@ -1,3 +1,5 @@
 .aws-sam
+.yarn/
 dist/
+/tests/
 node_modules
