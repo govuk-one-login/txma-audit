@@ -29,3 +29,6 @@ tempMessageZip.gzip
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versionsoutfile.txt
+
+# Tests
+tests/bin/
