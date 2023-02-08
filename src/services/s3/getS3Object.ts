@@ -19,5 +19,8 @@ export const getS3ObjectAsStream = async (
 
   const { Body } = await client.send(new GetObjectCommand(input))
 
-  return Body as Readable
+  if (!(Body instanceof Readable)) {
+    throw Error('Get S3 Object command did not return stream')
+  }
+  return Body
 }

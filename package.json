@@ -17,7 +17,8 @@
     "test:cov": "jest --coverage"
   },
   "dependencies": {
-    "@aws-crypto/client-node": "3.1.1",
+    "@aws-crypto/encrypt-node": "3.1.1",
+    "@aws-crypto/kms-keyring-node": "3.1.0",
     "@aws-sdk/client-s3": "3.257.0",
     "aws-sdk": "2.1136.0"
   },

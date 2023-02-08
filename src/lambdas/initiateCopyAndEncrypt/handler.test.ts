@@ -1,5 +1,4 @@
 import { encryptS3Object } from '../../services/kms/encryptS3Object'
-import { deleteS3Object } from '../../services/s3/deleteS3Object'
 import { getS3ObjectAsStream } from '../../services/s3/getS3Object'
 import { putS3Object } from '../../services/s3/putS3Object'
 import { createDataStream } from '../../utils/tests/test-helpers/test-helper'
@@ -23,16 +22,12 @@ jest.mock('../../services/s3/getS3Object', () => ({
 jest.mock('../../services/s3/putS3Object', () => ({
   putS3Object: jest.fn()
 }))
-jest.mock('../../services/s3/deleteS3Object', () => ({
-  deleteS3Object: jest.fn()
-}))
 jest.mock('../../services/kms/encryptS3Object', () => ({
   encryptS3Object: jest.fn()
 }))
 
 const mockGetS3ObjectAsStream = getS3ObjectAsStream as jest.Mock
 const mockPutS3Object = putS3Object as jest.Mock
-const mockDeleteS3Object = deleteS3Object as jest.Mock
 const mockEncryptS3Object = encryptS3Object as jest.Mock
 
 describe('InitiateCopyAndEncrypt', function () {
@@ -60,17 +55,12 @@ describe('InitiateCopyAndEncrypt', function () {
       TEST_S3_OBJECT_KEY,
       TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER
     )
-    expect(mockDeleteS3Object).toHaveBeenCalledWith(
-      TEST_TEMPORARY_BUCKET_NAME,
-      TEST_S3_OBJECT_KEY
-    )
   })
 
   it('throws an error if there is no data in the SQS Event', async () => {
     expect(handler({ Records: [] })).rejects.toThrow('No data in event')
     expect(mockGetS3ObjectAsStream).not.toHaveBeenCalled()
     expect(mockPutS3Object).not.toHaveBeenCalled()
-    expect(mockDeleteS3Object).not.toHaveBeenCalled()
   })
 
   it('throws an error if the SQS event comes from the wrong S3 bucket', async () => {
@@ -79,6 +69,5 @@ describe('InitiateCopyAndEncrypt', function () {
     )
     expect(mockGetS3ObjectAsStream).not.toHaveBeenCalled()
     expect(mockPutS3Object).not.toHaveBeenCalled()
-    expect(mockDeleteS3Object).not.toHaveBeenCalled()
   })
 })

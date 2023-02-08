@@ -1,5 +1,4 @@
 import { SQSEvent } from 'aws-lambda'
-import { deleteS3Object } from '../../services/s3/deleteS3Object'
 import { getS3ObjectAsStream } from '../../services/s3/getS3Object'
 import { putS3Object } from '../../services/s3/putS3Object'
 import { getEnv, tryParseJSON } from '../../utils/helpers'
@@ -36,9 +35,5 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 
   const encryptedData = await encryptS3Object(temporaryDataStream)
 
-  await putS3Object(permanentBucket, eventKey, encryptedData)
-
-  await deleteS3Object(eventBucket, eventKey)
-
-  return
+  putS3Object(permanentBucket, eventKey, encryptedData)
 }

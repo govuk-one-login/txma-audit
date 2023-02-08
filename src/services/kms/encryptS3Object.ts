@@ -1,8 +1,5 @@
-import {
-  KmsKeyringNode,
-  buildClient,
-  CommitmentPolicy
-} from '@aws-crypto/client-node'
+import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
+import { buildEncrypt } from '@aws-crypto/encrypt-node'
 import { Readable } from 'stream'
 import { getEnv } from '../../utils/helpers'
 
@@ -15,9 +12,7 @@ export const encryptS3Object = async (data: Readable): Promise<Buffer> => {
   // const context = {
   //     some: 'key',
   // };
-  const { encrypt } = buildClient(
-    CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
-  )
+  const { encrypt } = buildEncrypt()
 
   const { result } = await encrypt(keyring, data)
 

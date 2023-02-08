@@ -312,8 +312,9 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
             Action:
-              - kms:GenerateDataKey
+              - kms:Encrypt
               - kms:Decrypt
+              - kms:GenerateDataKey
             Resource: '*'
 
   EncryptionGeneratorKmsKeyAlias:
@@ -752,6 +753,7 @@ Resources:
     Properties:
       QueueName: !Sub '${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ'
       KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+      MessageRetentionPeriod: 1209600
 
   AuditFileReadyToEncryptQueuePolicy:
     Type: AWS::SQS::QueuePolicy
@@ -1021,6 +1023,14 @@ Resources:
                 Action:
                   - sqs:*
                 Resource: !GetAtt AuditFileReadyToEncryptQueue.Arn
+              - Sid: UseEncryptionGeneratorKmsKey
+                Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:GenerateDataKey*
+                  - kms:Encrypt*
+                Resource:
+                  - !GetAtt EncryptionGeneratorKmsKey.Arn
 
   InitiateCopyAndEncryptFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
@@ -1028,6 +1038,7 @@ Resources:
     #checkov:skip=CKV_AWS_117:VPC not required
     Type: AWS::Serverless::Function
     Properties:
+      MemorySize: 1536
       FunctionName: InitiateCopyAndEncryptFunction
       Handler: initiateCopyAndEncrypt.handler
       Role: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn

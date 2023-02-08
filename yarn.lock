@@ -10,40 +10,6 @@
     "@jridgewell/gen-mapping" "^0.1.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
-"@aws-crypto/cache-material@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@aws-crypto/cache-material/-/cache-material-3.1.0.tgz#8369ed971feeaa710ee03cd5ccae11623e86b51a"
-  integrity sha512-fC59BV0YoxSSzI8bIAWLjaKrP52iOqey0NSvsZ5/kV/UwJp8VtDfD7UC5UneORQh1luRw8ZnC0kx0wHbqG/+iw==
-  dependencies:
-    "@aws-crypto/material-management" "^3.1.0"
-    "@aws-crypto/serialize" "^3.1.0"
-    "@types/lru-cache" "^5.1.0"
-    lru-cache "^6.0.0"
-    tslib "^2.2.0"
-
-"@aws-crypto/caching-materials-manager-node@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@aws-crypto/caching-materials-manager-node/-/caching-materials-manager-node-3.1.0.tgz#6e41af1ee63dfea4417c51928fc2ea58bfd010ca"
-  integrity sha512-1cb/XVb43RRq1PYdzBPyycfH+1ASZ6DfQ2GbSLFrMgPLvhnxoyyv+Bd5QlvViIREn3xIXa1gupeGJz6BaayFXQ==
-  dependencies:
-    "@aws-crypto/cache-material" "^3.1.0"
-    "@aws-crypto/material-management-node" "^3.1.0"
-    tslib "^2.2.0"
-
-"@aws-crypto/client-node@3.1.1":
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/@aws-crypto/client-node/-/client-node-3.1.1.tgz#97062007ec0a86e01713ba772a40af49e0322735"
-  integrity sha512-WdbYBxbB5onE4LVab5q7fByNiAAmL4Y+pGCaDOl6RLLH17xHBfyQHHeG+5+Xloygh/aWR42So8LhLPhGmral3g==
-  dependencies:
-    "@aws-crypto/caching-materials-manager-node" "^3.1.0"
-    "@aws-crypto/decrypt-node" "^3.1.0"
-    "@aws-crypto/encrypt-node" "^3.1.1"
-    "@aws-crypto/kms-keyring-node" "^3.1.0"
-    "@aws-crypto/material-management-node" "^3.1.0"
-    "@aws-crypto/raw-aes-keyring-node" "^3.1.0"
-    "@aws-crypto/raw-rsa-keyring-node" "^3.1.0"
-    tslib "^2.2.0"
-
 "@aws-crypto/crc32@3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@aws-crypto/crc32/-/crc32-3.0.0.tgz#07300eca214409c33e3ff769cd5697b57fdd38fa"
@@ -62,19 +28,7 @@
     "@aws-sdk/types" "^3.222.0"
     tslib "^1.11.1"
 
-"@aws-crypto/decrypt-node@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@aws-crypto/decrypt-node/-/decrypt-node-3.1.0.tgz#f5d8298a50a2f73f4635770a8ed688df618595cd"
-  integrity sha512-F0TlNkdy11m1BCfhPQAXvdKHg82tAeOIc+tYXCL6ND/I3zh0F8oqVdr5oIuv4B6aIOgSSnAym0ctbAs8jw3pBA==
-  dependencies:
-    "@aws-crypto/material-management-node" "^3.1.0"
-    "@aws-crypto/serialize" "^3.1.0"
-    "@types/duplexify" "^3.6.0"
-    duplexify "^4.1.1"
-    readable-stream "^3.6.0"
-    tslib "^2.2.0"
-
-"@aws-crypto/encrypt-node@^3.1.1":
+"@aws-crypto/encrypt-node@3.1.1":
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@aws-crypto/encrypt-node/-/encrypt-node-3.1.1.tgz#7dcd533a008a0201d24bae6b0304a0cb87a2b7c8"
   integrity sha512-LfB6LC1DhpsMCN2M24SgtR9m8CC2lTyO5w5mBWCsk+8h4BvhQXcgfruvHabGfDn4L+2Lr97nT9/THstNCuVVyg==
@@ -100,7 +54,7 @@
   dependencies:
     tslib "^1.11.1"
 
-"@aws-crypto/kms-keyring-node@^3.1.0":
+"@aws-crypto/kms-keyring-node@3.1.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@aws-crypto/kms-keyring-node/-/kms-keyring-node-3.1.0.tgz#64686da89192392d89036bbb03c64b99326ea77d"
   integrity sha512-8SVn+Vz0HU3FXfHc6jdm4yvrAVssN7t5F9s3zzvKdb8w8u7vLpzZiLEw5TonmZD4KwBqG4YbciTX8wtXx3PUIw==
@@ -135,34 +89,6 @@
   dependencies:
     asn1.js "^5.3.0"
     bn.js "^5.1.1"
-    tslib "^2.2.0"
-
-"@aws-crypto/raw-aes-keyring-node@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@aws-crypto/raw-aes-keyring-node/-/raw-aes-keyring-node-3.1.0.tgz#54f8d92cc896709742bdc46f7af2f9bd8ac93b92"
-  integrity sha512-td1BH2OJks1PMkuHrMcwPJwVmyzsCrj1H9vqNnuw26dz9ZIdW8+e8DTv68WWUoCv43Qc6osmnGsTy7JjvGPzMQ==
-  dependencies:
-    "@aws-crypto/material-management-node" "^3.1.0"
-    "@aws-crypto/raw-keyring" "^3.1.0"
-    "@aws-crypto/serialize" "^3.1.0"
-    tslib "^2.2.0"
-
-"@aws-crypto/raw-keyring@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@aws-crypto/raw-keyring/-/raw-keyring-3.1.0.tgz#6adef656f2fca85a42b97887804518d5098dc078"
-  integrity sha512-GIZvpQ7eEXeV0FOZ5Tvwzz5t4dMmigjs739Dypt6q5Er02zQUB2OVmteLJH6p33j11zLaD1AGW6Yq22gy2+NDQ==
-  dependencies:
-    "@aws-crypto/material-management" "^3.1.0"
-    "@aws-crypto/serialize" "^3.1.0"
-    tslib "^2.2.0"
-
-"@aws-crypto/raw-rsa-keyring-node@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@aws-crypto/raw-rsa-keyring-node/-/raw-rsa-keyring-node-3.1.0.tgz#3a9f6d695d3b46bf819226a92bcb18fd77d2b71f"
-  integrity sha512-3EPnGm0l8Ui29p+jYctKaJAHv381MHvnjcPGw2ZGaVL+HAve+5WSL9JjwK8gOXoRot7ntt1KC1nBBmI+cj/G0g==
-  dependencies:
-    "@aws-crypto/material-management-node" "^3.1.0"
-    "@aws-crypto/raw-keyring" "^3.1.0"
     tslib "^2.2.0"
 
 "@aws-crypto/serialize@^3.1.0":
@@ -2043,11 +1969,6 @@
   version "7.0.11"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.11.tgz#d421b6c527a3037f7c84433fd2c4229e016863d3"
   integrity sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==
-
-"@types/lru-cache@^5.1.0":
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/@types/lru-cache/-/lru-cache-5.1.1.tgz#c48c2e27b65d2a153b19bfc1a317e30872e01eef"
-  integrity sha512-ssE3Vlrys7sdIzs5LOxCzTVMsU7i9oa/IaW92wF32JFb3CVczqOkru2xspuKczHEbG3nvmPY7IFqVmGGHdNbYw==
 
 "@types/node@*":
   version "18.13.0"
