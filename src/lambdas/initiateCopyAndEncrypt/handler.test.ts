@@ -1,5 +1,5 @@
 import { encryptS3Object } from '../../services/kms/encryptS3Object'
-import { getS3ObjectAsStream } from '../../services/s3/getS3Object'
+import { getS3ObjectAsStream } from '../../services/s3/getS3ObjectAsStream'
 import { putS3Object } from '../../services/s3/putS3Object'
 import { createDataStream } from '../../utils/tests/test-helpers/test-helper'
 import {
@@ -16,7 +16,7 @@ import {
 } from '../../utils/tests/testEvents/testS3SqsEvent'
 import { handler } from './handler'
 
-jest.mock('../../services/s3/getS3Object', () => ({
+jest.mock('../../services/s3/getS3ObjectAsStream', () => ({
   getS3ObjectAsStream: jest.fn()
 }))
 jest.mock('../../services/s3/putS3Object', () => ({

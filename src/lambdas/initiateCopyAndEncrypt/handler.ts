@@ -1,5 +1,5 @@
 import { SQSEvent } from 'aws-lambda'
-import { getS3ObjectAsStream } from '../../services/s3/getS3Object'
+import { getS3ObjectAsStream } from '../../services/s3/getS3ObjectAsStream'
 import { putS3Object } from '../../services/s3/putS3Object'
 import { getEnv, tryParseJSON } from '../../utils/helpers'
 import { encryptS3Object } from '../../services/kms/encryptS3Object'
