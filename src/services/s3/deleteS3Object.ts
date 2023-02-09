@@ -17,6 +17,4 @@ export const deleteS3Object = async (
   } as DeleteObjectCommandInput
 
   await client.send(new DeleteObjectCommand(input))
-
-  return
 }
