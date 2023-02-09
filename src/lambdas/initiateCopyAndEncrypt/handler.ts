@@ -35,5 +35,5 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 
   const encryptedData = await encryptS3Object(temporaryDataStream)
 
-  putS3Object(permanentBucket, eventKey, encryptedData)
+  await putS3Object(permanentBucket, eventKey, encryptedData)
 }
