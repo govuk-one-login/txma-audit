@@ -37,8 +37,8 @@ jobs:
           cache: yarn
       - name: Node - Enable Corepack
         run: corepack enable
-      - name: Install dependencies
-        run: yarn install
+      - name: Install ESBuild binaries
+        run: yarn unplug
       - name: Run linting
         if: always()
         run: yarn lint
@@ -57,3 +57,21 @@ jobs:
           quiet: true
       - name: Build Lambda functions
         run: yarn build
+
+  check-yarn-cache:
+    name: Check Yarn cache
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3.0.0
+        with:
+          node-version: 18
+          cache: yarn
+      - name: Node - Enable Corepack
+        run: corepack enable
+      - name: Install ESBuild binaries
+        run: yarn unplug
+      - name: Check Yarn cache
+        run: yarn install --immutable --immutable-cache --check-cache
