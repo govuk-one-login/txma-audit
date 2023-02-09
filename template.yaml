@@ -625,6 +625,8 @@ Resources:
       Handler: delimiter.handler
       Role: !GetAtt DelimiterLambdaAccessRole.Arn
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+      MemorySize: 512
+      Timeout: 120
 
   AddFirehoseRecordFunctionInvokePermission:
     Type: AWS::Lambda::Permission
