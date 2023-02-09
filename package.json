@@ -8,6 +8,7 @@
   },
   "author": "GDS",
   "license": "MIT",
+  "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "tsc --noEmit && ts-node ./esbuild.config.ts",
     "lint": "prettier . --check || exit 1 ; eslint . --max-warnings=0",
