@@ -1,9 +1,9 @@
 version: 2
 updates:
-  package-ecosystem: npm
-  directory: /
-  schedule:
-    interval: daily
-  commit-message:
-    prefix: dependabot
-    include: scope
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: dependabot
+      include: scope
