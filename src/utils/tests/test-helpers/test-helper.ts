@@ -3,6 +3,7 @@ import {
   FirehoseTransformationEvent,
   FirehoseTransformationEventRecord
 } from 'aws-lambda'
+import { Readable } from 'stream'
 
 export class TestHelper {
   private static firehoseTransformationEvent: FirehoseTransformationEvent = {
@@ -39,4 +40,10 @@ export class TestHelper {
   static encodeAuditEvent(message: object): string {
     return JSON.stringify(message)
   }
+}
+export const createDataStream = (testData: string) => {
+  const dataStream = new Readable()
+  dataStream.push(testData)
+  dataStream.push(null)
+  return dataStream
 }
