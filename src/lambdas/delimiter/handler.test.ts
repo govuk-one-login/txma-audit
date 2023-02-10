@@ -2,55 +2,16 @@ import { handler } from './handler'
 import { TestHelper } from '../../utils/tests/test-helpers/test-helper'
 import { FirehoseTransformationResult } from 'aws-lambda'
 
-jest.mock('aws-sdk', () => {
-  const mockSNSInstance = {
-    publish: jest.fn().mockReturnThis(),
-    promise: jest.fn()
-  }
-  const mockSNS = jest.fn(() => mockSNSInstance)
-
-  return {
-    SNS: mockSNS,
-    config: {
-      update: jest.fn()
-    }
-  }
-})
-
-jest.mock('crypto', () => {
-  return {
-    randomUUID: jest.fn(() => {
-      return '58339721-64c9-486b-903f-ad7e63fc45de'
-    })
-  }
-})
-
 describe('Unit test for app eventProcessorHandler', function () {
-  let consoleMock: jest.SpyInstance
-
-  beforeEach(() => {
-    consoleMock = jest.spyOn(global.console, 'log')
-
-    process.env.topicArn = 'SOME-SNS-TOPIC'
-    process.env.defaultComponentId = 'SOME-COMPONENT-ID'
+  const exampleMessage = JSON.stringify({
+    timestamp: 1609462861,
+    timestamp_formatted: '2021-01-23T15:43:21.842',
+    event_name: 'AUTHENTICATION_ATTEMPT',
+    component_id: 'AUTH'
   })
-
-  afterEach(() => {
-    consoleMock.mockRestore()
-    jest.clearAllMocks()
-  })
+  const expectedData = Buffer.from(exampleMessage + '\n').toString('base64')
 
   it('accepts a payload and stringifies', async () => {
-    const exampleMessage = {
-      timestamp: 1609462861,
-      timestamp_formatted: '2021-01-23T15:43:21.842',
-      event_name: 'AUTHENTICATION_ATTEMPT',
-      component_id: 'AUTH'
-    }
-
-    const expectedData: string = Buffer.from(
-      TestHelper.encodeAuditEvent(exampleMessage) + '\n'
-    ).toString('base64')
     const expectedResult: FirehoseTransformationResult = {
       records: [
         {
@@ -60,30 +21,18 @@ describe('Unit test for app eventProcessorHandler', function () {
         }
       ]
     }
-
-    const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(
-      TestHelper.encodeAuditEvent(exampleMessage)
-    )
+    const firehoseEvent =
+      TestHelper.createFirehoseEventWithEncodedMessage(exampleMessage)
 
     const result = await handler(firehoseEvent)
+
     expect(result).toEqual(expectedResult)
   })
 
   it('accepts a payload with multiple messages and stringifies', async () => {
-    const exampleMessage = {
-      timestamp: 1609462861,
-      timestamp_formatted: '2021-01-23T15:43:21.842',
-      event_name: 'AUTHENTICATION_ATTEMPT',
-      component_id: 'AUTH'
-    }
-
-    const expectedData: string = Buffer.from(
-      TestHelper.encodeAuditEvent(exampleMessage) + '\n'
-    ).toString('base64')
     const expectedResult: FirehoseTransformationResult = {
       records: []
     }
-
     for (let i = 0; i < 5; i++) {
       expectedResult.records.push({
         data: expectedData,
@@ -91,13 +40,13 @@ describe('Unit test for app eventProcessorHandler', function () {
         result: 'Ok'
       })
     }
-
     const firehoseEvent = TestHelper.createFirehoseEventWithEncodedMessage(
-      TestHelper.encodeAuditEvent(exampleMessage),
+      exampleMessage,
       5
     )
 
     const result = await handler(firehoseEvent)
+
     expect(result).toEqual(expectedResult)
   })
 })

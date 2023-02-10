@@ -2983,23 +2983,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"aws-sdk@npm:2.1136.0":
-  version: 2.1136.0
-  resolution: "aws-sdk@npm:2.1136.0"
-  dependencies:
-    buffer: 4.9.2
-    events: 1.1.1
-    ieee754: 1.1.13
-    jmespath: 0.16.0
-    querystring: 0.2.0
-    sax: 1.2.1
-    url: 0.10.3
-    uuid: 3.3.2
-    xml2js: 0.4.19
-  checksum: f420351fe552d8aaccb9f4907fc2a111c1c997e3a9b2fd73622fc4526f0244396c5087a5a7f07d2d0b4a8a9d184461877be63d561d1a17dc75b2ebf73a6d5296
-  languageName: node
-  linkType: hard
-
 "aws-sdk@npm:^2.650.0":
   version: 2.1311.0
   resolution: "aws-sdk@npm:2.1311.0"
@@ -3544,7 +3527,6 @@ __metadata:
     "@types/node": 17.0.13
     "@typescript-eslint/eslint-plugin": 5.49.0
     "@typescript-eslint/parser": 5.51.0
-    aws-sdk: 2.1136.0
     aws-sdk-client-mock: 2.0.1
     aws-sdk-client-mock-jest: 2.0.1
     esbuild: 0.17.7
@@ -6975,15 +6957,6 @@ __metadata:
     is-typed-array: ^1.1.3
     which-typed-array: ^1.1.2
   checksum: 705e51f0de5b446f4edec10739752ac25856541e0254ea1e7e45e5b9f9b0cb105bc4bd415736a6210edc68245a7f903bf085ffb08dd7deb8a0e847f60538a38a
-  languageName: node
-  linkType: hard
-
-"uuid@npm:3.3.2":
-  version: 3.3.2
-  resolution: "uuid@npm:3.3.2"
-  bin:
-    uuid: ./bin/uuid
-  checksum: 8793629d2799f500aeea9fcd0aec6c4e9fbcc4d62ed42159ad96be345c3fffac1bbf61a23e18e2782600884fee05e6d4012ce4b70d0037c8e987533ae6a77870
   languageName: node
   linkType: hard
 
