@@ -36,11 +36,8 @@ export class TestHelper {
 
     return event
   }
-
-  static encodeAuditEvent(message: object): string {
-    return JSON.stringify(message)
-  }
 }
+
 export const createDataStream = (testData: string) => {
   const dataStream = new Readable()
   dataStream.push(testData)
