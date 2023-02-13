@@ -47,7 +47,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-jest", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:27.2.1"],\
             ["husky", "npm:8.0.3"],\
             ["jest", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:28.1.3"],\
-            ["jest-when", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:3.5.1"],\
+            ["jest-when", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:3.5.2"],\
             ["lint-staged", "npm:13.1.1"],\
             ["prettier", "npm:2.8.3"],\
             ["ts-jest", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:28.0.8"],\
@@ -4419,7 +4419,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-jest", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:27.2.1"],\
             ["husky", "npm:8.0.3"],\
             ["jest", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:28.1.3"],\
-            ["jest-when", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:3.5.1"],\
+            ["jest-when", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:3.5.2"],\
             ["lint-staged", "npm:13.1.1"],\
             ["prettier", "npm:2.8.3"],\
             ["ts-jest", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:28.0.8"],\
@@ -6354,17 +6354,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["jest-when", [\
-        ["npm:3.5.1", {\
-          "packageLocation": "./.yarn/cache/jest-when-npm-3.5.1-50bed3876d-1efb9f497f.zip/node_modules/jest-when/",\
+        ["npm:3.5.2", {\
+          "packageLocation": "./.yarn/cache/jest-when-npm-3.5.2-adc3b79257-9ad95552d3.zip/node_modules/jest-when/",\
           "packageDependencies": [\
-            ["jest-when", "npm:3.5.1"]\
+            ["jest-when", "npm:3.5.2"]\
           ],\
           "linkType": "SOFT"\
         }],\
-        ["virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:3.5.1", {\
-          "packageLocation": "./.yarn/__virtual__/jest-when-virtual-aa54488fb5/0/cache/jest-when-npm-3.5.1-50bed3876d-1efb9f497f.zip/node_modules/jest-when/",\
+        ["virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:3.5.2", {\
+          "packageLocation": "./.yarn/__virtual__/jest-when-virtual-0012e5c0a8/0/cache/jest-when-npm-3.5.2-adc3b79257-9ad95552d3.zip/node_modules/jest-when/",\
           "packageDependencies": [\
-            ["jest-when", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:3.5.1"],\
+            ["jest-when", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:3.5.2"],\
             ["@types/jest", "npm:28.1.7"],\
             ["jest", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:28.1.3"]\
           ],\
