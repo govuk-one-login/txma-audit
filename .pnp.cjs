@@ -146,7 +146,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-crypto/kms-keyring-node", "npm:3.1.0"],\
             ["@aws-crypto/kms-keyring", "npm:3.1.0"],\
             ["@aws-crypto/material-management-node", "npm:3.1.0"],\
-            ["aws-sdk", "npm:2.1311.0"],\
+            ["aws-sdk", "npm:2.1313.0"],\
             ["tslib", "npm:2.5.0"]\
           ],\
           "linkType": "HARD"\
@@ -3694,10 +3694,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["aws-sdk", [\
-        ["npm:2.1311.0", {\
-          "packageLocation": "./.yarn/cache/aws-sdk-npm-2.1311.0-d4c7a6b6fc-36c6f7f86d.zip/node_modules/aws-sdk/",\
+        ["npm:2.1313.0", {\
+          "packageLocation": "./.yarn/cache/aws-sdk-npm-2.1313.0-25d23ee5f4-30c7b9a104.zip/node_modules/aws-sdk/",\
           "packageDependencies": [\
-            ["aws-sdk", "npm:2.1311.0"],\
+            ["aws-sdk", "npm:2.1313.0"],\
             ["buffer", "npm:4.9.2"],\
             ["events", "npm:1.1.1"],\
             ["ieee754", "npm:1.1.13"],\
