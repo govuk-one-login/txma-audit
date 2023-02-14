@@ -434,6 +434,8 @@ Resources:
       Namespace: AWS/SQS
       AlarmActions:
         - !Ref SNSNonCriticalAlarmTopic
+      OKActions:
+        - !Ref SNSNonCriticalAlarmTopic
       Dimensions:
         - Name: QueueName
           Value: !Sub '${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ'
@@ -495,6 +497,17 @@ Resources:
       TopicArn: !Ref SNSCriticalAlarmTopic
       Protocol: https
       Endpoint: '{{resolve:secretsmanager:PagerDutyEndpoint}}'
+
+  ChatbotChannelAlertConfiguration:
+    Type: AWS::Chatbot::SlackChannelConfiguration
+    Properties:
+      ConfigurationName: encryption-failure-alarm-notification
+      IamRoleArn: '{{resolve:ssm:ChatbotAlarmRoleArn}}'
+      SlackChannelId: '{{resolve:ssm:SlackAlertNotificationsChannelId}}'
+      SlackWorkspaceId: '{{resolve:ssm:SlackAlertNotificationsWorkspaceId}}'
+      LoggingLevel: ERROR
+      SnsTopicArns:
+        - !GetAtt SNSNonCriticalAlarmTopic.TopicArn
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
