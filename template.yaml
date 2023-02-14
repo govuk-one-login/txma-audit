@@ -438,7 +438,7 @@ Resources:
         - !Ref SNSNonCriticalAlarmTopic
       Dimensions:
         - Name: QueueName
-          Value: !Sub '${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ'
+          Value: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.QueueName
 
   SNSCriticalAlarmTopic:
     Type: AWS::SNS::Topic
