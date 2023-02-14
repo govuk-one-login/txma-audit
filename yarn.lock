@@ -37,9 +37,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-crypto/encrypt-node@npm:3.1.0":
-  version: 3.1.0
-  resolution: "@aws-crypto/encrypt-node@npm:3.1.0"
+"@aws-crypto/encrypt-node@npm:3.1.1":
+  version: 3.1.1
+  resolution: "@aws-crypto/encrypt-node@npm:3.1.1"
   dependencies:
     "@aws-crypto/material-management-node": ^3.1.0
     "@aws-crypto/serialize": ^3.1.0
@@ -47,7 +47,7 @@ __metadata:
     duplexify: ^4.1.1
     readable-stream: ^3.6.0
     tslib: ^2.2.0
-  checksum: e18a56832c29771953aa4d2c569a4a13ef3f037f8574a72b0f4f19eb8f1743e11e96e255e16f5859e736bbff65ec397c0d15638c04eb04b3b04ba4e54ffb3478
+  checksum: 411b5c0d392cb571aa45ba3f12556c9a9f1069dd398a8abbf28ae1fc7f4707edfc8253d3cc7aa75fa0f26c1f22e53eac25a6c9dff4826141c551c68536e24cb8
   languageName: node
   linkType: hard
 
@@ -3517,7 +3517,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "di-txma-audit@workspace:."
   dependencies:
-    "@aws-crypto/encrypt-node": 3.1.0
+    "@aws-crypto/encrypt-node": 3.1.1
     "@aws-crypto/kms-keyring-node": 3.1.0
     "@aws-crypto/material-management": 3.1.0
     "@aws-sdk/client-s3": 3.257.0
