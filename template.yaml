@@ -498,16 +498,16 @@ Resources:
       Protocol: https
       Endpoint: '{{resolve:secretsmanager:PagerDutyEndpoint}}'
 
-  ChatbotChannelAlertConfiguration:
-    Type: AWS::Chatbot::SlackChannelConfiguration
-    Properties:
-      ConfigurationName: encryption-failure-alarm-notification
-      IamRoleArn: '{{resolve:ssm:ChatbotAlarmRoleArn}}'
-      SlackChannelId: '{{resolve:ssm:SlackAlertNotificationsChannelId}}'
-      SlackWorkspaceId: '{{resolve:ssm:SlackAlertNotificationsWorkspaceId}}'
-      LoggingLevel: ERROR
-      SnsTopicArns:
-        - !GetAtt SNSNonCriticalAlarmTopic.TopicArn
+  # ChatbotChannelAlertConfiguration:
+  #   Type: AWS::Chatbot::SlackChannelConfiguration
+  #   Properties:
+  #     ConfigurationName: encryption-failure-alarm-notification
+  #     IamRoleArn: '{{resolve:ssm:ChatbotAlarmRoleArn}}'
+  #     SlackChannelId: '{{resolve:ssm:SlackAlertNotificationsChannelId}}'
+  #     SlackWorkspaceId: '{{resolve:ssm:SlackAlertNotificationsWorkspaceId}}'
+  #     LoggingLevel: ERROR
+  #     SnsTopicArns:
+  #       - !GetAtt SNSNonCriticalAlarmTopic.TopicArn
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
