@@ -173,6 +173,7 @@ Resources:
 
   MessageBucketLogsBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
     Properties:
       VersioningConfiguration:
@@ -213,7 +214,7 @@ Resources:
   MessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AWS::StackName}-${Environment}-message-batch'
+      BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -224,10 +225,10 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       VersioningConfiguration:
-        Status: 'Enabled'
+        Status: Enabled
       LoggingConfiguration:
-        DestinationBucketName: !Ref MessageBucketLogsBucket
-        LogFilePrefix: 'audit/message-batch-bucket/'
+        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
@@ -745,7 +746,7 @@ Resources:
     Type: AWS::S3::Bucket
     Condition: IsTestableEnv
     Properties:
-      BucketName: !Sub '${AWS::StackName}-${Environment}-message-batch-txma2'
+      BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch-txma2
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -756,10 +757,10 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       VersioningConfiguration:
-        Status: 'Enabled'
+        Status: Enabled
       LoggingConfiguration:
-        DestinationBucketName: !Ref MessageBucketLogsBucket
-        LogFilePrefix: 'audit/txma2-message-batch-bucket/'
+        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch-txma2
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
@@ -837,6 +838,7 @@ Resources:
 
   TemporaryMessageBucketLogsBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
     Properties:
       VersioningConfiguration:
@@ -879,7 +881,7 @@ Resources:
   TemporaryMessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AWS::StackName}-${Environment}-temporary-message-batch'
+      BucketName: !Sub ${AWS::StackName}-${Environment}-temporary-message-batch
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -890,10 +892,10 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       VersioningConfiguration:
-        Status: 'Enabled'
+        Status: Enabled
       LoggingConfiguration:
-        DestinationBucketName: !Ref TemporaryMessageBucketLogsBucket
-        LogFilePrefix: 'audit/temporary-message-batch-bucket/'
+        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-temporary-message-batch
       LifecycleConfiguration:
         Rules:
           - Id: DeleteAutoTestObjects
@@ -938,7 +940,7 @@ Resources:
   PermanentMessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AWS::StackName}-${Environment}-permanent-message-batch'
+      BucketName: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -949,10 +951,10 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       VersioningConfiguration:
-        Status: 'Enabled'
+        Status: Enabled
       LoggingConfiguration:
-        DestinationBucketName: !Ref PermanentMessageBucketLogsBucket
-        LogFilePrefix: 'audit/permanent-message-batch-bucket/'
+        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
@@ -976,6 +978,7 @@ Resources:
 
   PermanentMessageBucketLogsBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
     Properties:
       VersioningConfiguration:
