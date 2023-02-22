@@ -171,46 +171,6 @@ Resources:
       AliasName: !Sub 'alias/${AWS::StackName}/${Environment}/audit-file-ready-to-encrypt-queue-kms-key'
       TargetKeyId: !Ref AuditFileReadyToEncryptQueueKmsKey
 
-  MessageBucketLogsBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
-    Properties:
-      VersioningConfiguration:
-        Status: 'Enabled'
-      BucketName: !Sub '${AWS::StackName}-${Environment}-bucket-logs'
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      Tags:
-        - Key: CheckovRulesToSkip
-          Value: CKV_AWS_18
-
-  S3AccessLogsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref MessageBucketLogsBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: 'EnableS3Logging'
-            Effect: 'Allow'
-            Resource:
-              - !Sub '${MessageBucketLogsBucket.Arn}/*'
-            Principal:
-              Service: 'logging.s3.amazonaws.com'
-            Action:
-              - 's3:PutObject'
-            Condition:
-              StringEquals:
-                'aws:SourceAccount': !Sub '${AWS::AccountId}'
-
   MessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -836,48 +796,6 @@ Resources:
 
   # S3 resources
 
-  TemporaryMessageBucketLogsBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
-    Properties:
-      VersioningConfiguration:
-        Status: 'Enabled'
-      BucketName: !Sub '${AWS::StackName}-${Environment}-temporary-bucket-logs'
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      Tags:
-        - Key: CheckovRulesToSkip
-          Value: CKV_AWS_18
-
-  TemporaryS3AccessLogsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref TemporaryMessageBucketLogsBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: 'EnableTempS3Logging'
-            Effect: 'Allow'
-            Resource:
-              - !Sub '${TemporaryMessageBucketLogsBucket.Arn}/*'
-            Principal:
-              Service: 'logging.s3.amazonaws.com'
-            Action:
-              - 's3:PutObject'
-            Condition:
-              StringEquals:
-                'aws:SourceAccount': !Sub '${AWS::AccountId}'
-              Bool:
-                'aws:SecureTransport': 'true'
-
   TemporaryMessageBatchBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -975,48 +893,6 @@ Resources:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
-
-  PermanentMessageBucketLogsBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    # checkov:skip=CKV_AWS_18:Ensure the S3 bucket has access logging enabled
-    Properties:
-      VersioningConfiguration:
-        Status: 'Enabled'
-      BucketName: !Sub '${AWS::StackName}-${Environment}-permanent-bucket-logs'
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      Tags:
-        - Key: CheckovRulesToSkip
-          Value: CKV_AWS_18
-
-  PermanentS3AccessLogsBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref PermanentMessageBucketLogsBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: 'EnableS3Logging'
-            Effect: 'Allow'
-            Resource:
-              - !Sub '${PermanentMessageBucketLogsBucket.Arn}/*'
-            Principal:
-              Service: 'logging.s3.amazonaws.com'
-            Action:
-              - 's3:PutObject'
-            Condition:
-              StringEquals:
-                'aws:SourceAccount': !Sub '${AWS::AccountId}'
-              Bool:
-                'aws:SecureTransport': 'true'
 
   PermanentMessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
