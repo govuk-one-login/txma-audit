@@ -188,7 +188,7 @@ Resources:
         Status: Enabled
       LoggingConfiguration:
         DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
-        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch/
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
@@ -720,7 +720,7 @@ Resources:
         Status: Enabled
       LoggingConfiguration:
         DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
-        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch-txma2
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch-txma2/
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
@@ -813,7 +813,7 @@ Resources:
         Status: Enabled
       LoggingConfiguration:
         DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
-        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-temporary-message-batch
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-temporary-message-batch/
       LifecycleConfiguration:
         Rules:
           - Id: DeleteAutoTestObjects
@@ -872,7 +872,7 @@ Resources:
         Status: Enabled
       LoggingConfiguration:
         DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
-        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch/
       LifecycleConfiguration:
         Rules:
           - Id: AuditGlacierRule
