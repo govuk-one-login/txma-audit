@@ -394,9 +394,9 @@ Resources:
       MetricName: ApproximateNumberOfMessagesVisible
       Namespace: AWS/SQS
       AlarmActions:
-        - !Ref SNSNonCriticalAlarmTopic
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
       OKActions:
-        - !Ref SNSNonCriticalAlarmTopic
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
       Dimensions:
         - Name: QueueName
           Value: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.QueueName
@@ -406,12 +406,6 @@ Resources:
     Properties:
       KmsMasterKeyId: '{{resolve:ssm:CoreSnsKmsKeyArn}}'
       TopicName: 'SNSCriticalAlarmTopic'
-
-  SNSNonCriticalAlarmTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      KmsMasterKeyId: '{{resolve:ssm:CoreSnsKmsKeyArn}}'
-      TopicName: 'SNSNonCriticalAlarmTopic'
 
   SNSCriticalAlarmTopicPolicy:
     Type: AWS::SNS::TopicPolicy
@@ -432,25 +426,6 @@ Resources:
       Topics:
         - !Ref SNSCriticalAlarmTopic
 
-  SNSNonCriticalAlarmTopicPolicy:
-    Type: AWS::SNS::TopicPolicy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: cloudwatch.amazonaws.com
-            Action: 'sns:Publish'
-            Resource: !GetAtt SNSNonCriticalAlarmTopic.TopicArn
-            Condition:
-              ArnLike:
-                aws:SourceArn: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*
-              StringEquals:
-                aws:SourceAccount: !Sub ${AWS::AccountId}
-      Topics:
-        - !Ref SNSNonCriticalAlarmTopic
-
   PagerDutySubscription:
     Type: AWS::SNS::Subscription
     Condition: IsPagerDutyEnvironment
@@ -458,17 +433,6 @@ Resources:
       TopicArn: !Ref SNSCriticalAlarmTopic
       Protocol: https
       Endpoint: '{{resolve:secretsmanager:PagerDutyEndpoint}}'
-
-  # ChatbotChannelAlertConfiguration:
-  #   Type: AWS::Chatbot::SlackChannelConfiguration
-  #   Properties:
-  #     ConfigurationName: encryption-failure-alarm-notification
-  #     IamRoleArn: '{{resolve:ssm:ChatbotAlarmRoleArn}}'
-  #     SlackChannelId: '{{resolve:ssm:SlackAlertNotificationsChannelId}}'
-  #     SlackWorkspaceId: '{{resolve:ssm:SlackAlertNotificationsWorkspaceId}}'
-  #     LoggingLevel: ERROR
-  #     SnsTopicArns:
-  #       - !GetAtt SNSNonCriticalAlarmTopic.TopicArn
 
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
