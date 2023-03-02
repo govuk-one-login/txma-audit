@@ -197,13 +197,17 @@ Resources:
               - TransitionInDays: 90
                 StorageClass: GLACIER
       NotificationConfiguration:
-        QueueConfigurations: !If
-          - IsProductionOrStaging
-          - - Event: 's3:ObjectCreated:*'
+        QueueConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
+          - !If
+            - IsProductionOrStaging
+            - Event: 's3:ObjectCreated:*'
               Queue: '{{resolve:ssm:CSLSS3QueueARN}}'
             - Event: 's3:ObjectRestore:*'
               Queue: '{{resolve:ssm:CSLSS3QueueARN}}'
-          - - !Ref AWS::NoValue
+            - !Ref AWS::NoValue
+
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -755,6 +759,18 @@ Resources:
             Condition:
               ArnLike:
                 aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-${Environment}-temporary-message-batch'
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+          - Effect: 'Allow'
+            Action:
+              - sqs:*
+            Resource:
+              - !GetAtt AuditFileReadyToEncryptQueue.Arn
+            Principal:
+              AWS: '*'
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-${Environment}-message-batch'
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
 
