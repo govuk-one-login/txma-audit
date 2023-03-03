@@ -222,19 +222,6 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Sid: AllowBucketAccess
-            Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:DeleteObject
-            Resource:
-              - !GetAtt MessageBatchBucket.Arn
-              - !Sub '${MessageBatchBucket.Arn}/*'
-            Principal:
-              AWS: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
-            Condition:
-              Bool:
-                'aws:SecureTransport': 'true'
           - Effect: 'Deny'
             Action:
               - 's3:DeleteObject'
@@ -944,12 +931,14 @@ Resources:
                   - s3:GetObject
                 Resource:
                   - !GetAtt TemporaryMessageBatchBucket.Arn
+                  - !Sub '${TemporaryMessageBatchBucket.Arn}/*'
               - Sid: AuditS3Read
                 Effect: Allow
                 Action:
                   - s3:GetObject
                 Resource:
                   - !GetAtt MessageBatchBucket.Arn
+                  - !Sub '${MessageBatchBucket.Arn}/*'
               - Sid: PermanentS3Write
                 Effect: Allow
                 Action:

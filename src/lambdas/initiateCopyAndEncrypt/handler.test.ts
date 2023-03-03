@@ -12,7 +12,8 @@ import {
   TEST_AUDIT_BUCKET_NAME
 } from '../../utils/tests/testConstants'
 import {
-  testS3SqsEvent,
+  testTemporaryS3SqsEvent,
+  testAuditS3SqsEvent,
   wrongBucketTestS3SqsEvent
 } from '../../utils/tests/testEvents/testS3SqsEvent'
 import { handler } from './handler'
@@ -45,10 +46,29 @@ describe('InitiateCopyAndEncrypt', function () {
     mockGetS3ObjectAsStream.mockResolvedValue(s3ObjectStream)
     mockEncryptS3Object.mockResolvedValue(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
 
-    await handler(testS3SqsEvent)
+    await handler(testTemporaryS3SqsEvent)
 
     expect(mockGetS3ObjectAsStream).toHaveBeenCalledWith(
       TEST_TEMPORARY_BUCKET_NAME,
+      TEST_S3_OBJECT_KEY
+    )
+    expect(mockEncryptS3Object).toHaveBeenCalledWith(s3ObjectStream)
+    expect(mockPutS3Object).toHaveBeenCalledWith(
+      TEST_PERMANENT_BUCKET_NAME,
+      TEST_S3_OBJECT_KEY,
+      TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER
+    )
+  })
+
+  it('retrieves and copies an S3 object from the audit bucket', async () => {
+    const s3ObjectStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
+    mockGetS3ObjectAsStream.mockResolvedValue(s3ObjectStream)
+    mockEncryptS3Object.mockResolvedValue(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
+
+    await handler(testAuditS3SqsEvent)
+
+    expect(mockGetS3ObjectAsStream).toHaveBeenCalledWith(
+      TEST_AUDIT_BUCKET_NAME,
       TEST_S3_OBJECT_KEY
     )
     expect(mockEncryptS3Object).toHaveBeenCalledWith(s3ObjectStream)
