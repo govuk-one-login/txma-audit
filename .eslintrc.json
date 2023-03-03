@@ -5,6 +5,9 @@
     "eslint:recommended",
     "prettier"
   ],
+  "rules": {
+    "no-console": "error"
+  },
   "env": {
     "jest/globals": true,
     "node": true
