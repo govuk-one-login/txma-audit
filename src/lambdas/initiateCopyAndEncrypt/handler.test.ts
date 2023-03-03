@@ -1,6 +1,7 @@
 import { encryptS3Object } from '../../services/kms/encryptS3Object'
 import { getS3ObjectAsStream } from '../../services/s3/getS3ObjectAsStream'
 import { putS3Object } from '../../services/s3/putS3Object'
+import { mockLambdaContext } from '../../utils/tests/mockLambdaContext'
 import { createDataStream } from '../../utils/tests/test-helpers/test-helper'
 import {
   TEST_TEMPORARY_BUCKET_NAME,
@@ -46,7 +47,7 @@ describe('InitiateCopyAndEncrypt', function () {
     mockGetS3ObjectAsStream.mockResolvedValue(s3ObjectStream)
     mockEncryptS3Object.mockResolvedValue(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
 
-    await handler(testTemporaryS3SqsEvent)
+    await handler(testTemporaryS3SqsEvent, mockLambdaContext)
 
     expect(mockGetS3ObjectAsStream).toHaveBeenCalledWith(
       TEST_TEMPORARY_BUCKET_NAME,
@@ -65,7 +66,7 @@ describe('InitiateCopyAndEncrypt', function () {
     mockGetS3ObjectAsStream.mockResolvedValue(s3ObjectStream)
     mockEncryptS3Object.mockResolvedValue(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
 
-    await handler(testAuditS3SqsEvent)
+    await handler(testAuditS3SqsEvent, mockLambdaContext)
 
     expect(mockGetS3ObjectAsStream).toHaveBeenCalledWith(
       TEST_AUDIT_BUCKET_NAME,
@@ -80,15 +81,17 @@ describe('InitiateCopyAndEncrypt', function () {
   })
 
   it('throws an error if there is no data in the SQS Event', async () => {
-    expect(handler({ Records: [] })).rejects.toThrow('No data in event')
+    expect(handler({ Records: [] }, mockLambdaContext)).rejects.toThrow(
+      'No data in event'
+    )
     expect(mockGetS3ObjectAsStream).not.toHaveBeenCalled()
     expect(mockPutS3Object).not.toHaveBeenCalled()
   })
 
   it('throws an error if the SQS event comes from the wrong S3 bucket', async () => {
-    expect(handler(wrongBucketTestS3SqsEvent)).rejects.toThrow(
-      `Incorrect source bucket - ${TEST_WRONG_S3_BUCKET}`
-    )
+    expect(
+      handler(wrongBucketTestS3SqsEvent, mockLambdaContext)
+    ).rejects.toThrow(`Incorrect source bucket - ${TEST_WRONG_S3_BUCKET}`)
     expect(mockGetS3ObjectAsStream).not.toHaveBeenCalled()
     expect(mockPutS3Object).not.toHaveBeenCalled()
   })
