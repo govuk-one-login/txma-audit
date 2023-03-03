@@ -931,6 +931,12 @@ Resources:
                   - s3:GetObject
                 Resource:
                   - !GetAtt TemporaryMessageBatchBucket.Arn
+              - Sid: AuditS3Read
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !GetAtt MessageBatchBucket.Arn
               - Sid: PermanentS3Write
                 Effect: Allow
                 Action:
