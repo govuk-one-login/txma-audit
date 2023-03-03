@@ -1,14 +1,15 @@
-import { SQSEvent } from 'aws-lambda'
+import { SQSEvent, Context } from 'aws-lambda'
 import { getS3ObjectAsStream } from '../../services/s3/getS3ObjectAsStream'
 import { putS3Object } from '../../services/s3/putS3Object'
 import { getEnv, tryParseJSON } from '../../utils/helpers'
 import { encryptS3Object } from '../../services/kms/encryptS3Object'
-
-export const handler = async (event: SQSEvent): Promise<void> => {
-  console.log(
-    'Handling initiate copy and encrypt SQS event',
-    JSON.stringify(event, null, 2)
-  )
+import { initialiseLogger, logger } from '../../services/logger'
+export const handler = async (
+  event: SQSEvent,
+  context: Context
+): Promise<void> => {
+  initialiseLogger(context)
+  logger.info('Handling initiate copy and encrypt SQS event')
 
   if (event.Records.length === 0) {
     throw new Error('No data in event')
@@ -26,6 +27,8 @@ export const handler = async (event: SQSEvent): Promise<void> => {
   const eventS3data = eventData.Records[0].s3
   const eventBucket = eventS3data.bucket.name
   const eventKey = eventS3data.object.key
+
+  logger.info('Encrypting data', { eventBucket, eventKey })
 
   if (eventBucket !== temporaryBucket) {
     throw new Error(`Incorrect source bucket - ${eventBucket}`)

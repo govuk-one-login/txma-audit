@@ -31,6 +31,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-crypto/encrypt-node", "npm:3.1.0"],\
             ["@aws-crypto/kms-keyring-node", "npm:3.1.0"],\
             ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
             ["@jest/types", "npm:28.1.3"],\
             ["@types/aws-lambda", "npm:8.10.110"],\
@@ -253,6 +254,26 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-sdk/types", "npm:3.267.0"],\
             ["@aws-sdk/util-utf8-browser", "npm:3.259.0"],\
             ["tslib", "npm:1.14.1"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@aws-lambda-powertools/commons", [\
+        ["npm:1.6.0", {\
+          "packageLocation": "./.yarn/cache/@aws-lambda-powertools-commons-npm-1.6.0-6eda615fdc-bf2720336a.zip/node_modules/@aws-lambda-powertools/commons/",\
+          "packageDependencies": [\
+            ["@aws-lambda-powertools/commons", "npm:1.6.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@aws-lambda-powertools/logger", [\
+        ["npm:1.6.0", {\
+          "packageLocation": "./.yarn/cache/@aws-lambda-powertools-logger-npm-1.6.0-81ca0c9ffe-ce73d4b0eb.zip/node_modules/@aws-lambda-powertools/logger/",\
+          "packageDependencies": [\
+            ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
+            ["@aws-lambda-powertools/commons", "npm:1.6.0"],\
+            ["lodash.merge", "npm:4.6.2"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -4483,6 +4504,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-crypto/encrypt-node", "npm:3.1.0"],\
             ["@aws-crypto/kms-keyring-node", "npm:3.1.0"],\
             ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
             ["@jest/types", "npm:28.1.3"],\
             ["@types/aws-lambda", "npm:8.10.110"],\
