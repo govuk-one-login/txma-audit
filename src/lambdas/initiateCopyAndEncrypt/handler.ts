@@ -21,13 +21,14 @@ export const handler = async (event: SQSEvent): Promise<void> => {
   }
 
   const temporaryBucket = getEnv('TEMPORARY_BUCKET_NAME')
+  const auditBucket = getEnv('AUDIT_BUCKET_NAME')
   const permanentBucket = getEnv('PERMANENT_BUCKET_NAME')
 
   const eventS3data = eventData.Records[0].s3
   const eventBucket = eventS3data.bucket.name
   const eventKey = eventS3data.object.key
 
-  if (eventBucket !== temporaryBucket) {
+  if (eventBucket !== temporaryBucket && eventBucket !== auditBucket) {
     throw new Error(`Incorrect source bucket - ${eventBucket}`)
   }
 

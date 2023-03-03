@@ -981,6 +981,7 @@ Resources:
         Variables:
           TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
       Events:
         AuditFileReadyToEncryptEvent:

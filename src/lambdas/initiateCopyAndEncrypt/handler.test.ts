@@ -8,7 +8,8 @@ import {
   TEST_S3_OBJECT_DATA_STRING,
   TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
   TEST_S3_OBJECT_KEY,
-  TEST_WRONG_S3_BUCKET
+  TEST_WRONG_S3_BUCKET,
+  TEST_AUDIT_BUCKET_NAME
 } from '../../utils/tests/testConstants'
 import {
   testS3SqsEvent,
@@ -36,9 +37,10 @@ describe('InitiateCopyAndEncrypt', function () {
 
     process.env.TEMPORARY_BUCKET_NAME = TEST_TEMPORARY_BUCKET_NAME
     process.env.PERMANENT_BUCKET_NAME = TEST_PERMANENT_BUCKET_NAME
+    process.env.AUDIT_BUCKET_NAME = TEST_AUDIT_BUCKET_NAME
   })
 
-  it('retrieves and copies an S3 object', async () => {
+  it('retrieves and copies an S3 object from the temporary bucket', async () => {
     const s3ObjectStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
     mockGetS3ObjectAsStream.mockResolvedValue(s3ObjectStream)
     mockEncryptS3Object.mockResolvedValue(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
