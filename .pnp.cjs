@@ -34,7 +34,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
             ["@jest/types", "npm:28.1.3"],\
-            ["@types/aws-lambda", "npm:8.10.110"],\
+            ["@types/aws-lambda", "npm:8.10.111"],\
             ["@types/jest", "npm:28.1.7"],\
             ["@types/jest-when", "npm:3.5.2"],\
             ["@types/node", "npm:17.0.45"],\
@@ -3023,10 +3023,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["@types/aws-lambda", [\
-        ["npm:8.10.110", {\
-          "packageLocation": "./.yarn/cache/@types-aws-lambda-npm-8.10.110-3291cba8a5-57be339400.zip/node_modules/@types/aws-lambda/",\
+        ["npm:8.10.111", {\
+          "packageLocation": "./.yarn/cache/@types-aws-lambda-npm-8.10.111-558d196fab-160ae845d5.zip/node_modules/@types/aws-lambda/",\
           "packageDependencies": [\
-            ["@types/aws-lambda", "npm:8.10.110"]\
+            ["@types/aws-lambda", "npm:8.10.111"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -4507,7 +4507,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
             ["@jest/types", "npm:28.1.3"],\
-            ["@types/aws-lambda", "npm:8.10.110"],\
+            ["@types/aws-lambda", "npm:8.10.111"],\
             ["@types/jest", "npm:28.1.7"],\
             ["@types/jest-when", "npm:3.5.2"],\
             ["@types/node", "npm:17.0.45"],\
