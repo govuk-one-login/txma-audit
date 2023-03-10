@@ -17,6 +17,11 @@ export const handler = async (
 
   const eventData = tryParseJSON(event.Records[0].body)
 
+  if (eventData.Event === 's3:TestEvent') {
+    logger.info('Event is of type s3:TestEvent and will not be encrypted')
+    return
+  }
+
   if (!eventData.Records[0].s3) {
     throw new Error('No s3 data in event')
   }
