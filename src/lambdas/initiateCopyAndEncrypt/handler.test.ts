@@ -15,7 +15,8 @@ import {
 import {
   testTemporaryS3SqsEvent,
   testAuditS3SqsEvent,
-  wrongBucketTestS3SqsEvent
+  wrongBucketTestS3SqsEvent,
+  testS3TestEvent
 } from '../../utils/tests/testEvents/testS3SqsEvent'
 import { handler } from './handler'
 
@@ -40,6 +41,14 @@ describe('InitiateCopyAndEncrypt', function () {
     process.env.TEMPORARY_BUCKET_NAME = TEST_TEMPORARY_BUCKET_NAME
     process.env.PERMANENT_BUCKET_NAME = TEST_PERMANENT_BUCKET_NAME
     process.env.AUDIT_BUCKET_NAME = TEST_AUDIT_BUCKET_NAME
+  })
+
+  it('handles s3 testEvents emitted when a new notification link is established', async () => {
+    await handler(testS3TestEvent, mockLambdaContext)
+
+    expect(mockGetS3ObjectAsStream).not.toHaveBeenCalled()
+    expect(mockEncryptS3Object).not.toHaveBeenCalled()
+    expect(mockPutS3Object).not.toHaveBeenCalled()
   })
 
   it('retrieves and copies an S3 object from the temporary bucket', async () => {

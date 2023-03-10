@@ -68,3 +68,24 @@ export const wrongBucketTestS3SqsEvent = {
     }
   ]
 }
+
+export const testS3TestEvent = {
+  Records: [
+    {
+      messageId: '',
+      receiptHandle: '',
+      body: '{"Service":"Amazon S3","Event":"s3:TestEvent","Time":"","Bucket":"","RequestId":"","HostId":""}',
+      attributes: {
+        ApproximateReceiveCount: '1',
+        SentTimestamp: '',
+        SenderId: '',
+        ApproximateFirstReceiveTimestamp: ''
+      },
+      messageAttributes: {},
+      md5OfBody: '',
+      eventSource: '',
+      eventSourceARN: '',
+      awsRegion: ''
+    }
+  ]
+}
