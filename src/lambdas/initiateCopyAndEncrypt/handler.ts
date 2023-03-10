@@ -9,7 +9,6 @@ export const handler = async (
   context: Context
 ): Promise<void> => {
   initialiseLogger(context)
-  logger.info('Handling initiate copy and encrypt SQS event')
 
   if (event.Records.length === 0) {
     throw new Error('No data in event')
@@ -38,11 +37,18 @@ export const handler = async (
     throw new Error(`Incorrect source bucket - ${eventBucket}`)
   }
 
-  logger.info('Encrypting data', { eventBucket, eventKey })
-
   const temporaryDataStream = await getS3ObjectAsStream(eventBucket, eventKey)
+  logger.info('Successfully retrieved data', {
+    sourceBucket: eventBucket,
+    key: eventKey
+  })
 
   const encryptedData = await encryptS3Object(temporaryDataStream)
+  logger.info('Successfully encrypted data', { key: eventKey })
 
   await putS3Object(permanentBucket, eventKey, encryptedData)
+  logger.info('Successfully put encrypted data', {
+    destinationBucket: permanentBucket,
+    key: eventKey
+  })
 }
