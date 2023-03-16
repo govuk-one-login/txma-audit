@@ -9,7 +9,6 @@ export const handler = async (
   context: Context
 ): Promise<void> => {
   initialiseLogger(context)
-  logger.info('Handling initiate copy and encrypt SQS event')
 
   if (event.Records.length === 0) {
     throw new Error('No data in event')
@@ -17,26 +16,39 @@ export const handler = async (
 
   const eventData = tryParseJSON(event.Records[0].body)
 
+  if (eventData.Event === 's3:TestEvent') {
+    logger.info('Event is of type s3:TestEvent and will not be encrypted')
+    return
+  }
+
   if (!eventData.Records[0].s3) {
     throw new Error('No s3 data in event')
   }
 
   const temporaryBucket = getEnv('TEMPORARY_BUCKET_NAME')
+  const auditBucket = getEnv('AUDIT_BUCKET_NAME')
   const permanentBucket = getEnv('PERMANENT_BUCKET_NAME')
 
   const eventS3data = eventData.Records[0].s3
   const eventBucket = eventS3data.bucket.name
   const eventKey = eventS3data.object.key
 
-  logger.info('Encrypting data', { eventBucket, eventKey })
-
-  if (eventBucket !== temporaryBucket) {
+  if (eventBucket !== temporaryBucket && eventBucket !== auditBucket) {
     throw new Error(`Incorrect source bucket - ${eventBucket}`)
   }
 
   const temporaryDataStream = await getS3ObjectAsStream(eventBucket, eventKey)
+  logger.info('Successfully retrieved data', {
+    sourceBucket: eventBucket,
+    key: eventKey
+  })
 
   const encryptedData = await encryptS3Object(temporaryDataStream)
+  logger.info('Successfully encrypted data', { key: eventKey })
 
   await putS3Object(permanentBucket, eventKey, encryptedData)
+  logger.info('Successfully put encrypted data', {
+    destinationBucket: permanentBucket,
+    key: eventKey
+  })
 }

@@ -197,13 +197,16 @@ Resources:
               - TransitionInDays: 90
                 StorageClass: GLACIER
       NotificationConfiguration:
-        QueueConfigurations: !If
-          - IsProductionOrStaging
-          - - Event: 's3:ObjectCreated:*'
-              Queue: '{{resolve:ssm:CSLSS3QueueARN}}'
-            - Event: 's3:ObjectRestore:*'
-              Queue: '{{resolve:ssm:CSLSS3QueueARN}}'
-          - - !Ref AWS::NoValue
+        QueueConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
+          - !If
+            - IsProductionOrStaging
+            - - Event: 's3:ObjectCreated:*'
+                Queue: '{{resolve:ssm:CSLSS3QueueARN}}'
+              - Event: 's3:ObjectRestore:*'
+                Queue: '{{resolve:ssm:CSLSS3QueueARN}}'
+            - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -751,10 +754,24 @@ Resources:
             Resource:
               - !GetAtt AuditFileReadyToEncryptQueue.Arn
             Principal:
-              AWS: '*'
+              Service:
+                - s3.amazonaws.com
             Condition:
               ArnLike:
                 aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-${Environment}-temporary-message-batch'
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+          - Effect: 'Allow'
+            Action:
+              - sqs:*
+            Resource:
+              - !GetAtt AuditFileReadyToEncryptQueue.Arn
+            Principal:
+              Service:
+                - s3.amazonaws.com
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-${Environment}-message-batch'
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
 
@@ -915,6 +932,14 @@ Resources:
                   - s3:GetObject
                 Resource:
                   - !GetAtt TemporaryMessageBatchBucket.Arn
+                  - !Sub '${TemporaryMessageBatchBucket.Arn}/*'
+              - Sid: AuditS3Read
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !GetAtt MessageBatchBucket.Arn
+                  - !Sub '${MessageBatchBucket.Arn}/*'
               - Sid: PermanentS3Write
                 Effect: Allow
                 Action:
@@ -965,6 +990,7 @@ Resources:
         Variables:
           TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
       Events:
         AuditFileReadyToEncryptEvent:
