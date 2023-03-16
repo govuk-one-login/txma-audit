@@ -754,7 +754,8 @@ Resources:
             Resource:
               - !GetAtt AuditFileReadyToEncryptQueue.Arn
             Principal:
-              AWS: '*'
+              Service:
+                - s3.amazonaws.com
             Condition:
               ArnLike:
                 aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-${Environment}-temporary-message-batch'
@@ -766,7 +767,8 @@ Resources:
             Resource:
               - !GetAtt AuditFileReadyToEncryptQueue.Arn
             Principal:
-              AWS: '*'
+              Service:
+                - s3.amazonaws.com
             Condition:
               ArnLike:
                 aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-${Environment}-message-batch'
