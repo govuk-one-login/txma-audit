@@ -172,6 +172,8 @@ Resources:
       TargetKeyId: !Ref AuditFileReadyToEncryptQueueKmsKey
 
   MessageBatchBucket:
+    DependsOn:
+      - AuditFileReadyToEncryptQueuePolicy
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch
@@ -761,7 +763,7 @@ Resources:
                 - s3.amazonaws.com
             Condition:
               ArnLike:
-                aws:SourceArn: !GetAtt TemporaryMessageBatchBucket.Arn
+                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-temporary-message-batch
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
           - Effect: 'Allow'
@@ -774,13 +776,15 @@ Resources:
                 - s3.amazonaws.com
             Condition:
               ArnLike:
-                aws:SourceArn: !GetAtt MessageBatchBucket.Arn
+                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
 
   # S3 resources
 
   TemporaryMessageBatchBucket:
+    DependsOn:
+      - AuditFileReadyToEncryptQueuePolicy
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-temporary-message-batch
