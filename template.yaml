@@ -761,7 +761,7 @@ Resources:
                 - s3.amazonaws.com
             Condition:
               ArnLike:
-                aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-${Environment}-temporary-message-batch'
+                aws:SourceArn: !GetAtt TemporaryMessageBatchBucket.Arn
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
           - Effect: 'Allow'
@@ -774,7 +774,7 @@ Resources:
                 - s3.amazonaws.com
             Condition:
               ArnLike:
-                aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-${Environment}-message-batch'
+                aws:SourceArn: !GetAtt MessageBatchBucket.Arn
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
 
