@@ -953,6 +953,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !GetAtt PermanentMessageBatchBucket.Arn
+                  - !Sub '${PermanentMessageBatchBucket.Arn}/*'
               - Sid: UseSqsKmsKey
                 Effect: Allow
                 Action:
