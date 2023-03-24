@@ -1,13 +1,11 @@
-import { _Object } from '@aws-sdk/client-s3'
 import { Context } from 'aws-lambda'
 import { initialiseLogger, logger } from '../../services/logger'
 import { startCopyBatchJob } from './startCopyBatchJob'
 import { startRestoreBatchJob } from './startRestoreBatchJob'
-import { listAuditFilesForDateRange } from './listAuditFilesForDateRange'
-import { fileAlreadyEncrypted } from './fileAlreadyEncrypted'
+import { listFilesToEncrypt } from './listFilesToEncrypt'
 
 export const handler = async (
-  parameters: { dateFrom: string; dateTo: string },
+  parameters: { dateFrom: string; dateTo: string; notTestMode: boolean },
   context: Context
 ) => {
   initialiseLogger(context)
@@ -15,19 +13,15 @@ export const handler = async (
     dateFrom: parameters.dateFrom,
     dateTo: parameters.dateTo
   })
-  const fileList = await filterFileListForAlreadyEncryptedData(
-    await listAuditFilesForDateRange(parameters)
+  const listFilesResults = await listFilesToEncrypt(parameters)
+  logger.info(
+    `${listFilesResults.standardFiles} standard files and ${listFilesResults.glacierFiles} glacier files found`
   )
-  const glacierFiles = fileList.filter((f) => f.StorageClass === 'GLACIER')
-  const standardTierFiles = fileList.filter(
-    (f) => f.StorageClass === 'STANDARD'
-  )
-  await startCopyBatchJob(standardTierFiles.map((f) => f.Key as string))
-  await startRestoreBatchJob(glacierFiles.map((f) => f.Key as string))
-}
-
-const filterFileListForAlreadyEncryptedData = async (
-  fileList: _Object[]
-): Promise<_Object[]> => {
-  return fileList.filter((file) => !!file.Key && fileAlreadyEncrypted(file.Key))
+  if (!parameters.notTestMode) {
+    logger.info('Not starting batch jobs because this was a test mode run')
+  } else {
+    logger.info('Starting batch jobs')
+    await startRestoreBatchJob(listFilesResults.glacierFiles)
+    await startCopyBatchJob(listFilesResults.standardFiles)
+  }
 }
