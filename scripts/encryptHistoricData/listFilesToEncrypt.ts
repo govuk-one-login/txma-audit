@@ -1,5 +1,5 @@
 import { _Object, StorageClass } from '@aws-sdk/client-s3'
-import { getEnv } from '../../utils/helpers'
+import { getEnv } from '../../src/utils/helpers'
 import { listAuditFilesForDateRange } from './listAuditFilesForDateRange'
 
 export const listFilesToEncrypt = async (parameters: {

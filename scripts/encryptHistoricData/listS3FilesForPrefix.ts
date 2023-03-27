@@ -4,7 +4,7 @@ import {
   ListObjectsV2CommandInput,
   _Object
 } from '@aws-sdk/client-s3'
-import { getEnv } from '../../utils/helpers'
+import { getEnv } from '../../src/utils/helpers'
 
 export const listS3FilesForPrefix = async (
   input: ListObjectsV2CommandInput,
