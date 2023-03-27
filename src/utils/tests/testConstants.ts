@@ -9,3 +9,5 @@ export const TEST_GENERATOR_KEY_ID = 'testGeneratorKeyId'
 export const TEST_S3_OBJECT_KEY = 'testKey'
 export const TEST_WRONG_S3_BUCKET = 'wrongTestBucket'
 export const TEST_AUDIT_BUCKET_NAME = 'testAuditBucket'
+export const TEST_AUDIT_BUCKET_ARN = `arn:aws:s3:::${TEST_AUDIT_BUCKET_NAME}`
+export const TEST_S3_BATCH_TASK_ID = 's3BatchTaskId'
