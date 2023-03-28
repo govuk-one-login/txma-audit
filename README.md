@@ -148,6 +148,32 @@ aws cloudformation delete-stack --stack-name <stack-name>
 
 You can find the stack name defined in the files: `samconfig.toml`
 
+## Legacy data encryption command-line tool
+
+Our audit data is in the process of being encrypted. New data is encrypted as it comes in, but we need to back-encrypt all our existing data.
+To do this, we've made a command-line tool.
+Before you use it, you need to set these environment variables in your shell.
+
+- LEGACY_AUDIT_BUCKET_NAME=audit-<ENVIRONMENT>-message-batch
+- AUDIT_PERMANENT_BUCKET_NAME=audit-<ENVIRONMENT>-permanent-message-batch
+- BATCH_ENCRYPT_LAMBDA_ARN=arn:aws:lambda:eu-west-2:<ACCOUNT_ID>:function:di-txma-historic-encrypt-batch
+- BATCH_JOB_ROLE_ARN=arn:aws:iam::<ACCOUNT_ID>:role/di-txma-historic-encrypt-batch-jobs-role
+- BATCH_JOB_MANIFEST_BUCKET_ARN=arn:aws:s3:::txma-data-analysis-<ENVIRONMENT>-batch-job-manifest-bucket
+- BATCH_JOB_MANIFEST_BUCKET_NAME=txma-data-analysis-<ENVIRONMENT>-batch-job-manifest-bucket
+- AWS_ACCOUNT_ID=<ACCOUNT_ID>
+- AWS_REGION=eu-west-2
+
+It accepts three arguments, and has two modes.
+If you just provide a start and end date:
+
+```
+yarn historicEncrypt --startDate 2022-08-02 --endDate 2022-08-03
+```
+
+it will scan through the files in the legacy message batch bucket and permanent message batch bucket and tell you if anything needs to be encrypted. This is intended as a quick test.
+
+If you pass the `--startNow` it will actually start the necessary batch jobs to trigger encryption of the data
+
 ## Resources
 
 See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
