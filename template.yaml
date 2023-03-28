@@ -199,14 +199,13 @@ Resources:
               - TransitionInDays: 90
                 StorageClass: GLACIER
       NotificationConfiguration:
+        # TODO: reinstate this once circular dependency resolved
+        # LambdaConfigurations:
+        #   - Event: s3:ObjectRestore:Completed
+        #     Function: !GetAtt HistoricEncryptGlacierRestoreFunction.Arn
         QueueConfigurations:
           - Event: 's3:ObjectCreated:*'
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
-          - !If
-            - IsProductionOrStaging
-            - Event: 's3:ObjectRestore:*'
-              Queue: '{{resolve:ssm:CSLSS3QueueARN}}'
-            - !Ref AWS::NoValue
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -1004,6 +1003,203 @@ Resources:
     DeadLetterQueue:
       Type: SQS
       TargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
+  ########################################
+  # Encrypt historic data lambdas starts #
+  ########################################
+  HistoricEncryptGlacierRestoreFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    #checkov:skip=CKV_AWS_116:DLQ not required
+    #checkov:skip=CKV_AWS_117:VPC not required
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 1536
+      FunctionName: di-txma-historic-encrypt-restore
+      Handler: historicEncryptGlacierRestore.handler
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+      Environment:
+        Variables:
+          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
+          GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
+      Policies:
+        - Statement:
+            - Sid: AuditS3Read
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource:
+                - !GetAtt MessageBatchBucket.Arn
+                - !Sub '${MessageBatchBucket.Arn}/*'
+            - Sid: PermanentS3Write
+              Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource:
+                - !GetAtt PermanentMessageBatchBucket.Arn
+                - !Sub '${PermanentMessageBatchBucket.Arn}/*'
+            - Sid: Logs
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !GetAtt HistoricEncryptGlacierRestoreLogs.Arn
+            - Sid: UseEncryptionGeneratorKmsKey
+              Effect: Allow
+              Action:
+                - kms:Decrypt
+                - kms:GenerateDataKey*
+                - kms:Encrypt*
+              Resource:
+                - !GetAtt EncryptionGeneratorKmsKey.Arn
+
+  HistoricEncryptGlacierRestoreLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: !Sub '/aws/lambda/di-txma-historic-encrypt-restore'
+      RetentionInDays: 7
+
+  HistoricEncryptBatchFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    #checkov:skip=CKV_AWS_116:DLQ not required
+    #checkov:skip=CKV_AWS_117:VPC not required
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 1536
+      FunctionName: di-txma-historic-encrypt-batch
+      Handler: historicEncryptBatch.handler
+      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
+      Environment:
+        Variables:
+          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
+          GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
+      Policies:
+        - Statement:
+            - Sid: AuditS3Read
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource:
+                - !GetAtt MessageBatchBucket.Arn
+                - !Sub '${MessageBatchBucket.Arn}/*'
+            - Sid: PermanentS3Write
+              Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource:
+                - !GetAtt PermanentMessageBatchBucket.Arn
+                - !Sub '${PermanentMessageBatchBucket.Arn}/*'
+            - Sid: Logs
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !GetAtt HistoricEncryptBatchLogs.Arn
+            - Sid: UseEncryptionGeneratorKmsKey
+              Effect: Allow
+              Action:
+                - kms:Decrypt
+                - kms:GenerateDataKey*
+                - kms:Encrypt*
+              Resource:
+                - !GetAtt EncryptionGeneratorKmsKey.Arn
+
+  HistoricEncryptBatchLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      LogGroupName: !Sub '/aws/lambda/di-txma-historic-encrypt-batch'
+      RetentionInDays: 7
+
+  HistoricEncryptBatchJobsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: di-txma-historic-encrypt-batch-jobs-role
+      PermissionsBoundary:
+        !If [
+          UsePermissionsBoundary,
+          !Ref PermissionsBoundary,
+          !Ref AWS::NoValue
+        ]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - batchoperations.s3.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AllowS3GlacierRestore
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowAuditBucketRestore
+                Effect: Allow
+                Action:
+                  - s3:RestoreObject
+                Resource:
+                  - !GetAtt MessageBatchBucket.Arn
+        - PolicyName: AllowManifestOperations
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowManifestBucketRead
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource: '{{resolve:ssm:BatchJobManifestBucketArn}}/*'
+              - Sid: AllowManifestBucketWriteForReports
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: '{{resolve:ssm:BatchJobManifestBucketArn}}/*'
+        - PolicyName: AllowEncryptOperations
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowEncryptLambdaExecute
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt HistoricEncryptBatchFunction.Arn
+
+  HistoricEncryptGlacierRestoreRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: di-txma-historic-encrypt-glacier-restore-role
+      PermissionsBoundary:
+        !If [
+          UsePermissionsBoundary,
+          !Ref PermissionsBoundary,
+          !Ref AWS::NoValue
+        ]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - s3.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AllowEncryptOperations
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowEncryptLambdaExecute
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt HistoricEncryptGlacierRestoreFunction.Arn
+
+  ######################################
+  # Encrypt historic data lambdas ends #
+  ######################################
 
   ########
   # CSLS #

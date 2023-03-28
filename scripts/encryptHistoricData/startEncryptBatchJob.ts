@@ -7,7 +7,7 @@ import {
 import { getEnv } from '../../src/utils/helpers'
 import { writeJobManifestFile } from './writeJobManifestFile'
 
-export const startCopyBatchJob = async (s3FileKeys: string[]) => {
+export const startEncryptBatchJob = async (s3FileKeys: string[]) => {
   if (s3FileKeys.length === 0) {
     console.log(
       'Not starting copy batch job because there were no files to copy'
@@ -23,15 +23,12 @@ export const startCopyBatchJob = async (s3FileKeys: string[]) => {
     s3FileKeys,
     manifestFileName
   )
-  const jobId = await createS3TransferBatchJob(
-    manifestFileName,
-    manifestFileEtag
-  )
+  const jobId = await createEncryptBatchJob(manifestFileName, manifestFileEtag)
 
-  console.log('Started S3 copy job', { jobId })
+  console.log('Started encrypt job', { jobId })
 }
 
-const createS3TransferBatchJob = async (
+const createEncryptBatchJob = async (
   manifestFileName: string,
   manifestFileEtag: string
 ) => {
@@ -44,8 +41,8 @@ const createS3TransferBatchJob = async (
     RoleArn: getEnv('BATCH_JOB_ROLE_ARN'),
     Priority: 1,
     Operation: {
-      S3PutObjectCopy: {
-        TargetResource: getEnv('TEMPORARY_MESSAGE_BATCH_BUCKET_ARN')
+      LambdaInvoke: {
+        FunctionArn: getEnv('BATCH_ENCRYPT_LAMBDA_ARN')
       }
     },
     Report: {

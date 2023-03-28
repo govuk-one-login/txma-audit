@@ -1,4 +1,4 @@
-import { startCopyBatchJob } from './startCopyBatchJob'
+import { startEncryptBatchJob } from './startEncryptBatchJob'
 import { startRestoreBatchJob } from './startRestoreBatchJob'
 import { listFilesToEncrypt } from './listFilesToEncrypt'
 import { program } from 'commander'
@@ -21,7 +21,7 @@ export const startEncryption = async (parameters: {
   } else {
     console.log('Starting batch jobs')
     await startRestoreBatchJob(listFilesResults.glacierFiles)
-    await startCopyBatchJob(listFilesResults.standardFiles)
+    await startEncryptBatchJob(listFilesResults.standardFiles)
   }
 }
 

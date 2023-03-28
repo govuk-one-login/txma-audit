@@ -22,7 +22,7 @@ export const handler = async (
 
   try {
     await encryptFileForTask(event.tasks[0])
-    logger.info('Decrypt and copy completed successfully', {
+    logger.info('Encrypt and copy completed successfully', {
       s3Key: event.tasks[0].s3Key
     })
   } catch (err) {
