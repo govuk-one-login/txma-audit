@@ -1156,7 +1156,7 @@ Resources:
                 Action:
                   - s3:RestoreObject
                 Resource:
-                  - !GetAtt MessageBatchBucket.Arn
+                  - !Sub '${MessageBatchBucket.Arn}/*'
         - PolicyName: AllowManifestOperations
           PolicyDocument:
             Version: '2012-10-17'
