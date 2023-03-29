@@ -1018,6 +1018,7 @@ Resources:
       Environment:
         Variables:
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           AUDIT_BUCKET_NAME: !Sub ${AWS::StackName}-${Environment}-message-batch
           GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
       Policies:
@@ -1029,10 +1030,14 @@ Resources:
               Resource:
                 - !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
                 - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch/*'
-            - Sid: PermanentS3Write
+            - Sid: PermanentS3ReadWrite
               Effect: Allow
               Action:
                 - s3:PutObject
+                # We need GetObject so we can tell if the file is already in the permanent bucket
+                - s3:GetObject
+                # Adding the ListBucket permission ensures that when a file doesn't exist, we get a 404 instead of a 403
+                - s3:ListBucket
               Resource:
                 - !GetAtt PermanentMessageBatchBucket.Arn
                 - !Sub '${PermanentMessageBatchBucket.Arn}/*'
@@ -1081,6 +1086,7 @@ Resources:
       Environment:
         Variables:
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
       Policies:
