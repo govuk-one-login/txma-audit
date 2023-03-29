@@ -16,13 +16,13 @@ jest.mock('../../sharedServices/encryptAuditData', () => ({
   encryptAuditData: jest.fn()
 }))
 
-describe('handler', () => {
+describe('historicEncryptBatch', () => {
   beforeEach(() => {
     jest.resetAllMocks()
     jest.spyOn(logger, 'error')
   })
 
-  it('throws an error if there is no data in the SQS Event', async () => {
+  it('throws an error if there is no data in the event', async () => {
     expect(handler(emptyTestS3BatchEvent, mockLambdaContext)).rejects.toThrow(
       'No tasks in event'
     )

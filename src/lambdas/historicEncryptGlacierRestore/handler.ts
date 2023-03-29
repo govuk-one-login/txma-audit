@@ -6,10 +6,9 @@ import { permanentBucketFileExists } from './permanentBucketFileExists'
 export const handler = async (event: S3Event, context: Context) => {
   initialiseLogger(context)
   if (!event.Records || event.Records.length !== 1) {
-    logger.error(
-      `Event record length was '${event.Records.length}' not 1, or no Records property found, cannot continue`
+    throw Error(
+      `Event record length was ${event.Records.length} not 1, or no Records property found, cannot continue`
     )
-    return
   }
 
   const s3Data = event.Records[0].s3
