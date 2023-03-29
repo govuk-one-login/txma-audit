@@ -1176,35 +1176,6 @@ Resources:
                   - lambda:InvokeFunction
                 Resource: !GetAtt HistoricEncryptBatchFunction.Arn
 
-  HistoricEncryptGlacierRestoreRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: di-txma-historic-encrypt-glacier-restore-role
-      PermissionsBoundary:
-        !If [
-          UsePermissionsBoundary,
-          !Ref PermissionsBoundary,
-          !Ref AWS::NoValue
-        ]
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - s3.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: AllowEncryptOperations
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: AllowEncryptLambdaExecute
-                Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource: !GetAtt HistoricEncryptGlacierRestoreFunction.Arn
-
   ######################################
   # Encrypt historic data lambdas ends #
   ######################################
