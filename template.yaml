@@ -199,10 +199,9 @@ Resources:
               - TransitionInDays: 90
                 StorageClass: GLACIER
       NotificationConfiguration:
-        # TODO: reinstate this once circular dependency resolved
-        # LambdaConfigurations:
-        #   - Event: s3:ObjectRestore:Completed
-        #     Function: !GetAtt HistoricEncryptGlacierRestoreFunction.Arn
+        LambdaConfigurations:
+          - Event: s3:ObjectRestore:Completed
+            Function: !GetAtt HistoricEncryptGlacierRestoreFunction.Arn
         QueueConfigurations:
           - Event: 's3:ObjectCreated:*'
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
@@ -1019,7 +1018,7 @@ Resources:
       Environment:
         Variables:
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
-          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
+          AUDIT_BUCKET_NAME: !Sub ${AWS::StackName}-${Environment}-message-batch
           GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
       Policies:
         - Statement:
@@ -1028,8 +1027,8 @@ Resources:
               Action:
                 - s3:GetObject
               Resource:
-                - !GetAtt MessageBatchBucket.Arn
-                - !Sub '${MessageBatchBucket.Arn}/*'
+                - !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
+                - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch/*'
             - Sid: PermanentS3Write
               Effect: Allow
               Action:
@@ -1059,6 +1058,15 @@ Resources:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
       LogGroupName: !Sub '/aws/lambda/di-txma-historic-encrypt-restore'
       RetentionInDays: 7
+
+  GlacierRestoreLambdaPolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HistoricEncryptGlacierRestoreFunction
+      Principal: 's3.amazonaws.com'
+      SourceAccount: !Sub ${AWS::AccountId}
+      SourceArn: !GetAtt MessageBatchBucket.Arn
 
   HistoricEncryptBatchFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
