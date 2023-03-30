@@ -1,6 +1,9 @@
+import { StorageClass } from '@aws-sdk/client-s3'
 import { Context, S3Event } from 'aws-lambda'
 import { initialiseLogger, logger } from '../../services/logger'
+import { s3ChangeStorageClass } from '../../services/s3/s3ChangeStorageClass'
 import { encryptAuditData } from '../../sharedServices/encryptAuditData'
+import { getEnv } from '../../utils/helpers'
 import { permanentBucketFileExists } from './permanentBucketFileExists'
 
 export const handler = async (event: S3Event, context: Context) => {
@@ -22,4 +25,10 @@ export const handler = async (event: S3Event, context: Context) => {
   }
 
   await encryptAuditData(s3Data.bucket.name, objectKey)
+
+  await s3ChangeStorageClass(
+    getEnv('PERMANENT_BUCKET_NAME'),
+    objectKey,
+    StorageClass.GLACIER
+  )
 }
