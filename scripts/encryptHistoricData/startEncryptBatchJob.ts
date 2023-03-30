@@ -16,8 +16,7 @@ export const startEncryptBatchJob = async (s3FileKeys: string[]) => {
   }
   console.log(`Start copy batch job for ${s3FileKeys.length} files`)
 
-  // TODO make this file name use the start and end dates
-  const manifestFileName = `historial-encrypt-job.csv`
+  const manifestFileName = `historial-encrypt-job-${Date.now()}.csv`
   const manifestFileEtag = await writeJobManifestFile(
     getEnv('LEGACY_AUDIT_BUCKET_NAME'),
     s3FileKeys,
@@ -36,8 +35,6 @@ const createEncryptBatchJob = async (
   const input = {
     ConfirmationRequired: false,
     AccountId: getEnv('AWS_ACCOUNT_ID'),
-    // TODO: use start date and end date to make the ClientRequestToken
-    //ClientRequestToken: `copy-${zendeskTicketId}`,
     RoleArn: getEnv('BATCH_JOB_ROLE_ARN'),
     Priority: 1,
     Operation: {
