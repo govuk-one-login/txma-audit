@@ -2,7 +2,10 @@ export const getAuditFilePrefixesForDates = (
   dateFrom: string,
   dateTo: string
 ): string[] => {
-  return generateTimeRange(getEpochDate(dateFrom), getEpochDate(dateTo)).map(
+  return generateDateListForRange(
+    getEpochDate(dateFrom),
+    getEpochDate(dateTo)
+  ).map(
     (date) =>
       `firehose/${date.getFullYear()}/${padDateComponentToTwoDigits(
         date.getMonth() + 1
@@ -13,20 +16,22 @@ export const getAuditFilePrefixesForDates = (
 const padDateComponentToTwoDigits = (dateComponent: number) =>
   dateComponent.toString().padStart(2, '0')
 
-const generateTimeRange = (epochStartDate: number, epochEndDate: number) => {
+const generateDateListForRange = (
+  epochStartDate: number,
+  epochEndDate: number
+) => {
   const currentDate = new Date(epochStartDate)
 
-  // Set end to be the last hour in the last day
-  const lastHour = new Date(epochEndDate)
+  const lastDay = new Date(epochEndDate)
 
-  const timeRange: Date[] = []
+  const dateRange: Date[] = []
 
-  while (currentDate <= new Date(lastHour)) {
-    timeRange.push(new Date(currentDate))
+  while (currentDate <= new Date(lastDay)) {
+    dateRange.push(new Date(currentDate))
     currentDate.setUTCDate(currentDate.getUTCDate() + 1)
   }
 
-  return timeRange
+  return dateRange
 }
 
 const getEpochDate = (dateString: string): number => {
