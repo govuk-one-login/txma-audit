@@ -31,4 +31,7 @@ export const handler = async (event: S3Event, context: Context) => {
     objectKey,
     StorageClass.GLACIER
   )
+  logger.info('Successfully sent file back to Glacier storage', {
+    key: objectKey
+  })
 }
