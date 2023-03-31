@@ -1012,7 +1012,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       MemorySize: 1536
-      FunctionName: di-txma-historic-encrypt-restore
+      FunctionName: !Sub ${AWS::StackName}-historic-encrypt-restore
       Handler: historicEncryptGlacierRestore.handler
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
       Environment:
@@ -1061,17 +1061,17 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: !Sub '/aws/lambda/di-txma-historic-encrypt-restore'
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-historic-encrypt-restore'
       RetentionInDays: 7
 
-  GlacierRestoreLambdaPolicy:
+  GlacierRestoreLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref HistoricEncryptGlacierRestoreFunction
       Principal: 's3.amazonaws.com'
       SourceAccount: !Sub ${AWS::AccountId}
-      SourceArn: !GetAtt MessageBatchBucket.Arn
+      SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
 
   HistoricEncryptBatchFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
@@ -1080,7 +1080,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       MemorySize: 1536
-      FunctionName: di-txma-historic-encrypt-batch
+      FunctionName: !Sub ${AWS::StackName}-historic-encrypt-batch
       Handler: historicEncryptBatch.handler
       KmsKeyArn: !GetAtt LambdaKMSKey.Arn
       Environment:
@@ -1125,7 +1125,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: !Sub '/aws/lambda/di-txma-historic-encrypt-batch'
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-historic-encrypt-batch'
       RetentionInDays: 7
 
   HistoricEncryptBatchJobsRole:
