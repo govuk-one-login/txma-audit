@@ -30,7 +30,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["@aws-crypto/encrypt-node", "npm:3.1.0"],\
             ["@aws-crypto/kms-keyring-node", "npm:3.1.0"],\
-            ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
             ["@aws-sdk/client-s3-control", "npm:3.299.0"],\
@@ -161,6 +161,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@aws-crypto-material-management-npm-3.1.0-3ac98d4b22-f0ad1b4e30.zip/node_modules/@aws-crypto/material-management/",\
           "packageDependencies": [\
             ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["asn1.js", "npm:5.4.1"],\
+            ["bn.js", "npm:5.2.1"],\
+            ["tslib", "npm:2.5.0"]\
+          ],\
+          "linkType": "HARD"\
+        }],\
+        ["npm:3.2.0", {\
+          "packageLocation": "./.yarn/cache/@aws-crypto-material-management-npm-3.2.0-1e2b2f8093-e5cbb18c7a.zip/node_modules/@aws-crypto/material-management/",\
+          "packageDependencies": [\
+            ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["asn1.js", "npm:5.4.1"],\
             ["bn.js", "npm:5.2.1"],\
             ["tslib", "npm:2.5.0"]\
@@ -5324,7 +5334,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["di-txma-audit", "workspace:."],\
             ["@aws-crypto/encrypt-node", "npm:3.1.0"],\
             ["@aws-crypto/kms-keyring-node", "npm:3.1.0"],\
-            ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
             ["@aws-sdk/client-s3-control", "npm:3.299.0"],\
