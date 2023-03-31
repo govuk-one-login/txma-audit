@@ -779,7 +779,6 @@ Resources:
   TemporaryMessageBatchBucket:
     DependsOn:
       - AuditFileReadyToEncryptQueuePolicy
-      -
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-temporary-message-batch
