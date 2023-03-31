@@ -29,7 +29,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./",\
           "packageDependencies": [\
             ["@aws-crypto/encrypt-node", "npm:3.1.0"],\
-            ["@aws-crypto/kms-keyring-node", "npm:3.1.0"],\
+            ["@aws-crypto/kms-keyring-node", "npm:3.2.0"],\
             ["@aws-crypto/material-management", "npm:3.1.0"],\
             ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
@@ -133,23 +133,23 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["@aws-crypto/kms-keyring", [\
-        ["npm:3.1.0", {\
-          "packageLocation": "./.yarn/cache/@aws-crypto-kms-keyring-npm-3.1.0-7548557e5e-969e29f934.zip/node_modules/@aws-crypto/kms-keyring/",\
+        ["npm:3.2.0", {\
+          "packageLocation": "./.yarn/cache/@aws-crypto-kms-keyring-npm-3.2.0-e9d44b20ba-5394babb50.zip/node_modules/@aws-crypto/kms-keyring/",\
           "packageDependencies": [\
-            ["@aws-crypto/kms-keyring", "npm:3.1.0"],\
-            ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["@aws-crypto/kms-keyring", "npm:3.2.0"],\
+            ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["tslib", "npm:2.5.0"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@aws-crypto/kms-keyring-node", [\
-        ["npm:3.1.0", {\
-          "packageLocation": "./.yarn/cache/@aws-crypto-kms-keyring-node-npm-3.1.0-2c639444f7-40162c1a34.zip/node_modules/@aws-crypto/kms-keyring-node/",\
+        ["npm:3.2.0", {\
+          "packageLocation": "./.yarn/cache/@aws-crypto-kms-keyring-node-npm-3.2.0-7c2fa844fe-029837b2d0.zip/node_modules/@aws-crypto/kms-keyring-node/",\
           "packageDependencies": [\
-            ["@aws-crypto/kms-keyring-node", "npm:3.1.0"],\
-            ["@aws-crypto/kms-keyring", "npm:3.1.0"],\
-            ["@aws-crypto/material-management-node", "npm:3.1.0"],\
+            ["@aws-crypto/kms-keyring-node", "npm:3.2.0"],\
+            ["@aws-crypto/kms-keyring", "npm:3.2.0"],\
+            ["@aws-crypto/material-management-node", "npm:3.2.0"],\
             ["aws-sdk", "npm:2.1313.0"],\
             ["tslib", "npm:2.5.0"]\
           ],\
@@ -161,6 +161,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@aws-crypto-material-management-npm-3.1.0-3ac98d4b22-f0ad1b4e30.zip/node_modules/@aws-crypto/material-management/",\
           "packageDependencies": [\
             ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["asn1.js", "npm:5.4.1"],\
+            ["bn.js", "npm:5.2.1"],\
+            ["tslib", "npm:2.5.0"]\
+          ],\
+          "linkType": "HARD"\
+        }],\
+        ["npm:3.2.0", {\
+          "packageLocation": "./.yarn/cache/@aws-crypto-material-management-npm-3.2.0-1e2b2f8093-e5cbb18c7a.zip/node_modules/@aws-crypto/material-management/",\
+          "packageDependencies": [\
+            ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["asn1.js", "npm:5.4.1"],\
             ["bn.js", "npm:5.2.1"],\
             ["tslib", "npm:2.5.0"]\
@@ -179,6 +189,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["tslib", "npm:2.5.0"]\
           ],\
           "linkType": "HARD"\
+        }],\
+        ["npm:3.2.0", {\
+          "packageLocation": "./.yarn/cache/@aws-crypto-material-management-node-npm-3.2.0-5ee58ddbbc-5d0533ac43.zip/node_modules/@aws-crypto/material-management-node/",\
+          "packageDependencies": [\
+            ["@aws-crypto/material-management-node", "npm:3.2.0"],\
+            ["@aws-crypto/hkdf-node", "npm:3.0.0"],\
+            ["@aws-crypto/material-management", "npm:3.2.0"],\
+            ["@aws-crypto/serialize", "npm:3.2.0"],\
+            ["tslib", "npm:2.5.0"]\
+          ],\
+          "linkType": "HARD"\
         }]\
       ]],\
       ["@aws-crypto/serialize", [\
@@ -187,6 +208,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["@aws-crypto/serialize", "npm:3.1.0"],\
             ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["asn1.js", "npm:5.4.1"],\
+            ["bn.js", "npm:5.2.1"],\
+            ["tslib", "npm:2.5.0"]\
+          ],\
+          "linkType": "HARD"\
+        }],\
+        ["npm:3.2.0", {\
+          "packageLocation": "./.yarn/cache/@aws-crypto-serialize-npm-3.2.0-de8ee90d1a-41a4c2d186.zip/node_modules/@aws-crypto/serialize/",\
+          "packageDependencies": [\
+            ["@aws-crypto/serialize", "npm:3.2.0"],\
+            ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["asn1.js", "npm:5.4.1"],\
             ["bn.js", "npm:5.2.1"],\
             ["tslib", "npm:2.5.0"]\
@@ -5323,7 +5355,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["di-txma-audit", "workspace:."],\
             ["@aws-crypto/encrypt-node", "npm:3.1.0"],\
-            ["@aws-crypto/kms-keyring-node", "npm:3.1.0"],\
+            ["@aws-crypto/kms-keyring-node", "npm:3.2.0"],\
             ["@aws-crypto/material-management", "npm:3.1.0"],\
             ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
