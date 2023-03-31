@@ -1132,7 +1132,7 @@ Resources:
   HistoricEncryptBatchJobsRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: di-txma-historic-encrypt-batch-jobs-role
+      RoleName: !Sub ${AWS::StackName}-historic-encrypt-batch-jobs-role
       PermissionsBoundary:
         !If [
           UsePermissionsBoundary,
