@@ -30,7 +30,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["@aws-crypto/encrypt-node", "npm:3.1.0"],\
             ["@aws-crypto/kms-keyring-node", "npm:3.2.0"],\
-            ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
             ["@aws-sdk/client-s3-control", "npm:3.299.0"],\
@@ -5397,7 +5397,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["di-txma-audit", "workspace:."],\
             ["@aws-crypto/encrypt-node", "npm:3.1.0"],\
             ["@aws-crypto/kms-keyring-node", "npm:3.2.0"],\
-            ["@aws-crypto/material-management", "npm:3.1.0"],\
+            ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["@aws-lambda-powertools/logger", "npm:1.6.0"],\
             ["@aws-sdk/client-s3", "npm:3.257.0"],\
             ["@aws-sdk/client-s3-control", "npm:3.299.0"],\

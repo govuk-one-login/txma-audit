@@ -115,18 +115,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-crypto/material-management@npm:3.1.0, @aws-crypto/material-management@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "@aws-crypto/material-management@npm:3.1.0"
-  dependencies:
-    asn1.js: ^5.3.0
-    bn.js: ^5.1.1
-    tslib: ^2.2.0
-  checksum: f0ad1b4e30ccdd40ceba5910b8074bc094bb133be6f80cde992996cf3d0c2b5e4222b046fc234e6fecef826a583ee6e6043f564951474eeb4c0139138009bd42
-  languageName: node
-  linkType: hard
-
-"@aws-crypto/material-management@npm:^3.2.0":
+"@aws-crypto/material-management@npm:3.2.0, @aws-crypto/material-management@npm:^3.2.0":
   version: 3.2.0
   resolution: "@aws-crypto/material-management@npm:3.2.0"
   dependencies:
@@ -134,6 +123,17 @@ __metadata:
     bn.js: ^5.1.1
     tslib: ^2.2.0
   checksum: e5cbb18c7ab874306fd6c408cadba7cb10aaa5c552fcb94f3cc962f287a0e1baa4b1bf54be33570c12e7079592021c088fb02d410fb1f314c690eaac4e42fa5d
+  languageName: node
+  linkType: hard
+
+"@aws-crypto/material-management@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@aws-crypto/material-management@npm:3.1.0"
+  dependencies:
+    asn1.js: ^5.3.0
+    bn.js: ^5.1.1
+    tslib: ^2.2.0
+  checksum: f0ad1b4e30ccdd40ceba5910b8074bc094bb133be6f80cde992996cf3d0c2b5e4222b046fc234e6fecef826a583ee6e6043f564951474eeb4c0139138009bd42
   languageName: node
   linkType: hard
 
@@ -4464,7 +4464,7 @@ __metadata:
   dependencies:
     "@aws-crypto/encrypt-node": 3.1.0
     "@aws-crypto/kms-keyring-node": 3.2.0
-    "@aws-crypto/material-management": 3.1.0
+    "@aws-crypto/material-management": 3.2.0
     "@aws-lambda-powertools/logger": 1.6.0
     "@aws-sdk/client-s3": 3.257.0
     "@aws-sdk/client-s3-control": 3.299.0
