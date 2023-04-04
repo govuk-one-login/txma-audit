@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@aws-crypto/encrypt-node": "3.1.0",
-    "@aws-crypto/kms-keyring-node": "3.1.0",
+    "@aws-crypto/kms-keyring-node": "3.2.0",
     "@aws-crypto/material-management": "3.1.0",
     "@aws-lambda-powertools/logger": "1.6.0",
     "@aws-sdk/client-s3": "3.257.0",
