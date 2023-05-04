@@ -563,24 +563,29 @@ Resources:
                 - sns.amazonaws.com
             Action:
               - sts:AssumeRole
-      Policies:
-        - PolicyName: sns_kinesis_firehose_access_policy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'firehose:DescribeDeliveryStream'
-                  - 'firehose:ListDeliveryStreams'
-                  - 'firehose:ListTagsForDeliveryStream'
-                  - 'firehose:PutRecord'
-                  - 'firehose:PutRecordBatch'
-                Resource:
-                  - !GetAtt AuditDeliveryStream.Arn
-              - Effect: Allow
-                Action:
-                  - 'kms:Decrypt'
-                Resource: '{{resolve:ssm:SNSKMSKeyARN}}'
+      ManagedPolicyArns:
+        - !Ref SnsKinesisFirehoseAccessPolicy
+
+  SnsKinesisFirehoseAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: sns_kinesis_firehose_access_policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'firehose:DescribeDeliveryStream'
+              - 'firehose:ListDeliveryStreams'
+              - 'firehose:ListTagsForDeliveryStream'
+              - 'firehose:PutRecord'
+              - 'firehose:PutRecordBatch'
+            Resource:
+              - !GetAtt AuditDeliveryStream.Arn
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: '{{resolve:ssm:SNSKMSKeyARN}}'
 
   LambdaKMSKey:
     Type: AWS::KMS::Key
@@ -922,60 +927,66 @@ Resources:
               Service:
                 - lambda.amazonaws.com
             Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: InitiateCopyAndEncryptActions
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: TemporaryS3Read
-                Effect: Allow
-                Action:
-                  - s3:GetObject
-                Resource:
-                  - !GetAtt TemporaryMessageBatchBucket.Arn
-                  - !Sub '${TemporaryMessageBatchBucket.Arn}/*'
-              - Sid: AuditS3Read
-                Effect: Allow
-                Action:
-                  - s3:GetObject
-                Resource:
-                  - !GetAtt MessageBatchBucket.Arn
-                  - !Sub '${MessageBatchBucket.Arn}/*'
-              - Sid: PermanentS3Write
-                Effect: Allow
-                Action:
-                  - s3:PutObject
-                Resource:
-                  - !GetAtt PermanentMessageBatchBucket.Arn
-                  - !Sub '${PermanentMessageBatchBucket.Arn}/*'
-              - Sid: UseSqsKmsKey
-                Effect: Allow
-                Action:
-                  - kms:Decrypt
-                  - kms:GenerateDataKey*
-                  - kms:ReEncrypt*
-                Resource:
-                  - !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
-              - Sid: Logs
-                Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: !GetAtt InitiateCopyAndEncryptLogs.Arn
-              - Sid: sqsReceive
-                Effect: Allow
-                Action:
-                  - sqs:*
-                Resource: !GetAtt AuditFileReadyToEncryptQueue.Arn
-              - Sid: UseEncryptionGeneratorKmsKey
-                Effect: Allow
-                Action:
-                  - kms:Decrypt
-                  - kms:GenerateDataKey*
-                  - kms:Encrypt*
-                Resource:
-                  - !GetAtt EncryptionGeneratorKmsKey.Arn
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref InitiateCopyAndEncryptPolicy
+
+  InitiateCopyAndEncryptPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-InitiateCopyAndEncryptPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: TemporaryS3Read
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - !GetAtt TemporaryMessageBatchBucket.Arn
+              - !Sub '${TemporaryMessageBatchBucket.Arn}/*'
+          - Sid: AuditS3Read
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub '${MessageBatchBucket.Arn}/*'
+          - Sid: PermanentS3Write
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource:
+              - !GetAtt PermanentMessageBatchBucket.Arn
+              - !Sub '${PermanentMessageBatchBucket.Arn}/*'
+          - Sid: UseSqsKmsKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource:
+              - !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+          - Sid: Logs
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !GetAtt InitiateCopyAndEncryptLogs.Arn
+          - Sid: sqsReceive
+            Effect: Allow
+            Action:
+              - sqs:*
+            Resource: !GetAtt AuditFileReadyToEncryptQueue.Arn
+          - Sid: UseEncryptionGeneratorKmsKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey*
+              - kms:Encrypt*
+            Resource:
+              - !GetAtt EncryptionGeneratorKmsKey.Arn
 
   InitiateCopyAndEncryptFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
@@ -1006,6 +1017,7 @@ Resources:
   ########################################
   # Encrypt historic data lambdas starts #
   ########################################
+  # TODO: now we've back-encrypted everything, we can get rid of these lambdas
   HistoricEncryptGlacierRestoreFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     #checkov:skip=CKV_AWS_116:DLQ not required
