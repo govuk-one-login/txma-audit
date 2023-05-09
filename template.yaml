@@ -204,6 +204,8 @@ Resources:
             - Id: ProductionAuditGlacierRule
               Status: Enabled
               ExpirationInDays: 2557
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
               Transitions:
                 - TransitionInDays: 90
                   StorageClass: GLACIER
@@ -212,6 +214,8 @@ Resources:
             - Id: StagingAuditGlacierRule
               Status: Enabled
               ExpirationInDays: 120
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
               Transitions:
                 - TransitionInDays: 90
                   StorageClass: GLACIER
