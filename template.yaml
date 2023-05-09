@@ -215,6 +215,9 @@ Resources:
               Transitions:
                 - TransitionInDays: 90
                   StorageClass: GLACIER
+          - Id: DeleteExpiredObjects
+            Status: Enabled
+            ExpiredObjectDeleteMarker: true
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: s3:ObjectRestore:Completed
