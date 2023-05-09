@@ -37,9 +37,14 @@ Conditions:
       !Equals [!Ref Environment, staging],
       !Equals [!Ref Environment, production]
     ]
-  IsProductionOrStaging: !And
+  IsStaging: !Equals [!Ref Environment, staging]
+  IsProduction: !And
     - !Not [!Equals [!Ref Environment, dev]]
     - !Not [!Equals [!Ref Environment, build]]
+    - !Not [!Condition IsStaging]
+  IsProductionOrStaging: !And
+    - !Condition IsStaging
+    - !Condition IsProduction
   IsPipelineTestStage: !Or
     - !Equals [!Ref Environment, build]
     - !Equals [!Ref Environment, staging]
@@ -194,11 +199,22 @@ Resources:
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch/
       LifecycleConfiguration:
         Rules:
-          - Id: AuditGlacierRule
-            Status: Enabled
-            Transitions:
-              - TransitionInDays: 90
-                StorageClass: GLACIER
+          - !If
+            - IsProduction
+            - Id: ProductionAuditGlacierRule
+              Status: Enabled
+              ExpirationInDays: 2557
+              Transitions:
+                - TransitionInDays: 90
+                  StorageClass: GLACIER
+          - !If
+            - IsStaging
+            - Id: StagingAuditGlacierRule
+              Status: Enabled
+              ExpirationInDays: 120
+              Transitions:
+                - TransitionInDays: 90
+                  StorageClass: GLACIER
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: s3:ObjectRestore:Completed
