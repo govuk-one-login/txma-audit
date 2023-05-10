@@ -834,6 +834,29 @@ Resources:
             TagFilters:
               - Key: autoTest
                 Value: 'true'
+          - !If
+            - IsProduction
+            - Id: ProductionAuditGlacierRule
+              Status: Enabled
+              ExpirationInDays: 2557
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+              Transitions:
+                - TransitionInDays: 90
+                  StorageClass: GLACIER
+          - !If
+            - IsStaging
+            - Id: StagingAuditGlacierRule
+              Status: Enabled
+              ExpirationInDays: 120
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+              Transitions:
+                - TransitionInDays: 90
+                  StorageClass: GLACIER
+          - Id: DeleteExpiredObjects
+            Status: Enabled
+            ExpiredObjectDeleteMarker: true
       NotificationConfiguration:
         QueueConfigurations:
           - Event: 's3:ObjectCreated:*'
@@ -885,11 +908,26 @@ Resources:
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch/
       LifecycleConfiguration:
         Rules:
-          - Id: AuditGlacierRule
-            Status: Enabled
-            Transitions:
-              - TransitionInDays: 90
-                StorageClass: GLACIER
+          - !If
+            - IsProduction
+            - Id: ProductionAuditGlacierRule
+              Status: Enabled
+              ExpirationInDays: 2557
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+              Transitions:
+                - TransitionInDays: 90
+                  StorageClass: GLACIER
+          - !If
+            - IsStaging
+            - Id: StagingAuditGlacierRule
+              Status: Enabled
+              ExpirationInDays: 120
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+              Transitions:
+                - TransitionInDays: 90
+                  StorageClass: GLACIER
           - Id: DeleteAutoTestObjects
             Status: Enabled
             ExpirationInDays: 1
@@ -898,6 +936,9 @@ Resources:
             TagFilters:
               - Key: autoTest
                 Value: 'true'
+          - Id: DeleteExpiredObjects
+            Status: Enabled
+            ExpiredObjectDeleteMarker: true
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
