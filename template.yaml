@@ -42,7 +42,7 @@ Conditions:
     - !Not [!Equals [!Ref Environment, dev]]
     - !Not [!Equals [!Ref Environment, build]]
     - !Not [!Condition IsStaging]
-  IsProductionOrStaging: !And
+  IsProductionOrStaging: !Or
     - !Condition IsStaging
     - !Condition IsProduction
   IsPipelineTestStage: !Or
