@@ -201,7 +201,7 @@ Resources:
         Rules:
           - !If
             - IsProduction
-            - Id: ProductionAuditGlacierRule
+            - Id: ProductionGlacierAndExpirationRule
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
@@ -211,7 +211,7 @@ Resources:
                   StorageClass: GLACIER
           - !If
             - IsStaging
-            - Id: StagingAuditGlacierRule
+            - Id: StagingGlacierAndExpirationRule
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
@@ -219,7 +219,7 @@ Resources:
               Transitions:
                 - TransitionInDays: 90
                   StorageClass: GLACIER
-          - Id: DeleteExpiredObjects
+          - Id: DeleteExpiredObjectMarkers
             Status: Enabled
             ExpiredObjectDeleteMarker: true
       NotificationConfiguration:
@@ -836,7 +836,7 @@ Resources:
                 Value: 'true'
           - !If
             - IsProduction
-            - Id: ProductionAuditGlacierRule
+            - Id: ProductionGlacierAndExpirationRule
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
@@ -846,7 +846,7 @@ Resources:
                   StorageClass: GLACIER
           - !If
             - IsStaging
-            - Id: StagingAuditGlacierRule
+            - Id: StagingGlacierAndExpirationRule
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
@@ -854,7 +854,7 @@ Resources:
               Transitions:
                 - TransitionInDays: 90
                   StorageClass: GLACIER
-          - Id: DeleteExpiredObjects
+          - Id: DeleteExpiredObjectMarkers
             Status: Enabled
             ExpiredObjectDeleteMarker: true
       NotificationConfiguration:
@@ -910,7 +910,7 @@ Resources:
         Rules:
           - !If
             - IsProduction
-            - Id: ProductionAuditGlacierRule
+            - Id: ProductionGlacierAndExpirationRule
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
@@ -920,7 +920,7 @@ Resources:
                   StorageClass: GLACIER
           - !If
             - IsStaging
-            - Id: StagingAuditGlacierRule
+            - Id: StagingGlacierAndExpirationRule
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
@@ -936,7 +936,7 @@ Resources:
             TagFilters:
               - Key: autoTest
                 Value: 'true'
-          - Id: DeleteExpiredObjects
+          - Id: DeleteExpiredObjectMarkers
             Status: Enabled
             ExpiredObjectDeleteMarker: true
       OwnershipControls:
