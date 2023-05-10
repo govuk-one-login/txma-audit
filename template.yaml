@@ -56,7 +56,7 @@ Conditions:
 Globals:
   Function:
     Architectures:
-      - x86_64
+      - arm64
     CodeSigningConfigArn: !If
       - UseCodeSigning
       - !Ref CodeSigningConfigArn
