@@ -37,9 +37,13 @@ Conditions:
       !Equals [!Ref Environment, staging],
       !Equals [!Ref Environment, production]
     ]
-  IsProductionOrStaging: !And
+  IsProduction: !And
     - !Not [!Equals [!Ref Environment, dev]]
     - !Not [!Equals [!Ref Environment, build]]
+    - !Not [!Equals [!Ref Environment, staging]]
+  IsProductionOrStaging: !Or
+    - !Equals [!Ref Environment, staging]
+    - !Condition IsProduction
   IsPipelineTestStage: !Or
     - !Equals [!Ref Environment, build]
     - !Equals [!Ref Environment, staging]
@@ -199,6 +203,25 @@ Resources:
             Transitions:
               - TransitionInDays: 90
                 StorageClass: GLACIER
+          - !If
+            - IsProduction
+            - Id: ProductionExpirationRule
+              Status: Enabled
+              ExpirationInDays: 2557
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+            - !Ref AWS::NoValue
+          - !If
+            - IsTestableEnv
+            - Id: NonProductionExpirationRule
+              Status: Enabled
+              ExpirationInDays: 120
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+            - !Ref AWS::NoValue
+          - Id: DeleteExpiredObjectMarkers
+            Status: Enabled
+            ExpiredObjectDeleteMarker: true
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: s3:ObjectRestore:Completed
@@ -803,6 +826,11 @@ Resources:
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-temporary-message-batch/
       LifecycleConfiguration:
         Rules:
+          - Id: AuditGlacierRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: GLACIER
           - Id: DeleteAutoTestObjects
             Status: Enabled
             ExpirationInDays: 1
@@ -811,6 +839,25 @@ Resources:
             TagFilters:
               - Key: autoTest
                 Value: 'true'
+          - !If
+            - IsProduction
+            - Id: ProductionExpirationRule
+              Status: Enabled
+              ExpirationInDays: 2557
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+            - !Ref AWS::NoValue
+          - !If
+            - IsTestableEnv
+            - Id: NonProductionExpirationRule
+              Status: Enabled
+              ExpirationInDays: 120
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+            - !Ref AWS::NoValue
+          - Id: DeleteExpiredObjectMarkers
+            Status: Enabled
+            ExpiredObjectDeleteMarker: true
       NotificationConfiguration:
         QueueConfigurations:
           - Event: 's3:ObjectCreated:*'
@@ -867,6 +914,22 @@ Resources:
             Transitions:
               - TransitionInDays: 90
                 StorageClass: GLACIER
+          - !If
+            - IsProduction
+            - Id: ProductionExpirationRule
+              Status: Enabled
+              ExpirationInDays: 2557
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+            - !Ref AWS::NoValue
+          - !If
+            - IsTestableEnv
+            - Id: NonProductionExpirationRule
+              Status: Enabled
+              ExpirationInDays: 120
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+            - !Ref AWS::NoValue
           - Id: DeleteAutoTestObjects
             Status: Enabled
             ExpirationInDays: 1
@@ -875,6 +938,9 @@ Resources:
             TagFilters:
               - Key: autoTest
                 Value: 'true'
+          - Id: DeleteExpiredObjectMarkers
+            Status: Enabled
+            ExpiredObjectDeleteMarker: true
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
