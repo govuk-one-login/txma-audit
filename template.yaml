@@ -37,13 +37,12 @@ Conditions:
       !Equals [!Ref Environment, staging],
       !Equals [!Ref Environment, production]
     ]
-  IsStaging: !Equals [!Ref Environment, staging]
   IsProduction: !And
     - !Not [!Equals [!Ref Environment, dev]]
     - !Not [!Equals [!Ref Environment, build]]
-    - !Not [!Condition IsStaging]
+    - !Not [!Equals [!Ref Environment, staging]]
   IsProductionOrStaging: !Or
-    - !Condition IsStaging
+    - !Equals [!Ref Environment, staging]
     - !Condition IsProduction
   IsPipelineTestStage: !Or
     - !Equals [!Ref Environment, build]
@@ -206,15 +205,15 @@ Resources:
                 StorageClass: GLACIER
           - !If
             - IsProduction
-            - Id: ProductionGlacierAndExpirationRule
+            - Id: ProductionExpirationRule
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
                 NoncurrentDays: 30
             - !Ref AWS::NoValue
           - !If
-            - IsStaging
-            - Id: StagingGlacierAndExpirationRule
+            - IsTestableEnv
+            - Id: NonProductionExpirationRule
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
@@ -842,15 +841,15 @@ Resources:
                 Value: 'true'
           - !If
             - IsProduction
-            - Id: ProductionGlacierAndExpirationRule
+            - Id: ProductionExpirationRule
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
                 NoncurrentDays: 30
             - !Ref AWS::NoValue
           - !If
-            - IsStaging
-            - Id: StagingGlacierAndExpirationRule
+            - IsTestableEnv
+            - Id: NonProductionExpirationRule
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
@@ -917,15 +916,15 @@ Resources:
                 StorageClass: GLACIER
           - !If
             - IsProduction
-            - Id: ProductionGlacierAndExpirationRule
+            - Id: ProductionExpirationRule
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
                 NoncurrentDays: 30
             - !Ref AWS::NoValue
           - !If
-            - IsStaging
-            - Id: StagingGlacierAndExpirationRule
+            - IsTestableEnv
+            - Id: NonProductionExpirationRule
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
