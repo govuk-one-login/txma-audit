@@ -199,6 +199,11 @@ Resources:
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch/
       LifecycleConfiguration:
         Rules:
+          - Id: AuditGlacierRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: GLACIER
           - !If
             - IsProduction
             - Id: ProductionGlacierAndExpirationRule
@@ -206,9 +211,7 @@ Resources:
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
                 NoncurrentDays: 30
-              Transitions:
-                - TransitionInDays: 90
-                  StorageClass: GLACIER
+            - !Ref AWS::NoValue
           - !If
             - IsStaging
             - Id: StagingGlacierAndExpirationRule
@@ -216,9 +219,7 @@ Resources:
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
                 NoncurrentDays: 30
-              Transitions:
-                - TransitionInDays: 90
-                  StorageClass: GLACIER
+            - !Ref AWS::NoValue
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
             ExpiredObjectDeleteMarker: true
@@ -826,6 +827,11 @@ Resources:
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-temporary-message-batch/
       LifecycleConfiguration:
         Rules:
+          - Id: AuditGlacierRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: GLACIER
           - Id: DeleteAutoTestObjects
             Status: Enabled
             ExpirationInDays: 1
@@ -841,9 +847,7 @@ Resources:
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
                 NoncurrentDays: 30
-              Transitions:
-                - TransitionInDays: 90
-                  StorageClass: GLACIER
+            - !Ref AWS::NoValue
           - !If
             - IsStaging
             - Id: StagingGlacierAndExpirationRule
@@ -851,9 +855,7 @@ Resources:
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
                 NoncurrentDays: 30
-              Transitions:
-                - TransitionInDays: 90
-                  StorageClass: GLACIER
+            - !Ref AWS::NoValue
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
             ExpiredObjectDeleteMarker: true
@@ -908,6 +910,11 @@ Resources:
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch/
       LifecycleConfiguration:
         Rules:
+          - Id: AuditGlacierRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: GLACIER
           - !If
             - IsProduction
             - Id: ProductionGlacierAndExpirationRule
@@ -915,9 +922,7 @@ Resources:
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
                 NoncurrentDays: 30
-              Transitions:
-                - TransitionInDays: 90
-                  StorageClass: GLACIER
+            - !Ref AWS::NoValue
           - !If
             - IsStaging
             - Id: StagingGlacierAndExpirationRule
@@ -925,9 +930,7 @@ Resources:
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
                 NoncurrentDays: 30
-              Transitions:
-                - TransitionInDays: 90
-                  StorageClass: GLACIER
+            - !Ref AWS::NoValue
           - Id: DeleteAutoTestObjects
             Status: Enabled
             ExpirationInDays: 1
