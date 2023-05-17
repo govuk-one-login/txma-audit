@@ -77,108 +77,14 @@ Globals:
     Timeout: 30
 
 Resources:
-  LogsKmsKey:
-    Type: AWS::KMS::Key
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:root'
-            Action:
-              - 'kms:*'
-            Resource:
-              - '*'
-          - Effect: 'Allow'
-            Principal:
-              Service: !Sub 'logs.${AWS::Region}.amazonaws.com'
-            Action:
-              - 'kms:Encrypt*'
-              - 'kms:Decrypt*'
-              - 'kms:ReEncrypt*'
-              - 'kms:GenerateDataKey*'
-              - 'kms:Describe*'
-            Resource:
-              - '*'
-            Condition:
-              ArnLike:
-                'kms:EncryptionContext:aws:logs:arn': !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+  #################################
+  # Start: Audit Bucket resources #
+  #################################
 
-  FireHoseKMSKey:
-    Type: AWS::KMS::Key
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
-            Action:
-              - 'kms:*'
-            Resource:
-              - '*'
-          - Effect: 'Allow'
-            Principal:
-              Service: 'firehose.amazonaws.com'
-            Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource: '*'
-
-  FireHoseKMSKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub 'alias/${AWS::StackName}/${Environment}/FireHoseKMSKey'
-      TargetKeyId: !Ref FireHoseKMSKey
-
-  AuditFileReadyToEncryptQueueKmsKey:
-    Type: AWS::KMS::Key
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
-            Action:
-              - 'kms:*'
-            Resource:
-              - '*'
-          - Effect: 'Allow'
-            Principal:
-              Service: 's3.amazonaws.com'
-            Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource: '*'
-          - Effect: 'Allow'
-            Principal:
-              Service: 'sqs.amazonaws.com'
-            Action:
-              - 'kms:Decrypt'
-              - 'kms:Encrypt'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource: '*'
-
-  AuditFileReadyToEncryptQueueKmsKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub 'alias/${AWS::StackName}/${Environment}/audit-file-ready-to-encrypt-queue-kms-key'
-      TargetKeyId: !Ref AuditFileReadyToEncryptQueueKmsKey
-
+  # S3 resources
   MessageBatchBucket:
     DependsOn:
       - AuditFileReadyToEncryptQueuePolicy
-      - GlacierRestoreLambdaPermission
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch
@@ -223,9 +129,6 @@ Resources:
             Status: Enabled
             ExpiredObjectDeleteMarker: true
       NotificationConfiguration:
-        LambdaConfigurations:
-          - Event: s3:ObjectRestore:Completed
-            Function: !GetAtt HistoricEncryptGlacierRestoreFunction.Arn
         QueueConfigurations:
           - Event: 's3:ObjectCreated:*'
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
@@ -278,531 +181,6 @@ Resources:
                 - 's3:Get*'
                 - 's3:List*'
             - !Ref AWS::NoValue
-
-  EncryptionGeneratorKmsKey:
-    Type: AWS::KMS::Key
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: Enable Root access
-            Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action:
-              - kms:*
-            Resource: '*'
-          - Sid: Allow AWS Lambda access
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action:
-              - kms:Encrypt
-              - kms:Decrypt
-              - kms:GenerateDataKey
-            Resource: '*'
-
-  EncryptionGeneratorKmsKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub alias/${AWS::StackName}/${Environment}/encryption-generator-kms-key
-      TargetKeyId: !Ref EncryptionGeneratorKmsKey
-
-  EncryptionGeneratorKmsKeyArnParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: EncryptionGeneratorKmsKeyArn
-      Type: String
-      Value: !GetAtt EncryptionGeneratorKmsKey.Arn
-
-  AuditEventTable:
-    Type: AWS::Glue::Table
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseName: '{{resolve:ssm:AuditDataAnalysisGlueDatabaseName}}'
-      TableInput:
-        Description: Table to analyse event message raw data from the audit bucket
-        Name:
-          !Join [
-            '',
-            [
-              !Join ['', !Split ['-', !Ref AWS::StackName]],
-              !Sub '_${Environment}_message_batch_table'
-            ]
-          ]
-        Parameters:
-          has_encrypted_data: true
-          projection.enabled: true
-          projection.datetime.type: date
-          projection.datetime.range: 2022/08/01/00,NOW
-          projection.datetime.format: yyyy/MM/dd/HH
-          projection.datetime.interval: 1
-          projection.datetime.interval.unit: HOURS
-          storage.location.template:
-            !Join [
-              '',
-              [s3://, !Ref MessageBatchBucket, '/firehose/${datetime}/']
-            ]
-        PartitionKeys:
-          - Name: datetime
-            Type: string
-        StorageDescriptor:
-          Columns:
-            - Name: event_id
-              Type: string
-            - Name: client_id
-              Type: string
-            - Name: timestamp
-              Type: bigint
-            - Name: timestamp_formatted
-              Type: string
-            - Name: event_name
-              Type: string
-            - Name: component_id
-              Type: string
-            - Name: user
-              Type: string
-            - Name: platform
-              Type: string
-            - Name: restricted
-              Type: string
-            - Name: extensions
-              Type: string
-          Compressed: true
-          InputFormat: org.apache.hadoop.mapred.TextInputFormat
-          Location: !Sub s3://${MessageBatchBucket}/firehose/
-          OutputFormat: org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat
-          SerdeInfo:
-            Parameters:
-              {
-                'ignore.malformed.json': true,
-                'serialization.format': 1,
-                'field.delim': ''
-              }
-            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
-          StoredAsSubDirectories: false
-        TableType: EXTERNAL_TABLE
-
-  S3NoReceivedObjectsAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: Audit S3 Received No Objects Alarm
-      AlarmName: S3NoReceivedObjectsAlarm
-      ComparisonOperator: LessThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 86400
-      Threshold: 0
-      TreatMissingData: breaching
-      MetricName: PutRequests
-      Namespace: AWS/S3
-      AlarmActions:
-        - !Ref SNSCriticalAlarmTopic
-      Dimensions:
-        - Name: BucketName
-          Value: !Ref MessageBatchBucket
-        - Name: FilterId
-          Value: EntireBucket
-
-  FailureToEncryptAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: Alarm that monitors the ReadToEncrypt DLQ for any new objects
-      AlarmName: FailureToEncryptAlarm
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 60
-      Threshold: 1
-      TreatMissingData: notBreaching
-      MetricName: ApproximateNumberOfMessagesVisible
-      Namespace: AWS/SQS
-      AlarmActions:
-        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
-      OKActions:
-        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
-      Dimensions:
-        - Name: QueueName
-          Value: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.QueueName
-
-  SNSCriticalAlarmTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      KmsMasterKeyId: '{{resolve:ssm:CoreSnsKmsKeyArn}}'
-      TopicName: 'SNSCriticalAlarmTopic'
-
-  SNSCriticalAlarmTopicPolicy:
-    Type: AWS::SNS::TopicPolicy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: cloudwatch.amazonaws.com
-            Action: 'sns:Publish'
-            Resource: !GetAtt SNSCriticalAlarmTopic.TopicArn
-            Condition:
-              ArnLike:
-                aws:SourceArn: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*
-              StringEquals:
-                aws:SourceAccount: !Sub ${AWS::AccountId}
-      Topics:
-        - !Ref SNSCriticalAlarmTopic
-
-  PagerDutySubscription:
-    Type: AWS::SNS::Subscription
-    Condition: IsPagerDutyEnvironment
-    Properties:
-      TopicArn: !Ref SNSCriticalAlarmTopic
-      Protocol: https
-      Endpoint: '{{resolve:secretsmanager:PagerDutyEndpoint}}'
-
-  FirehoseLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: '/aws/firehose'
-      RetentionInDays: 7
-
-  FirehoseLogStream:
-    DependsOn:
-      - FirehoseLogGroup
-    Type: AWS::Logs::LogStream
-    Properties:
-      LogGroupName: !Ref FirehoseLogGroup
-      LogStreamName: 'audit'
-
-  AuditDeliveryStream:
-    Type: AWS::KinesisFirehose::DeliveryStream
-    DependsOn:
-      - DeliveryStreamPolicy
-    Properties:
-      DeliveryStreamName: !Sub
-        - 'AuditFireHose-${EnvironmentName}'
-        - EnvironmentName: !Ref Environment
-      DeliveryStreamType: DirectPut
-      DeliveryStreamEncryptionConfigurationInput:
-        KeyARN: !GetAtt FireHoseKMSKey.Arn
-        KeyType: 'CUSTOMER_MANAGED_CMK'
-      ExtendedS3DestinationConfiguration:
-        Prefix: 'firehose/'
-        BucketARN: !GetAtt MessageBatchBucket.Arn
-        BufferingHints:
-          IntervalInSeconds: !If
-            - IsTestableEnv
-            - 60
-            - 900
-          SizeInMBs: 128
-        CompressionFormat: 'GZIP'
-        RoleARN: !GetAtt DeliveryStreamRole.Arn
-        CloudWatchLoggingOptions:
-          Enabled: true
-          LogGroupName: !Ref FirehoseLogGroup
-          LogStreamName: !Ref FirehoseLogStream
-        ProcessingConfiguration:
-          Enabled: true
-          Processors:
-            - Type: Lambda
-              Parameters:
-                - ParameterName: LambdaArn
-                  ParameterValue: !GetAtt DelimiterFunction.Arn
-                - ParameterName: RoleArn
-                  ParameterValue: !GetAtt DeliveryStreamRole.Arn
-
-  DeliveryStreamSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
-      Endpoint: !GetAtt AuditDeliveryStream.Arn #FireHose
-      Protocol: firehose
-      RawMessageDelivery: true
-      SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
-
-  DeliveryStreamRole:
-    Type: AWS::IAM::Role
-    Properties:
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: ''
-            Effect: Allow
-            Principal:
-              Service:
-                - firehose.amazonaws.com
-            Action: 'sts:AssumeRole'
-
-  DeliveryStreamPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      Roles:
-        - !Ref DeliveryStreamRole
-      PolicyName: firehose_delivery_policy
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:AbortMultipartUpload
-              - s3:GetBucketLocation
-              - s3:GetObject
-              - s3:ListBucket
-              - s3:ListBucketMultipartUploads
-              - s3:PutObject
-            Resource:
-              - !GetAtt MessageBatchBucket.Arn
-              - !Sub ${MessageBatchBucket.Arn}/*
-          - Effect: Allow
-            Action:
-              - lambda:InvokeFunction
-              - lambda:GetFunctionConfiguration
-            Resource: !Sub ${DelimiterFunction.Arn}*
-          - Effect: Allow
-            Action:
-              - logs:CreateLogGroup
-              - logs:PutLogEvents
-              - logs:CreateLogStream
-            Resource:
-              - !GetAtt FirehoseLogGroup.Arn
-
-  SNSTopicSubscriptionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - sns.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - !Ref SnsKinesisFirehoseAccessPolicy
-
-  SnsKinesisFirehoseAccessPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      ManagedPolicyName: sns_kinesis_firehose_access_policy
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - 'firehose:DescribeDeliveryStream'
-              - 'firehose:ListDeliveryStreams'
-              - 'firehose:ListTagsForDeliveryStream'
-              - 'firehose:PutRecord'
-              - 'firehose:PutRecordBatch'
-            Resource:
-              - !GetAtt AuditDeliveryStream.Arn
-          - Effect: Allow
-            Action:
-              - 'kms:Decrypt'
-            Resource: '{{resolve:ssm:SNSKMSKeyARN}}'
-
-  LambdaKMSKey:
-    Type: AWS::KMS::Key
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
-            Action:
-              - 'kms:*'
-            Resource:
-              - '*'
-          - Effect: 'Allow'
-            Principal:
-              Service: 'lambda.amazonaws.com'
-            Action:
-              - 'kms:Decrypt'
-            Resource: '*'
-
-  LambdaKMSKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub 'alias/${AWS::StackName}/${Environment}/LambdaKMSKey'
-      TargetKeyId: !Ref LambdaKMSKey
-
-  DelimiterLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: '/aws/lambda/DelimiterFunction'
-      RetentionInDays: 7
-
-  DelimiterLambdaAccessRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub '${AWS::StackName}-LambdaAccessRole-Delimiter'
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: ''
-            Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole'
-
-  DelimiterFunction:
-    #checkov:skip=CKV_AWS_115:Defined in Globals section
-    #checkov:skip=CKV_AWS_116:DLQ not required
-    #checkov:skip=CKV_AWS_117:VPC not required
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: DelimiterFunction
-      Handler: delimiter.handler
-      Role: !GetAtt DelimiterLambdaAccessRole.Arn
-      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
-
-  AddFirehoseRecordFunctionInvokePermission:
-    Type: AWS::Lambda::Permission
-    Condition: DeployTestRolePolicy
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt IntegrationTestsAddFirehoseRecordFunctionNameParameter.Value
-      Principal: !Ref TestRoleArn
-
-  IntegrationTestsAddFirehoseRecordFunctionNameParameter:
-    Condition: IsTestableEnv
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub /tests/${AWS::StackName}/IntegrationTestsAddFirehoseRecordFunctionName
-      Type: String
-      Value: '{{resolve:ssm:/tests/AddFirehoseRecordFunctionName}}'
-
-  #
-  # txma2 specific resources
-  #
-
-  # separate message batch bucket so txma2 and txma tests remain isolated and can run concurrently
-  MessageBatchBucketTxMA2:
-    Type: AWS::S3::Bucket
-    Condition: IsTestableEnv
-    Properties:
-      BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch-txma2
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      LoggingConfiguration:
-        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
-        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch-txma2/
-      LifecycleConfiguration:
-        Rules:
-          - Id: AuditGlacierRule
-            Status: Enabled
-            Transitions:
-              - TransitionInDays: 90
-                StorageClass: GLACIER
-          - Id: DeleteAutoTestObjects
-            Status: Enabled
-            ExpirationInDays: 1
-            NoncurrentVersionExpiration:
-              NoncurrentDays: 1
-            TagFilters:
-              - Key: autoTest
-                Value: 'true'
-      # NotificationConfiguration:
-      #   QueueConfigurations:
-      #     !If
-      #     - IsProductionOrStaging
-      #     - - Event: "s3:ObjectCreated:*"
-      #         Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-      #       - Event: "s3:ObjectRestore:*"
-      #         Queue: "{{resolve:ssm:CSLSS3QueueARN}}"
-      #     - - !Ref AWS::NoValue
-      OwnershipControls:
-        Rules:
-          - ObjectOwnership: BucketOwnerPreferred
-      MetricsConfigurations:
-        - Id: EntireBucket
-
-  ##########################################
-  # Resources for revised encryption cycle #
-  ##########################################
-
-  # SQS
-
-  AuditFileReadyToEncryptQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub '${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-queue'
-      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
-      RedrivePolicy:
-        deadLetterTargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
-        maxReceiveCount: 5
-
-  AuditFileReadyToEncryptDeadLetterQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub '${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ'
-      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
-      MessageRetentionPeriod: 1209600
-
-  AuditFileReadyToEncryptQueuePolicy:
-    Type: AWS::SQS::QueuePolicy
-    Properties:
-      Queues:
-        - !Ref AuditFileReadyToEncryptQueue
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Action:
-              - sqs:*
-            Resource:
-              - !GetAtt AuditFileReadyToEncryptQueue.Arn
-            Principal:
-              Service:
-                - s3.amazonaws.com
-            Condition:
-              ArnLike:
-                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-temporary-message-batch
-              StringEquals:
-                aws:SourceAccount: !Ref AWS::AccountId
-          - Effect: 'Allow'
-            Action:
-              - sqs:*
-            Resource:
-              - !GetAtt AuditFileReadyToEncryptQueue.Arn
-            Principal:
-              Service:
-                - s3.amazonaws.com
-            Condition:
-              ArnLike:
-                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
-              StringEquals:
-                aws:SourceAccount: !Ref AWS::AccountId
-
-  # S3 resources
 
   TemporaryMessageBatchBucket:
     DependsOn:
@@ -967,12 +345,252 @@ Resources:
               Bool:
                 'aws:SecureTransport': 'true'
 
-  # lambdas
+  MessageBatchBucketTxMA2:
+    Type: AWS::S3::Bucket
+    Condition: IsTestableEnv
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch-txma2
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LoggingConfiguration:
+        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch-txma2/
+      LifecycleConfiguration:
+        Rules:
+          - Id: AuditGlacierRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: GLACIER
+          - Id: DeleteAutoTestObjects
+            Status: Enabled
+            ExpirationInDays: 1
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 1
+            TagFilters:
+              - Key: autoTest
+                Value: 'true'
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      MetricsConfigurations:
+        - Id: EntireBucket
+
+  # Lambda function resources
+  DelimiterLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: /aws/lambda/DelimiterFunction
+      RetentionInDays: 7
+
+  DelimiterLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-LambdaAccessRole-Delimiter
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaServiceToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
+
+  DelimiterFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    #checkov:skip=CKV_AWS_117:VPC not required
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DelimiterFunction
+      Handler: delimiter.handler
+      Role: !GetAtt DelimiterLambdaAccessRole.Arn
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+
+  ###############################
+  # End: Audit Bucket resources #
+  ###############################
+
+  ###############################
+  # Start: Encryption resources #
+  ###############################
+
+  # KMS key resources
+  AuditFileReadyToEncryptQueueKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - kms:*
+            Resource:
+              - '*'
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: '*'
+          - Effect: Allow
+            Principal:
+              Service: sqs.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: '*'
+
+  AuditFileReadyToEncryptQueueKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${AWS::StackName}/${Environment}/audit-file-ready-to-encrypt-queue-kms-key
+      TargetKeyId: !Ref AuditFileReadyToEncryptQueueKmsKey
+
+  EncryptionGeneratorKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable Root access
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - kms:*
+            Resource: '*'
+          - Sid: Allow AWS Lambda access
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:GenerateDataKey
+            Resource: '*'
+
+  EncryptionGeneratorKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${AWS::StackName}/${Environment}/encryption-generator-kms-key
+      TargetKeyId: !Ref EncryptionGeneratorKmsKey
+
+  EncryptionGeneratorKmsKeyArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: EncryptionGeneratorKmsKeyArn
+      Type: String
+      Value: !GetAtt EncryptionGeneratorKmsKey.Arn
+
+  # SQS resources
+  AuditFileReadyToEncryptQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-queue
+      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
+        maxReceiveCount: 5
+
+  AuditFileReadyToEncryptDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ
+      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+      MessageRetentionPeriod: 1209600
+
+  AuditFileReadyToEncryptQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref AuditFileReadyToEncryptQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:*
+            Resource:
+              - !GetAtt AuditFileReadyToEncryptQueue.Arn
+            Principal:
+              Service:
+                - s3.amazonaws.com
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-temporary-message-batch
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+          - Effect: Allow
+            Action:
+              - sqs:*
+            Resource:
+              - !GetAtt AuditFileReadyToEncryptQueue.Arn
+            Principal:
+              Service:
+                - s3.amazonaws.com
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+
+  # Lambda resources
+  InitiateCopyAndEncryptFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    #checkov:skip=CKV_AWS_117:VPC not required
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 1536
+      FunctionName: InitiateCopyAndEncryptFunction
+      Handler: initiateCopyAndEncrypt.handler
+      Role: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      Environment:
+        Variables:
+          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
+          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
+          GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
+      Events:
+        AuditFileReadyToEncryptEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
+            BatchSize: 1
+    DeadLetterQueue:
+      Type: SQS
+      TargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
 
   InitiateCopyAndEncryptLogs:
     Type: AWS::Logs::LogGroup
     Properties:
-      KmsKeyId: !GetAtt LogsKmsKey.Arn
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
       LogGroupName: !Sub '/aws/lambda/InitiateCopyAndEncryptFunction'
       RetentionInDays: 7
 
@@ -1054,227 +672,275 @@ Resources:
             Resource:
               - !GetAtt EncryptionGeneratorKmsKey.Arn
 
-  InitiateCopyAndEncryptFunction:
-    #checkov:skip=CKV_AWS_115:Defined in Globals section
-    #checkov:skip=CKV_AWS_116:DLQ not required
-    #checkov:skip=CKV_AWS_117:VPC not required
-    Type: AWS::Serverless::Function
-    Properties:
-      MemorySize: 1536
-      FunctionName: InitiateCopyAndEncryptFunction
-      Handler: initiateCopyAndEncrypt.handler
-      Role: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
-      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
-      Environment:
-        Variables:
-          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
-          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
-          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
-          GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
-      Events:
-        AuditFileReadyToEncryptEvent:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
-            BatchSize: 1
-    DeadLetterQueue:
-      Type: SQS
-      TargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
-  ########################################
-  # Encrypt historic data lambdas starts #
-  ########################################
-  # TODO: now we've back-encrypted everything, we can get rid of these lambdas
-  HistoricEncryptGlacierRestoreFunction:
-    #checkov:skip=CKV_AWS_115:Defined in Globals section
-    #checkov:skip=CKV_AWS_116:DLQ not required
-    #checkov:skip=CKV_AWS_117:VPC not required
-    Type: AWS::Serverless::Function
-    Properties:
-      MemorySize: 1536
-      FunctionName: !Sub ${AWS::StackName}-historic-encrypt-restore
-      Handler: historicEncryptGlacierRestore.handler
-      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
-      Environment:
-        Variables:
-          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
-          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
-          AUDIT_BUCKET_NAME: !Sub ${AWS::StackName}-${Environment}-message-batch
-          GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
-      Policies:
-        - Statement:
-            - Sid: AuditS3Read
-              Effect: Allow
-              Action:
-                - s3:GetObject
-              Resource:
-                - !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
-                - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch/*'
-            - Sid: PermanentS3ReadWrite
-              Effect: Allow
-              Action:
-                - s3:PutObject
-                # We need GetObject so we can tell if the file is already in the permanent bucket
-                - s3:GetObject
-                # Adding the ListBucket permission ensures that when a file doesn't exist, we get a 404 instead of a 403
-                - s3:ListBucket
-              Resource:
-                - !GetAtt PermanentMessageBatchBucket.Arn
-                - !Sub '${PermanentMessageBatchBucket.Arn}/*'
-            - Sid: Logs
-              Effect: Allow
-              Action:
-                - logs:CreateLogGroup
-                - logs:CreateLogStream
-                - logs:PutLogEvents
-              Resource: !GetAtt HistoricEncryptGlacierRestoreLogs.Arn
-            - Sid: UseEncryptionGeneratorKmsKey
-              Effect: Allow
-              Action:
-                - kms:Decrypt
-                - kms:GenerateDataKey*
-                - kms:Encrypt*
-              Resource:
-                - !GetAtt EncryptionGeneratorKmsKey.Arn
+  #############################
+  # End: Encryption resources #
+  #############################
 
-  HistoricEncryptGlacierRestoreLogs:
+  #####################################
+  # Start: Audit data query resources #
+  #####################################
+
+  AuditEventTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: '{{resolve:ssm:AuditDataAnalysisGlueDatabaseName}}'
+      TableInput:
+        Description: Table to analyse event message raw data from the audit bucket
+        Name:
+          !Join [
+            '',
+            [
+              !Join ['', !Split ['-', !Ref AWS::StackName]],
+              !Sub '_${Environment}_message_batch_table'
+            ]
+          ]
+        Parameters:
+          has_encrypted_data: true
+          projection.enabled: true
+          projection.datetime.type: date
+          projection.datetime.range: 2022/08/01/00,NOW
+          projection.datetime.format: yyyy/MM/dd/HH
+          projection.datetime.interval: 1
+          projection.datetime.interval.unit: HOURS
+          storage.location.template:
+            !Join [
+              '',
+              [s3://, !Ref MessageBatchBucket, '/firehose/${datetime}/']
+            ]
+        PartitionKeys:
+          - Name: datetime
+            Type: string
+        StorageDescriptor:
+          Columns:
+            - Name: event_id
+              Type: string
+            - Name: client_id
+              Type: string
+            - Name: timestamp
+              Type: bigint
+            - Name: timestamp_formatted
+              Type: string
+            - Name: event_name
+              Type: string
+            - Name: component_id
+              Type: string
+            - Name: user
+              Type: string
+            - Name: platform
+              Type: string
+            - Name: restricted
+              Type: string
+            - Name: extensions
+              Type: string
+          Compressed: true
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          Location: !Sub s3://${MessageBatchBucket}/firehose/
+          OutputFormat: org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat
+          SerdeInfo:
+            Parameters:
+              {
+                'ignore.malformed.json': true,
+                'serialization.format': 1,
+                'field.delim': ''
+              }
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+          StoredAsSubDirectories: false
+        TableType: EXTERNAL_TABLE
+
+  ###################################
+  # End: Audit data query resources #
+  ###################################
+
+  ##########################################
+  # Start: Audit delivery stream resources #
+  ##########################################
+
+  FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-historic-encrypt-restore'
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: /aws/firehose
       RetentionInDays: 7
 
-  GlacierRestoreLambdaPermission:
-    Type: AWS::Lambda::Permission
+  FirehoseLogStream:
+    Type: AWS::Logs::LogStream
     Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref HistoricEncryptGlacierRestoreFunction
-      Principal: 's3.amazonaws.com'
-      SourceAccount: !Sub ${AWS::AccountId}
-      SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
+      LogGroupName: !Ref FirehoseLogGroup
+      LogStreamName: audit
 
-  HistoricEncryptBatchFunction:
-    #checkov:skip=CKV_AWS_115:Defined in Globals section
-    #checkov:skip=CKV_AWS_116:DLQ not required
-    #checkov:skip=CKV_AWS_117:VPC not required
-    Type: AWS::Serverless::Function
+  AuditDeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    DependsOn:
+      - DeliveryStreamPolicy
     Properties:
-      MemorySize: 1536
-      FunctionName: !Sub ${AWS::StackName}-historic-encrypt-batch
-      Handler: historicEncryptBatch.handler
-      KmsKeyArn: !GetAtt LambdaKMSKey.Arn
-      Environment:
-        Variables:
-          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
-          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
-          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
-          GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
-      Policies:
-        - Statement:
-            - Sid: AuditS3Read
-              Effect: Allow
-              Action:
-                - s3:GetObject
-              Resource:
-                - !GetAtt MessageBatchBucket.Arn
-                - !Sub '${MessageBatchBucket.Arn}/*'
-            - Sid: PermanentS3Write
-              Effect: Allow
-              Action:
-                - s3:PutObject
-              Resource:
-                - !GetAtt PermanentMessageBatchBucket.Arn
-                - !Sub '${PermanentMessageBatchBucket.Arn}/*'
-            - Sid: Logs
-              Effect: Allow
-              Action:
-                - logs:CreateLogGroup
-                - logs:CreateLogStream
-                - logs:PutLogEvents
-              Resource: !GetAtt HistoricEncryptBatchLogs.Arn
-            - Sid: UseEncryptionGeneratorKmsKey
-              Effect: Allow
-              Action:
-                - kms:Decrypt
-                - kms:GenerateDataKey*
-                - kms:Encrypt*
-              Resource:
-                - !GetAtt EncryptionGeneratorKmsKey.Arn
+      DeliveryStreamName: !Sub AuditFireHose-${Environment}
+      DeliveryStreamType: DirectPut
+      DeliveryStreamEncryptionConfigurationInput:
+        KeyARN: '{{resolve:ssm:FirehoseKmsKeyArn}}'
+        KeyType: CUSTOMER_MANAGED_CMK
+      ExtendedS3DestinationConfiguration:
+        Prefix: firehose/
+        BucketARN: !GetAtt MessageBatchBucket.Arn
+        BufferingHints:
+          IntervalInSeconds: !If
+            - IsTestableEnv
+            - 60
+            - 900
+          SizeInMBs: 128
+        CompressionFormat: GZIP
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+        CloudWatchLoggingOptions:
+          Enabled: true
+          LogGroupName: !Ref FirehoseLogGroup
+          LogStreamName: !Ref FirehoseLogStream
+        ProcessingConfiguration:
+          Enabled: true
+          Processors:
+            - Type: Lambda
+              Parameters:
+                - ParameterName: LambdaArn
+                  ParameterValue: !GetAtt DelimiterFunction.Arn
+                - ParameterName: RoleArn
+                  ParameterValue: !GetAtt DeliveryStreamRole.Arn
 
-  HistoricEncryptBatchLogs:
-    Type: AWS::Logs::LogGroup
+  DeliveryStreamSubscription:
+    Type: AWS::SNS::Subscription
     Properties:
-      KmsKeyId: !GetAtt LogsKmsKey.Arn
-      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-historic-encrypt-batch'
-      RetentionInDays: 7
+      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
+      Endpoint: !GetAtt AuditDeliveryStream.Arn
+      Protocol: firehose
+      RawMessageDelivery: true
+      SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
 
-  HistoricEncryptBatchJobsRole:
+  DeliveryStreamRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${AWS::StackName}-historic-encrypt-batch-jobs-role
-      PermissionsBoundary:
-        !If [
-          UsePermissionsBoundary,
-          !Ref PermissionsBoundary,
-          !Ref AWS::NoValue
-        ]
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowFirehoseToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action: sts:AssumeRole
+
+  DeliveryStreamPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref DeliveryStreamRole
+      PolicyName: firehose_delivery_policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:AbortMultipartUpload
+              - s3:GetBucketLocation
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:ListBucketMultipartUploads
+              - s3:PutObject
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub ${MessageBatchBucket.Arn}/*
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+              - lambda:GetFunctionConfiguration
+            Resource: !Sub ${DelimiterFunction.Arn}*
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:PutLogEvents
+              - logs:CreateLogStream
+            Resource:
+              - !GetAtt FirehoseLogGroup.Arn
+
+  SNSTopicSubscriptionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
               Service:
-                - batchoperations.s3.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: AllowS3GlacierRestore
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: AllowAuditBucketRestore
-                Effect: Allow
-                Action:
-                  - s3:RestoreObject
-                Resource:
-                  - !Sub '${MessageBatchBucket.Arn}/*'
-        - PolicyName: AllowManifestOperations
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: AllowManifestBucketRead
-                Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:GetObjectVersion
-                Resource: '{{resolve:ssm:BatchJobManifestBucketArn}}/*'
-              - Sid: AllowManifestBucketWriteForReports
-                Effect: Allow
-                Action:
-                  - s3:PutObject
-                Resource: '{{resolve:ssm:BatchJobManifestBucketArn}}/*'
-        - PolicyName: AllowEncryptOperations
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: AllowEncryptLambdaExecute
-                Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource: !GetAtt HistoricEncryptBatchFunction.Arn
+                - sns.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref SnsKinesisFirehoseAccessPolicy
+
+  SnsKinesisFirehoseAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: sns_kinesis_firehose_access_policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'firehose:DescribeDeliveryStream'
+              - 'firehose:ListDeliveryStreams'
+              - 'firehose:ListTagsForDeliveryStream'
+              - 'firehose:PutRecord'
+              - 'firehose:PutRecordBatch'
+            Resource:
+              - !GetAtt AuditDeliveryStream.Arn
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+            Resource: '{{resolve:ssm:SNSKMSKeyARN}}'
+
+  ########################################
+  # End: Audit delivery stream resources #
+  ########################################
 
   ######################################
-  # Encrypt historic data lambdas ends #
+  # Start: Integration Tests resources #
   ######################################
 
-  ########
-  # CSLS #
-  ########
+  AddFirehoseRecordFunctionInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: DeployTestRolePolicy
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt IntegrationTestsAddFirehoseRecordFunctionNameParameter.Value
+      Principal: !Ref TestRoleArn
+
+  IntegrationTestsAddFirehoseRecordFunctionNameParameter:
+    Condition: IsTestableEnv
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/IntegrationTestsAddFirehoseRecordFunctionName
+      Type: String
+      Value: '{{resolve:ssm:/tests/AddFirehoseRecordFunctionName}}'
+
+  ####################################
+  # End: Integration Tests resources #
+  ####################################
+
+  #############################
+  # Start: CSLS Subscriptions #
+  #############################
 
   CSLSFireHoseLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: 'FirehoseLogGroup'
+        Ref: FirehoseLogGroup
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
@@ -1283,13 +949,79 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
-        Ref: 'DelimiterLogGroup'
+        Ref: DelimiterLogGroup
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
-Outputs:
-  IPVCoreStubURL:
-    Value: !ImportValue IPVCoreStubURL
+  CSLSInitiateCopyAndEncryptLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName:
+        Ref: InitiateCopyAndEncryptLogs
+      FilterPattern: ''
+      DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
-  OrchestrationStubURL:
-    Value: !ImportValue OrchestrationStubURL
+  ###########################
+  # End: CSLS Subscriptions #
+  ###########################
+
+  ##########################################
+  # Start: Monitoring & alerting resources #
+  ##########################################
+
+  # CloudWatch Alarms
+  FailureToEncryptAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm that monitors the ReadToEncrypt DLQ for any new objects
+      AlarmName: FailureToEncryptAlarm
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 60
+      Threshold: 1
+      TreatMissingData: notBreaching
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      OKActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.QueueName
+
+  S3NoReceivedObjectsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Audit S3 Received No Objects Alarm
+      AlarmName: S3NoReceivedObjectsAlarm
+      ComparisonOperator: LessThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 0
+      TreatMissingData: breaching
+      MetricName: PutRequests
+      Namespace: AWS/S3
+      AlarmActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
+      Dimensions:
+        - Name: BucketName
+          Value: !Ref MessageBatchBucket
+        - Name: FilterId
+          Value: EntireBucket
+
+  # PagerDuty
+  PagerDutySubscription:
+    Type: AWS::SNS::Subscription
+    Condition: IsPagerDutyEnvironment
+    Properties:
+      TopicArn: '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
+      Protocol: https
+      Endpoint: '{{resolve:secretsmanager:PagerDutyEndpoint}}'
+
+  ########################################
+  # End: Monitoring & alerting resources #
+  ########################################
