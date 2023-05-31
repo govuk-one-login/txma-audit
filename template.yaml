@@ -27,6 +27,10 @@ Parameters:
     Description: 'The ARN of the role that will used for integration tests'
     Default: 'none'
     AllowedPattern: '(none)|(arn:aws:iam::.*:role/.*)'
+  VpcStackName:
+    Type: String
+    Description: The name of the stack containing the VPC
+    Default: none
 
 Conditions:
   UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, 'none']]
@@ -75,6 +79,9 @@ Globals:
       - !Ref AWS::NoValue
     Runtime: nodejs18.x
     Timeout: 30
+    VpcConfig:
+      SecurityGroupIds:
+        - Fn::ImportValue: !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
 
 Resources:
   #################################
@@ -412,16 +419,21 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
   DelimiterFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
-    #checkov:skip=CKV_AWS_117:VPC not required
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: DelimiterFunction
       Handler: delimiter.handler
       Role: !GetAtt DelimiterLambdaAccessRole.Arn
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
 
   ###############################
   # End: Audit Bucket resources #
@@ -563,7 +575,6 @@ Resources:
   # Lambda resources
   InitiateCopyAndEncryptFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
-    #checkov:skip=CKV_AWS_117:VPC not required
     Type: AWS::Serverless::Function
     Properties:
       MemorySize: 1536
@@ -583,6 +594,11 @@ Resources:
           Properties:
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
             BatchSize: 1
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
     DeadLetterQueue:
       Type: SQS
       TargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
@@ -612,7 +628,7 @@ Resources:
                 - lambda.amazonaws.com
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref InitiateCopyAndEncryptPolicy
 
   InitiateCopyAndEncryptPolicy:

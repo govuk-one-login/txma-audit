@@ -8,5 +8,6 @@ tags = "Product=\"GOV.UK Sign In\" System=\"TxMA\" Environment=\"dev\" Owner=\"d
 parameter_overrides=[
     "Environment=dev",
     "CodeSigningConfigArn=none",
-    "PermissionsBoundary=none"
+    "PermissionsBoundary=none",
+    "VpcStackName=vpc"
 ]
