@@ -425,6 +425,7 @@ Resources:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
     Properties:
+      MemorySize: 256
       FunctionName: DelimiterFunction
       Handler: delimiter.handler
       Role: !GetAtt DelimiterLambdaAccessRole.Arn
