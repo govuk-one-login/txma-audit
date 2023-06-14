@@ -400,10 +400,38 @@ Resources:
       LogGroupName: /aws/lambda/DelimiterFunction
       RetentionInDays: 7
 
+  DelimiterLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-s3-delimiter
+      RetentionInDays: 7
+
   DelimiterLambdaAccessRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub ${AWS::StackName}-LambdaAccessRole-Delimiter
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaServiceToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  S3DelimiterFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-s3-delimiter-role
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -427,8 +455,23 @@ Resources:
     Properties:
       MemorySize: 256
       FunctionName: DelimiterFunction
-      Handler: delimiter.handler
+      Handler: s3Delimiter.handler
       Role: !GetAtt DelimiterLambdaAccessRole.Arn
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+
+  S3DelimiterFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 256
+      FunctionName: !Sub ${AWS::StackName}-s3-delimiter
+      Handler: s3Delimiter.handler
+      Role: !GetAtt S3DelimiterFunctionRole.Arn
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       VpcConfig:
         SubnetIds:
@@ -521,6 +564,13 @@ Resources:
       Type: String
       Value: !GetAtt EncryptionGeneratorKmsKey.Arn
 
+  S3EncryptionGeneratorKmsKeyArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${AWS::StackName}/S3EncryptionGeneratorKmsKeyArn
+      Type: String
+      Value: !GetAtt EncryptionGeneratorKmsKey.Arn
+
   # SQS resources
   AuditFileReadyToEncryptQueue:
     Type: AWS::SQS::Queue
@@ -580,7 +630,7 @@ Resources:
     Properties:
       MemorySize: 1536
       FunctionName: InitiateCopyAndEncryptFunction
-      Handler: initiateCopyAndEncrypt.handler
+      Handler: s3CopyAndEncrypt.handler
       Role: !GetAtt InitiateCopyAndEncryptLambdaRole.Arn
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       Environment:
@@ -604,11 +654,45 @@ Resources:
       Type: SQS
       TargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
 
+  S3CopyAndEncryptFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 1536
+      FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
+      Handler: s3CopyAndEncrypt.handler
+      Role: !GetAtt S3CopyAndEncryptFunctionRole.Arn
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      Environment:
+        Variables:
+          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
+          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
+          GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
+      Events:
+        AuditFileReadyToEncryptEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
+            BatchSize: 1
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+
   InitiateCopyAndEncryptLogs:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
       LogGroupName: !Sub '/aws/lambda/InitiateCopyAndEncryptFunction'
+      RetentionInDays: 7
+
+  S3CopyAndEncryptLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-s3-copy-and-encrypt
       RetentionInDays: 7
 
   InitiateCopyAndEncryptLambdaRole:
@@ -632,10 +716,88 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref InitiateCopyAndEncryptPolicy
 
+  S3CopyAndEncryptFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-s3-copy-and-encrypt-role
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref InitiateCopyAndEncryptPolicy
+
   InitiateCopyAndEncryptPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       ManagedPolicyName: !Sub ${AWS::StackName}-InitiateCopyAndEncryptPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: TemporaryS3Read
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - !GetAtt TemporaryMessageBatchBucket.Arn
+              - !Sub '${TemporaryMessageBatchBucket.Arn}/*'
+          - Sid: AuditS3Read
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub '${MessageBatchBucket.Arn}/*'
+          - Sid: PermanentS3Write
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource:
+              - !GetAtt PermanentMessageBatchBucket.Arn
+              - !Sub '${PermanentMessageBatchBucket.Arn}/*'
+          - Sid: UseSqsKmsKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey*
+              - kms:ReEncrypt*
+            Resource:
+              - !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+          - Sid: Logs
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !GetAtt InitiateCopyAndEncryptLogs.Arn
+          - Sid: sqsReceive
+            Effect: Allow
+            Action:
+              - sqs:*
+            Resource: !GetAtt AuditFileReadyToEncryptQueue.Arn
+          - Sid: UseEncryptionGeneratorKmsKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey*
+              - kms:Encrypt*
+            Resource:
+              - !GetAtt EncryptionGeneratorKmsKey.Arn
+
+  S3CopyAndEncryptPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-s3-copy-and-encrypt-policy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
