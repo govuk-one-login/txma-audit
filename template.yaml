@@ -669,12 +669,6 @@ Resources:
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
-      Events:
-        AuditFileReadyToEncryptEvent:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
-            BatchSize: 1
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
