@@ -719,14 +719,14 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
-        Version: 2012-10-17
+        Version: '2012-10-17'
         Statement:
-          - Sid: ''
+          - Sid: AllowLambdaService
             Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref S3CopyAndEncryptPolicy
@@ -801,7 +801,7 @@ Resources:
               - s3:GetObject
             Resource:
               - !GetAtt TemporaryMessageBatchBucket.Arn
-              - !Sub '${TemporaryMessageBatchBucket.Arn}/*'
+              - !Sub ${TemporaryMessageBatchBucket.Arn}/*
           - Sid: AuditS3Read
             Effect: Allow
             Action:
@@ -815,7 +815,7 @@ Resources:
               - s3:PutObject
             Resource:
               - !GetAtt PermanentMessageBatchBucket.Arn
-              - !Sub '${PermanentMessageBatchBucket.Arn}/*'
+              - !Sub ${PermanentMessageBatchBucket.Arn}/*
           - Sid: UseSqsKmsKey
             Effect: Allow
             Action:
@@ -824,7 +824,7 @@ Resources:
               - kms:ReEncrypt*
             Resource:
               - !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
-          - Sid: sqsReceive
+          - Sid: SQSReceive
             Effect: Allow
             Action:
               - sqs:*
