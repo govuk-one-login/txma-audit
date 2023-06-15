@@ -729,7 +729,7 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        - !Ref InitiateCopyAndEncryptPolicy
+        - !Ref S3CopyAndEncryptPolicy
 
   InitiateCopyAndEncryptPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -824,13 +824,6 @@ Resources:
               - kms:ReEncrypt*
             Resource:
               - !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
-          - Sid: Logs
-            Effect: Allow
-            Action:
-              - logs:CreateLogGroup
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-            Resource: !GetAtt InitiateCopyAndEncryptLogs.Arn
           - Sid: sqsReceive
             Effect: Allow
             Action:
