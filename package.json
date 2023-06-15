@@ -15,7 +15,6 @@
     "lint": "prettier . --check || exit 1 ; eslint . --max-warnings=0",
     "lint:fix": "prettier . --write ; eslint . --fix",
     "postinstall": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\"",
-    "historicEncrypt": "ts-node scripts/encryptHistoricData/entryPoint.ts",
     "test": "jest",
     "test:cov": "jest --coverage"
   },
