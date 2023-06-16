@@ -1040,6 +1040,7 @@ Resources:
             Action: sts:AssumeRole
 
   AuditMessageDeliveryStreamRole:
+    Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub ${AWS::StackName}-message-batch-firehose-role
       PermissionsBoundary: !If
