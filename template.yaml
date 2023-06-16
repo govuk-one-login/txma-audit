@@ -945,6 +945,12 @@ Resources:
       LogGroupName: !Ref FirehoseLogGroup
       LogStreamName: audit
 
+  AuditMessageDeliveryStreamDestinationLogStream:
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref AuditMessageDeliveryStreamLogs
+      LogStreamName: DestinationDelivery
+
   AuditDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     DependsOn:
@@ -1002,7 +1008,7 @@ Resources:
         CloudWatchLoggingOptions:
           Enabled: true
           LogGroupName: !Ref AuditMessageDeliveryStreamLogs
-          LogStreamName: DestinationDelivery
+          LogStreamName: !Ref AuditMessageDeliveryStreamDestinationLogStream
         ProcessingConfiguration:
           Enabled: true
           Processors:
