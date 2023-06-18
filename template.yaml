@@ -1028,41 +1028,6 @@ Resources:
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
 
-  DeliveryStreamRole:
-    Type: AWS::IAM::Role
-    Properties:
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowFirehoseToAssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - firehose.amazonaws.com
-            Action: sts:AssumeRole
-
-  AuditMessageDeliveryStreamRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub ${AWS::StackName}-message-batch-firehose-role
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowFirehoseToAssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - firehose.amazonaws.com
-            Action: sts:AssumeRole
-
   DeliveryStreamPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -1097,11 +1062,9 @@ Resources:
               - !GetAtt FirehoseLogGroup.Arn
 
   AuditMessageDeliveryStreamPolicy:
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Properties:
-      Roles:
-        - !Ref AuditMessageDeliveryStreamRole
-      PolicyName: !Sub ${AWS::StackName}-message-batch-firehose-policy
+      ManagedPolicyName: !Sub ${AWS::StackName}-message-batch-firehose-policy
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -1129,6 +1092,43 @@ Resources:
               - logs:CreateLogStream
             Resource:
               - !GetAtt AuditMessageDeliveryStreamLogs.Arn
+
+  DeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowFirehoseToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action: sts:AssumeRole
+
+  AuditMessageDeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-message-batch-firehose-role
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowFirehoseToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref AuditMessageDeliveryStreamPolicy
 
   SNSTopicSubscriptionRole:
     Type: AWS::IAM::Role
