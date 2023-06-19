@@ -6,6 +6,7 @@
 .eslintignore
 .gitignore
 .husky
+.nvmrc
 .pnp.*
 .prettierignore
 .secrets.baseline
