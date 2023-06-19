@@ -392,93 +392,6 @@ Resources:
       MetricsConfigurations:
         - Id: EntireBucket
 
-  # Lambda function resources
-  DelimiterLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
-      LogGroupName: /aws/lambda/DelimiterFunction
-      RetentionInDays: 7
-
-  DelimiterLogs:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
-      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-s3-delimiter
-      RetentionInDays: 7
-
-  DelimiterLambdaAccessRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub ${AWS::StackName}-LambdaAccessRole-Delimiter
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowLambdaServiceToAssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-
-  S3DelimiterFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub ${AWS::StackName}-s3-delimiter-role
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowLambdaServiceToAssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-
-  DelimiterFunction:
-    #checkov:skip=CKV_AWS_115:Defined in Globals section
-    Type: AWS::Serverless::Function
-    Properties:
-      MemorySize: 256
-      FunctionName: DelimiterFunction
-      Handler: s3Delimiter.handler
-      Role: !GetAtt DelimiterLambdaAccessRole.Arn
-      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
-          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
-
-  S3DelimiterFunction:
-    #checkov:skip=CKV_AWS_115:Defined in Globals section
-    Type: AWS::Serverless::Function
-    Properties:
-      MemorySize: 256
-      FunctionName: !Sub ${AWS::StackName}-s3-delimiter
-      Handler: s3Delimiter.handler
-      Role: !GetAtt S3DelimiterFunctionRole.Arn
-      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
-          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
-
   ###############################
   # End: Audit Bucket resources #
   ###############################
@@ -924,6 +837,94 @@ Resources:
   # Start: Audit delivery stream resources #
   ##########################################
 
+  # Lambda function resources
+  DelimiterLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: /aws/lambda/DelimiterFunction
+      RetentionInDays: 7
+
+  AuditMessageDelimiterLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-audit-message-delimiter
+      RetentionInDays: 7
+
+  DelimiterLambdaAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-LambdaAccessRole-Delimiter
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaServiceToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  AuditMessageDelimiterFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-audit-message-delimiter-role
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaServiceToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  DelimiterFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 256
+      FunctionName: DelimiterFunction
+      Handler: auditMessageDelimiter.handler
+      Role: !GetAtt DelimiterLambdaAccessRole.Arn
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+
+  AuditMessageDelimiterFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 256
+      FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
+      Handler: auditMessageDelimiter.handler
+      Role: !GetAtt AuditMessageDelimiterFunctionRole.Arn
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+
+  # Kinesis Firehose resources
   FirehoseLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -931,11 +932,24 @@ Resources:
       LogGroupName: /aws/firehose
       RetentionInDays: 7
 
+  AuditMessageDeliveryStreamLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: !Sub /aws/kinesisfirehose/${AWS::StackName}-message-batch
+      RetentionInDays: 7
+
   FirehoseLogStream:
     Type: AWS::Logs::LogStream
     Properties:
       LogGroupName: !Ref FirehoseLogGroup
       LogStreamName: audit
+
+  AuditMessageDeliveryStreamDestinationLogStream:
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref AuditMessageDeliveryStreamLogs
+      LogStreamName: DestinationDelivery
 
   AuditDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
@@ -972,6 +986,39 @@ Resources:
                 - ParameterName: RoleArn
                   ParameterValue: !GetAtt DeliveryStreamRole.Arn
 
+  AuditMessageDeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Sub ${AWS::StackName}-message-batch
+      DeliveryStreamType: DirectPut
+      DeliveryStreamEncryptionConfigurationInput:
+        KeyARN: '{{resolve:ssm:FirehoseKmsKeyArn}}'
+        KeyType: CUSTOMER_MANAGED_CMK
+      ExtendedS3DestinationConfiguration:
+        Prefix: firehose/
+        BucketARN: !GetAtt MessageBatchBucket.Arn
+        BufferingHints:
+          IntervalInSeconds: !If
+            - IsTestableEnv
+            - 60
+            - 900
+          SizeInMBs: 128
+        CompressionFormat: GZIP
+        RoleARN: !GetAtt DeliveryStreamRole.Arn # TODO: Update
+        CloudWatchLoggingOptions:
+          Enabled: true
+          LogGroupName: !Ref AuditMessageDeliveryStreamLogs
+          LogStreamName: !Ref AuditMessageDeliveryStreamDestinationLogStream
+        ProcessingConfiguration:
+          Enabled: true
+          Processors:
+            - Type: Lambda
+              Parameters:
+                - ParameterName: LambdaArn
+                  ParameterValue: !GetAtt AuditMessageDelimiterFunction.Arn
+                - ParameterName: RoleArn
+                  ParameterValue: !GetAtt AuditMessageDeliveryStreamRole.Arn
+
   DeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
     Properties:
@@ -980,23 +1027,6 @@ Resources:
       Protocol: firehose
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
-
-  DeliveryStreamRole:
-    Type: AWS::IAM::Role
-    Properties:
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowFirehoseToAssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - firehose.amazonaws.com
-            Action: sts:AssumeRole
 
   DeliveryStreamPolicy:
     Type: AWS::IAM::Policy
@@ -1031,6 +1061,75 @@ Resources:
             Resource:
               - !GetAtt FirehoseLogGroup.Arn
 
+  AuditMessageDeliveryStreamPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-message-batch-firehose-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:AbortMultipartUpload
+              - s3:GetBucketLocation
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:ListBucketMultipartUploads
+              - s3:PutObject
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub ${MessageBatchBucket.Arn}/*
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+              - lambda:GetFunctionConfiguration
+            Resource:
+              - !Sub ${AuditMessageDelimiterFunction.Arn}*
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:PutLogEvents
+              - logs:CreateLogStream
+            Resource:
+              - !GetAtt AuditMessageDeliveryStreamLogs.Arn
+
+  DeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowFirehoseToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action: sts:AssumeRole
+
+  AuditMessageDeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-message-batch-firehose-role
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowFirehoseToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - firehose.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref AuditMessageDeliveryStreamPolicy
+
   SNSTopicSubscriptionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1049,6 +1148,26 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - !Ref SnsKinesisFirehoseAccessPolicy
+
+  AuditMessageDeliveryEventProcessingSnsSubscriptionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-message-batch-sns-sub-role
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref AuditMessageDeliveryEventProcessingSnsSubscriptionPolicy
 
   SnsKinesisFirehoseAccessPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -1070,6 +1189,27 @@ Resources:
             Action:
               - 'kms:Decrypt'
             Resource: '{{resolve:ssm:SNSKMSKeyARN}}'
+
+  AuditMessageDeliveryEventProcessingSnsSubscriptionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-message-batch-sns-sub-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - firehose:DescribeDeliveryStream
+              - firehose:ListDeliveryStreams
+              - firehose:ListTagsForDeliveryStream
+              - firehose:PutRecord
+              - firehose:PutRecordBatch
+            Resource:
+              - !GetAtt AuditMessageDeliveryStream.Arn
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+            Resource: '{{resolve:ssm:SNSKMSKeyARN}}' #TODO: Swap this to a better named SSM parameter when available
 
   ########################################
   # End: Audit delivery stream resources #
@@ -1112,6 +1252,14 @@ Resources:
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
+  CslsAuditMessageDeliveryStreamLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName: !Ref AuditMessageDeliveryStreamLogs
+      FilterPattern: ''
+      DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
+
   CSLSDelimiterLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProductionOrStaging
@@ -1121,12 +1269,28 @@ Resources:
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
+  CslsAuditMessageDelimiterFunctionSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName: !Ref AuditMessageDelimiterLogs
+      FilterPattern: ''
+      DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
+
   CSLSInitiateCopyAndEncryptLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName:
         Ref: InitiateCopyAndEncryptLogs
+      FilterPattern: ''
+      DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
+
+  CslsS3CopyAndEncryptLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName: !Ref S3CopyAndEncryptLogs
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
@@ -1160,11 +1324,53 @@ Resources:
         - Name: QueueName
           Value: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.QueueName
 
+  FailureToEncryptAuditMessageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm that monitors the ReadToEncrypt DLQ for any new objects
+      AlarmName: !Sub ${AWS::StackName}-failure-to-encrypt-audit-message
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 60
+      Threshold: 1
+      TreatMissingData: notBreaching
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      OKActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.QueueName
+
   S3NoReceivedObjectsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: Audit S3 Received No Objects Alarm
       AlarmName: S3NoReceivedObjectsAlarm
+      ComparisonOperator: LessThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 86400
+      Threshold: 0
+      TreatMissingData: breaching
+      MetricName: PutRequests
+      Namespace: AWS/S3
+      AlarmActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
+      Dimensions:
+        - Name: BucketName
+          Value: !Ref MessageBatchBucket
+        - Name: FilterId
+          Value: EntireBucket
+
+  NoAuditMessagesReceivedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Audit S3 Received No Objects Alarm
+      AlarmName: !Sub ${AWS::StackName}-no-audit-messages-received
       ComparisonOperator: LessThanOrEqualToThreshold
       EvaluationPeriods: 1
       Statistic: Sum
