@@ -845,11 +845,11 @@ Resources:
       LogGroupName: /aws/lambda/DelimiterFunction
       RetentionInDays: 7
 
-  S3DelimiterLogs:
+  AuditMessageDelimiterLogs:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
-      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-s3-delimiter
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-audit-message-delimiter
       RetentionInDays: 7
 
   DelimiterLambdaAccessRole:
@@ -873,10 +873,10 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
-  S3DelimiterFunctionRole:
+  AuditMessageDelimiterFunctionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${AWS::StackName}-s3-delimiter-role
+      RoleName: !Sub ${AWS::StackName}-audit-message-delimiter-role
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -900,7 +900,7 @@ Resources:
     Properties:
       MemorySize: 256
       FunctionName: DelimiterFunction
-      Handler: s3Delimiter.handler
+      Handler: auditMessageDelimiter.handler
       Role: !GetAtt DelimiterLambdaAccessRole.Arn
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       VpcConfig:
@@ -909,14 +909,14 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
 
-  S3DelimiterFunction:
+  AuditMessageDelimiterFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
     Properties:
       MemorySize: 256
-      FunctionName: !Sub ${AWS::StackName}-s3-delimiter
-      Handler: s3Delimiter.handler
-      Role: !GetAtt S3DelimiterFunctionRole.Arn
+      FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
+      Handler: auditMessageDelimiter.handler
+      Role: !GetAtt AuditMessageDelimiterFunctionRole.Arn
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       VpcConfig:
         SubnetIds:
@@ -1015,7 +1015,7 @@ Resources:
             - Type: Lambda
               Parameters:
                 - ParameterName: LambdaArn
-                  ParameterValue: !GetAtt S3DelimiterFunction.Arn
+                  ParameterValue: !GetAtt AuditMessageDelimiterFunction.Arn
                 - ParameterName: RoleArn
                   ParameterValue: !GetAtt AuditMessageDeliveryStreamRole.Arn
 
@@ -1084,7 +1084,7 @@ Resources:
               - lambda:InvokeFunction
               - lambda:GetFunctionConfiguration
             Resource:
-              - !Sub ${S3DelimiterFunction.Arn}*
+              - !Sub ${AuditMessageDelimiterFunction.Arn}*
           - Effect: Allow
             Action:
               - logs:CreateLogGroup
@@ -1269,11 +1269,11 @@ Resources:
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
-  CslsS3DelimiterFunctionSubscription:
+  CslsAuditMessageDelimiterFunctionSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProductionOrStaging
     Properties:
-      LogGroupName: !Ref S3DelimiterLogs
+      LogGroupName: !Ref AuditMessageDelimiterLogs
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
