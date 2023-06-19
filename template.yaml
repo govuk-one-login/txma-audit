@@ -1023,10 +1023,10 @@ Resources:
     Type: AWS::SNS::Subscription
     Properties:
       TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
-      Endpoint: !GetAtt AuditDeliveryStream.Arn
+      Endpoint: !GetAtt AuditMessageDeliveryStream.Arn
       Protocol: firehose
       RawMessageDelivery: true
-      SubscriptionRoleArn: !GetAtt SNSTopicSubscriptionRole.Arn
+      SubscriptionRoleArn: !GetAtt AuditMessageDeliveryEventProcessingSnsSubscriptionRole.Arn
 
   DeliveryStreamPolicy:
     Type: AWS::IAM::Policy
