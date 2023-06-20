@@ -33,6 +33,7 @@ Parameters:
     Default: none
 
 Conditions:
+  DevEnvironment: !Equals [!Ref Environment, dev]
   UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, 'none']]
   UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, 'none']]
   UseTestRole: !Not [!Equals [!Ref TestRoleArn, 'none']]
