@@ -1,0 +1,45 @@
+name: Delete feature branch stack
+
+on:
+  delete:
+    branches-ignore:
+      - main
+
+env:
+  AWS_REGION: eu-west-2
+
+jobs:
+  delete-feature:
+    name: Delete feature branch
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+      - name: Assume the dev account deployment role
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_DEV_DEPLOY_ROLE_ARN }}
+      - name: Delete feature branch stack
+        env:
+          FEATURE_BRANCH_NAME: ${{ github.event.ref }}
+        run: |
+          stack_name=$(
+            echo ${FEATURE_BRANCH_NAME##*/} | \
+            tr -cd '[a-zA-Z0-9-]' | \
+            tr '[:upper:]' '[:lower:]' | \
+            cut -c -32
+          )
+
+          sam delete \
+            --stack-name ${stack_name:0:32} \
+            --region ${AWS_REGION} \
+            --no-prompts

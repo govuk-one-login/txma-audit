@@ -992,3 +992,17 @@ Resources:
   ########################################
   # End: Monitoring & alerting resources #
   ########################################
+
+  ################################
+  # Start: Development resources #
+  ################################
+
+  EmptyS3Buckets:
+    Condition: DevEnvironment
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: '{{resolve:ssm:EmptyS3BucketsFunctionArn}}'
+
+  ##############################
+  # End: Development resources #
+  ##############################
