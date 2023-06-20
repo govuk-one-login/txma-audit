@@ -427,6 +427,8 @@ Resources:
 
   EncryptionGeneratorKmsKeyAlias:
     Type: AWS::KMS::Alias
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AliasName: !Sub alias/${AWS::StackName}/${Environment}/encryption-generator-kms-key
       TargetKeyId: !Ref EncryptionGeneratorKmsKey
