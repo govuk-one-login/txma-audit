@@ -359,97 +359,12 @@ Resources:
   # Start: Encryption resources #
   ###############################
 
-  # KMS key resources
-  AuditFileReadyToEncryptQueueKmsKey:
-    Type: AWS::KMS::Key
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action:
-              - kms:*
-            Resource:
-              - '*'
-          - Effect: Allow
-            Principal:
-              Service: s3.amazonaws.com
-            Action:
-              - kms:Decrypt
-              - kms:Encrypt
-              - kms:GenerateDataKey*
-              - kms:DescribeKey
-            Resource: '*'
-          - Effect: Allow
-            Principal:
-              Service: sqs.amazonaws.com
-            Action:
-              - kms:Decrypt
-              - kms:Encrypt
-              - kms:GenerateDataKey*
-              - kms:DescribeKey
-            Resource: '*'
-
-  AuditFileReadyToEncryptQueueKmsKeyAlias:
-    Type: AWS::KMS::Alias
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      AliasName: !Sub alias/${AWS::StackName}/${Environment}/audit-file-ready-to-encrypt-queue-kms-key
-      TargetKeyId: !Ref AuditFileReadyToEncryptQueueKmsKey
-
-  EncryptionGeneratorKmsKey:
-    Type: AWS::KMS::Key
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: Enable Root access
-            Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action:
-              - kms:*
-            Resource: '*'
-          - Sid: Allow AWS Lambda access
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action:
-              - kms:Encrypt
-              - kms:Decrypt
-              - kms:GenerateDataKey
-            Resource: '*'
-
-  EncryptionGeneratorKmsKeyAlias:
-    Type: AWS::KMS::Alias
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      AliasName: !Sub alias/${AWS::StackName}/${Environment}/encryption-generator-kms-key
-      TargetKeyId: !Ref EncryptionGeneratorKmsKey
-
-  S3EncryptionGeneratorKmsKeyArnParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub /${AWS::StackName}/S3EncryptionGeneratorKmsKeyArn
-      Type: String
-      Value: !GetAtt EncryptionGeneratorKmsKey.Arn
-
   # SQS resources
   AuditFileReadyToEncryptQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-queue
-      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+      KmsMasterKeyId: '{{resolve:ssm:TemporaryAuditFileReadyToEncryptQueueKmsKeyArn}}'
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
         maxReceiveCount: 5
@@ -458,7 +373,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ
-      KmsMasterKeyId: !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+      KmsMasterKeyId: '{{resolve:ssm:TemporaryAuditFileReadyToEncryptQueueKmsKeyArn}}'
       MessageRetentionPeriod: 1209600
 
   AuditFileReadyToEncryptQueuePolicy:
@@ -511,7 +426,7 @@ Resources:
           TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
-          GENERATOR_KEY_ID: !GetAtt EncryptionGeneratorKmsKey.Arn
+          GENERATOR_KEY_ID: '{{resolve:ssm:TemporaryEncryptionGeneratorKmsKeyArn}}'
       Events:
         AuditFileReadyToEncryptEvent:
           Type: SQS
@@ -587,7 +502,7 @@ Resources:
               - kms:GenerateDataKey*
               - kms:ReEncrypt*
             Resource:
-              - !GetAtt AuditFileReadyToEncryptQueueKmsKey.Arn
+              - '{{resolve:ssm:TemporaryAuditFileReadyToEncryptQueueKmsKeyArn}}'
           - Sid: SQSReceive
             Effect: Allow
             Action:
@@ -600,7 +515,7 @@ Resources:
               - kms:GenerateDataKey*
               - kms:Encrypt*
             Resource:
-              - !GetAtt EncryptionGeneratorKmsKey.Arn
+              - '{{resolve:ssm:TemporaryEncryptionGeneratorKmsKeyArn}}'
 
   #############################
   # End: Encryption resources #
@@ -882,30 +797,6 @@ Resources:
   ########################################
   # End: Audit delivery stream resources #
   ########################################
-
-  ######################################
-  # Start: Integration Tests resources #
-  ######################################
-
-  AddFirehoseRecordFunctionInvokePermission:
-    Type: AWS::Lambda::Permission
-    Condition: DeployTestRolePolicy
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt IntegrationTestsAddFirehoseRecordFunctionNameParameter.Value
-      Principal: !Ref TestRoleArn
-
-  IntegrationTestsAddFirehoseRecordFunctionNameParameter:
-    Condition: IsTestableEnv
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub /tests/${AWS::StackName}/IntegrationTestsAddFirehoseRecordFunctionName
-      Type: String
-      Value: '{{resolve:ssm:/tests/AddFirehoseRecordFunctionName}}'
-
-  ####################################
-  # End: Integration Tests resources #
-  ####################################
 
   #############################
   # Start: CSLS Subscriptions #
