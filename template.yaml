@@ -362,6 +362,8 @@ Resources:
   # KMS key resources
   AuditFileReadyToEncryptQueueKmsKey:
     Type: AWS::KMS::Key
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       EnableKeyRotation: true
       KeyPolicy:
@@ -395,6 +397,8 @@ Resources:
 
   AuditFileReadyToEncryptQueueKmsKeyAlias:
     Type: AWS::KMS::Alias
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AliasName: !Sub alias/${AWS::StackName}/${Environment}/audit-file-ready-to-encrypt-queue-kms-key
       TargetKeyId: !Ref AuditFileReadyToEncryptQueueKmsKey
