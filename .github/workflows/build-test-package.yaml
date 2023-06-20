@@ -118,37 +118,6 @@ jobs:
             --no-fail-on-empty-changeset \
             --resolve-s3
 
-  package-dev:
-    name: Package for deployment to dev account
-    if: github.ref == 'refs/heads/main'
-    needs: [validate-build, check-yarn-cache]
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: sam-build
-      - name: Setup Python 3.8
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2
-      - name: Assume AWS role - Dev
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_DEV }}
-      - name: Package SAM app and upload to S3 - Dev
-        uses: alphagov/di-devplatform-upload-action@v3
-        with:
-          artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME_DEV }}
-          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_DEV }}
-          working-directory: '.'
-
   package-build:
     name: Package for deployment to build account
     if: github.ref == 'refs/heads/main'
