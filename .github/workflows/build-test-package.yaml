@@ -113,7 +113,6 @@ jobs:
           )
 
           sam deploy \
-            --config-env dev \
             --stack-name ${stack_name} \
             --no-fail-on-empty-changeset \
             --resolve-s3
