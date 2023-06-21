@@ -364,7 +364,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-queue
-      KmsMasterKeyId: '{{resolve:ssm:TemporaryAuditFileReadyToEncryptQueueKmsKeyArn}}'
+      KmsMasterKeyId: '{{resolve:ssm:AuditFileReadyToEncryptQueueKmsKeyArn}}'
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.Arn
         maxReceiveCount: 5
@@ -373,7 +373,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ
-      KmsMasterKeyId: '{{resolve:ssm:TemporaryAuditFileReadyToEncryptQueueKmsKeyArn}}'
+      KmsMasterKeyId: '{{resolve:ssm:AuditFileReadyToEncryptQueueKmsKeyArn}}'
       MessageRetentionPeriod: 1209600
 
   AuditFileReadyToEncryptQueuePolicy:
@@ -426,7 +426,7 @@ Resources:
           TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
-          GENERATOR_KEY_ID: '{{resolve:ssm:TemporaryEncryptionGeneratorKmsKeyArn}}'
+          GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
       Events:
         AuditFileReadyToEncryptEvent:
           Type: SQS
@@ -502,7 +502,7 @@ Resources:
               - kms:GenerateDataKey*
               - kms:ReEncrypt*
             Resource:
-              - '{{resolve:ssm:TemporaryAuditFileReadyToEncryptQueueKmsKeyArn}}'
+              - '{{resolve:ssm:AuditFileReadyToEncryptQueueKmsKeyArn}}'
           - Sid: SQSReceive
             Effect: Allow
             Action:
@@ -515,7 +515,7 @@ Resources:
               - kms:GenerateDataKey*
               - kms:Encrypt*
             Resource:
-              - '{{resolve:ssm:TemporaryEncryptionGeneratorKmsKeyArn}}'
+              - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
 
   #############################
   # End: Encryption resources #
