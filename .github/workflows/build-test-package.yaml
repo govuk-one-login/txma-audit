@@ -1,0 +1,180 @@
+name: Build, Test and Package
+
+on: [push, workflow_dispatch]
+
+env:
+  AWS_REGION: eu-west-2
+
+jobs:
+  validate-build:
+    name: Validate build & run tests
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+      - name: Assume AWS Validate role
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN }}
+      - name: Node - Enable Corepack
+        run: corepack enable
+      - name: Install ESBuild binaries
+        run: yarn unplug
+      - name: Run linting
+        if: always()
+        run: yarn lint
+      - name: Run tests
+        if: always()
+        run: yarn test
+      - name: Validate SAM template
+        if: always()
+        run: sam validate --lint
+      - name: Run Checkov on SAM template
+        if: always()
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: '.'
+          framework: cloudformation
+          quiet: true
+          skip_check: CKV_AWS_116
+      - name: Build Lambda functions
+        run: yarn build
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: sam-build
+          path: |
+            dist/
+            samconfig.toml
+            template.yaml
+
+  check-yarn-cache:
+    name: Check Yarn cache
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Node - Enable Corepack
+        run: corepack enable
+      - name: Install ESBuild binaries
+        run: yarn unplug
+      - name: Check Yarn cache
+        run: yarn install --immutable --immutable-cache --check-cache
+
+  deploy-feature:
+    name: Deploy feature branch to dev account
+    if: startsWith(github.ref, 'refs/heads/feature') || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main')
+    needs: [validate-build]
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: sam-build
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+      - name: Assume the dev account deployment role
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_DEV_DEPLOY_ROLE_ARN }}
+      - name: Deploy to feature stack in the dev account
+        env:
+          FEATURE_BRANCH_NAME: ${{ github.event.ref }}
+        run: |
+          stack_name=$(
+            echo ${FEATURE_BRANCH_NAME##*/} | \
+            tr -cd '[a-zA-Z0-9-]' | \
+            tr '[:upper:]' '[:lower:]' | \
+            cut -c -32
+          )
+
+          sam deploy \
+            --stack-name ${stack_name} \
+            --no-fail-on-empty-changeset \
+            --resolve-s3
+
+  # package-dev:
+  #   name: Package for deployment to dev account
+  #   if: github.ref == 'refs/heads/main'
+  #   needs: [validate-build, check-yarn-cache]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #   steps:
+  #     - name: Download build artifact
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: sam-build
+  #     - name: Setup Python 3.8
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.8'
+  #     - name: Setup SAM CLI
+  #       uses: aws-actions/setup-sam@v2
+  #     - name: Assume AWS role - Dev
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-region: ${{ env.AWS_REGION }}
+  #         role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_DEV }}
+  #     - name: Package SAM app and upload to S3 - Dev
+  #       uses: alphagov/di-devplatform-upload-action@v3
+  #       with:
+  #         artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME_DEV }}
+  #         signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_DEV }}
+  #         working-directory: '.'
+
+  package-build:
+    name: Package for deployment to build account
+    if: github.ref == 'refs/heads/main'
+    needs: [validate-build, check-yarn-cache]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: sam-build
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+      - name: Assume AWS role - Dev
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+      - name: Package SAM app and upload to S3 - Dev
+        uses: alphagov/di-devplatform-upload-action@v3
+        with:
+          artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
+          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+          working-directory: '.'
