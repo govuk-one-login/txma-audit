@@ -702,6 +702,15 @@ Resources:
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt AuditMessageDeliveryEventProcessingSnsSubscriptionRole.Arn
 
+  AuditMessageDeliveryStreamSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: '{{resolve:ssm:EventProcessorSnsTopicArn}}'
+      Endpoint: !GetAtt AuditMessageDeliveryStream.Arn
+      Protocol: firehose
+      RawMessageDelivery: true
+      SubscriptionRoleArn: !GetAtt AuditMessageDeliveryEventProcessingSnsSubscriptionRole.Arn
+
   AuditMessageDeliveryStreamPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
