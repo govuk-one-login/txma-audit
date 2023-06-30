@@ -874,7 +874,7 @@ Resources:
       ComparisonOperator: LessThanOrEqualToThreshold
       EvaluationPeriods: 1
       Statistic: Sum
-      Period: 43200
+      Period: 7200
       Threshold: 0
       TreatMissingData: breaching
       MetricName: PutRequests
