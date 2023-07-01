@@ -39,7 +39,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/aws-lambda", "npm:8.10.119"],\
             ["@types/jest", "npm:29.5.2"],\
             ["@types/jest-when", "npm:3.5.2"],\
-            ["@types/node", "npm:18.16.18"],\
+            ["@types/node", "npm:18.16.19"],\
             ["@typescript-eslint/eslint-plugin", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:5.59.11"],\
             ["@typescript-eslint/parser", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:5.59.11"],\
             ["aws-sdk-client-mock", "npm:2.1.1"],\
@@ -3292,6 +3292,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/node", "npm:18.16.18"]\
           ],\
           "linkType": "HARD"\
+        }],\
+        ["npm:18.16.19", {\
+          "packageLocation": "./.yarn/cache/@types-node-npm-18.16.19-aada4da69c-63c31f0961.zip/node_modules/@types/node/",\
+          "packageDependencies": [\
+            ["@types/node", "npm:18.16.19"]\
+          ],\
+          "linkType": "HARD"\
         }]\
       ]],\
       ["@types/prettier", [\
@@ -4551,7 +4558,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/aws-lambda", "npm:8.10.119"],\
             ["@types/jest", "npm:29.5.2"],\
             ["@types/jest-when", "npm:3.5.2"],\
-            ["@types/node", "npm:18.16.18"],\
+            ["@types/node", "npm:18.16.19"],\
             ["@typescript-eslint/eslint-plugin", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:5.59.11"],\
             ["@typescript-eslint/parser", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:5.59.11"],\
             ["aws-sdk-client-mock", "npm:2.1.1"],\
@@ -8189,7 +8196,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@tsconfig/node12", "npm:1.0.11"],\
             ["@tsconfig/node14", "npm:1.0.3"],\
             ["@tsconfig/node16", "npm:1.0.3"],\
-            ["@types/node", "npm:18.16.18"],\
+            ["@types/node", "npm:18.16.19"],\
             ["@types/swc__core", null],\
             ["@types/swc__wasm", null],\
             ["@types/typescript", null],\
