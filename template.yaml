@@ -869,8 +869,9 @@ Resources:
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
       AlarmDescription: >-
-        Monitor Audit Message Delimiter function DLQ for messages. 
-        Indicates Audit messages have not been delivered to the Audit bucket.
+        Monitor Audit Message Delimiter function DLQ for new messages. 
+        When messages land in this queue, it indicates Audit events 
+        have not been delivered to the Audit bucket.
       AlarmName: !Sub ${AWS::StackName}-audit-message-dlq
       ComparisonOperator: GreaterThanThreshold
       DatapointsToAlarm: 1
@@ -887,44 +888,45 @@ Resources:
   FailureToEncryptAuditMessageAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Alarm that monitors the ReadToEncrypt DLQ for any new objects
-      AlarmName: !Sub ${AWS::StackName}-failure-to-encrypt-audit-message
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 60
-      Threshold: 1
-      TreatMissingData: notBreaching
-      MetricName: ApproximateNumberOfMessagesVisible
-      Namespace: AWS/SQS
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
-      OKActions:
-        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: >-
+        Monitor the Ready To Encrypt DLQ for new messages. 
+        When messages land in this queue, it indicates Audit events have 
+        failed to encrypt.
+      AlarmName: !Sub ${AWS::StackName}-failure-to-encrypt-audit-message
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
       Dimensions:
         - Name: QueueName
           Value: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.QueueName
+      EvaluationPeriods: 1
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Statistic: Sum
+      Period: 60
+      Threshold: 0
 
   NoAuditMessagesReceivedAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
       AlarmDescription: Audit S3 Received No Objects Alarm
       AlarmName: !Sub ${AWS::StackName}-no-audit-messages-received
       ComparisonOperator: LessThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 43200
-      Threshold: 0
-      TreatMissingData: breaching
-      MetricName: PutRequests
-      Namespace: AWS/S3
-      AlarmActions:
-        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
       Dimensions:
         - Name: BucketName
           Value: !Ref MessageBatchBucket
         - Name: FilterId
           Value: EntireBucket
+      EvaluationPeriods: 1
+      MetricName: PutRequests
+      Namespace: AWS/S3
+      Period: 43200
+      Statistic: Sum
+      Threshold: 0
+      TreatMissingData: breaching
 
   # PagerDuty
   PagerDutySubscription:
