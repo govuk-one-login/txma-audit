@@ -1,32 +1,34 @@
 AWSTemplateFormatVersion: '2010-09-09'
+
 Transform: AWS::Serverless-2016-10-31
-Description: 'A template to create all the Audit infrastructure.'
+
+Description: Audit system
 
 Parameters:
   CodeSigningConfigArn:
     Type: String
-    Default: 'none'
+    Default: none
     Description: >
       The ARN of the Code Signing Config to use, provided by the deployment pipeline
   PermissionsBoundary:
-    Description: 'The ARN of the permissions boundary to apply when creating IAM roles'
+    Description: The ARN of the permissions boundary to apply when creating IAM roles
     Type: String
-    Default: 'none'
+    Default: none
   Environment:
-    Description: 'The environment type'
-    Type: 'String'
+    Description: The environment type
+    Type: String
     AllowedValues:
-      - 'dev'
-      - 'build'
-      - 'staging'
-      - 'integration'
-      - 'production'
-    ConstraintDescription: must be dev, build, staging, integration or production
+      - dev
+      - build
+      - staging
+      - integration
+      - production
+    ConstraintDescription: Must be dev, build, staging, integration or production
   TestRoleArn:
-    Type: 'String'
-    Description: 'The ARN of the role that will used for integration tests'
-    Default: 'none'
-    AllowedPattern: '(none)|(arn:aws:iam::.*:role/.*)'
+    Type: String
+    Description: The ARN of the role that will used for integration tests
+    Default: none
+    AllowedPattern: (none)|(arn:aws:iam::.*:role/.*)
   VpcStackName:
     Type: String
     Description: The name of the stack containing the VPC
@@ -34,9 +36,9 @@ Parameters:
 
 Conditions:
   DevEnvironment: !Equals [!Ref Environment, dev]
-  UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, 'none']]
-  UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, 'none']]
-  UseTestRole: !Not [!Equals [!Ref TestRoleArn, 'none']]
+  UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, none]]
+  UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, none]]
+  UseTestRole: !Not [!Equals [!Ref TestRoleArn, none]]
   IsPagerDutyEnvironment:
     !Or [
       !Equals [!Ref Environment, staging],
@@ -138,7 +140,7 @@ Resources:
             ExpiredObjectDeleteMarker: true
       NotificationConfiguration:
         QueueConfigurations:
-          - Event: 's3:ObjectCreated:*'
+          - Event: s3:ObjectCreated:*
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
       OwnershipControls:
         Rules:
@@ -154,40 +156,40 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Effect: 'Deny'
+          - Effect: Deny
             Action:
-              - 's3:DeleteObject'
-              - 's3:DeleteObjectVersion'
-              - 's3:DeleteBucket'
-              - 's3:DeleteBucketPolicy'
+              - s3:DeleteObject
+              - s3:DeleteObjectVersion
+              - s3:DeleteBucket
+              - s3:DeleteBucketPolicy
             Resource:
               - !GetAtt MessageBatchBucket.Arn
-              - !Sub '${MessageBatchBucket.Arn}/*'
+              - !Sub ${MessageBatchBucket.Arn}/*
             Principal:
               AWS: '*'
           - !If
             - DeployTestRolePolicy
-            - Effect: 'Allow'
+            - Effect: Allow
               Resource:
                 - !GetAtt MessageBatchBucket.Arn
-                - !Sub '${MessageBatchBucket.Arn}/*'
+                - !Sub ${MessageBatchBucket.Arn}/*
               Principal:
                 AWS: !Ref TestRoleArn
               Action:
-                - 's3:GetObject'
-                - 's3:ListBucket'
+                - s3:GetObject
+                - s3:ListBucket
             - !Ref AWS::NoValue
           - !If
             - IsProductionOrStaging
-            - Effect: 'Allow'
+            - Effect: Allow
               Resource:
                 - !GetAtt MessageBatchBucket.Arn
-                - !Sub '${MessageBatchBucket.Arn}/*'
+                - !Sub ${MessageBatchBucket.Arn}/*
               Principal:
                 AWS: '{{resolve:ssm:CSLSS3LambdaARN}}'
               Action:
-                - 's3:Get*'
-                - 's3:List*'
+                - s3:Get*
+                - s3:List*
             - !Ref AWS::NoValue
 
   TemporaryMessageBatchBucket:
@@ -224,7 +226,7 @@ Resources:
               NoncurrentDays: 1
             TagFilters:
               - Key: autoTest
-                Value: 'true'
+                Value: true
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
@@ -246,7 +248,7 @@ Resources:
             ExpiredObjectDeleteMarker: true
       NotificationConfiguration:
         QueueConfigurations:
-          - Event: 's3:ObjectCreated:*'
+          - Event: s3:ObjectCreated:*
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
       OwnershipControls:
         Rules:
@@ -302,7 +304,7 @@ Resources:
               NoncurrentDays: 1
             TagFilters:
               - Key: autoTest
-                Value: 'true'
+                Value: true
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
             ExpiredObjectDeleteMarker: true
@@ -345,7 +347,7 @@ Resources:
               NoncurrentDays: 1
             TagFilters:
               - Key: autoTest
-                Value: 'true'
+                Value: true
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -488,7 +490,7 @@ Resources:
               - s3:GetObject
             Resource:
               - !GetAtt MessageBatchBucket.Arn
-              - !Sub '${MessageBatchBucket.Arn}/*'
+              - !Sub ${MessageBatchBucket.Arn}/*
           - Sid: PermanentS3Write
             Effect: Allow
             Action:
@@ -552,7 +554,7 @@ Resources:
           storage.location.template:
             !Join [
               '',
-              [s3://, !Ref MessageBatchBucket, '/firehose/${datetime}/']
+              ['s3://', !Ref MessageBatchBucket, '/firehose/${datetime}/']
             ]
         PartitionKeys:
           - Name: datetime
@@ -693,15 +695,6 @@ Resources:
                 - ParameterName: RoleArn
                   ParameterValue: !GetAtt AuditMessageDeliveryStreamRole.Arn
 
-  DeliveryStreamSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      TopicArn: '{{resolve:ssm:EventProcessorSNSTopicARN}}'
-      Endpoint: !GetAtt AuditMessageDeliveryStream.Arn
-      Protocol: firehose
-      RawMessageDelivery: true
-      SubscriptionRoleArn: !GetAtt AuditMessageDeliveryEventProcessingSnsSubscriptionRole.Arn
-
   AuditMessageDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
     Properties:
@@ -802,7 +795,7 @@ Resources:
           - Effect: Allow
             Action:
               - kms:Decrypt
-            Resource: '{{resolve:ssm:SNSKMSKeyARN}}' #TODO: Swap this to a better named SSM parameter when available
+            Resource: '{{resolve:ssm:EventProcessorSnsKmsKeyArn}}'
 
   ########################################
   # End: Audit delivery stream resources #
@@ -906,6 +899,11 @@ Resources:
 
   EmptyS3Buckets:
     Condition: DevEnvironment
+    DependsOn:
+      - MessageBatchBucket
+      - TemporaryMessageBatchBucket
+      - PermanentMessageBatchBucket
+      - MessageBatchBucketTxMA2
     Type: AWS::CloudFormation::CustomResource
     Properties:
       ServiceToken: '{{resolve:ssm:EmptyS3BucketsFunctionArn}}'
