@@ -659,9 +659,11 @@ Resources:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
     Properties:
-      DeadLetterQueue:
-        Type: SQS
-        TargetArn: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+      EventInvokeConfiguration:
+        DestinationConfig:
+          OnFailure:
+            Type: SQS
+            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
       Handler: auditMessageDelimiter.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
