@@ -633,15 +633,25 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
+  AuditMessageDelimiterDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-audit-message-delimiter-dlq
+      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
+      MessageRetentionPeriod: 1209600
+
   AuditMessageDelimiterFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
     Properties:
-      MemorySize: 256
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
       Handler: auditMessageDelimiter.handler
-      Role: !GetAtt AuditMessageDelimiterFunctionRole.Arn
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      MemorySize: 256
+      Role: !GetAtt AuditMessageDelimiterFunctionRole.Arn
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
@@ -838,6 +848,27 @@ Resources:
   ##########################################
 
   # CloudWatch Alarms
+  AuditMessageDelimiterDeadLetterQueueAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: >-
+        Monitor Audit Message Delimiter function DLQ for messages. 
+        Indicates Audit messages have not been delivered to the Audit bucket.
+      AlarmName: !Sub ${AWS::StackName}-audit-message-dlq
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt AuditMessageDelimiterDeadLetterQueue.QueueName
+      EvaluationPeriods: 1
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+
   FailureToEncryptAuditMessageAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
