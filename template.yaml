@@ -612,6 +612,27 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${AWS::StackName}-audit-message-delimiter
       RetentionInDays: 7
 
+  AuditMessageDelimiterDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-audit-message-delimiter-dlq
+      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
+      MessageRetentionPeriod: 1209600
+
+  AuditMessageDelimiterFunctionDeadLetterQueuePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-message-delimiter-dlq-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowDeadLetterQueueAccess
+            Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+
   AuditMessageDelimiterFunctionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -632,13 +653,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-
-  AuditMessageDelimiterDeadLetterQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub ${AWS::StackName}-audit-message-delimiter-dlq
-      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
-      MessageRetentionPeriod: 1209600
+        - !Ref AuditMessageDelimiterFunctionDeadLetterQueuePolicy
 
   AuditMessageDelimiterFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
