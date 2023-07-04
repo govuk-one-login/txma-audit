@@ -653,7 +653,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${AWS::StackName}-audit-message-delimiter-dlq
-      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
+      KmsMasterKeyId: '{{resolve:ssm:S3QueueNotificationsKmsKeyArn}}'
       MessageRetentionPeriod: 1209600 # 14 days
 
   AuditMessageDelimiterDeadLetterQueuePolicy:
@@ -672,7 +672,7 @@ Resources:
               - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
             Condition:
               ArnEquals:
-                aws:SourceArn: arn:aws:s3:::${AWS::StackName}-${Environment}-firehose-failure
+                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-firehose-failure
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
       Queues:
@@ -721,14 +721,14 @@ Resources:
         - Id: Failures
           Prefix: failures/
       NotificationConfiguration:
-        QueueConfiguration:
-          Event: s3:ObjectCreated:*
-          Filter:
-            S3Key:
-              Rules:
-                - Name: prefix
-                  Value: failures/
-          Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+        QueueConfigurations:
+          - Event: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: failures/
+            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
