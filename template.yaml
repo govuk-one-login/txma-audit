@@ -910,7 +910,6 @@ Resources:
           ReturnData: true
           Label: DeliveryToS3.Success percentage
         - Id: m1
-          Period: 3600
           Label: DeliveryToS3.Success
           ReturnData: false
           MetricStat:
