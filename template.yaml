@@ -649,7 +649,38 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
 
   # Kinesis Firehose resources
+  AuditMessageDelimiterDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-audit-message-delimiter-dlq
+      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  AuditMessageDelimiterDeadLetterQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowS3ToSendMessage
+            Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: arn:aws:s3:::${AWS::StackName}-${Environment}-firehose-failure
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Queues:
+        - !Ref AuditMessageDelimiterDeadLetterQueue
+
   AuditMessageFirehoseFailureBucket:
+    DependsOn:
+      - AuditMessageDelimiterDeadLetterQueuePolicy
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-firehose-failure
@@ -689,6 +720,15 @@ Resources:
       MetricsConfigurations:
         - Id: Failures
           Prefix: failures/
+      NotificationConfiguration:
+        QueueConfiguration:
+          Event: s3:ObjectCreated:*
+          Filter:
+            S3Key:
+              Rules:
+                - Name: prefix
+                  Value: failures/
+          Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
