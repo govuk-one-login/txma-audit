@@ -663,6 +663,7 @@ Resources:
         DestinationConfig:
           OnFailure:
             Destination: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+            Type: SQS
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
       Handler: auditMessageDelimiter.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
