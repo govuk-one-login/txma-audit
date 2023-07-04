@@ -687,7 +687,8 @@ Resources:
         DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-firehose-failure/
       MetricsConfigurations:
-        - Id: EntireBucket
+        - Id: Failures
+          Prefix: failures/
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -926,7 +927,7 @@ Resources:
         - Name: BucketName
           Value: !Ref AuditMessageFirehoseFailureBucket
         - Name: FilterId
-          Value: EntireBucket
+          Value: Failures
       EvaluationPeriods: 1
       MetricName: PutRequests
       Namespace: AWS/S3
