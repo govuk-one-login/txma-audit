@@ -662,8 +662,7 @@ Resources:
       EventInvokeConfig:
         DestinationConfig:
           OnFailure:
-            Type: SQS
-            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+            Destination: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
       Handler: auditMessageDelimiter.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
