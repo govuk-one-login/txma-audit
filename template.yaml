@@ -880,6 +880,25 @@ Resources:
         - Name: FilterId
           Value: EntireBucket
 
+  AuditFirehoseDeliveryFreshness:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Audit S3 delivery freshness
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-delivery-freshness
+      ComparisonOperator: LessThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      Period: 3600
+      Threshold: 0
+      TreatMissingData: breaching
+      MetricName: DeliveryToS3.DataFreshness
+      Namespace: AWS/Firehose
+      AlarmActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref AuditMessageDeliveryStream
+
   # PagerDuty
   PagerDutySubscription:
     Type: AWS::SNS::Subscription
