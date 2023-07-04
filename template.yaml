@@ -612,27 +612,6 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${AWS::StackName}-audit-message-delimiter
       RetentionInDays: 7
 
-  AuditMessageDelimiterDeadLetterQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: !Sub ${AWS::StackName}-audit-message-delimiter-dlq
-      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
-      MessageRetentionPeriod: 1209600 # 14 days
-
-  AuditMessageDelimiterFunctionDeadLetterQueuePolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      ManagedPolicyName: !Sub ${AWS::StackName}-message-delimiter-dlq-policy
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowDeadLetterQueueAccess
-            Effect: Allow
-            Action:
-              - sqs:SendMessage
-            Resource:
-              - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
-
   AuditMessageDelimiterFunctionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -653,17 +632,11 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        - !Ref AuditMessageDelimiterFunctionDeadLetterQueuePolicy
 
   AuditMessageDelimiterFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
     Properties:
-      EventInvokeConfig:
-        DestinationConfig:
-          OnFailure:
-            Destination: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
-            Type: SQS
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
       Handler: auditMessageDelimiter.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
@@ -676,6 +649,56 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
 
   # Kinesis Firehose resources
+  AuditMessageFirehoseFailureBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-${Environment}-firehose-failure
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules: !If
+          - IsTestableEnv
+          - - Id: ExpirationRule
+              Status: Enabled
+              ExpirationInDays: 120
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 30
+            - Id: DeleteExpiredObjectMarkers
+              ExpiredObjectDeleteMarker: true
+              Status: Enabled
+            - Id: RemoveSuccessObjects
+              ExpirationInDays: 1
+              Prefix: success/
+              Status: Enabled
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 1
+          - - Id: RemoveSuccessObjects
+              ExpirationInDays: 1
+              Prefix: success/
+              Status: Enabled
+              NoncurrentVersionExpiration:
+                NoncurrentDays: 1
+            - Id: DeleteExpiredObjectMarkers
+              ExpiredObjectDeleteMarker: true
+              Status: Enabled
+      LoggingConfiguration:
+        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-firehose-failure/
+      MetricsConfigurations:
+        - Id: EntireBucket
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
   AuditMessageDeliveryStreamLogs:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -688,6 +711,12 @@ Resources:
     Properties:
       LogGroupName: !Ref AuditMessageDeliveryStreamLogs
       LogStreamName: DestinationDelivery
+
+  AuditMessageDeliveryStreamBackupLogStream:
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref AuditMessageDeliveryStreamLogs
+      LogStreamName: BackupDelivery
 
   AuditMessageDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
@@ -721,6 +750,20 @@ Resources:
                   ParameterValue: !GetAtt AuditMessageDelimiterFunction.Arn
                 - ParameterName: RoleArn
                   ParameterValue: !GetAtt AuditMessageDeliveryStreamRole.Arn
+        S3BackupMode: Enabled
+        S3BackupConfiguration:
+          BucketARN: !GetAtt AuditMessageFirehoseFailureBucket.Arn
+          BufferingHints:
+            IntervalInSeconds: 60
+            SizeInMBs: 128
+          CloudWatchLoggingOptions:
+            Enabled: true
+            LogGroupName: !Ref AuditMessageDeliveryStreamLogs
+            LogStreamName: !Ref AuditMessageDeliveryStreamBackupLogStream
+          CompressionFormat: GZIP
+          ErrorOutputPrefix: failures/
+          Prefix: success/
+          RoleARN: !GetAtt AuditMessageDeliveryStreamRole.Arn
 
   AuditMessageDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -749,6 +792,8 @@ Resources:
             Resource:
               - !GetAtt MessageBatchBucket.Arn
               - !Sub ${MessageBatchBucket.Arn}/*
+              - !GetAtt AuditMessageFirehoseFailureBucket.Arn
+              - !Sub ${AuditMessageFirehoseFailureBucket.Arn}/*
           - Effect: Allow
             Action:
               - lambda:InvokeFunction
@@ -865,24 +910,26 @@ Resources:
   ##########################################
 
   # CloudWatch Alarms
-  AuditMessageDelimiterDeadLetterQueueAlarm:
+  AuditMessageFirehoseFailureAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
       AlarmDescription: >-
-        Monitor Audit Message Delimiter function DLQ for new messages. 
-        When messages land in this queue, it indicates Audit events 
+        Monitor Audit Message Firehose failure bucket for new objects. 
+        When objects land in this bucket, it indicates Audit events 
         have not been delivered to the Audit bucket.
-      AlarmName: !Sub ${AWS::StackName}-audit-message-dlq
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-failure
       ComparisonOperator: GreaterThanThreshold
       DatapointsToAlarm: 1
       Dimensions:
-        - Name: QueueName
-          Value: !GetAtt AuditMessageDelimiterDeadLetterQueue.QueueName
+        - Name: BucketName
+          Value: !Ref AuditMessageFirehoseFailureBucket
+        - Name: FilterId
+          Value: EntireBucket
       EvaluationPeriods: 1
-      MetricName: ApproximateNumberOfMessagesVisible
-      Namespace: AWS/SQS
+      MetricName: PutRequests
+      Namespace: AWS/S3
       Period: 60
       Statistic: Sum
       Threshold: 0
