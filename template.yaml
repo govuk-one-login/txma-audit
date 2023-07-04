@@ -913,7 +913,7 @@ Resources:
           Label: DeliveryToS3.Success
           ReturnData: false
           MetricStat:
-            Period: 1
+            Period: 3600
             Stat: Average
             Metric:
               Namespace: AWS/Firehose
