@@ -662,9 +662,9 @@ Resources:
           - IsTestableEnv
           - - Id: ExpirationRule
               Status: Enabled
-              ExpirationInDays: 120
+              ExpirationInDays: 30
               NoncurrentVersionExpiration:
-                NoncurrentDays: 30
+                NoncurrentDays: 7
             - Id: DeleteExpiredObjectMarkers
               ExpiredObjectDeleteMarker: true
               Status: Enabled
