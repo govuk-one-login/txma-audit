@@ -377,7 +377,7 @@ Resources:
     Properties:
       QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ
       KmsMasterKeyId: '{{resolve:ssm:AuditFileReadyToEncryptQueueKmsKeyArn}}'
-      MessageRetentionPeriod: 1209600
+      MessageRetentionPeriod: 1209600 # 14 days
 
   AuditFileReadyToEncryptQueuePolicy:
     Type: AWS::SQS::QueuePolicy
