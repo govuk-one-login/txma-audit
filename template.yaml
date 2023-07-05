@@ -705,15 +705,15 @@ Resources:
               Status: Enabled
               NoncurrentVersionExpiration:
                 NoncurrentDays: 1
-          - - Id: RemoveSuccessObjects
+          - - Id: DeleteExpiredObjectMarkers
+              ExpiredObjectDeleteMarker: true
+              Status: Enabled
+            - Id: RemoveSuccessObjects
               ExpirationInDays: 1
               Prefix: success/
               Status: Enabled
               NoncurrentVersionExpiration:
                 NoncurrentDays: 1
-            - Id: DeleteExpiredObjectMarkers
-              ExpiredObjectDeleteMarker: true
-              Status: Enabled
       LoggingConfiguration:
         DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-firehose-failure/
