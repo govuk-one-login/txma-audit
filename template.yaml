@@ -897,7 +897,7 @@ Resources:
         - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
       Dimensions:
         - Name: DeliveryStreamName
-          Value: DeliveryStreamNameDeliveryStreamName
+          Value: !Ref AuditMessageDeliveryStream
 
   AuditFirehoseDeliverySuccessPercentage:
     Type: AWS::CloudWatch::Alarm
@@ -920,7 +920,7 @@ Resources:
               MetricName: DeliveryToS3.Success
               Dimensions:
                 - Name: DeliveryStreamName
-                  Value: DeliveryStreamName
+                  Value: !Ref AuditMessageDeliveryStream
       ComparisonOperator: LessThanOrEqualToThreshold
       EvaluationPeriods: 1
       Threshold: 75
