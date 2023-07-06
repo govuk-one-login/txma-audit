@@ -95,6 +95,7 @@ Resources:
   MessageBatchBucket:
     DependsOn:
       - AuditFileReadyToEncryptQueuePolicy
+      - AuditMessageDelimiterDeadLetterQueuePolicy
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch
@@ -141,12 +142,26 @@ Resources:
       NotificationConfiguration:
         QueueConfigurations:
           - Event: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: firehose/
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
+          - Event: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: failures/
+            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
+        - Id: Failures
+          Prefix: failures/
 
   MessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -377,7 +392,7 @@ Resources:
     Properties:
       QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ
       KmsMasterKeyId: '{{resolve:ssm:AuditFileReadyToEncryptQueueKmsKeyArn}}'
-      MessageRetentionPeriod: 1209600
+      MessageRetentionPeriod: 1209600 # 14 days
 
   AuditFileReadyToEncryptQueuePolicy:
     Type: AWS::SQS::QueuePolicy
@@ -637,11 +652,11 @@ Resources:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
     Properties:
-      MemorySize: 256
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
       Handler: auditMessageDelimiter.handler
-      Role: !GetAtt AuditMessageDelimiterFunctionRole.Arn
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      MemorySize: 256
+      Role: !GetAtt AuditMessageDelimiterFunctionRole.Arn
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
@@ -649,6 +664,35 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
 
   # Kinesis Firehose resources
+  AuditMessageDelimiterDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-audit-message-delimiter-dlq
+      KmsMasterKeyId: '{{resolve:ssm:S3QueueNotificationsKmsKeyArn}}'
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  AuditMessageDelimiterDeadLetterQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowS3ToSendMessage
+            Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Queues:
+        - !Ref AuditMessageDelimiterDeadLetterQueue
+
   AuditMessageDeliveryStreamLogs:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -665,13 +709,12 @@ Resources:
   AuditMessageDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
-      DeliveryStreamName: !Sub ${AWS::StackName}-message-batch
-      DeliveryStreamType: DirectPut
       DeliveryStreamEncryptionConfigurationInput:
         KeyARN: '{{resolve:ssm:FirehoseKmsKeyArn}}'
         KeyType: CUSTOMER_MANAGED_CMK
+      DeliveryStreamName: !Sub ${AWS::StackName}-message-batch
+      DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
-        Prefix: firehose/
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
           IntervalInSeconds: !If
@@ -679,12 +722,13 @@ Resources:
             - 60
             - 900
           SizeInMBs: 128
-        CompressionFormat: GZIP
-        RoleARN: !GetAtt AuditMessageDeliveryStreamRole.Arn
         CloudWatchLoggingOptions:
           Enabled: true
           LogGroupName: !Ref AuditMessageDeliveryStreamLogs
           LogStreamName: !Ref AuditMessageDeliveryStreamDestinationLogStream
+        CompressionFormat: GZIP
+        ErrorOutputPrefix: failures/
+        Prefix: firehose/
         ProcessingConfiguration:
           Enabled: true
           Processors:
@@ -694,6 +738,8 @@ Resources:
                   ParameterValue: !GetAtt AuditMessageDelimiterFunction.Arn
                 - ParameterName: RoleArn
                   ParameterValue: !GetAtt AuditMessageDeliveryStreamRole.Arn
+        RoleARN: !GetAtt AuditMessageDeliveryStreamRole.Arn
+        S3BackupMode: Disabled
 
   AuditMessageDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -838,47 +884,73 @@ Resources:
   ##########################################
 
   # CloudWatch Alarms
+  AuditMessageFirehoseProcessingFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: >-
+        Monitor processing failures in the Audit bucket. When an object 
+        lands in the Audit bucket with the prefix 'failures/', it indicates 
+        Audit events have been delivered to the Audit bucket unprocessed
+        due to a failure in the Firehose stream.
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-processing-failure
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
+      Dimensions:
+        - Name: BucketName
+          Value: !Ref MessageBatchBucket
+        - Name: FilterId
+          Value: Failures
+      EvaluationPeriods: 1
+      MetricName: PutRequests
+      Namespace: AWS/S3
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+
   FailureToEncryptAuditMessageAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Alarm that monitors the ReadToEncrypt DLQ for any new objects
-      AlarmName: !Sub ${AWS::StackName}-failure-to-encrypt-audit-message
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 60
-      Threshold: 1
-      TreatMissingData: notBreaching
-      MetricName: ApproximateNumberOfMessagesVisible
-      Namespace: AWS/SQS
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
-      OKActions:
-        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: >-
+        Monitor the Ready To Encrypt DLQ for new messages. 
+        When messages land in this queue, it indicates Audit events have 
+        failed to encrypt.
+      AlarmName: !Sub ${AWS::StackName}-failure-to-encrypt-audit-message
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
       Dimensions:
         - Name: QueueName
           Value: !GetAtt AuditFileReadyToEncryptDeadLetterQueue.QueueName
+      EvaluationPeriods: 1
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Statistic: Sum
+      Period: 60
+      Threshold: 0
 
   NoAuditMessagesReceivedAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
       AlarmDescription: Audit S3 Received No Objects Alarm
       AlarmName: !Sub ${AWS::StackName}-no-audit-messages-received
       ComparisonOperator: LessThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 43200
-      Threshold: 0
-      TreatMissingData: breaching
-      MetricName: PutRequests
-      Namespace: AWS/S3
-      AlarmActions:
-        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
       Dimensions:
         - Name: BucketName
           Value: !Ref MessageBatchBucket
         - Name: FilterId
           Value: EntireBucket
+      EvaluationPeriods: 1
+      MetricName: PutRequests
+      Namespace: AWS/S3
+      Period: 43200
+      Statistic: Sum
+      Threshold: 0
+      TreatMissingData: breaching
 
   # PagerDuty
   PagerDutySubscription:
