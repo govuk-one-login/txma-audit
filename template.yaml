@@ -95,6 +95,7 @@ Resources:
   MessageBatchBucket:
     DependsOn:
       - AuditFileReadyToEncryptQueuePolicy
+      - AuditMessageDelimiterDeadLetterQueuePolicy
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch
@@ -141,12 +142,18 @@ Resources:
       NotificationConfiguration:
         QueueConfigurations:
           - Event: s3:ObjectCreated:*
+            Prefix: firehose/
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
+          - Event: s3:ObjectCreated:*
+            Prefix: failures/
+            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
+        - Id: Failures
+          Prefix: failures/
 
   MessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -353,6 +360,10 @@ Resources:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
+
+  # # S3 Notification resources
+  # MessageBatchBucketObjectReceivedNotificationTopic:
+  #   Type: SNS::Topic
 
   ###############################
   # End: Audit Bucket resources #
@@ -672,73 +683,11 @@ Resources:
               - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
             Condition:
               ArnEquals:
-                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-firehose-failure
+                aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
       Queues:
         - !Ref AuditMessageDelimiterDeadLetterQueue
-
-  AuditMessageFirehoseFailureBucket:
-    DependsOn:
-      - AuditMessageDelimiterDeadLetterQueuePolicy
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub ${AWS::StackName}-${Environment}-firehose-failure
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      LifecycleConfiguration:
-        Rules: !If
-          - IsTestableEnv
-          - - Id: ExpirationRule
-              Status: Enabled
-              ExpirationInDays: 30
-              NoncurrentVersionExpiration:
-                NoncurrentDays: 7
-            - Id: DeleteExpiredObjectMarkers
-              ExpiredObjectDeleteMarker: true
-              Status: Enabled
-            - Id: RemoveSuccessObjects
-              ExpirationInDays: 1
-              Prefix: success/
-              Status: Enabled
-              NoncurrentVersionExpiration:
-                NoncurrentDays: 1
-          - - Id: DeleteExpiredObjectMarkers
-              ExpiredObjectDeleteMarker: true
-              Status: Enabled
-            - Id: RemoveSuccessObjects
-              ExpirationInDays: 1
-              Prefix: success/
-              Status: Enabled
-              NoncurrentVersionExpiration:
-                NoncurrentDays: 1
-      LoggingConfiguration:
-        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
-        LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-firehose-failure/
-      MetricsConfigurations:
-        - Id: Failures
-          Prefix: failures/
-      NotificationConfiguration:
-        QueueConfigurations:
-          - Event: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: prefix
-                    Value: failures/
-            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
-      OwnershipControls:
-        Rules:
-          - ObjectOwnership: BucketOwnerPreferred
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
 
   AuditMessageDeliveryStreamLogs:
     Type: AWS::Logs::LogGroup
@@ -753,12 +702,6 @@ Resources:
       LogGroupName: !Ref AuditMessageDeliveryStreamLogs
       LogStreamName: DestinationDelivery
 
-  AuditMessageDeliveryStreamBackupLogStream:
-    Type: AWS::Logs::LogStream
-    Properties:
-      LogGroupName: !Ref AuditMessageDeliveryStreamLogs
-      LogStreamName: BackupDelivery
-
   AuditMessageDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
@@ -768,7 +711,6 @@ Resources:
         KeyARN: '{{resolve:ssm:FirehoseKmsKeyArn}}'
         KeyType: CUSTOMER_MANAGED_CMK
       ExtendedS3DestinationConfiguration:
-        Prefix: firehose/
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
           IntervalInSeconds: !If
@@ -776,12 +718,13 @@ Resources:
             - 60
             - 900
           SizeInMBs: 128
-        CompressionFormat: GZIP
-        RoleARN: !GetAtt AuditMessageDeliveryStreamRole.Arn
         CloudWatchLoggingOptions:
           Enabled: true
           LogGroupName: !Ref AuditMessageDeliveryStreamLogs
           LogStreamName: !Ref AuditMessageDeliveryStreamDestinationLogStream
+        CompressionFormat: GZIP
+        ErrorOutputPrefix: failures/
+        Prefix: firehose/
         ProcessingConfiguration:
           Enabled: true
           Processors:
@@ -791,20 +734,8 @@ Resources:
                   ParameterValue: !GetAtt AuditMessageDelimiterFunction.Arn
                 - ParameterName: RoleArn
                   ParameterValue: !GetAtt AuditMessageDeliveryStreamRole.Arn
+        RoleARN: !GetAtt AuditMessageDeliveryStreamRole.Arn
         S3BackupMode: Enabled
-        S3BackupConfiguration:
-          BucketARN: !GetAtt AuditMessageFirehoseFailureBucket.Arn
-          BufferingHints:
-            IntervalInSeconds: 60
-            SizeInMBs: 128
-          CloudWatchLoggingOptions:
-            Enabled: true
-            LogGroupName: !Ref AuditMessageDeliveryStreamLogs
-            LogStreamName: !Ref AuditMessageDeliveryStreamBackupLogStream
-          CompressionFormat: GZIP
-          ErrorOutputPrefix: failures/
-          Prefix: success/
-          RoleARN: !GetAtt AuditMessageDeliveryStreamRole.Arn
 
   AuditMessageDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
@@ -833,8 +764,6 @@ Resources:
             Resource:
               - !GetAtt MessageBatchBucket.Arn
               - !Sub ${MessageBatchBucket.Arn}/*
-              - !GetAtt AuditMessageFirehoseFailureBucket.Arn
-              - !Sub ${AuditMessageFirehoseFailureBucket.Arn}/*
           - Effect: Allow
             Action:
               - lambda:InvokeFunction
@@ -951,21 +880,22 @@ Resources:
   ##########################################
 
   # CloudWatch Alarms
-  AuditMessageFirehoseFailureAlarm:
+  AuditMessageFirehoseProcessingFailureAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
       AlarmDescription: >-
-        Monitor Audit Message Firehose failure bucket for new objects. 
-        When objects land in this bucket, it indicates Audit events 
-        have not been delivered to the Audit bucket.
-      AlarmName: !Sub ${AWS::StackName}-audit-firehose-failure
+        Monitor processing failures in the Audit bucket. When an object 
+        lands in the Audit bucket with the prefix 'failures/', it indicates 
+        Audit events have been delivered to the Audit bucket unprocessed
+        due to a failure in the Firehose stream.
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-processing-failure
       ComparisonOperator: GreaterThanThreshold
       DatapointsToAlarm: 1
       Dimensions:
         - Name: BucketName
-          Value: !Ref AuditMessageFirehoseFailureBucket
+          Value: !Ref MessageBatchBucket
         - Name: FilterId
           Value: Failures
       EvaluationPeriods: 1
