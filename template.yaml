@@ -142,10 +142,18 @@ Resources:
       NotificationConfiguration:
         QueueConfigurations:
           - Event: s3:ObjectCreated:*
-            Prefix: firehose/
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: firehose/
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
           - Event: s3:ObjectCreated:*
-            Prefix: failures/
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: failures/
             Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
       OwnershipControls:
         Rules:
