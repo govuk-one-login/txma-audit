@@ -369,10 +369,6 @@ Resources:
       MetricsConfigurations:
         - Id: EntireBucket
 
-  # # S3 Notification resources
-  # MessageBatchBucketObjectReceivedNotificationTopic:
-  #   Type: SNS::Topic
-
   ###############################
   # End: Audit Bucket resources #
   ###############################
