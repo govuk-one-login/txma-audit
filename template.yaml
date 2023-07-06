@@ -639,6 +639,7 @@ Resources:
     Properties:
       MemorySize: 256
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
+      Timeout: 120
       Handler: auditMessageDelimiter.handler
       Role: !GetAtt AuditMessageDelimiterFunctionRole.Arn
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
