@@ -709,11 +709,11 @@ Resources:
   AuditMessageDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
-      DeliveryStreamName: !Sub ${AWS::StackName}-message-batch
-      DeliveryStreamType: DirectPut
       DeliveryStreamEncryptionConfigurationInput:
         KeyARN: '{{resolve:ssm:FirehoseKmsKeyArn}}'
         KeyType: CUSTOMER_MANAGED_CMK
+      DeliveryStreamName: !Sub ${AWS::StackName}-message-batch
+      DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
         BucketARN: !GetAtt MessageBatchBucket.Arn
         BufferingHints:
@@ -739,7 +739,7 @@ Resources:
                 - ParameterName: RoleArn
                   ParameterValue: !GetAtt AuditMessageDeliveryStreamRole.Arn
         RoleARN: !GetAtt AuditMessageDeliveryStreamRole.Arn
-        S3BackupMode: Enabled
+        S3BackupMode: Disabled
 
   AuditMessageDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
