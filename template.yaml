@@ -710,7 +710,7 @@ Resources:
               - kms:DescribeKey
               - kms:ReEncrypt*
             Resource:
-              - '{{resolve:ssm:SqsKmsKeyArn}}'
+              - '{{resolve:ssm:S3QueueNotificationsKmsKeyArn}}'
 
   AuditMessageFirehoseReingestFunctionRole:
     Type: AWS::IAM::Role
