@@ -948,7 +948,7 @@ Resources:
       EvaluationPeriods: 1
       MetricName: PutRequests
       Namespace: AWS/S3
-      Period: 43200
+      Period: 7200 # 2 hours
       Statistic: Sum
       Threshold: 0
       TreatMissingData: breaching
