@@ -967,6 +967,14 @@ Resources:
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
+  CslsAuditMessageFirehoseReingestLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName: !Ref AuditMessageFirehoseReingestLogs
+      FilterPattern: ''
+      DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
+
   CslsS3CopyAndEncryptLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsProductionOrStaging
