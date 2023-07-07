@@ -693,7 +693,7 @@ Resources:
               - s3:PutObject
               - s3:PutObjectAcl
             Resource:
-              - !Ref ${MessageBatchBucket}
+              - !Ref MessageBatchBucket
               - !Sub ${MessageBatchBucket.Arn}/failures/*
           - Sid: ReadFromFirehoseDlq
             Effect: Allow
@@ -726,7 +726,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        - !Ref FirehoseAuditMessageReingestPolicy
+        - !Ref AuditMessageFirehoseReingestPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -756,7 +756,7 @@ Resources:
       Handler: auditMessageFirehoseReingest.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       MemorySize: 512
-      Role: !GetAtt FirehoseAuditMessageReingestFunctionRole.Arn
+      Role: !GetAtt AuditMessageFirehoseReingestFunctionRole.Arn
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
