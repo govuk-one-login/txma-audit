@@ -1,6 +1,5 @@
 import {
   Context,
-  Handler,
   SQSBatchItemFailure,
   SQSBatchResponse,
   SQSEvent,
@@ -9,9 +8,11 @@ import {
 import { initialiseLogger, logger } from '../../services/logger'
 import { S3ObjectDetails } from '../../types/s3ObjectDetails'
 import { tryParseJSON } from '../../utils/helpers/tryParseJson'
+import { deleteOrUpdateS3Objects } from './deleteOrUpdateS3Objects'
 import { getAuditEvents } from './getAuditEvents'
+import { sendAuditEventsToFirehose } from './sendAuditEventsToFirehose'
 
-export const handler: Handler = async (
+export const handler = async (
   event: SQSEvent,
   context: Context
 ): Promise<SQSBatchResponse> => {
@@ -21,27 +22,55 @@ export const handler: Handler = async (
 
   const batchItemFailures: SQSBatchItemFailure[] = []
 
-  const bucket: string = JSON.parse(event.Records[0].body).s3.bucket.name
   const s3ObjectDetails: S3ObjectDetails[] = getS3ObjectDetails(event.Records)
 
-  const getAuditEventsResults = await getAuditEvents(s3ObjectDetails, bucket)
+  // Get the audit events from the S3 objects, if there is a failure we can send
+  // the message back to the queue for reprocessing
+  const getAuditEventsResults = await getAuditEvents(s3ObjectDetails)
   batchItemFailures.push(
     ...messageIdsToBatchItemFailures(getAuditEventsResults.failedIds)
   )
 
-  // Use PutRecordBatch to reingest the audit message
+  // Send the audit events to Firehose, and collect any that Firehose failed
+  // to ingest
+  const sendAuditEventsToFirehoseResults = await sendAuditEventsToFirehose(
+    getAuditEventsResults.successfulResults
+  )
 
-  // Delete object from S3
+  // Delete or update the S3 objects based on the results of the Firehose
+  // ingestion. If there are any failures we can keep the S3 object and update
+  // it with the events that failed to reingest
+  await deleteOrUpdateS3Objects(sendAuditEventsToFirehoseResults)
 
   return {
-    batchItemFailures: []
+    batchItemFailures
   }
 }
 
 const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] =>
   records
-    .filter((record) => tryParseJSON(record.body).Event === 's3:TestEvent')
+    .filter((record) => {
+      const isS3TestEvent = tryParseJSON(record.body).Event === 's3:TestEvent'
+
+      if (isS3TestEvent) {
+        logger.info('Event is of type s3:TestEvent, ignoring')
+      }
+
+      return !isS3TestEvent
+    })
+    .filter((record) => {
+      const key = tryParseJSON(record.body).s3.object.key
+
+      const isFailureKey = key.startsWith('failures/')
+
+      if (!isFailureKey) {
+        logger.warn('Received object without failures/ prefix, ignoring')
+      }
+
+      return isFailureKey
+    })
     .map((record) => ({
+      bucket: JSON.parse(record.body).s3.bucket.name as string,
       key: JSON.parse(record.body).s3.object.key as string,
       sqsRecordMessageId: record.messageId
     }))

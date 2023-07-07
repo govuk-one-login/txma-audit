@@ -2,6 +2,7 @@ import { when } from 'jest-when'
 import { Readable, Writable } from 'node:stream'
 import { getS3ObjectAsStream } from '../../services/s3/getS3ObjectAsStream'
 import { AuditEvent } from '../../types/auditEvent'
+import { objectToBase64 } from '../../utils/helpers/objectToBase64'
 import { readableToString } from '../../utils/helpers/readableToString'
 import { getAuditEventsFromS3Object } from './getAuditEventsFromS3Object'
 
@@ -55,15 +56,16 @@ describe('getAuditEventsFromS3Object', () => {
       }
     ]
 
-    const auditEventsString = auditEvents
-      .map((event) => JSON.stringify(event))
-      .join('')
+    const fileContents = auditEvents
+      .map((event) => JSON.stringify({ rawData: objectToBase64(event) }))
+      .join('\n')
+
     const readable = new Readable()
-    readable.push(auditEventsString)
+    readable.push(fileContents)
     readable.push(null)
 
     when(getS3ObjectAsStream).mockResolvedValue(readable)
-    when(readableToString).mockResolvedValue(auditEventsString)
+    when(readableToString).mockResolvedValue(fileContents)
 
     const result = await getAuditEventsFromS3Object(bucketName, key)
     expect(result).toEqual(auditEvents)
