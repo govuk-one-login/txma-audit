@@ -4,7 +4,7 @@ import {
   CreateJobCommandInput,
   JobReportScope
 } from '@aws-sdk/client-s3-control'
-import { getEnv } from '../../src/utils/helpers'
+import { getEnv } from '../../src/utils/helpers/tryParseJson'
 import { writeJobManifestFile } from './writeJobManifestFile'
 
 export const startEncryptBatchJob = async (s3FileKeys: string[]) => {

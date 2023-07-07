@@ -4,7 +4,7 @@ import {
   S3Client,
   StorageClass
 } from '@aws-sdk/client-s3'
-import { getEnv } from '../../utils/helpers'
+import { getEnv } from '../../utils/helpers/getEnv'
 
 export const s3ChangeStorageClass = (
   bucket: string,

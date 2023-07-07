@@ -2,7 +2,7 @@ import { encryptS3Object } from '../services/kms/encryptS3Object'
 import { logger } from '../services/logger'
 import { getS3ObjectAsStream } from '../services/s3/getS3ObjectAsStream'
 import { putS3Object } from '../services/s3/putS3Object'
-import { getEnv } from '../utils/helpers'
+import { getEnv } from '../utils/helpers/getEnv'
 
 export const encryptAuditData = async (
   eventBucket: string,

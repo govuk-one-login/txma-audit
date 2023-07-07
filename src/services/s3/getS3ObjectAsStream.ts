@@ -4,7 +4,7 @@ import {
   GetObjectCommandInput
 } from '@aws-sdk/client-s3'
 import { Readable } from 'stream'
-import { getEnv } from '../../utils/helpers'
+import { getEnv } from '../../utils/helpers/getEnv'
 
 export const getS3ObjectAsStream = async (
   bucket: string,

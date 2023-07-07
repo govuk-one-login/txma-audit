@@ -3,7 +3,7 @@ import {
   DeleteObjectCommand,
   DeleteObjectCommandInput
 } from '@aws-sdk/client-s3'
-import { getEnv } from '../../utils/helpers'
+import { getEnv } from '../../utils/helpers/getEnv'
 
 export const deleteS3Object = async (
   bucket: string,
