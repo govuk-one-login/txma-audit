@@ -683,6 +683,18 @@ Resources:
               - firehose:PutRecordBatch
             Resource:
               - !GetAtt AuditMessageDeliveryStream.Arn
+          - Sid: AllowS3Access
+            Effect: Allow
+            Action:
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:ListBucket
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Resource:
+              - !Ref ${MessageBatchBucket}
+              - !Sub ${MessageBatchBucket.Arn}/failures/*
           - Sid: ReadFromFirehoseDlq
             Effect: Allow
             Action:
@@ -741,7 +753,7 @@ Resources:
             ScalingConfig:
               MaximumConcurrency: 2
       FunctionName: !Sub ${AWS::StackName}-audit-firehose-reingest
-      Handler: firehoseAuditMessageReingest.handler
+      Handler: auditMessageFirehoseReingest.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       MemorySize: 512
       Role: !GetAtt FirehoseAuditMessageReingestFunctionRole.Arn
