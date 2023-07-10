@@ -942,6 +942,27 @@ Resources:
       Statistic: Sum
       Threshold: 0
 
+  FailureToPublishAuditMessageDeliveryStreamSubscription:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm that monitors the AuditMessageDeliveryStream DLQ
+      AlarmName: !Sub ${AWS::StackName}-failure-to-publish-audit-stream
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 60
+      Threshold: 1
+      DatapointsToAlarm: 1
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      OKActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.QueueName
+
   FailureToEncryptAuditMessageAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
