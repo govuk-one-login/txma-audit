@@ -957,7 +957,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: Audit S3 delivery freshness
-      AlarmName: !Sub ${AWS::StackName}-audit-firehose-delivery-freshness
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-data-freshness
       ComparisonOperator: LessThanOrEqualToThreshold
       EvaluationPeriods: 1
       Statistic: Maximum
