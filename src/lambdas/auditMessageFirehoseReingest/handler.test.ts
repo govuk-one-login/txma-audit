@@ -177,4 +177,60 @@ describe('handler', () => {
 
     expect(getAuditEvents).toHaveBeenCalledWith([])
   })
+
+  it('ignores events without s3 object key', async () => {
+    const sqsEvent: SQSEvent = {
+      Records: [
+        {
+          body: JSON.stringify({
+            s3: {
+              bucket: {
+                name: 'mockBucket'
+              }
+            }
+          }),
+          messageId: 'messageId1'
+        }
+      ]
+    } as SQSEvent
+
+    when(getAuditEvents).mockResolvedValue({
+      successfulResults: [],
+      failedIds: []
+    })
+    when(sendAuditEventsToFirehose).mockResolvedValue([])
+    when(deleteOrUpdateS3Objects).mockResolvedValue()
+
+    await handler(sqsEvent, mockLambdaContext)
+
+    expect(getAuditEvents).toHaveBeenCalledWith([])
+  })
+
+  it('ignores events without s3 bucket name', async () => {
+    const sqsEvent: SQSEvent = {
+      Records: [
+        {
+          body: JSON.stringify({
+            s3: {
+              object: {
+                key: 'failures/your-object-key'
+              }
+            }
+          }),
+          messageId: 'messageId1'
+        }
+      ]
+    } as SQSEvent
+
+    when(getAuditEvents).mockResolvedValue({
+      successfulResults: [],
+      failedIds: []
+    })
+    when(sendAuditEventsToFirehose).mockResolvedValue([])
+    when(deleteOrUpdateS3Objects).mockResolvedValue()
+
+    await handler(sqsEvent, mockLambdaContext)
+
+    expect(getAuditEvents).toHaveBeenCalledWith([])
+  })
 })

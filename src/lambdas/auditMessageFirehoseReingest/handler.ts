@@ -20,6 +20,11 @@ export const handler = async (
 
   logger.info(`Received ${event.Records.length} records for processing`)
 
+  /***********************************
+   * TODO: REMOVE THIS BEFORE MERGING *
+   ***********************************/
+  logger.info('Event structure', { event })
+
   const batchItemFailures: SQSBatchItemFailure[] = []
 
   const s3ObjectDetails: S3ObjectDetails[] = getS3ObjectDetails(event.Records)
@@ -59,21 +64,29 @@ const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] =>
       return !isS3TestEvent
     })
     .filter((record) => {
-      const key = tryParseJSON(record.body).s3.object.key
+      const key: string = tryParseJSON(record.body).s3?.object?.key
+      const bucket: string = tryParseJSON(record.body).s3?.bucket?.name
 
-      const isFailureKey = key.startsWith('failures/')
+      if (key && bucket) {
+        const isFailuresKey = key.startsWith('failures/')
 
-      if (!isFailureKey) {
-        logger.warn('Received object without failures/ prefix, ignoring')
+        if (!isFailuresKey) {
+          logger.warn('Received object without failures/ prefix, ignoring', {
+            bucket,
+            key
+          })
+        }
+        return isFailuresKey
       }
-
-      return isFailureKey
+      return false
     })
-    .map((record) => ({
-      bucket: JSON.parse(record.body).s3.bucket.name as string,
-      key: JSON.parse(record.body).s3.object.key as string,
-      sqsRecordMessageId: record.messageId
-    }))
+    .map(
+      (record): S3ObjectDetails => ({
+        bucket: tryParseJSON(record.body).s3?.bucket?.name,
+        key: tryParseJSON(record.body).s3?.object?.key,
+        sqsRecordMessageId: record.messageId
+      })
+    )
 
 const messageIdsToBatchItemFailures = (messageIds: string[]) =>
   messageIds.map((messageId) => ({
