@@ -771,6 +771,7 @@ Resources:
           Effect: Allow
           Action:
             - sqs:SendMessage
+            - sqs:GetQueueAttributes
           Resource:
             - !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
           Condition:
@@ -808,11 +809,6 @@ Resources:
               - logs:CreateLogStream
             Resource:
               - !GetAtt AuditMessageDeliveryStreamLogs.Arn
-          - Effect: Allow
-            Action:
-              - sqs:SendMessage
-            Resource:
-              - !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
 
   AuditMessageDeliveryStreamRole:
     Type: AWS::IAM::Role
@@ -874,6 +870,11 @@ Resources:
             Action:
               - kms:Decrypt
             Resource: '{{resolve:ssm:EventProcessorSnsKmsKeyArn}}'
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
 
   ########################################
   # End: Audit delivery stream resources #
