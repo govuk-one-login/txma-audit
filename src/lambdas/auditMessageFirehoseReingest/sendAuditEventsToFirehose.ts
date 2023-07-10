@@ -17,7 +17,7 @@ export const sendAuditEventsToFirehose = async (
 
       try {
         const result = await firehosePutRecordBatch(
-          getEnv('FIREHOSE_STREAM_NAME'),
+          getEnv('FIREHOSE_DELIVERY_STREAM_NAME'),
           records
         )
 

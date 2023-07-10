@@ -3,7 +3,7 @@ import { firehosePutRecordBatch } from '../../services/firehose/firehosePutRecor
 import { S3ObjectDetails } from '../../types/s3ObjectDetails'
 import { sendAuditEventsToFirehose } from './sendAuditEventsToFirehose'
 
-process.env.FIREHOSE_STREAM_NAME = 'mockDeliveryStreamName'
+process.env.FIREHOSE_DELIVERY_STREAM_NAME = 'mockDeliveryStreamName'
 
 jest.mock('../../services/firehose/firehosePutRecordBatch.ts', () => ({
   firehosePutRecordBatch: jest.fn()
