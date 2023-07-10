@@ -756,7 +756,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${AWS::StackName}-${Environment}-audit-message-delivery-stream-DLQ
-      KmsMasterKeyId: '{{resolve:ssm:AuditFileReadyToEncryptQueueKmsKeyArn}}' #TODO: Do I need to use a different KMS key here?
+      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArnParameter}}'
       MessageRetentionPeriod: 1209600 # 14 Days
 
   AuditMessageDeliveryStreamSubscriptionDeadLetterQueuePolicy:
