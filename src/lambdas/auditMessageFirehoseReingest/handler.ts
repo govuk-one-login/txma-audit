@@ -47,6 +47,10 @@ export const handler = async (
   // it with the events that failed to reingest
   await deleteOrUpdateS3Objects(sendAuditEventsToFirehoseResults)
 
+  if (batchItemFailures.length > 0) {
+    logger.warn('Batch item failures', { batchItemFailures })
+  }
+
   return {
     batchItemFailures
   }

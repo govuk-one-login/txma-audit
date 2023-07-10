@@ -15,6 +15,7 @@ jest.mock('../../utils/helpers/readableToString', () => ({
 }))
 
 jest.mock('node:zlib', () => ({
+  constants: jest.fn(),
   createGunzip: jest.fn().mockImplementation(() => {
     const writable = new Writable()
     writable._write = jest.fn()
