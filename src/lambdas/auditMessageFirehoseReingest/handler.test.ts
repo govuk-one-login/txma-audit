@@ -24,14 +24,18 @@ describe('handler', () => {
     Records: [
       {
         body: JSON.stringify({
-          s3: {
-            bucket: {
-              name: 'mockBucket'
-            },
-            object: {
-              key: 'failures/your-object-key'
+          Records: [
+            {
+              s3: {
+                bucket: {
+                  name: 'mockBucket'
+                },
+                object: {
+                  key: 'failures/your-object-key'
+                }
+              }
             }
-          }
+          ]
         }),
         messageId: 'messageId1'
       }
@@ -152,14 +156,18 @@ describe('handler', () => {
       Records: [
         {
           body: JSON.stringify({
-            s3: {
-              bucket: {
-                name: 'mockBucket'
-              },
-              object: {
-                key: 'your-object-key'
+            Records: [
+              {
+                s3: {
+                  bucket: {
+                    name: 'mockBucket'
+                  },
+                  object: {
+                    key: 'your-object-key'
+                  }
+                }
               }
-            }
+            ]
           }),
           messageId: 'messageId1'
         }
@@ -183,11 +191,15 @@ describe('handler', () => {
       Records: [
         {
           body: JSON.stringify({
-            s3: {
-              bucket: {
-                name: 'mockBucket'
+            Records: [
+              {
+                s3: {
+                  bucket: {
+                    name: 'mockBucket'
+                  }
+                }
               }
-            }
+            ]
           }),
           messageId: 'messageId1'
         }
@@ -211,11 +223,15 @@ describe('handler', () => {
       Records: [
         {
           body: JSON.stringify({
-            s3: {
-              object: {
-                key: 'failures/your-object-key'
+            Records: [
+              {
+                s3: {
+                  object: {
+                    key: 'failures/your-object-key'
+                  }
+                }
               }
-            }
+            ]
           }),
           messageId: 'messageId1'
         }
