@@ -22,5 +22,6 @@ export const getS3ObjectAsStream = async (
   if (!(Body instanceof Readable)) {
     throw Error('Get S3 Object command did not return stream')
   }
+
   return Body
 }

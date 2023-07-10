@@ -12,14 +12,18 @@ export const getAuditEventsFromS3Object = async (
 ) => {
   const contents = await getS3ObjectAsStream(bucketName, key)
 
+  const debugContents = await readableToString(contents)
+  logger.info('debugContents', { debugContents })
+
   return await getAuditEvents(contents)
 }
 
 const getAuditEvents = async (contents: Readable): Promise<AuditEvent[]> => {
   /***********************************
    * TODO: REMOVE THIS BEFORE MERGING *
-   ***********************************/
-  logger.info('getAuditEvents', { contents })
+   ***********************************/ logger.info('getAuditEvents', {
+    contents
+  })
 
   const jsonString = await readableToString(contents.pipe(createGunzip()))
 
