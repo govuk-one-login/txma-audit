@@ -773,6 +773,8 @@ Resources:
             - sqs:SendMessage
           Resource:
             - !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
+          Condition:
+            aws:SourceArn: !Ref AuditMessageDeliveryStreamSubscription
 
   AuditMessageDeliveryStreamPolicy:
     Type: AWS::IAM::ManagedPolicy
