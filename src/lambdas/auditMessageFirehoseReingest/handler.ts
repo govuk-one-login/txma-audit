@@ -30,6 +30,15 @@ export const handler = async (
     ...messageIdsToBatchItemFailures(getAuditEventsResults.failedIds)
   )
 
+  if (batchItemFailures.length > 0) {
+    logger.warn(
+      'Finished getting Audit Events from S3. There were some failures.',
+      { batchItemFailures }
+    )
+  } else {
+    logger.info('Successfully got Audit Events from S3')
+  }
+
   // Send the audit events to Firehose, and collect any that Firehose failed
   // to ingest
   const sendAuditEventsToFirehoseResults = await sendAuditEventsToFirehose(
@@ -40,10 +49,6 @@ export const handler = async (
   // ingestion. If there are any failures we can keep the S3 object and update
   // it with the events that failed to reingest
   await deleteOrUpdateS3Objects(sendAuditEventsToFirehoseResults)
-
-  if (batchItemFailures.length > 0) {
-    logger.warn('Batch item failures', { batchItemFailures })
-  }
 
   return {
     batchItemFailures
