@@ -756,7 +756,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${AWS::StackName}-${Environment}-audit-message-delivery-stream-DLQ
-      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArnParameter}}'
+      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
       MessageRetentionPeriod: 1209600 # 14 Days
 
   AuditMessageDeliveryStreamSubscriptionDeadLetterQueuePolicy:
