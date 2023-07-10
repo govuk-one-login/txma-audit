@@ -20,13 +20,7 @@ export const handler = async (
 
   logger.info(`Received ${event.Records.length} records for processing`)
 
-  /***********************************
-   * TODO: REMOVE THIS BEFORE MERGING *
-   ***********************************/
-  logger.info('Event structure', { event })
-
   const batchItemFailures: SQSBatchItemFailure[] = []
-
   const s3ObjectDetails: S3ObjectDetails[] = getS3ObjectDetails(event.Records)
 
   // Get the audit events from the S3 objects, if there is a failure we can send
