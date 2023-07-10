@@ -749,6 +749,32 @@ Resources:
       Protocol: firehose
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt AuditMessageDeliveryEventProcessingSnsSubscriptionRole.Arn
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
+
+  AuditMessageDeliveryStreamSubscriptionDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-${Environment}-audit-message-delivery-stream-DLQ
+      KmsMasterKeyId: '{{resolve:ssm:AuditFileReadyToEncryptQueueKmsKeyArn}}' #TODO: Do I need to use a different KMS key here?
+      MessageRetentionPeriod: 1209600 # 14 Days
+
+  AuditMessageDeliveryStreamSubscriptionDeadLetterQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref AuditMessageDeliveryStreamSubscriptionDeadLetterQueue
+      PolicyDocument:
+        Statement:
+          Principal:
+            Service: sns.amazonaws.com
+          Effect: Allow
+          Action:
+            - sqs:SendMessage
+          Resource:
+            - !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
+          Condition:
+            sourceArn: !Ref AuditMessageDeliveryStreamSubscription
 
   AuditMessageDeliveryStreamPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -781,6 +807,11 @@ Resources:
               - logs:CreateLogStream
             Resource:
               - !GetAtt AuditMessageDeliveryStreamLogs.Arn
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
 
   AuditMessageDeliveryStreamRole:
     Type: AWS::IAM::Role
