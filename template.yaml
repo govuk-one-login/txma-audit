@@ -653,6 +653,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
+      Timeout: 120
       Handler: auditMessageDelimiter.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       MemorySize: 256
@@ -1005,6 +1006,54 @@ Resources:
       Statistic: Sum
       Threshold: 0
       TreatMissingData: breaching
+
+  AuditFirehoseDeliveryFreshness:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Audit S3 delivery freshness
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-data-freshness
+      ComparisonOperator: LessThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      Period: 3600
+      Threshold: 3600
+      TreatMissingData: breaching
+      MetricName: DeliveryToS3.DataFreshness
+      Namespace: AWS/Firehose
+      AlarmActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref AuditMessageDeliveryStream
+
+  AuditFirehoseDeliverySuccessPercentage:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Audit S3 delivery success percentage
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-delivery-success-percentage
+      Metrics:
+        - Expression: 'm1*100'
+          Id: e1
+          ReturnData: true
+          Label: DeliveryToS3.Success percentage
+        - Id: m1
+          Label: DeliveryToS3.Success
+          ReturnData: false
+          MetricStat:
+            Period: 3600
+            Stat: Average
+            Metric:
+              Namespace: AWS/Firehose
+              MetricName: DeliveryToS3.Success
+              Dimensions:
+                - Name: DeliveryStreamName
+                  Value: !Ref AuditMessageDeliveryStream
+      ComparisonOperator: LessThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Threshold: 75
+      TreatMissingData: breaching
+      AlarmActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
 
   # PagerDuty
   PagerDutySubscription:
