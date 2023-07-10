@@ -774,7 +774,8 @@ Resources:
           Resource:
             - !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
           Condition:
-            aws:SourceArn: !GetAtt AuditMessageDeliveryStreamSubscription.Arn
+            ArnEquals:
+              aws:SourceArn: !Ref AuditMessageDeliveryStreamSubscription
 
   AuditMessageDeliveryStreamPolicy:
     Type: AWS::IAM::ManagedPolicy
