@@ -1,5 +1,6 @@
 import { Readable } from 'node:stream'
 import { createGunzip } from 'node:zlib'
+import { logger } from '../../services/logger'
 import { getS3ObjectAsStream } from '../../services/s3/getS3ObjectAsStream'
 import { AuditEvent } from '../../types/auditEvent'
 import { base64ToObject } from '../../utils/helpers/base64ToObject'
@@ -15,7 +16,17 @@ export const getAuditEventsFromS3Object = async (
 }
 
 const getAuditEvents = async (contents: Readable): Promise<AuditEvent[]> => {
+  /***********************************
+   * TODO: REMOVE THIS BEFORE MERGING *
+   ***********************************/
+  logger.info('getAuditEvents', { contents })
+
   const jsonString = await readableToString(contents.pipe(createGunzip()))
+
+  /***********************************
+   * TODO: REMOVE THIS BEFORE MERGING *
+   ***********************************/
+  logger.info('jsonString', { jsonString })
 
   const base64AuditEvents: string[] = jsonString
     .split('\n')

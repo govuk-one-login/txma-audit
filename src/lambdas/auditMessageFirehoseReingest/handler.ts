@@ -52,8 +52,8 @@ export const handler = async (
   }
 }
 
-const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] =>
-  records
+const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] => {
+  const s3ObjectDetails = records
     .filter((record) => {
       const isS3TestEvent = tryParseJSON(record.body).Event === 's3:TestEvent'
 
@@ -90,6 +90,16 @@ const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] =>
         sqsRecordMessageId: record.messageId
       }
     })
+
+  logger.info(`Found ${s3ObjectDetails.length} S3 objects to process`, {
+    s3ObjectDetails: s3ObjectDetails.map(({ bucket, key }) => ({
+      bucket,
+      key
+    }))
+  })
+
+  return s3ObjectDetails
+}
 
 const messageIdsToBatchItemFailures = (messageIds: string[]) =>
   messageIds.map((messageId) => ({
