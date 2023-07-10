@@ -962,7 +962,7 @@ Resources:
       EvaluationPeriods: 1
       Statistic: Maximum
       Period: 3600
-      Threshold: 0
+      Threshold: 3600
       TreatMissingData: breaching
       MetricName: DeliveryToS3.DataFreshness
       Namespace: AWS/Firehose
