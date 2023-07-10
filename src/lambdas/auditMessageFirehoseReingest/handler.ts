@@ -64,8 +64,9 @@ const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] =>
       return !isS3TestEvent
     })
     .filter((record) => {
-      const key: string = tryParseJSON(record.body).s3?.object?.key
-      const bucket: string = tryParseJSON(record.body).s3?.bucket?.name
+      const s3EventData = tryParseJSON(record.body).Records[0].s3
+      const key: string = s3EventData?.object?.key
+      const bucket: string = s3EventData?.bucket?.name
 
       if (key && bucket) {
         const isFailuresKey = key.startsWith('failures/')
@@ -80,13 +81,15 @@ const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] =>
       }
       return false
     })
-    .map(
-      (record): S3ObjectDetails => ({
-        bucket: tryParseJSON(record.body).s3?.bucket?.name,
-        key: tryParseJSON(record.body).s3?.object?.key,
+    .map((record): S3ObjectDetails => {
+      const s3EventData = tryParseJSON(record.body).Records[0].s3
+
+      return {
+        bucket: s3EventData?.bucket?.name,
+        key: s3EventData?.object?.key,
         sqsRecordMessageId: record.messageId
-      })
-    )
+      }
+    })
 
 const messageIdsToBatchItemFailures = (messageIds: string[]) =>
   messageIds.map((messageId) => ({
