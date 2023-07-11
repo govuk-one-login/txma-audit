@@ -7,7 +7,7 @@ import { S3ObjectDetails } from '../../types/s3ObjectDetails'
 import { objectToBase64 } from '../../utils/helpers/objectToBase64'
 
 export const deleteOrUpdateS3Objects = async (results: S3ObjectDetails[]) => {
-  Promise.all(
+  return Promise.all(
     results.map(async (result) => {
       if (
         result.auditEventsFailedReingest &&
