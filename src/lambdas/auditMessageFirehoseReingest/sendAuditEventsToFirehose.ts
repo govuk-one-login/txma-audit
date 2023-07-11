@@ -15,6 +15,12 @@ export const sendAuditEventsToFirehose = async (
         details.auditEvents as AuditEvent[]
       )
 
+      /*******************************
+       * TODO: REMOVE DEBUG STATEMENT *
+       *******************************/
+      logger.info('Audit events', { auditEvents: details.auditEvents })
+      logger.info('Firehose records', { records })
+
       try {
         const result = await firehosePutRecordBatch(
           getEnv('FIREHOSE_DELIVERY_STREAM_NAME'),
