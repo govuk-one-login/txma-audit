@@ -1,3 +1,4 @@
+import { constants, gzipSync } from 'node:zlib'
 import { logger } from '../../services/logger'
 import { deleteS3Object } from '../../services/s3/deleteS3Object'
 import { putS3Object } from '../../services/s3/putS3Object'
@@ -6,7 +7,7 @@ import { S3ObjectDetails } from '../../types/s3ObjectDetails'
 import { objectToBase64 } from '../../utils/helpers/objectToBase64'
 
 export const deleteOrUpdateS3Objects = async (results: S3ObjectDetails[]) => {
-  await Promise.all(
+  Promise.all(
     results.map(async (result) => {
       if (
         result.auditEventsFailedReingest &&
@@ -57,9 +58,9 @@ export const deleteOrUpdateS3Objects = async (results: S3ObjectDetails[]) => {
 }
 
 const setFileContentsFromAuditEvents = (events: AuditEvent[]): Buffer => {
-  const fileContents = {
+  const fileContents = JSON.stringify({
     rawData: objectToBase64(events)
-  }
+  })
 
-  return Buffer.from(JSON.stringify(fileContents))
+  return gzipSync(Buffer.from(fileContents), { flush: constants.Z_SYNC_FLUSH })
 }

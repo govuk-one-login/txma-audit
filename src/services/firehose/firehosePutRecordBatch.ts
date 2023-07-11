@@ -6,7 +6,6 @@ import {
 } from '@aws-sdk/client-firehose'
 import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
 import { getEnv } from '../../utils/helpers/getEnv'
-import { logger } from '../logger'
 
 export const firehosePutRecordBatch = async (
   streamName: string,
@@ -19,17 +18,5 @@ export const firehosePutRecordBatch = async (
   }
   const command = new PutRecordBatchCommand(input)
 
-  /*******************************
-   * TODO: REMOVE DEBUG STATEMENT *
-   *******************************/
-  logger.info('Firehose PutRecordBatch input', { input })
-  const response = await client.send(command)
-
-  /*******************************
-   * TODO: REMOVE DEBUG STATEMENT *
-   * *****************************/
-
-  logger.info('Firehose PutRecordBatch response', { response })
-
-  return response
+  return await client.send(command)
 }
