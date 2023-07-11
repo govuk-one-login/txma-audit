@@ -11,7 +11,7 @@ export const deleteOrUpdateS3Objects = async (results: S3ObjectDetails[]) => {
     results.map(async (result) => {
       if (
         result.auditEventsFailedReingest &&
-        result.auditEventsFailedReingest.length === 0
+        result.auditEventsFailedReingest.length > 0
       ) {
         try {
           const fileContents = setFileContentsFromAuditEvents(
