@@ -710,9 +710,14 @@ Resources:
               - kms:Decrypt
               - kms:DescribeKey
               - kms:ReEncrypt*
-              - kms:Encrypt
             Resource:
               - '{{resolve:ssm:S3QueueNotificationsKmsKeyArn}}'
+          - Sid: UseFirehoseKmsKey
+            Effect: Allow
+            Action:
+              - kms:DescribeKey
+              - kms:Encrypt
+            Resource:
               - '{{resolve:ssm:FirehoseKmsKeyArn}}'
 
   AuditMessageFirehoseReingestFunctionRole:
