@@ -1012,7 +1012,7 @@ Resources:
     Properties:
       AlarmDescription: Audit S3 delivery freshness
       AlarmName: !Sub ${AWS::StackName}-audit-firehose-data-freshness
-      ComparisonOperator: GreaterThanOrEqualToThreshold
+      ComparisonOperator: LessThanOrEqualToThreshold
       EvaluationPeriods: 1
       Statistic: Maximum
       Period: 3600
