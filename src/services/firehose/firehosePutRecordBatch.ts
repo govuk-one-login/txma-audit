@@ -23,6 +23,13 @@ export const firehosePutRecordBatch = async (
    * TODO: REMOVE DEBUG STATEMENT *
    *******************************/
   logger.info('Firehose PutRecordBatch input', { input })
+  const response = await client.send(command)
 
-  return client.send(command)
+  /*******************************
+   * TODO: REMOVE DEBUG STATEMENT *
+   * *****************************/
+
+  logger.info('Firehose PutRecordBatch response', { response })
+
+  return response
 }
