@@ -750,6 +750,34 @@ Resources:
       Protocol: firehose
       RawMessageDelivery: true
       SubscriptionRoleArn: !GetAtt AuditMessageDeliveryEventProcessingSnsSubscriptionRole.Arn
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
+
+  AuditMessageDeliveryStreamSubscriptionDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-${Environment}-audit-message-delivery-stream-DLQ
+      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
+      MessageRetentionPeriod: 1209600 # 14 Days
+
+  AuditMessageDeliveryStreamSubscriptionDeadLetterQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref AuditMessageDeliveryStreamSubscriptionDeadLetterQueue
+      PolicyDocument:
+        Statement:
+          Principal:
+            Service: sns.amazonaws.com
+          Effect: Allow
+          Action:
+            - sqs:SendMessage
+            - sqs:GetQueueAttributes
+          Resource:
+            - !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
+          Condition:
+            ArnEquals:
+              aws:SourceArn: !Ref AuditMessageDeliveryStreamSubscription
 
   AuditMessageDeliveryStreamPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -843,6 +871,11 @@ Resources:
             Action:
               - kms:Decrypt
             Resource: '{{resolve:ssm:EventProcessorSnsKmsKeyArn}}'
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
 
   ########################################
   # End: Audit delivery stream resources #
@@ -909,6 +942,27 @@ Resources:
       Period: 60
       Statistic: Sum
       Threshold: 0
+
+  FailureToPublishAuditMessageDeliveryStreamSubscription:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm that monitors the AuditMessageDeliveryStream DLQ
+      AlarmName: !Sub ${AWS::StackName}-failure-to-publish-audit-stream
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 60
+      Threshold: 1
+      DatapointsToAlarm: 1
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      OKActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.QueueName
 
   FailureToEncryptAuditMessageAlarm:
     Type: AWS::CloudWatch::Alarm
