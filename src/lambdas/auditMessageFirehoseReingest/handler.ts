@@ -32,11 +32,11 @@ export const handler = async (
 
   if (batchItemFailures.length > 0) {
     logger.warn(
-      'Finished getting Audit Events from S3. There were some failures.',
+      'Finished retrieving Audit Events from S3. There were some failures.',
       { batchItemFailures }
     )
   } else {
-    logger.info('Successfully got Audit Events from S3')
+    logger.info('Successfully retrieved Audit Events from S3')
   }
 
   // Send the audit events to Firehose, and collect any that Firehose failed
