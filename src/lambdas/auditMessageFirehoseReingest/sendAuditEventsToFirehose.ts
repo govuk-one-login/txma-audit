@@ -9,7 +9,7 @@ import { getEnv } from '../../utils/helpers/getEnv'
 export const sendAuditEventsToFirehose = async (
   s3ObjectDetails: S3ObjectDetails[]
 ): Promise<S3ObjectDetails[]> =>
-  await Promise.all(
+  Promise.all(
     s3ObjectDetails.map(async (details) => {
       const records = auditEventsToFirehoseRecords(
         details.auditEvents as AuditEvent[]
@@ -20,6 +20,11 @@ export const sendAuditEventsToFirehose = async (
           getEnv('FIREHOSE_DELIVERY_STREAM_NAME'),
           records
         )
+
+        /*******************************
+         * TODO: REMOVE DEBUG STATEMENT *
+         *******************************/
+        logger.info('Firehose PutRecordBatch result', { result })
 
         return handleFirehosePutRecordBatchResult(result, details)
       } catch (error) {
