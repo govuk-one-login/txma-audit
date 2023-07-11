@@ -67,7 +67,7 @@ describe('handler', () => {
         sqsRecordMessageId: 'messageId1'
       }
     ])
-    when(deleteOrUpdateS3Objects).mockResolvedValue()
+    when(deleteOrUpdateS3Objects).mockResolvedValue([])
 
     const expectedResult = {
       batchItemFailures: []
@@ -123,7 +123,7 @@ describe('handler', () => {
         sqsRecordMessageId: 'messageId1'
       }
     ])
-    when(deleteOrUpdateS3Objects).mockResolvedValue()
+    when(deleteOrUpdateS3Objects).mockResolvedValue([])
 
     const expectedResult = {
       batchItemFailures: [
@@ -144,7 +144,7 @@ describe('handler', () => {
       failedIds: []
     })
     when(sendAuditEventsToFirehose).mockResolvedValue([])
-    when(deleteOrUpdateS3Objects).mockResolvedValue()
+    when(deleteOrUpdateS3Objects).mockResolvedValue([])
 
     await handler(testS3TestEvent, mockLambdaContext)
 
@@ -179,7 +179,7 @@ describe('handler', () => {
       failedIds: []
     })
     when(sendAuditEventsToFirehose).mockResolvedValue([])
-    when(deleteOrUpdateS3Objects).mockResolvedValue()
+    when(deleteOrUpdateS3Objects).mockResolvedValue([])
 
     await handler(sqsEvent, mockLambdaContext)
 
@@ -211,7 +211,7 @@ describe('handler', () => {
       failedIds: []
     })
     when(sendAuditEventsToFirehose).mockResolvedValue([])
-    when(deleteOrUpdateS3Objects).mockResolvedValue()
+    when(deleteOrUpdateS3Objects).mockResolvedValue([])
 
     await handler(sqsEvent, mockLambdaContext)
 
@@ -243,7 +243,7 @@ describe('handler', () => {
       failedIds: []
     })
     when(sendAuditEventsToFirehose).mockResolvedValue([])
-    when(deleteOrUpdateS3Objects).mockResolvedValue()
+    when(deleteOrUpdateS3Objects).mockResolvedValue([])
 
     await handler(sqsEvent, mockLambdaContext)
 
