@@ -746,6 +746,7 @@ Resources:
     #checkov:skip=CKV_AWS_115: Currently want this function to scale without limitation
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: dist/auditMessageFirehoseReingest/
       Environment:
         Variables:
           FIREHOSE_DELIVERY_STREAM_NAME: !Ref AuditMessageDeliveryStream
@@ -762,7 +763,7 @@ Resources:
             ScalingConfig:
               MaximumConcurrency: 2
       FunctionName: !Sub ${AWS::StackName}-audit-firehose-reingest
-      Handler: auditMessageFirehoseReingest.handler
+      Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       MemorySize: 512
       Role: !GetAtt AuditMessageFirehoseReingestFunctionRole.Arn
