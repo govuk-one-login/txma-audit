@@ -919,6 +919,58 @@ Resources:
   ##########################################
 
   # CloudWatch Alarms
+  AuditFirehoseDeliveryFreshness:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
+      AlarmDescription: Audit S3 delivery freshness
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-data-freshness
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref AuditMessageDeliveryStream
+      EvaluationPeriods: 1
+      MetricName: DeliveryToS3.DataFreshness
+      Namespace: AWS/Firehose
+      OKActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
+      Period: 3600
+      Statistic: Maximum
+      Threshold: 3600
+      TreatMissingData: breaching
+
+  AuditFirehoseDeliverySuccessPercentage:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: Audit S3 delivery success percentage
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-delivery-success-percentage
+      ComparisonOperator: LessThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Metrics:
+        - Id: e1
+          Expression: 'm1*100'
+          Label: DeliveryToS3.Success percentage
+          ReturnData: true
+        - Id: m1
+          Label: DeliveryToS3.Success
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: DeliveryStreamName
+                  Value: !Ref AuditMessageDeliveryStream
+              MetricName: DeliveryToS3.Success
+              Namespace: AWS/Firehose
+            Period: 3600
+            Stat: Average
+          ReturnData: false
+      OKActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      Threshold: 75
+      TreatMissingData: breaching
+
   AuditMessageFirehoseProcessingFailureAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -1003,58 +1055,12 @@ Resources:
       EvaluationPeriods: 1
       MetricName: PutRequests
       Namespace: AWS/S3
+      OKActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
       Period: 7200 # 2 hours
       Statistic: Sum
       Threshold: 0
       TreatMissingData: breaching
-
-  AuditFirehoseDeliveryFreshness:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: Audit S3 delivery freshness
-      AlarmName: !Sub ${AWS::StackName}-audit-firehose-data-freshness
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Maximum
-      Period: 3600
-      Threshold: 3600
-      TreatMissingData: breaching
-      MetricName: DeliveryToS3.DataFreshness
-      Namespace: AWS/Firehose
-      AlarmActions:
-        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
-      Dimensions:
-        - Name: DeliveryStreamName
-          Value: !Ref AuditMessageDeliveryStream
-
-  AuditFirehoseDeliverySuccessPercentage:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: Audit S3 delivery success percentage
-      AlarmName: !Sub ${AWS::StackName}-audit-firehose-delivery-success-percentage
-      Metrics:
-        - Expression: 'm1*100'
-          Id: e1
-          ReturnData: true
-          Label: DeliveryToS3.Success percentage
-        - Id: m1
-          Label: DeliveryToS3.Success
-          ReturnData: false
-          MetricStat:
-            Period: 3600
-            Stat: Average
-            Metric:
-              Namespace: AWS/Firehose
-              MetricName: DeliveryToS3.Success
-              Dimensions:
-                - Name: DeliveryStreamName
-                  Value: !Ref AuditMessageDeliveryStream
-      ComparisonOperator: LessThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Threshold: 75
-      TreatMissingData: breaching
-      AlarmActions:
-        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
 
   # PagerDuty
   PagerDutySubscription:
