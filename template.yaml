@@ -72,7 +72,6 @@ Globals:
       - UseCodeSigning
       - !Ref CodeSigningConfigArn
       - !Ref AWS::NoValue
-    CodeUri: dist/
     Environment:
       Variables:
         NODE_OPTIONS: --enable-source-maps
@@ -434,23 +433,24 @@ Resources:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
     Properties:
-      MemorySize: 1536
-      FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
-      Handler: s3CopyAndEncrypt.handler
-      Role: !GetAtt S3CopyAndEncryptFunctionRole.Arn
-      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
-      Environment:
-        Variables:
-          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
-          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
-          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
-          GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+      CodeUri: dist/s3CopyAndEncrypt/
       Events:
         AuditFileReadyToEncryptEvent:
           Type: SQS
           Properties:
-            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
             BatchSize: 1
+            Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
+      Environment:
+        Variables:
+          AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
+          GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
+      FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
+      Handler: handler.handler
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      MemorySize: 1536
+      Role: !GetAtt S3CopyAndEncryptFunctionRole.Arn
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
@@ -652,12 +652,13 @@ Resources:
     #checkov:skip=CKV_AWS_115: Currently want this function to scale without limitation
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: dist/auditMessageDelimiter/
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
-      Timeout: 120
-      Handler: auditMessageDelimiter.handler
+      Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       MemorySize: 256
       Role: !GetAtt AuditMessageDelimiterFunctionRole.Arn
+      Timeout: 120
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
@@ -1033,6 +1034,58 @@ Resources:
   ##########################################
 
   # CloudWatch Alarms
+  AuditFirehoseDeliveryFreshness:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
+      AlarmDescription: Audit S3 delivery freshness
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-data-freshness
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: DeliveryStreamName
+          Value: !Ref AuditMessageDeliveryStream
+      EvaluationPeriods: 1
+      MetricName: DeliveryToS3.DataFreshness
+      Namespace: AWS/Firehose
+      OKActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
+      Period: 3600
+      Statistic: Maximum
+      Threshold: 3600
+      TreatMissingData: breaching
+
+  AuditFirehoseDeliverySuccessPercentage:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: Audit S3 delivery success percentage
+      AlarmName: !Sub ${AWS::StackName}-audit-firehose-delivery-success-percentage
+      ComparisonOperator: LessThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Metrics:
+        - Id: e1
+          Expression: 'm1*100'
+          Label: DeliveryToS3.Success percentage
+          ReturnData: true
+        - Id: m1
+          Label: DeliveryToS3.Success
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: DeliveryStreamName
+                  Value: !Ref AuditMessageDeliveryStream
+              MetricName: DeliveryToS3.Success
+              Namespace: AWS/Firehose
+            Period: 3600
+            Stat: Average
+          ReturnData: false
+      OKActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      Threshold: 75
+      TreatMissingData: breaching
+
   AuditMessageFirehoseProcessingFailureAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -1117,58 +1170,12 @@ Resources:
       EvaluationPeriods: 1
       MetricName: PutRequests
       Namespace: AWS/S3
+      OKActions:
+        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
       Period: 7200 # 2 hours
       Statistic: Sum
       Threshold: 0
       TreatMissingData: breaching
-
-  AuditFirehoseDeliveryFreshness:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: Audit S3 delivery freshness
-      AlarmName: !Sub ${AWS::StackName}-audit-firehose-data-freshness
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Maximum
-      Period: 3600
-      Threshold: 3600
-      TreatMissingData: breaching
-      MetricName: DeliveryToS3.DataFreshness
-      Namespace: AWS/Firehose
-      AlarmActions:
-        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
-      Dimensions:
-        - Name: DeliveryStreamName
-          Value: !Ref AuditMessageDeliveryStream
-
-  AuditFirehoseDeliverySuccessPercentage:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: Audit S3 delivery success percentage
-      AlarmName: !Sub ${AWS::StackName}-audit-firehose-delivery-success-percentage
-      Metrics:
-        - Expression: 'm1*100'
-          Id: e1
-          ReturnData: true
-          Label: DeliveryToS3.Success percentage
-        - Id: m1
-          Label: DeliveryToS3.Success
-          ReturnData: false
-          MetricStat:
-            Period: 3600
-            Stat: Average
-            Metric:
-              Namespace: AWS/Firehose
-              MetricName: DeliveryToS3.Success
-              Dimensions:
-                - Name: DeliveryStreamName
-                  Value: !Ref AuditMessageDeliveryStream
-      ComparisonOperator: LessThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Threshold: 75
-      TreatMissingData: breaching
-      AlarmActions:
-        - '{{resolve:ssm:CriticalAlarmSnsTopicArn}}'
 
   # PagerDuty
   PagerDutySubscription:
