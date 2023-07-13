@@ -1,80 +1,22 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -eu
+# This script will only run in AWS Codepipeline. It has access to the following environment variables:
+# CFN_<OUTPUT-NAME> - Stack output value (replace <OUTPUT-NAME> with the name of the output)
+# TEST_REPORT_ABSOLUTE_DIR - Absolute path to where the test report file should be placed
+# TEST_REPORT_DIR - Relative path from current directory to where the test report file should be placed
+# TEST_ENVIRONMENT - The environment the pipeline is running the tests in
 
-MAX_ATTEMPT=7
-ATTEMPT_NUMBER=1
-WAIT_TIME_SECONDS=5
-SELENIUM_READY="false"
+# This file needs to be located at the root when running in the container. The path /test-app is defined
+# in the Dockerfile.
+cd /test-app || exit 1
 
-# uses exponential backoff retry to ensure the grid is up
-grid_status_check() {
-  while [[ $ATTEMPT_NUMBER -le $MAX_ATTEMPT || $SELENIUM_READY == "false" ]]; do
-    echo "grid check attempt $ATTEMPT_NUMBER out of $MAX_ATTEMPT"
-    SELENIUM_READY=$(curl --silent "${DRIVER}/status" | jq ".value.ready")
-
-    if [[ $SELENIUM_READY == "true" ]]; then
-      echo "selenium grid reported ready as: $SELENIUM_READY. ready to run tests"
-      break
-    else
-      TIME_TO_WAIT=$((WAIT_TIME_SECONDS * ATTEMPT_NUMBER))
-      echo "selenium check value: $SELENIUM_READY"
-      echo "waiting $TIME_TO_WAIT seconds before re-checking if grid is ready"
-      sleep $TIME_TO_WAIT
-      ATTEMPT_NUMBER=$((ATTEMPT_NUMBER+1))
-    fi
-  done
-
-  echo "returning selenium ready state as $SELENIUM_READY"
-}
-
-gradle -v
-
-# If variable not set or null, set it to localhost as if we were running it using docker-compose, compose will set DRIVER for us.
-# if driver is loccalhost, we are using the chromedriver rather than the remotewebdriver
-DRIVER="${DRIVER:="localhost"}"
-
-echo "Selenium Grid URL for RemoteWebDriver: $DRIVER"
-
-# if we are running the test in docker compose, change to the WORKDIR in dev.Dockerfile otherwise we are running selenium directly on the host as we cannot run docker in docker
-if [ "$DRIVER" == "http://selenium-hub:4444/wd/hub" ]; then
-  echo "running in docker compose as the environment variable DRIVER is the selinium hubs service name as specified in docker-compose.dev.yml"
-  echo "preserving current working directory which is"
-  pwd
-
-  # perform a grid check
-  grid_status_check
-
-  if [[ $SELENIUM_READY != "true" ]]; then
-    echo "selenium grid status is $SELENIUM_READY. exit with status code 1"
-    exit 1
-  else
-    echo "selenium is ready to run tests"
-  fi
-
+if [ "$TEST_ENVIRONMENT" == "build" ]; then
+  yarn test:integration
+  TESTS_EXIT_CODE=$?
 else
-  echo "environment variable DRIVER exists but is not the selinium hubs service name. using the default localhost variant"
-  cd /
-  echo "running selenium using chromedriver"
-  export DRIVER=$DRIVER
+  echo "No Test Environment Set"
+  exit 1
 fi
-export CFN_AppURL="https://di-auth-stub-relying-party-staging-app.london.cloudapps.digital/"
-echo "Environment: $TEST_ENVIRONMENT"
 
-export CFN_IPVCoreStubURL="https://user:qTdrBchPGyt2bxaCr3ve@di-ipv-core-stub.london.cloudapps.digital/"
-echo "Environment: $TEST_ENVIRONMENT"
-
-export CFN_OrchestrationStubURL="https://staging-di-ipv-orchestrator-stub.london.cloudapps.digital/"
-echo "Environment: $TEST_ENVIRONMENT"
-
-export CFN_AuthURL="https://di-auth-stub-relying-party-staging.london.cloudapps.digital/"
-echo "Environment: $TEST_ENVIRONMENT"
-
-
-echo "Current Working Directory: $PWD"
-
- gradle -q test --info
-
-echo "Successfully generated report"
-
-exit 0
+cp tests/integration-tests/reports/junit.xml $TEST_REPORT_ABSOLUTE_DIR/junit.xml
+exit $TESTS_EXIT_CODE

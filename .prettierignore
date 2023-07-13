@@ -16,5 +16,4 @@ coverage/
 dist/
 Dockerfile
 sonar-project.properties
-/tests/
 yarn.lock
