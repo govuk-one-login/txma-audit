@@ -13,45 +13,13 @@ export const deleteOrUpdateS3Objects = async (results: S3ObjectDetails[]) => {
         result.auditEventsFailedReingest &&
         result.auditEventsFailedReingest.length > 0
       ) {
-        try {
-          const fileContents = setFileContentsFromAuditEvents(
-            result.auditEventsFailedReingest
-          )
-
-          await putS3Object(result.bucket, result.key, fileContents)
-
-          logger.info('Updated s3 object with events that failed to reingest', {
-            bucket: result.bucket,
-            key: result.key
-          })
-        } catch (error) {
-          logger.error(
-            'Error updating s3 object, some events still require reingest',
-            {
-              bucket: result.bucket,
-              key: result.key,
-              error,
-              failedEventIds: result.auditEventsFailedReingest.map(
-                (event) => event.event_id
-              )
-            }
-          )
-        }
+        await updateFailedProcessingS3Object(
+          result.auditEventsFailedReingest,
+          result.bucket,
+          result.key
+        )
       } else {
-        try {
-          await deleteS3Object(result.bucket, result.key)
-
-          logger.info('Deleted s3 object successfully', {
-            bucket: result.bucket,
-            key: result.key
-          })
-        } catch (error) {
-          logger.error('Error deleting s3 object', {
-            bucket: result.bucket,
-            key: result.key,
-            error
-          })
-        }
+        await deleteFailedProcessingS3Object(result.bucket, result.key)
       }
     })
   )
@@ -63,4 +31,48 @@ const setFileContentsFromAuditEvents = (events: AuditEvent[]): Buffer => {
   })
 
   return gzipSync(Buffer.from(fileContents), { flush: constants.Z_SYNC_FLUSH })
+}
+
+const updateFailedProcessingS3Object = async (
+  events: AuditEvent[],
+  bucket: string,
+  key: string
+): Promise<void> => {
+  try {
+    const fileContents = setFileContentsFromAuditEvents(events)
+
+    await putS3Object(bucket, key, fileContents)
+
+    logger.info('Updated s3 object with events that failed to reingest', {
+      bucket: bucket,
+      key: key
+    })
+  } catch (error) {
+    logger.error(
+      'Error updating s3 object, some events still require reingest',
+      {
+        bucket: bucket,
+        key: key,
+        error,
+        failedEventIds: events.map((event) => event.event_id)
+      }
+    )
+  }
+}
+
+const deleteFailedProcessingS3Object = async (bucket: string, key: string) => {
+  try {
+    await deleteS3Object(bucket, key)
+
+    logger.info('Deleted s3 object successfully', {
+      bucket: bucket,
+      key: key
+    })
+  } catch (error) {
+    logger.error('Error deleting s3 object', {
+      bucket: bucket,
+      key: key,
+      error
+    })
+  }
 }
