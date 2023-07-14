@@ -57,33 +57,8 @@ export const handler = async (
 
 const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] => {
   const s3ObjectDetails = records
-    .filter((record) => {
-      const isS3TestEvent = tryParseJSON(record.body).Event === 's3:TestEvent'
-
-      if (isS3TestEvent) {
-        logger.info('Event is of type s3:TestEvent, ignoring')
-      }
-
-      return !isS3TestEvent
-    })
-    .filter((record) => {
-      const s3EventData = tryParseJSON(record.body).Records[0].s3
-      const key: string = s3EventData?.object?.key
-      const bucket: string = s3EventData?.bucket?.name
-
-      if (key && bucket) {
-        const isFailuresKey = key.startsWith('failures/')
-
-        if (!isFailuresKey) {
-          logger.warn('Received object without failures/ prefix, ignoring', {
-            bucket,
-            key
-          })
-        }
-        return isFailuresKey
-      }
-      return false
-    })
+    .filter((record) => isS3TestEvent(record))
+    .filter((record) => hasFailuresPrefix(record))
     .map((record): S3ObjectDetails => {
       const s3EventData = tryParseJSON(record.body).Records[0].s3
 
@@ -108,3 +83,32 @@ const messageIdsToBatchItemFailures = (messageIds: string[]) =>
   messageIds.map((messageId) => ({
     itemIdentifier: messageId
   }))
+
+const isS3TestEvent = (record: SQSRecord) => {
+  const isS3TestEvent = tryParseJSON(record.body).Event === 's3:TestEvent'
+
+  if (isS3TestEvent) {
+    logger.info('Event is of type s3:TestEvent, ignoring')
+  }
+
+  return !isS3TestEvent
+}
+
+const hasFailuresPrefix = (record: SQSRecord) => {
+  const s3EventData = tryParseJSON(record.body).Records[0].s3
+  const key: string = s3EventData?.object?.key
+  const bucket: string = s3EventData?.bucket?.name
+
+  if (key && bucket) {
+    const isFailuresKey = key.startsWith('failures/')
+
+    if (!isFailuresKey) {
+      logger.warn('Received object without failures/ prefix, ignoring', {
+        bucket,
+        key
+      })
+    }
+    return isFailuresKey
+  }
+  return false
+}
