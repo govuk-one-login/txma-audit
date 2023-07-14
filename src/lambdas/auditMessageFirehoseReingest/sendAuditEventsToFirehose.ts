@@ -9,29 +9,29 @@ import { getEnv } from '../../utils/helpers/getEnv'
 export const sendAuditEventsToFirehose = async (
   s3ObjectDetails: S3ObjectDetails[]
 ): Promise<S3ObjectDetails[]> =>
-  Promise.all(
-    s3ObjectDetails.map(async (details) => {
-      const records = auditEventsToFirehoseRecords(
-        details.auditEvents as AuditEvent[]
-      )
+  Promise.all(s3ObjectDetails.map(sendAuditEventToFirehose))
 
-      try {
-        const result = await firehosePutRecordBatch(
-          getEnv('FIREHOSE_DELIVERY_STREAM_NAME'),
-          records
-        )
-
-        return handleFirehosePutRecordBatchResult(result, details)
-      } catch (error) {
-        logger.error('Error sending audit events to Firehose', { error })
-
-        return {
-          ...details,
-          auditEventsFailedReingest: details.auditEvents
-        }
-      }
-    })
+const sendAuditEventToFirehose = async (s3ObjectDetails: S3ObjectDetails) => {
+  const records = auditEventsToFirehoseRecords(
+    s3ObjectDetails.auditEvents as AuditEvent[]
   )
+
+  try {
+    const result = await firehosePutRecordBatch(
+      getEnv('FIREHOSE_DELIVERY_STREAM_NAME'),
+      records
+    )
+
+    return handleFirehosePutRecordBatchResult(result, s3ObjectDetails)
+  } catch (error) {
+    logger.error('Error sending audit events to Firehose', { error })
+
+    return {
+      ...s3ObjectDetails,
+      auditEventsFailedReingest: s3ObjectDetails.auditEvents
+    }
+  }
+}
 
 const handleFirehosePutRecordBatchResult = (
   result: PutRecordBatchOutput,

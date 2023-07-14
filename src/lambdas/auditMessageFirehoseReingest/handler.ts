@@ -57,8 +57,8 @@ export const handler = async (
 
 const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] => {
   const s3ObjectDetails = records
-    .filter((record) => isS3TestEvent(record))
-    .filter((record) => hasFailuresPrefix(record))
+    .filter(isS3TestEvent)
+    .filter(hasFailuresPrefix)
     .map((record): S3ObjectDetails => {
       const s3EventData = tryParseJSON(record.body).Records[0].s3
 

@@ -20,6 +20,9 @@ jest.mock('./deleteOrUpdateS3Objects', () => ({
 }))
 
 describe('handler', () => {
+  const mockFailuresS3ObjectKey = 'failures/your-object-key'
+  const mockBucketName = 'mockBucket'
+  const mockMessageId = 'mockMessageId'
   const sqsEvent: SQSEvent = {
     Records: [
       {
@@ -28,16 +31,16 @@ describe('handler', () => {
             {
               s3: {
                 bucket: {
-                  name: 'mockBucket'
+                  name: mockBucketName
                 },
                 object: {
-                  key: 'failures/your-object-key'
+                  key: mockFailuresS3ObjectKey
                 }
               }
             }
           ]
         }),
-        messageId: 'messageId1'
+        messageId: mockMessageId
       }
     ]
   } as SQSEvent
@@ -51,9 +54,9 @@ describe('handler', () => {
       successfulResults: [
         {
           auditEvents: [],
-          bucket: 'mockBucket',
-          key: 'failures/your-object-key',
-          sqsRecordMessageId: 'messageId1'
+          bucket: mockBucketName,
+          key: mockFailuresS3ObjectKey,
+          sqsRecordMessageId: mockMessageId
         }
       ],
       failedIds: []
@@ -62,9 +65,9 @@ describe('handler', () => {
       {
         auditEvents: [],
         auditEventsFailedReingest: [],
-        bucket: 'mockBucket',
-        key: 'failures/your-object-key',
-        sqsRecordMessageId: 'messageId1'
+        bucket: mockBucketName,
+        key: mockFailuresS3ObjectKey,
+        sqsRecordMessageId: mockMessageId
       }
     ])
     when(deleteOrUpdateS3Objects).mockResolvedValue([])
@@ -78,26 +81,26 @@ describe('handler', () => {
     expect(result).toEqual(expectedResult)
     expect(getAuditEvents).toHaveBeenCalledWith([
       {
-        bucket: 'mockBucket',
-        key: 'failures/your-object-key',
-        sqsRecordMessageId: 'messageId1'
+        bucket: mockBucketName,
+        key: mockFailuresS3ObjectKey,
+        sqsRecordMessageId: mockMessageId
       }
     ])
     expect(sendAuditEventsToFirehose).toHaveBeenCalledWith([
       {
         auditEvents: [],
-        bucket: 'mockBucket',
-        key: 'failures/your-object-key',
-        sqsRecordMessageId: 'messageId1'
+        bucket: mockBucketName,
+        key: mockFailuresS3ObjectKey,
+        sqsRecordMessageId: mockMessageId
       }
     ])
     expect(deleteOrUpdateS3Objects).toHaveBeenCalledWith([
       {
         auditEvents: [],
         auditEventsFailedReingest: [],
-        bucket: 'mockBucket',
-        key: 'failures/your-object-key',
-        sqsRecordMessageId: 'messageId1'
+        bucket: mockBucketName,
+        key: mockFailuresS3ObjectKey,
+        sqsRecordMessageId: mockMessageId
       }
     ])
   })
@@ -107,9 +110,9 @@ describe('handler', () => {
       successfulResults: [
         {
           auditEvents: [],
-          bucket: 'mockBucket',
-          key: 'failures/your-object-key',
-          sqsRecordMessageId: 'messageId1'
+          bucket: mockBucketName,
+          key: mockFailuresS3ObjectKey,
+          sqsRecordMessageId: mockMessageId
         }
       ],
       failedIds: ['messageId2']
@@ -118,9 +121,9 @@ describe('handler', () => {
       {
         auditEvents: [],
         auditEventsFailedReingest: [],
-        bucket: 'mockBucket',
-        key: 'failures/your-object-key',
-        sqsRecordMessageId: 'messageId1'
+        bucket: mockBucketName,
+        key: mockFailuresS3ObjectKey,
+        sqsRecordMessageId: mockMessageId
       }
     ])
     when(deleteOrUpdateS3Objects).mockResolvedValue([])
@@ -160,7 +163,7 @@ describe('handler', () => {
               {
                 s3: {
                   bucket: {
-                    name: 'mockBucket'
+                    name: mockBucketName
                   },
                   object: {
                     key: 'your-object-key'
@@ -169,7 +172,7 @@ describe('handler', () => {
               }
             ]
           }),
-          messageId: 'messageId1'
+          messageId: mockMessageId
         }
       ]
     } as SQSEvent
@@ -195,13 +198,13 @@ describe('handler', () => {
               {
                 s3: {
                   bucket: {
-                    name: 'mockBucket'
+                    name: mockBucketName
                   }
                 }
               }
             ]
           }),
-          messageId: 'messageId1'
+          messageId: mockMessageId
         }
       ]
     } as SQSEvent
@@ -227,13 +230,13 @@ describe('handler', () => {
               {
                 s3: {
                   object: {
-                    key: 'failures/your-object-key'
+                    key: mockFailuresS3ObjectKey
                   }
                 }
               }
             ]
           }),
-          messageId: 'messageId1'
+          messageId: mockMessageId
         }
       ]
     } as SQSEvent

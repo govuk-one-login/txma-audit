@@ -7,16 +7,22 @@ jest.mock('./getAuditEventsFromS3Object', () => ({
 }))
 
 describe('getAuditEvents', () => {
+  const mockBucketName = 'mockBucket'
+  const mockfailuresKey1 = 'failures/mockKey1'
+  const mockfailuresKey2 = 'failures/mockKey2'
+  const mockMessageId1 = 'mockMessageId1'
+  const mockMessageId2 = 'mockMessageId2'
+
   const s3ObjectDetails = [
     {
-      bucket: 'mockBucket',
+      bucket: mockBucketName,
       key: 'failures/mockKey1',
-      sqsRecordMessageId: 'mockMessageId1'
+      sqsRecordMessageId: mockMessageId1
     },
     {
-      bucket: 'mockBucket',
+      bucket: mockBucketName,
       key: 'failures/mockKey2',
-      sqsRecordMessageId: 'mockMessageId2'
+      sqsRecordMessageId: mockMessageId2
     }
   ]
   const auditEvents = [
@@ -33,15 +39,15 @@ describe('getAuditEvents', () => {
       successfulResults: [
         {
           auditEvents,
-          bucket: 'mockBucket',
-          key: 'failures/mockKey1',
-          sqsRecordMessageId: 'mockMessageId1'
+          bucket: mockBucketName,
+          key: mockfailuresKey1,
+          sqsRecordMessageId: mockMessageId1
         },
         {
           auditEvents,
-          bucket: 'mockBucket',
-          key: 'failures/mockKey2',
-          sqsRecordMessageId: 'mockMessageId2'
+          bucket: mockBucketName,
+          key: mockfailuresKey2,
+          sqsRecordMessageId: mockMessageId2
         }
       ],
       failedIds: []
@@ -57,7 +63,7 @@ describe('getAuditEvents', () => {
 
     const expectedResult = {
       successfulResults: [],
-      failedIds: ['mockMessageId1', 'mockMessageId2']
+      failedIds: [mockMessageId1, mockMessageId2]
     }
 
     const result = await getAuditEvents(s3ObjectDetails)
