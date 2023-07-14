@@ -8,10 +8,10 @@ import { readableToString } from '../../utils/helpers/readableToString'
 export const getAuditEventsFromS3Object = async (
   bucketName: string,
   key: string
-) => {
+): Promise<AuditEvent[]> => {
   const contents = await getS3ObjectAsStream(bucketName, key)
 
-  return await getAuditEvents(contents)
+  return getAuditEvents(contents)
 }
 
 const getAuditEvents = async (contents: Readable): Promise<AuditEvent[]> => {
