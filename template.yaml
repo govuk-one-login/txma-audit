@@ -94,7 +94,7 @@ Resources:
   MessageBatchBucket:
     DependsOn:
       - AuditFileReadyToEncryptQueuePolicy
-      - AuditMessageDelimiterDeadLetterQueuePolicy
+      - AuditMessageFailedProcessingQueuePolicy
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch
@@ -153,7 +153,7 @@ Resources:
                 Rules:
                   - Name: prefix
                     Value: failures/
-            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+            Queue: !GetAtt AuditMessageFailedProcessingQueue.Arn
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -704,7 +704,7 @@ Resources:
               - sqs:GetQueueAttributes
               - sqs:ReceiveMessage
             Resource:
-              - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+              - !GetAtt AuditMessageFailedProcessingQueue.Arn
           - Sid: UseSqsKmsKey
             Effect: Allow
             Action:
@@ -759,7 +759,7 @@ Resources:
             FunctionResponseTypes:
               - ReportBatchItemFailures
             MaximumBatchingWindowInSeconds: 10
-            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+            Queue: !GetAtt AuditMessageFailedProcessingQueue.Arn
             ScalingConfig:
               MaximumConcurrency: 2
       FunctionName: !Sub ${AWS::StackName}-audit-firehose-reingest
@@ -774,14 +774,24 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
 
   # Kinesis Firehose resources
-  AuditMessageDelimiterDeadLetterQueue:
+  AuditMessageFailedProcessingQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${AWS::StackName}-audit-message-delimiter-dlq
       KmsMasterKeyId: '{{resolve:ssm:S3QueueNotificationsKmsKeyArn}}'
       MessageRetentionPeriod: 1209600 # 14 days
+      QueueName: !Sub ${AWS::StackName}-audit-message-failed-processing
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AuditMessageFailedProcessingDeadLetterQueue.Arn
+        maxReceiveCount: 5
 
-  AuditMessageDelimiterDeadLetterQueuePolicy:
+  AuditMessageFailedProcessingDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
+      MessageRetentionPeriod: 1209600 # 14 days
+      QueueName: !Sub ${AWS::StackName}-audit-message-failed-processing-dlq
+
+  AuditMessageFailedProcessingQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       PolicyDocument:
@@ -794,14 +804,14 @@ Resources:
             Action:
               - sqs:SendMessage
             Resource:
-              - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+              - !GetAtt AuditMessageFailedProcessingQueue.Arn
             Condition:
               ArnEquals:
                 aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
       Queues:
-        - !Ref AuditMessageDelimiterDeadLetterQueue
+        - !Ref AuditMessageFailedProcessingQueue
 
   AuditMessageDeliveryStreamLogs:
     Type: AWS::Logs::LogGroup
