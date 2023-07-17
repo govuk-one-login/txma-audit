@@ -1,5 +1,5 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-import { getEnv } from '../../src/utils/helpers'
+import { getEnv } from '../../src/utils/helpers/getEnv'
 import { createManifestFileText } from './createManifestFileText'
 
 export const writeJobManifestFile = async (

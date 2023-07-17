@@ -649,7 +649,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
   AuditMessageDelimiterFunction:
-    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    #checkov:skip=CKV_AWS_115: Currently want this function to scale without limitation
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: dist/auditMessageDelimiter/
@@ -659,6 +659,114 @@ Resources:
       MemorySize: 256
       Role: !GetAtt AuditMessageDelimiterFunctionRole.Arn
       Timeout: 120
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+
+  AuditMessageFirehoseReingestLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-audit-firehose-reingest
+      RetentionInDays: 7
+
+  AuditMessageFirehoseReingestPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-audit-firehose-reingest-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowFirehoseAccess
+            Effect: Allow
+            Action:
+              - firehose:PutRecordBatch
+            Resource:
+              - !GetAtt AuditMessageDeliveryStream.Arn
+          - Sid: AllowS3Access
+            Effect: Allow
+            Action:
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:ListBucket
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub ${MessageBatchBucket.Arn}/failures/*
+          - Sid: ReadFromFirehoseDlq
+            Effect: Allow
+            Action:
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:ReceiveMessage
+            Resource:
+              - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+          - Sid: UseSqsKmsKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:ReEncrypt*
+            Resource:
+              - '{{resolve:ssm:S3QueueNotificationsKmsKeyArn}}'
+          - Sid: UseFirehoseKmsKey
+            Effect: Allow
+            Action:
+              - kms:DescribeKey
+              - kms:Encrypt
+            Resource:
+              - '{{resolve:ssm:FirehoseKmsKeyArn}}'
+
+  AuditMessageFirehoseReingestFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaServiceToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref AuditMessageFirehoseReingestPolicy
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      RoleName: !Sub ${AWS::StackName}-audit-firehose-reingest-role
+
+  AuditMessageFirehoseReingestFunction:
+    #checkov:skip=CKV_AWS_115: Currently want this function to scale without limitation
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/auditMessageFirehoseReingest/
+      Environment:
+        Variables:
+          FIREHOSE_DELIVERY_STREAM_NAME: !Ref AuditMessageDeliveryStream
+      Events:
+        Firehose:
+          Type: SQS
+          Properties:
+            BatchSize: 100
+            Enabled: false
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+            MaximumBatchingWindowInSeconds: 10
+            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+            ScalingConfig:
+              MaximumConcurrency: 2
+      FunctionName: !Sub ${AWS::StackName}-audit-firehose-reingest
+      Handler: handler.handler
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      MemorySize: 512
+      Role: !GetAtt AuditMessageFirehoseReingestFunctionRole.Arn
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
@@ -899,6 +1007,14 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref AuditMessageDelimiterLogs
+      FilterPattern: ''
+      DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
+
+  CslsAuditMessageFirehoseReingestLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName: !Ref AuditMessageFirehoseReingestLogs
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 

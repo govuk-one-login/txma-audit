@@ -1,5 +1,5 @@
 import { HeadObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { getEnv } from '../../utils/helpers'
+import { getEnv } from '../../utils/helpers/getEnv'
 
 export const s3FileExists = async (
   bucket: string,

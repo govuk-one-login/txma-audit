@@ -1,5 +1,5 @@
 import { SQSEvent, Context } from 'aws-lambda'
-import { tryParseJSON } from '../../utils/helpers'
+import { tryParseJSON } from '../../utils/helpers/tryParseJson'
 import { initialiseLogger, logger } from '../../services/logger'
 import { encryptAuditData } from '../../sharedServices/encryptAuditData'
 export const handler = async (

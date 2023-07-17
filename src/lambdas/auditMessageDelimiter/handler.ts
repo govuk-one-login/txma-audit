@@ -6,9 +6,13 @@ import {
   FirehoseTransformationResultRecord
 } from 'aws-lambda'
 
+import { logger } from '../../services/logger'
+
 export const handler = async (
   event: FirehoseTransformationEvent
 ): Promise<FirehoseTransformationResult> => {
+  logger.info(`Received ${event.records.length} records for processing`)
+
   /* Process the list of records and transform them */
   const transformationResult: FirehoseRecordTransformationStatus = 'Ok'
 

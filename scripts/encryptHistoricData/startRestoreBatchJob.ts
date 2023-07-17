@@ -4,7 +4,7 @@ import {
   CreateJobCommandInput,
   JobReportScope
 } from '@aws-sdk/client-s3-control'
-import { getEnv } from '../../src/utils/helpers'
+import { getEnv } from '../../src/utils/helpers/getEnv'
 import { writeJobManifestFile } from './writeJobManifestFile'
 
 export const startRestoreBatchJob = async (s3FileKeys: string[]) => {

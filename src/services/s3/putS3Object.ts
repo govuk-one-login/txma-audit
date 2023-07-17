@@ -3,7 +3,7 @@ import {
   PutObjectCommand,
   PutObjectCommandInput
 } from '@aws-sdk/client-s3'
-import { getEnv } from '../../utils/helpers'
+import { getEnv } from '../../utils/helpers/getEnv'
 
 export const putS3Object = async (
   bucket: string,
