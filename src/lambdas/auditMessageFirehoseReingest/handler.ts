@@ -21,11 +21,13 @@ export const handler = async (
   logger.info(`Received ${event.Records.length} records for processing`)
 
   const batchItemFailures: SQSBatchItemFailure[] = []
-  const s3ObjectDetails: S3ObjectDetails[] = getS3ObjectDetails(event.Records)
+  const s3ObjectDetailsArray: S3ObjectDetails[] = getDetailsOfS3Objects(
+    event.Records
+  )
 
   // Get the audit events from the S3 objects, if there is a failure we can send
   // the message back to the queue for reprocessing
-  const getAuditEventsResults = await getAuditEvents(s3ObjectDetails)
+  const getAuditEventsResults = await getAuditEvents(s3ObjectDetailsArray)
   batchItemFailures.push(
     ...messageIdsToBatchItemFailures(getAuditEventsResults.failedIds)
   )
@@ -55,28 +57,20 @@ export const handler = async (
   }
 }
 
-const getS3ObjectDetails = (records: SQSRecord[]): S3ObjectDetails[] => {
-  const s3ObjectDetails = records
+const getDetailsOfS3Objects = (records: SQSRecord[]): S3ObjectDetails[] => {
+  const s3ObjectDetailsArray = records
     .filter(isS3TestEvent)
     .filter(hasFailuresPrefix)
-    .map((record): S3ObjectDetails => {
-      const s3EventData = tryParseJSON(record.body).Records[0].s3
+    .map(getS3ObjectDetails)
 
-      return {
-        bucket: s3EventData?.bucket?.name,
-        key: s3EventData?.object?.key,
-        sqsRecordMessageId: record.messageId
-      }
-    })
-
-  logger.info(`Found ${s3ObjectDetails.length} S3 objects to process`, {
-    s3ObjectDetails: s3ObjectDetails.map(({ bucket, key }) => ({
+  logger.info(`Found ${s3ObjectDetailsArray.length} S3 objects to process`, {
+    s3ObjectDetails: s3ObjectDetailsArray.map(({ bucket, key }) => ({
       bucket,
       key
     }))
   })
 
-  return s3ObjectDetails
+  return s3ObjectDetailsArray
 }
 
 const messageIdsToBatchItemFailures = (messageIds: string[]) =>
@@ -111,4 +105,14 @@ const hasFailuresPrefix = (record: SQSRecord) => {
     return isFailuresKey
   }
   return false
+}
+
+const getS3ObjectDetails = (record: SQSRecord): S3ObjectDetails => {
+  const s3EventData = tryParseJSON(record.body).Records[0].s3
+
+  return {
+    bucket: s3EventData?.bucket?.name,
+    key: s3EventData?.object?.key,
+    sqsRecordMessageId: record.messageId
+  }
 }
