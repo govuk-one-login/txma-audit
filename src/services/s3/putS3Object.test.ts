@@ -12,7 +12,6 @@ import {
 } from '../../utils/tests/testConstants'
 import { putS3Object } from './putS3Object'
 
-process.env.AWS_REGION = 'eu-west-2'
 const s3Mock = mockClient(S3Client)
 
 describe('putS3Object', () => {

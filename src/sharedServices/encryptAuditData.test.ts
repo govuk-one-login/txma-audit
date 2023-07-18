@@ -29,10 +29,6 @@ jest.mock('../services/kms/encryptS3Object', () => ({
 describe('encryptAuditData', () => {
   beforeEach(() => {
     jest.resetAllMocks()
-
-    process.env.TEMPORARY_BUCKET_NAME = TEST_TEMPORARY_BUCKET_NAME
-    process.env.PERMANENT_BUCKET_NAME = TEST_PERMANENT_BUCKET_NAME
-    process.env.AUDIT_BUCKET_NAME = TEST_AUDIT_BUCKET_NAME
   })
 
   it.each([TEST_TEMPORARY_BUCKET_NAME, TEST_AUDIT_BUCKET_NAME])(

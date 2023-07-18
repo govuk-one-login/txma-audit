@@ -9,8 +9,6 @@ import {
 } from '../../utils/tests/testConstants'
 import { encryptS3Object } from './encryptS3Object'
 
-process.env.AWS_REGION = 'eu-west-2'
-
 jest.mock('@aws-crypto/encrypt-node', () => ({
   buildEncrypt: jest.fn().mockReturnValue({
     encrypt: jest.fn()
@@ -21,8 +19,6 @@ jest.mock('@aws-crypto/kms-keyring-node', () => ({
 }))
 
 describe('encryptS3Object', () => {
-  process.env.GENERATOR_KEY_ID = TEST_GENERATOR_KEY_ID
-
   it('returns a buffer of encrypted data', async () => {
     when(KmsKeyringNode as jest.Mock).mockImplementation(() => ({
       generatorKeyId: TEST_GENERATOR_KEY_ID
