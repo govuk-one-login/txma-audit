@@ -443,9 +443,9 @@ Resources:
       Environment:
         Variables:
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
+          AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
-          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
-          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
       FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
       Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'

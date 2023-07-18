@@ -8,9 +8,9 @@ export const encryptAuditData = async (
   eventBucket: string,
   eventKey: string
 ) => {
-  const temporaryBucket = getEnv('TEMPORARY_BUCKET_NAME')
+  const temporaryBucket = getEnv('AUDIT_TEMPORARY_BUCKET_NAME')
   const auditBucket = getEnv('AUDIT_BUCKET_NAME')
-  const permanentBucket = getEnv('PERMANENT_BUCKET_NAME')
+  const permanentBucket = getEnv('AUDIT_PERMANENT_BUCKET_NAME')
 
   if (eventBucket !== temporaryBucket && eventBucket !== auditBucket) {
     throw new Error(`Incorrect source bucket - ${eventBucket}`)
