@@ -14,7 +14,6 @@ import {
 } from '../../utils/tests/testConstants'
 import { getS3ObjectAsStream } from './getS3ObjectAsStream'
 
-process.env.AWS_REGION = 'eu-west-2'
 const s3Mock = mockClient(S3Client)
 const getObjectCommandInput: GetObjectCommandInput = {
   Bucket: TEST_TEMPORARY_BUCKET_NAME,

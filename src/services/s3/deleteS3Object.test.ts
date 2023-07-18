@@ -11,7 +11,6 @@ import {
   TEST_S3_OBJECT_KEY
 } from '../../utils/tests/testConstants'
 
-process.env.AWS_REGION = 'eu-west-2'
 const s3Mock = mockClient(S3Client)
 
 const putObjectCommandInput: DeleteObjectCommandInput = {
