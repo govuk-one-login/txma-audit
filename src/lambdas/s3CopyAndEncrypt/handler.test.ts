@@ -1,12 +1,12 @@
 import { mockLambdaContext } from '../../utils/tests/mockLambdaContext'
-import { encryptAuditData } from '../../sharedServices/encryptAuditData'
+import { encryptAuditData } from './encryptAuditData'
 import {
   testS3TestEvent,
   testS3SqsEvent
 } from '../../utils/tests/testEvents/testS3SqsEvent'
 import { handler } from './handler'
 
-jest.mock('../../sharedServices/encryptAuditData.ts', () => ({
+jest.mock('./encryptAuditData.ts', () => ({
   encryptAuditData: jest.fn()
 }))
 

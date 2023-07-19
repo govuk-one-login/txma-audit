@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream'
 import { constants, createGunzip } from 'node:zlib'
-import { getS3ObjectAsStream } from '../../services/s3/getS3ObjectAsStream'
+import { getS3ObjectAsStream } from '../../sharedServices/s3/getS3ObjectAsStream'
 import { AuditEvent } from '../../types/auditEvent'
 import { base64ToObject } from '../../utils/helpers/base64ToObject'
 import { readableToString } from '../../utils/helpers/readableToString'

@@ -1,4 +1,4 @@
-import { logger } from '../../services/logger'
+import { logger } from '../../sharedServices/logger'
 import { S3ObjectDetails } from '../../types/s3ObjectDetails'
 import { getAuditEventsFromS3Object } from './getAuditEventsFromS3Object'
 

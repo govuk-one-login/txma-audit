@@ -1,12 +1,12 @@
 import { when } from 'jest-when'
 import { Readable, Writable } from 'node:stream'
-import { getS3ObjectAsStream } from '../../services/s3/getS3ObjectAsStream'
+import { getS3ObjectAsStream } from '../../sharedServices/s3/getS3ObjectAsStream'
 import { AuditEvent } from '../../types/auditEvent'
 import { objectToBase64 } from '../../utils/helpers/objectToBase64'
 import { readableToString } from '../../utils/helpers/readableToString'
 import { getAuditEventsFromS3Object } from './getAuditEventsFromS3Object'
 
-jest.mock('../../services/s3/getS3ObjectAsStream', () => ({
+jest.mock('../../sharedServices/s3/getS3ObjectAsStream', () => ({
   getS3ObjectAsStream: jest.fn()
 }))
 

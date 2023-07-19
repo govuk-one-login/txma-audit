@@ -1,6 +1,6 @@
 import { PutRecordBatchOutput } from '@aws-sdk/client-firehose'
-import { firehosePutRecordBatch } from '../../services/firehose/firehosePutRecordBatch'
-import { logger } from '../../services/logger'
+import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
+import { logger } from '../../sharedServices/logger'
 import { AuditEvent } from '../../types/auditEvent'
 import { S3ObjectDetails } from '../../types/s3ObjectDetails'
 import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
