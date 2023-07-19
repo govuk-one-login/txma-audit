@@ -1,8 +1,8 @@
-import { encryptS3Object } from '../services/kms/encryptS3Object'
-import { getS3ObjectAsStream } from '../services/s3/getS3ObjectAsStream'
-import { putS3Object } from '../services/s3/putS3Object'
+import { encryptS3Object } from '../../sharedServices/kms/encryptS3Object'
+import { getS3ObjectAsStream } from '../../sharedServices/s3/getS3ObjectAsStream'
+import { putS3Object } from '../../sharedServices/s3/putS3Object'
 import { encryptAuditData } from './encryptAuditData'
-import { createDataStream } from '../utils/tests/test-helpers/test-helper'
+import { createDataStream } from '../../utils/tests/test-helpers/test-helper'
 import {
   TEST_AUDIT_BUCKET_NAME,
   TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
@@ -11,18 +11,18 @@ import {
   TEST_S3_OBJECT_KEY,
   TEST_TEMPORARY_BUCKET_NAME,
   TEST_WRONG_S3_BUCKET
-} from '../utils/tests/testConstants'
+} from '../../utils/tests/testConstants'
 import { when } from 'jest-when'
 
-jest.mock('../services/s3/getS3ObjectAsStream', () => ({
+jest.mock('../../sharedServices/s3/getS3ObjectAsStream', () => ({
   getS3ObjectAsStream: jest.fn()
 }))
 
-jest.mock('../services/s3/putS3Object', () => ({
+jest.mock('../../sharedServices/s3/putS3Object', () => ({
   putS3Object: jest.fn()
 }))
 
-jest.mock('../services/kms/encryptS3Object', () => ({
+jest.mock('../../sharedServices/kms/encryptS3Object', () => ({
   encryptS3Object: jest.fn()
 }))
 

@@ -5,7 +5,7 @@ import {
   SQSEvent,
   SQSRecord
 } from 'aws-lambda'
-import { initialiseLogger, logger } from '../../services/logger'
+import { initialiseLogger, logger } from '../../sharedServices/logger'
 import { S3ObjectDetails } from '../../types/s3ObjectDetails'
 import { tryParseJSON } from '../../utils/helpers/tryParseJson'
 import { deleteOrUpdateS3Objects } from './deleteOrUpdateS3Objects'

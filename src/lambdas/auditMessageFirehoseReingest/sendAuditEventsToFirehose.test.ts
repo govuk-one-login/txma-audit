@@ -1,10 +1,10 @@
 import { when } from 'jest-when'
-import { firehosePutRecordBatch } from '../../services/firehose/firehosePutRecordBatch'
+import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
 import { S3ObjectDetails } from '../../types/s3ObjectDetails'
 import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
 import { sendAuditEventsToFirehose } from './sendAuditEventsToFirehose'
 
-jest.mock('../../services/firehose/firehosePutRecordBatch.ts', () => ({
+jest.mock('../../sharedServices/firehose/firehosePutRecordBatch.ts', () => ({
   firehosePutRecordBatch: jest.fn()
 }))
 
