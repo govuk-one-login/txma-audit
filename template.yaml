@@ -94,7 +94,7 @@ Resources:
   MessageBatchBucket:
     DependsOn:
       - AuditFileReadyToEncryptQueuePolicy
-      - AuditMessageDelimiterDeadLetterQueuePolicy
+      - AuditMessageFailedProcessingQueuePolicy
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch
@@ -153,7 +153,7 @@ Resources:
                 Rules:
                   - Name: prefix
                     Value: failures/
-            Queue: !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+            Queue: !GetAtt AuditMessageFailedProcessingQueue.Arn
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -443,9 +443,9 @@ Resources:
       Environment:
         Variables:
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
+          AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
+          AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
-          PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
-          TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
       FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
       Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
@@ -645,11 +645,10 @@ Resources:
                 - lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaKinesisExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 
   AuditMessageDelimiterFunction:
-    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    #checkov:skip=CKV_AWS_115: Currently want this function to scale without limitation
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: dist/auditMessageDelimiter/
@@ -665,15 +664,133 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
 
+  AuditMessageFirehoseReingestLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-audit-firehose-reingest
+      RetentionInDays: 7
+
+  AuditMessageFirehoseReingestPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-audit-firehose-reingest-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowFirehoseAccess
+            Effect: Allow
+            Action:
+              - firehose:PutRecordBatch
+            Resource:
+              - !GetAtt AuditMessageDeliveryStream.Arn
+          - Sid: AllowS3Access
+            Effect: Allow
+            Action:
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:ListBucket
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Resource:
+              - !GetAtt MessageBatchBucket.Arn
+              - !Sub ${MessageBatchBucket.Arn}/failures/*
+          - Sid: ReadFromFirehoseDlq
+            Effect: Allow
+            Action:
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:ReceiveMessage
+            Resource:
+              - !GetAtt AuditMessageFailedProcessingQueue.Arn
+          - Sid: UseSqsKmsKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:ReEncrypt*
+            Resource:
+              - '{{resolve:ssm:S3QueueNotificationsKmsKeyArn}}'
+          - Sid: UseFirehoseKmsKey
+            Effect: Allow
+            Action:
+              - kms:DescribeKey
+              - kms:Encrypt
+            Resource:
+              - '{{resolve:ssm:FirehoseKmsKeyArn}}'
+
+  AuditMessageFirehoseReingestFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaServiceToAssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref AuditMessageFirehoseReingestPolicy
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      RoleName: !Sub ${AWS::StackName}-audit-firehose-reingest-role
+
+  AuditMessageFirehoseReingestFunction:
+    #checkov:skip=CKV_AWS_115: Currently want this function to scale without limitation
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/auditMessageFirehoseReingest/
+      Environment:
+        Variables:
+          FIREHOSE_DELIVERY_STREAM_NAME: !Ref AuditMessageDeliveryStream
+      Events:
+        Firehose:
+          Type: SQS
+          Properties:
+            BatchSize: 100
+            Enabled: false
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+            MaximumBatchingWindowInSeconds: 10
+            Queue: !GetAtt AuditMessageFailedProcessingQueue.Arn
+            ScalingConfig:
+              MaximumConcurrency: 2
+      FunctionName: !Sub ${AWS::StackName}-audit-firehose-reingest
+      Handler: handler.handler
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      MemorySize: 512
+      Role: !GetAtt AuditMessageFirehoseReingestFunctionRole.Arn
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+
   # Kinesis Firehose resources
-  AuditMessageDelimiterDeadLetterQueue:
+  AuditMessageFailedProcessingQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${AWS::StackName}-audit-message-delimiter-dlq
       KmsMasterKeyId: '{{resolve:ssm:S3QueueNotificationsKmsKeyArn}}'
       MessageRetentionPeriod: 1209600 # 14 days
+      QueueName: !Sub ${AWS::StackName}-audit-message-failed-processing
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AuditMessageFailedProcessingDeadLetterQueue.Arn
+        maxReceiveCount: 5
 
-  AuditMessageDelimiterDeadLetterQueuePolicy:
+  AuditMessageFailedProcessingDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
+      MessageRetentionPeriod: 1209600 # 14 days
+      QueueName: !Sub ${AWS::StackName}-audit-message-failed-processing-dlq
+
+  AuditMessageFailedProcessingQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       PolicyDocument:
@@ -686,14 +803,14 @@ Resources:
             Action:
               - sqs:SendMessage
             Resource:
-              - !GetAtt AuditMessageDelimiterDeadLetterQueue.Arn
+              - !GetAtt AuditMessageFailedProcessingQueue.Arn
             Condition:
               ArnEquals:
                 aws:SourceArn: !Sub arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
       Queues:
-        - !Ref AuditMessageDelimiterDeadLetterQueue
+        - !Ref AuditMessageFailedProcessingQueue
 
   AuditMessageDeliveryStreamLogs:
     Type: AWS::Logs::LogGroup
@@ -899,6 +1016,14 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref AuditMessageDelimiterLogs
+      FilterPattern: ''
+      DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
+
+  CslsAuditMessageFirehoseReingestLogsSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsProductionOrStaging
+    Properties:
+      LogGroupName: !Ref AuditMessageFirehoseReingestLogs
       FilterPattern: ''
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
