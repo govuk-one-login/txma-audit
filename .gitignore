@@ -33,3 +33,4 @@ tempMessageZip.gzip
 
 # Tests
 tests/bin/
+tests/**/reports/

@@ -1,40 +1,53 @@
-FROM amazoncorretto:11
+ARG ALPINE_VERSION=3.16
 
-ARG BUILD_DATE
-ARG COMMIT_SHA
-ARG GIT_REPO
+FROM python:alpine${ALPINE_VERSION} as builder
 
-LABEL "BUILD_DATE" = ${BUILD_DATE}
-LABEL "COMMIT_SHA" = ${COMMIT_SHA}
-LABEL "GIT_REPO" = ${GIT_REPO}
+ARG AWS_CLI_VERSION=2.8.13
 
-RUN yum install -y awscli shadow-utils wget unzip jq xz tar gzip Xvfb
+RUN apk update
+RUN apk add --no-cache \
+      build-base \
+      cmake \
+      git \
+      groff \
+      libffi-dev
+RUN git clone --single-branch --depth 1 -b ${AWS_CLI_VERSION} https://github.com/aws/aws-cli.git
 
-# download latest chrome
-RUN wget -O chrome_x64.rpm https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
-RUN yum localinstall -y *.rpm
+WORKDIR /aws-cli
 
-# download latest chromedriver and place in $PATH
-RUN wget -O chromedriver_linux https://chromedriver.storage.googleapis.com/2.40/chromedriver_linux64.zip
-RUN unzip chromedriver_linux
-RUN mv chromedriver /usr/local/bin/chromedriver
-RUN chmod 0777 /usr/local/bin/chromedriver
+RUN sed -i'' 's/PyInstaller.*/PyInstaller==5.6.2/g' requirements-build.txt
+RUN python -m venv venv
+RUN . venv/bin/activate
+RUN scripts/installers/make-exe
+RUN unzip -q dist/awscli-exe.zip
+RUN aws/install --bin-dir /aws-cli-bin
+RUN /aws-cli-bin/aws --version
+RUN rm -rf /usr/local/aws-cli/v2/current/dist/aws_completer /usr/local/aws-cli/v2/current/dist/awscli/data/ac.index /usr/local/aws-cli/v2/current/dist/awscli/examples
+RUN find /usr/local/aws-cli/v2/current/dist/awscli/botocore/data -name examples-1.json -delete
 
-RUN mkdir reports
+FROM node:16-alpine${ALPINE_VERSION} as run-tests
 
-#Install Gradle and dependencies
-RUN wget https://services.gradle.org/distributions/gradle-7.4.2-bin.zip -P /tmp
-RUN unzip -d /opt/gradle /tmp/gradle-*.zip
+COPY --from=builder /usr/local/bin/python /usr/local/bin/python
+COPY --from=builder /usr/local/lib/ /usr/local/lib/
+COPY --from=builder /usr/local/aws-cli/ /usr/local/aws-cli/
+COPY --from=builder /aws-cli-bin/ /usr/local/bin/
 
-ENV GRADLE_HOME=/opt/gradle/gradle-7.4.2
-ENV PATH=$PATH:$GRADLE_HOME/bin
-ENV BROWSER=chrome-headless
+RUN apk update && \
+      apk upgrade && \
+      apk add --no-cache \
+      bash
 
-RUN echo $PATH
-RUN gradle -v
+WORKDIR /test-app
 
-# copy source code over
-COPY ./ ./
+COPY package.json yarn.lock tsconfig.json .pnp* ./
+COPY tests/integration-tests ./tests/integration-tests
+COPY .yarn ./.yarn
+COPY tests/run-tests.sh /
 
-# ENTRYPOINT ["/bin/bash"]
-ENTRYPOINT ["./run-tests.sh"]
+RUN corepack enable
+RUN yarn unplug
+RUN chmod +x /run-tests.sh
+
+WORKDIR /test-app/tests
+
+ENTRYPOINT ["/run-tests.sh"]
