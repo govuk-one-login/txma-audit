@@ -1200,9 +1200,9 @@ Resources:
   # End: Monitoring & alerting resources #
   ########################################
 
-  ############################################
-  # Start: Self Serve Automated Test resources #
-  ############################################
+  ###################################
+  # Start: Automated Test resources #
+  ###################################
 
     AuditMessageDelimiterFunctionNameParameter:
     Type: AWS::SSM::Parameter
@@ -1213,9 +1213,9 @@ Resources:
       Value: !Ref AuditMessageDelimiterFunction
       Description: Audit delivery lambda available for self serve integration tests
 
-  ############################################
-  # End: Self Serve Automated Test resources #
-  ############################################
+  ##################################
+  # End: Automated Test resources #
+  ##################################
 
   ################################
   # Start: Development resources #
