@@ -1200,6 +1200,23 @@ Resources:
   # End: Monitoring & alerting resources #
   ########################################
 
+  ###################################
+  # Start: Automated Test resources #
+  ###################################
+
+    AuditMessageDelimiterFunctionNameParameter:
+    Type: AWS::SSM::Parameter
+    Condition: TestEnvironment
+    Properties:
+      Name: !Sub /${AWS::StackName}/AuditMessageDelimiterFunction
+      Type: String
+      Value: !Ref AuditMessageDelimiterFunction
+      Description: Audit delivery lambda available for self serve integration tests
+
+  ##################################
+  # End: Automated Test resources #
+  ##################################
+
   ################################
   # Start: Development resources #
   ################################
@@ -1218,3 +1235,24 @@ Resources:
   ##############################
   # End: Development resources #
   ##############################
+
+  Outputs:
+  AuditMessageDelimiterFunctionName:
+    Value: !Ref AuditMessageDelimiterFunction
+
+  AuditMessageDeliveryStreamLogsName:
+    Value: !Ref AuditMessageDeliveryStreamLogs
+
+  FraudSplunkDeliveryTestBucketName:
+    Condition: IsBuildOrDev
+    Value: !Ref FraudSplunkDeliveryTestBucket
+
+  FraudSplunkTransformationLogGroupName:
+    Value: !Ref FraudSplunkTransformationLogs
+
+  PerformanceSplunkDeliveryTestBucketName:
+    Condition: IsBuildOrDev
+    Value: !Ref PerformanceSplunkDeliveryTestBucket
+
+  PerformanceSplunkTransformationLogGroupName:
+    Value: !Ref PerformanceSplunkTransformationLogs
