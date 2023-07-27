@@ -3667,7 +3667,7 @@ __metadata:
     eslint-plugin-jest: 27.2.2
     husky: 8.0.3
     jest: 29.6.1
-    jest-junit: ^16.0.0
+    jest-junit: 16.0.0
     jest-when: 3.5.2
     lint-staged: 13.2.3
     prettier: 2.8.8
@@ -5114,7 +5114,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-junit@npm:^16.0.0":
+"jest-junit@npm:16.0.0":
   version: 16.0.0
   resolution: "jest-junit@npm:16.0.0"
   dependencies:
