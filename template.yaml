@@ -1223,7 +1223,7 @@ Outputs:
   # S3 Delimiter Function
   AuditMessageDelimiterFunctionName:
     Value: !Ref AuditMessageDelimiterFunction
-    
+
   AuditMessageDelimiterLogsName:
     Value: !Ref AuditMessageDelimiterLogs
 
