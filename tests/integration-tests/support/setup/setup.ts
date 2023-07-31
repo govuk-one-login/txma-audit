@@ -16,18 +16,12 @@ module.exports = async () => {
   const globals = ['AWS_REGION']
   const stackOutputMappings = {
     AUDIT_MESSAGE_DELIMITER_FUNCTION_NAME: 'AuditMessageDelimiterFunctionName',
-    AUDIT_MESSAGE_DELIVERY_STREAM_LOG_GROUP_NAME: 'AuditMessageDeliveryStreamLogsName',
-    FRAUD_SPLUNK_DELIVERY_TEST_BUCKET_NAME: 'FraudSplunkDeliveryTestBucketName',
-    FRAUD_SPLUNK_TRANSFORMATION_LOG_GROUP_NAME:
-      'FraudSplunkTransformationLogGroupName',
-    PERFORMANCE_SPLUNK_DELIVERY_TEST_BUCKET_NAME:
-      'PerformanceSplunkDeliveryTestBucketName',
-    PERFORMANCE_SPLUNK_TRANSFORMATION_LOG_GROUP_NAME:
-      'PerformanceSplunkTransformationLogGroupName'
+    AUDIT_MESSAGE_DELIMITER_LOGS_NAME: 'AuditMessageDelimiterLogsName',
+    S3_COPY_AND_ENCRYPT_FUNCTION_NAME: 'S3CopyAndEncryptFunctionName',
+    S3_COPY_AND_ENCRYPT_LOGS_NAME: 'S3CopyAndEncryptLogsName'
   }
   const secretMappings = {
-    FRAUD_HMAC_KEY: `tests/${stack}/FraudHMACKey`,
-    PERFORMANCE_HMAC_KEY: `tests/${stack}/PerformanceHMACKey`
+    FIREHOSE_DELIVERY_STREAM_NAME: 'IntegrationTestsAddRecordToFirehoseFunctionNameParameter',
   }
   setEnvVarsFromJestGlobals(globals)
   await setEnvVarsFromStackOutputs(stack, stackOutputMappings)
