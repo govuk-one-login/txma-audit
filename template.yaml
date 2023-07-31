@@ -1219,17 +1219,17 @@ Resources:
   # End: Development resources #
   ##############################
 
-  Outputs:
-    # S3 Delimiter Function
-    AuditMessageDelimiterFunctionName:
-      Value: !Ref AuditMessageDelimiterFunction
+Outputs:
+  # S3 Delimiter Function
+  AuditMessageDelimiterFunctionName:
+    Value: !Ref AuditMessageDelimiterFunction
+    
+  AuditMessageDelimiterLogsName:
+    Value: !Ref AuditMessageDelimiterLogs
 
-    AuditMessageDelimiterLogsName:
-      Value: !Ref AuditMessageDelimiterLogs
+  # S3 Copy And Encrypt Function
+  S3CopyAndEncryptFunctionName:
+    Value: !Ref S3CopyAndEncryptFunction
 
-    # S3 Copy And Encrypt Function
-    S3CopyAndEncryptFunctionName:
-      Value: !Ref S3CopyAndEncryptFunction
-
-    S3CopyAndEncryptLogsName:
-      Value: !Ref S3CopyAndEncryptLogs
+  S3CopyAndEncryptLogsName:
+    Value: !Ref S3CopyAndEncryptLogs
