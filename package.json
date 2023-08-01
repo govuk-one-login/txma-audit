@@ -20,7 +20,7 @@
     "test:integration": "jest -c ./tests/integration-tests/jest.config.integration.ts"
   },
   "dependencies": {
-    "@aws-crypto/encrypt-node": "3.2.0",
+    "@aws-crypto/encrypt-node": "3.2.2",
     "@aws-crypto/kms-keyring-node": "3.2.0",
     "@aws-crypto/material-management": "3.2.0",
     "@aws-lambda-powertools/logger": "1.11.0",
