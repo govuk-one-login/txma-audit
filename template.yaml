@@ -1199,6 +1199,37 @@ Resources:
     Properties:
       ServiceToken: '{{resolve:ssm:EmptyS3BucketsFunctionArn}}'
 
+  IntegrationTestsAddRecordToFirehoseFunctionNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/AddRecordToFirehoseFunctionName
+      Type: String
+      Value: '{{resolve:ssm:/tests/AddFirehoseRecordFunctionName}}'
+
+  AddRecordToFirehoseLambdaPolicy:
+    Condition: TestRoleResources
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt IntegrationTestsAddRecordToFirehoseFunctionNameParameter.Value
+      Principal: !Ref TestRoleArn
+
   ##############################
   # End: Development resources #
   ##############################
+
+Outputs:
+  # S3 Delimiter Function
+  AuditMessageDelimiterFunctionName:
+    Value: !Ref AuditMessageDelimiterFunction
+
+  AuditMessageDelimiterLogsName:
+    Value: !Ref AuditMessageDelimiterLogs
+
+  # S3 Copy And Encrypt Function
+  S3CopyAndEncryptFunctionName:
+    Value: !Ref S3CopyAndEncryptFunction
+
+  S3CopyAndEncryptLogsName:
+    Value: !Ref S3CopyAndEncryptLogs
