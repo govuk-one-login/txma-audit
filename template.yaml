@@ -63,6 +63,15 @@ Conditions:
   DeployMessageBucketPolicy: !Or
     - !Condition DeployTestRolePolicy
     - !Condition IsProductionOrStaging
+  TestEnvironment:
+    !Not [
+      !Or [
+        !Equals [!Ref Environment, production],
+        !Equals [!Ref Environment, integration]
+      ]
+    ]
+  TestRoleResources:
+    !And [Condition: TestEnvironment, !Not [!Equals [!Ref TestRoleArn, none]]]
 
 Globals:
   Function:
