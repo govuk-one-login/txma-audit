@@ -37,7 +37,7 @@ describe('events processed by firehose', () => {
         ]
       }
   
-      await invokeLambdaFunction(getEnv('AUDIT_MESSAGE_DELIMITER_FUNCTION_NAME'), event)
+      await invokeLambdaFunction(getEnv('FIREHOSE_DELIVERY_STREAM_NAME'), event)
       console.log(`Event ID for ${baseEvent.event_name}: ${eventId}`)
     })
     // Hits lambda directly - Remove and hit infra firehose function instead

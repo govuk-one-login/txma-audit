@@ -21,6 +21,7 @@ module.exports = async () => {
     S3_COPY_AND_ENCRYPT_LOGS_NAME: 'S3CopyAndEncryptLogsName'
   }
   const secretMappings = {
+    PERFORMANCE_HMAC_KEY: `tests/${stack}/PerformanceHMACKey`,
     FIREHOSE_DELIVERY_STREAM_NAME: 'IntegrationTestsAddRecordToFirehoseFunctionNameParameter',
   }
   setEnvVarsFromJestGlobals(globals)

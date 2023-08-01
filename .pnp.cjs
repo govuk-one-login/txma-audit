@@ -32,6 +32,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-crypto/kms-keyring-node", "npm:3.2.0"],\
             ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["@aws-lambda-powertools/logger", "npm:1.11.0"],\
+            ["@aws-sdk/client-cloudformation", "npm:3.352.0"],\
             ["@aws-sdk/client-cloudwatch-logs", "npm:3.352.0"],\
             ["@aws-sdk/client-firehose", "npm:3.352.0"],\
             ["@aws-sdk/client-lambda", "npm:3.352.0"],\
@@ -315,6 +316,54 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["@aws-sdk/chunked-blob-reader", "npm:3.310.0"],\
             ["tslib", "npm:2.5.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@aws-sdk/client-cloudformation", [\
+        ["npm:3.352.0", {\
+          "packageLocation": "./.yarn/cache/@aws-sdk-client-cloudformation-npm-3.352.0-f460b0eeab-d209188209.zip/node_modules/@aws-sdk/client-cloudformation/",\
+          "packageDependencies": [\
+            ["@aws-sdk/client-cloudformation", "npm:3.352.0"],\
+            ["@aws-crypto/sha256-browser", "npm:3.0.0"],\
+            ["@aws-crypto/sha256-js", "npm:3.0.0"],\
+            ["@aws-sdk/client-sts", "npm:3.352.0"],\
+            ["@aws-sdk/config-resolver", "npm:3.347.0"],\
+            ["@aws-sdk/credential-provider-node", "npm:3.352.0"],\
+            ["@aws-sdk/fetch-http-handler", "npm:3.347.0"],\
+            ["@aws-sdk/hash-node", "npm:3.347.0"],\
+            ["@aws-sdk/invalid-dependency", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-content-length", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-endpoint", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-host-header", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-logger", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-recursion-detection", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-retry", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-serde", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-signing", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-stack", "npm:3.347.0"],\
+            ["@aws-sdk/middleware-user-agent", "npm:3.352.0"],\
+            ["@aws-sdk/node-config-provider", "npm:3.347.0"],\
+            ["@aws-sdk/node-http-handler", "npm:3.350.0"],\
+            ["@aws-sdk/smithy-client", "npm:3.347.0"],\
+            ["@aws-sdk/types", "npm:3.347.0"],\
+            ["@aws-sdk/url-parser", "npm:3.347.0"],\
+            ["@aws-sdk/util-base64", "npm:3.310.0"],\
+            ["@aws-sdk/util-body-length-browser", "npm:3.310.0"],\
+            ["@aws-sdk/util-body-length-node", "npm:3.310.0"],\
+            ["@aws-sdk/util-defaults-mode-browser", "npm:3.347.0"],\
+            ["@aws-sdk/util-defaults-mode-node", "npm:3.347.0"],\
+            ["@aws-sdk/util-endpoints", "npm:3.352.0"],\
+            ["@aws-sdk/util-retry", "npm:3.347.0"],\
+            ["@aws-sdk/util-user-agent-browser", "npm:3.347.0"],\
+            ["@aws-sdk/util-user-agent-node", "virtual:d1f0b4d9d2a12c277642fa69e331e7712c0439426eaed3d19bd5ede0773b6119d96bc07668c10d3cd376349face39f0699e055c1fae28806a21cb66b85891fcd#npm:3.347.0"],\
+            ["@aws-sdk/util-utf8", "npm:3.310.0"],\
+            ["@aws-sdk/util-waiter", "npm:3.347.0"],\
+            ["@smithy/protocol-http", "npm:1.0.1"],\
+            ["@smithy/types", "npm:1.0.0"],\
+            ["fast-xml-parser", "npm:4.2.4"],\
+            ["tslib", "npm:2.5.0"],\
+            ["uuid", "npm:8.3.2"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -4889,6 +4938,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-crypto/kms-keyring-node", "npm:3.2.0"],\
             ["@aws-crypto/material-management", "npm:3.2.0"],\
             ["@aws-lambda-powertools/logger", "npm:1.11.0"],\
+            ["@aws-sdk/client-cloudformation", "npm:3.352.0"],\
             ["@aws-sdk/client-cloudwatch-logs", "npm:3.352.0"],\
             ["@aws-sdk/client-firehose", "npm:3.352.0"],\
             ["@aws-sdk/client-lambda", "npm:3.352.0"],\

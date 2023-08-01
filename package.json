@@ -36,6 +36,7 @@
     "jsonpath-plus": "7.2.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-cloudformation": "3.352.0",
     "@jest/types": "29.5.0",
     "@types/aws-lambda": "8.10.119",
     "@types/jest": "29.5.2",
