@@ -36,7 +36,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-sdk/client-s3", "npm:3.352.0"],\
             ["@aws-sdk/client-s3-control", "npm:3.352.0"],\
             ["@aws-sdk/util-endpoints", "npm:3.352.0"],\
-            ["@jest/types", "npm:29.5.0"],\
+            ["@jest/types", "npm:29.6.1"],\
             ["@types/aws-lambda", "npm:8.10.119"],\
             ["@types/jest", "npm:29.5.2"],\
             ["@types/jest-when", "npm:3.5.2"],\
@@ -4640,7 +4640,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-sdk/client-s3", "npm:3.352.0"],\
             ["@aws-sdk/client-s3-control", "npm:3.352.0"],\
             ["@aws-sdk/util-endpoints", "npm:3.352.0"],\
-            ["@jest/types", "npm:29.5.0"],\
+            ["@jest/types", "npm:29.6.1"],\
             ["@types/aws-lambda", "npm:8.10.119"],\
             ["@types/jest", "npm:29.5.2"],\
             ["@types/jest-when", "npm:3.5.2"],\
@@ -8303,7 +8303,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["ts-jest", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:29.1.1"],\
             ["@babel/core", null],\
-            ["@jest/types", "npm:29.5.0"],\
+            ["@jest/types", "npm:29.6.1"],\
             ["@types/babel-jest", null],\
             ["@types/babel__core", null],\
             ["@types/esbuild", null],\

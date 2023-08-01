@@ -30,7 +30,7 @@
     "@aws-sdk/util-endpoints": "3.352.0"
   },
   "devDependencies": {
-    "@jest/types": "29.5.0",
+    "@jest/types": "29.6.1",
     "@types/aws-lambda": "8.10.119",
     "@types/jest": "29.5.2",
     "@types/jest-when": "3.5.2",
