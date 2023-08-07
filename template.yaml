@@ -960,6 +960,14 @@ Resources:
               - sqs:DeleteMessage
               - sqs:GetQueueAttributes
             Resource: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
+          - Sid: UseSqsKmsKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:ReEncrypt*
+            Resource:
+              - '{{resolve:ssm:SqsKmsKeyArn}}'
 
   ############################
   # End: SNS DLQ Resouces   #
