@@ -9,7 +9,7 @@ export const handler = async (
 
   const results = event.Records.map((sqsRecord) => {
     const parsedRecord = tryParseJSON(sqsRecord.body)
-    logger.info('parsedRecord', parsedRecord)
+    logger.info('parsedRecord', { parsedRecord })
     return sqsRecord.messageId
   })
 
