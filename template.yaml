@@ -892,7 +892,7 @@ Resources:
             - !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
           Condition:
             ArnEquals:
-              aws:SourceArn: !Ref AuditMessageDeliveryStreamSubscription
+              aws:SourceArn: '{{resolve:ssm:EventProcessorSnsTopicArn}}'
 
   RedriveSNSDQLEventsFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
