@@ -50,10 +50,10 @@ export const handler = async (
   })
 
   const successfullyParsedRecords = results.filter(
-    (result) => result.failed === true
+    (result) => result.failed === false
   )
   const unsuccessfullyParsedRecords = results.filter(
-    (result) => result.failed === false
+    (result) => result.failed === true
   )
 
   const unsuccessfullyParsedRecordsSQSMessageId =
