@@ -36,4 +36,9 @@ interface EvidenceEvent {
 
 interface TxmaMetadata {
   obfuscated?: boolean
+  failedSNSPublish?: System
+}
+
+interface System {
+  audit?: boolean
 }

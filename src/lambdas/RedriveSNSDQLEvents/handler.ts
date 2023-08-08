@@ -34,10 +34,12 @@ export const handler = async (
         name: 'ParsingJSONError'
       }
     }
-    const markedAuditEvent = {
+    const markedAuditEvent: AuditEvent = {
       ...parsedRecord,
       txma: {
-        failedSNSPublish: true
+        failedSNSPublish: {
+          audit: true
+        }
       }
     }
     return {
