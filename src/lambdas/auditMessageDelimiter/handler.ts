@@ -19,7 +19,6 @@ export const handler = async (
   const output = event.records.map(
     (record: FirehoseTransformationEventRecord) => {
       const recordData = Buffer.from(record.data, 'base64').toString('utf8')
-      logger.debug('recordData', { recordData })
       const delimitedData = recordData + '\n'
       const payload = Buffer.from(delimitedData, 'utf8').toString('base64')
 
