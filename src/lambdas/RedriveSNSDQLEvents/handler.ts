@@ -63,6 +63,8 @@ export const handler = async (
     return element.auditEvent as AuditEvent
   })
 
+  logger.debug('auditEventArray', { auditEventArray })
+
   const firehoseRecords = auditEventsToFirehoseRecords(auditEventArray)
 
   logger.debug('firehoseRecords', { firehoseRecords })
