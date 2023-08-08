@@ -65,6 +65,7 @@ export const handler = async (
 
   const firehoseRecords = auditEventsToFirehoseRecords(auditEventArray)
 
+  logger.debug(firehoseRecords)
   try {
     const result = await firehosePutRecordBatch(
       getEnv('FIREHOSE_DELIVERY_STREAM_NAME'),
