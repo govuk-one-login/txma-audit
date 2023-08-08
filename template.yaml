@@ -899,6 +899,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: dist/RedriveSNSDQLEvents/
+      Environment:
+        Variables:
+          FIREHOSE_DELIVERY_STREAM_NAME: !Ref AuditMessageDeliveryStream
       Events:
         RedriveSNSDLQ:
           Type: SQS
@@ -945,6 +948,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref RedriveSNSDQLEventsFunctionPolicy
+        - !Ref AuditMessageFirehoseReingestPolicy
 
   RedriveSNSDQLEventsFunctionPolicy:
     Type: AWS::IAM::ManagedPolicy
