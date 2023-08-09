@@ -94,14 +94,10 @@ const generateLogMessage = (processingResultArrays: ProcessingResult[][]) => {
   processingResultArrays.map((singleProcessingResultArray) => {
     singleProcessingResultArray.map((processsingResult) => {
       if (Object.hasOwn(logMessage, processsingResult.failureReason)) {
-        Object.defineProperty(logMessage, processsingResult.failureReason, {
-          configurable: true,
-          value: true,
-          writable: true
-        })
+        logMessage[`processsingResult.failureReason`] = []
       }
       logger.debug('logMessage', { logMessage })
-      Object.logMessage[`${processsingResult.failureReason}`].push(
+      logMessage[`${processsingResult.failureReason}`].push(
         processsingResult.auditEvent?.event_id as string
       )
     })
