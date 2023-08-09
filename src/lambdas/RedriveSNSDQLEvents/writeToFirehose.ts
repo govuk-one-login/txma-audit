@@ -47,6 +47,10 @@ const parseFailedFirehosePuts = (
 
     params.RequestResponses?.forEach((response, index) => {
       if (response.ErrorCode && firehoseProcessingResults[index]) {
+        firehoseProcessingResults[index] = {
+          ...firehoseProcessingResults[index],
+          failureReason: 'succeededToWriteToFirehose'
+        }
         successfullProcessingResults.push(firehoseProcessingResults[index])
       } else {
         firehoseProcessingResults[index] = {

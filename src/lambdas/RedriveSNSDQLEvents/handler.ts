@@ -4,7 +4,7 @@ import {
   SQSBatchResponse,
   SQSEvent
 } from 'aws-lambda'
-import { initialiseLogger } from '../../sharedServices/logger'
+import { initialiseLogger, logger } from '../../sharedServices/logger'
 import { AuditEvent } from '../../types/auditEvent'
 import { tryParseJSON } from '../../utils/helpers/tryParseJson'
 import { writeToFirehose } from './writeToFirehose'
@@ -12,7 +12,7 @@ import { writeToFirehose } from './writeToFirehose'
 export type ProcessingResult = {
   sqsMessageId: string
   failed: boolean
-  failureReason?: string
+  failureReason: string
   auditEvent?: AuditEvent
 }
 
@@ -43,6 +43,7 @@ export const handler = async (
     return {
       sqsMessageId: sqsRecord.messageId,
       failed: false,
+      failureReason: 'SuccessfullyParsed',
       auditEvent: markedAuditEvent
     }
   })
@@ -63,10 +64,20 @@ export const handler = async (
       firehoseResponse.failedProcessingResults
     )
 
+  const batchItemFailure = unsuccessfullyParsedRecordsSQSMessageId.concat(
+    unsucessfullySentToFirehoseSQSMessageId
+  )
+
+  logger.info(
+    'processed the following event ids',
+    generateLogMessage([
+      unsuccessfullyParsedRecords,
+      firehoseResponse.failedProcessingResults,
+      firehoseResponse.successfullProcessingResults
+    ])
+  )
   return {
-    batchItemFailures: unsuccessfullyParsedRecordsSQSMessageId.concat(
-      unsucessfullySentToFirehoseSQSMessageId
-    )
+    batchItemFailures: batchItemFailure
   }
 }
 
@@ -76,4 +87,20 @@ const SQSBatchItemFailureFromProcessingResultArray = (
   return processingResultArray.map((element) => {
     return { itemIdentifier: element.sqsMessageId }
   })
+}
+
+const generateLogMessage = (processingResultArrays: ProcessingResult[][]) => {
+  const logMessage: { [key: string]: string[] } = {}
+  processingResultArrays.map((singleProcessingResultArray) => {
+    singleProcessingResultArray.map((processsingResult) => {
+      if (Object.hasOwn(logMessage, processsingResult.failureReason)) {
+        logMessage[`${processsingResult.failureReason}`] = []
+      }
+      logMessage[`${processsingResult.failureReason}`].push(
+        processsingResult.auditEvent?.event_id as string
+      )
+    })
+  })
+
+  return logMessage
 }
