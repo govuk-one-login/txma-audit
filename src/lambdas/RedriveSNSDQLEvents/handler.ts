@@ -95,7 +95,7 @@ const generateLogMessage = (processingResultArrays: ProcessingResult[][]) => {
       if (Object.hasOwn(logMessage, processsingResult.failureReason)) {
         logMessage[`${processsingResult.failureReason}`] = []
       }
-      logger.debug(logMessage)
+      logger.debug('logMessage', { logMessage })
       logMessage[`${processsingResult.failureReason}`].push(
         processsingResult.auditEvent?.event_id as string
       )
