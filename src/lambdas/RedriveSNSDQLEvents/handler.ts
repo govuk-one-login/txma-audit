@@ -93,8 +93,9 @@ const generateLogMessage = (processingResultArrays: ProcessingResult[][]) => {
   logger.debug('processingResultArrays', { processingResultArrays })
   processingResultArrays.map((singleProcessingResultArray) => {
     singleProcessingResultArray.map((processsingResult) => {
-      if (Object.hasOwn(logMessage, processsingResult.failureReason)) {
-        logMessage[`processsingResult.failureReason`] = []
+      if (Object.keys(logMessage).includes(processsingResult.failureReason)) {
+        logger.debug('setting key')
+        logMessage[`${processsingResult.failureReason}`] = []
       }
       logger.debug('logMessage', { logMessage })
       logMessage[`${processsingResult.failureReason}`].push(
