@@ -1,15 +1,13 @@
 import {
-  SQSEvent,
   Context,
+  SQSBatchItemFailure,
   SQSBatchResponse,
-  SQSBatchItemFailure
+  SQSEvent
 } from 'aws-lambda'
-import { tryParseJSON } from '../../utils/helpers/tryParseJson'
-import { initialiseLogger, logger } from '../../sharedServices/logger'
+import { initialiseLogger } from '../../sharedServices/logger'
 import { AuditEvent } from '../../types/auditEvent'
-import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
-import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
-import { getEnv } from '../../utils/helpers/getEnv'
+import { tryParseJSON } from '../../utils/helpers/tryParseJson'
+import { writeToFirehose } from './writeToFirehose'
 
 export type ProcessingResult = {
   sqsMessageId: string
@@ -55,31 +53,20 @@ export const handler = async (
   const unsuccessfullyParsedRecords = results.filter(
     (result) => result.failed === true
   )
-
   const unsuccessfullyParsedRecordsSQSMessageId =
     SQSBatchItemFailureFromProcessingResultArray(unsuccessfullyParsedRecords)
 
-  const auditEventArray = successfullyParsedRecords.map((element) => {
-    return element.auditEvent as AuditEvent
-  })
+  const firehoseResponse = await writeToFirehose(successfullyParsedRecords)
 
-  logger.debug('auditEventArray', { auditEventArray })
-
-  const firehoseRecords = auditEventsToFirehoseRecords(auditEventArray)
-
-  logger.debug('firehoseRecords', { firehoseRecords })
-  try {
-    const result = await firehosePutRecordBatch(
-      getEnv('FIREHOSE_DELIVERY_STREAM_NAME'),
-      firehoseRecords
+  const unsucessfullySentToFirehoseSQSMessageId =
+    SQSBatchItemFailureFromProcessingResultArray(
+      firehoseResponse.failedProcessingResults
     )
-    logger.debug('result', { result })
-  } catch (error) {
-    logger.error('failed to publish to firehose', error as Error)
-  }
 
   return {
-    batchItemFailures: unsuccessfullyParsedRecordsSQSMessageId
+    batchItemFailures: unsuccessfullyParsedRecordsSQSMessageId.concat(
+      unsucessfullySentToFirehoseSQSMessageId
+    )
   }
 }
 
