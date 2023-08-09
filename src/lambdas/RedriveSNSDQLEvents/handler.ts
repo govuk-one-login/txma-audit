@@ -90,6 +90,7 @@ const SQSBatchItemFailureFromProcessingResultArray = (
 
 const generateLogMessage = (processingResultArrays: ProcessingResult[][]) => {
   const logMessage: { [key: string]: string[] } = {}
+  logger.debug('processingResultArrays', { processingResultArrays })
   processingResultArrays.map((singleProcessingResultArray) => {
     singleProcessingResultArray.map((processsingResult) => {
       if (Object.hasOwn(logMessage, processsingResult.failureReason)) {
@@ -100,7 +101,7 @@ const generateLogMessage = (processingResultArrays: ProcessingResult[][]) => {
         })
       }
       logger.debug('logMessage', { logMessage })
-      logMessage[`${processsingResult.failureReason}`].push(
+      Object.logMessage[`${processsingResult.failureReason}`].push(
         processsingResult.auditEvent?.event_id as string
       )
     })
