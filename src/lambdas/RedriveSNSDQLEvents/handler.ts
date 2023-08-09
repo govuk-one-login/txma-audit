@@ -68,14 +68,13 @@ export const handler = async (
     unsucessfullySentToFirehoseSQSMessageId
   )
 
-  logger.info(
-    'processed the following event ids',
-    generateLogMessage([
+  logger.info('processed the following event ids', {
+    event_id: generateLogMessage([
       unsuccessfullyParsedRecords,
       firehoseResponse.failedProcessingResults,
       firehoseResponse.successfullProcessingResults
     ])
-  )
+  })
   return {
     batchItemFailures: batchItemFailure
   }
@@ -96,6 +95,7 @@ const generateLogMessage = (processingResultArrays: ProcessingResult[][]) => {
       if (Object.hasOwn(logMessage, processsingResult.failureReason)) {
         logMessage[`${processsingResult.failureReason}`] = []
       }
+      logger.debug(logMessage)
       logMessage[`${processsingResult.failureReason}`].push(
         processsingResult.auditEvent?.event_id as string
       )
