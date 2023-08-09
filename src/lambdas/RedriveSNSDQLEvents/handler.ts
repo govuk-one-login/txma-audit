@@ -29,7 +29,7 @@ export const handler = async (
       return {
         sqsMessageId: sqsRecord.messageId,
         failed: true,
-        name: 'ParsingJSONError'
+        failureReason: 'ParsingJSONError'
       }
     }
     const markedAuditEvent: AuditEvent = {
