@@ -71,7 +71,7 @@ const parseFailedFirehosePuts = (
       successfullProcessingResults: firehoseProcessingResults.map((element) => {
         return {
           ...element,
-          failureReason: successMessage
+          statusReason: successMessage
         }
       }),
       failedProcessingResults: []
