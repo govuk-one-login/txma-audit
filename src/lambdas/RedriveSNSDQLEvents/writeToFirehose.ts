@@ -6,7 +6,7 @@ import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/audit
 import { getEnv } from '../../utils/helpers/getEnv'
 import { ProcessingResult } from './handler'
 
-type FirehoseProcessingResult = {
+export type FirehoseProcessingResult = {
   successfullProcessingResults: ProcessingResult[]
   failedProcessingResults: ProcessingResult[]
 }
@@ -25,7 +25,7 @@ export const writeToFirehose = async (
       getEnv('FIREHOSE_DELIVERY_STREAM_NAME'),
       firehoseRecords
     )
-    return parseFailedFirehosePuts(result, successfullyParsedRecords)
+    return parseFirehoseResponse(result, successfullyParsedRecords)
   } catch (error) {
     logger.error('failed to publish to firehose', error as Error)
     const errorOutput: FirehoseProcessingResult = {
@@ -36,11 +36,11 @@ export const writeToFirehose = async (
   }
 }
 
-const parseFailedFirehosePuts = (
+export const parseFirehoseResponse = (
   firehoseResponse: PutRecordBatchCommandOutput,
   processingResults: ProcessingResult[]
 ): FirehoseProcessingResult => {
-  const successMessage = 'succeededToWriteToFirehose'
+  const successMessage = 'SucceededToWriteToFirehose'
 
   if (firehoseResponse.FailedPutCount && firehoseResponse.FailedPutCount > 0) {
     logger.warn('Some audit events failed to reingest')
@@ -51,15 +51,17 @@ const parseFailedFirehosePuts = (
       if (response.ErrorCode && processingResults[index]) {
         processingResults[index] = {
           ...processingResults[index],
-          statusReason: successMessage
+          statusReason: 'FailedToWriteToFirehose',
+          failed: true
         }
-        successfullProcessingResults.push(processingResults[index])
+        failedProcessingResults.push(processingResults[index])
       } else {
         processingResults[index] = {
           ...processingResults[index],
-          statusReason: 'FailedToWriteToFirehose'
+          statusReason: successMessage,
+          failed: false
         }
-        failedProcessingResults.push(processingResults[index])
+        successfullProcessingResults.push(processingResults[index])
       }
     })
     return {
