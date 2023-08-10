@@ -11,6 +11,7 @@ export const getAuditEvent = async (
   retryCount = 0
 ): Promise<AuditEvent> => {
   const latestObjects = await getLatestXObjectKeysFromS3(bucket, 15)
+  console.log(latestObjects)
   const foundAuditEvent = (
     await Promise.all(
       latestObjects.map(async (key) => {
