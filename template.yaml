@@ -1243,6 +1243,6 @@ Outputs:
   S3CopyAndEncryptLogsName:
     Value: !Ref S3CopyAndEncryptLogs
 
-  # Tempory Audit S3 Bucket 
+  # Tempory Audit S3 Bucket
   TemporaryMessageBatchBucketName:
     Value: !Ref TemporaryMessageBatchBucket
