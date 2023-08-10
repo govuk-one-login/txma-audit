@@ -92,8 +92,8 @@ export const generateLogMessage = (
   processingResultArrays: ProcessingResult[][]
 ) => {
   const logMessage: { [key: string]: string[] } = {}
-  processingResultArrays.map((singleProcessingResultArray) => {
-    singleProcessingResultArray.map((processsingResult) => {
+  processingResultArrays.forEach((singleProcessingResultArray) => {
+    singleProcessingResultArray.forEach((processsingResult) => {
       if (!Object.keys(logMessage).includes(processsingResult.failureReason)) {
         logMessage[`${processsingResult.failureReason}`] = []
       }
