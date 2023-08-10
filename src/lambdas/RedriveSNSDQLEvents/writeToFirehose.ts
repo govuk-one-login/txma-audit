@@ -37,29 +37,29 @@ export const writeToFirehose = async (
 }
 
 const parseFailedFirehosePuts = (
-  params: PutRecordBatchCommandOutput,
-  firehoseProcessingResults: ProcessingResult[]
+  firehoseResponse: PutRecordBatchCommandOutput,
+  processingResults: ProcessingResult[]
 ): FirehoseProcessingResult => {
   const successMessage = 'succeededToWriteToFirehose'
 
-  if (params.FailedPutCount && params.FailedPutCount > 0) {
+  if (firehoseResponse.FailedPutCount && firehoseResponse.FailedPutCount > 0) {
     logger.warn('Some audit events failed to reingest')
     const successfullProcessingResults: ProcessingResult[] = []
     const failedProcessingResults: ProcessingResult[] = []
 
-    params.RequestResponses?.forEach((response, index) => {
-      if (response.ErrorCode && firehoseProcessingResults[index]) {
-        firehoseProcessingResults[index] = {
-          ...firehoseProcessingResults[index],
+    firehoseResponse.RequestResponses?.forEach((response, index) => {
+      if (response.ErrorCode && processingResults[index]) {
+        processingResults[index] = {
+          ...processingResults[index],
           statusReason: successMessage
         }
-        successfullProcessingResults.push(firehoseProcessingResults[index])
+        successfullProcessingResults.push(processingResults[index])
       } else {
-        firehoseProcessingResults[index] = {
-          ...firehoseProcessingResults[index],
+        processingResults[index] = {
+          ...processingResults[index],
           statusReason: 'FailedToWriteToFirehose'
         }
-        failedProcessingResults.push(firehoseProcessingResults[index])
+        failedProcessingResults.push(processingResults[index])
       }
     })
     return {
@@ -68,7 +68,7 @@ const parseFailedFirehosePuts = (
     }
   } else {
     return {
-      successfullProcessingResults: firehoseProcessingResults.map((element) => {
+      successfullProcessingResults: processingResults.map((element) => {
         return {
           ...element,
           statusReason: successMessage
