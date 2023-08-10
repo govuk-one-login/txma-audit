@@ -1246,3 +1246,11 @@ Outputs:
   # Tempory Audit S3 Bucket
   TemporaryMessageBatchBucketName:
     Value: !Ref TemporaryMessageBatchBucket
+
+  # S3 Temp Audit Bucket
+  AuditMessageBatchName:
+    Value: !Ref audit-build-message-batch
+
+  # Firehose Message Batch
+  FirehoseAuditMessageBatchName:
+    Value: !Ref audit-message-batch
