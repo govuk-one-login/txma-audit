@@ -1244,7 +1244,7 @@ Outputs:
     Value: !Ref S3CopyAndEncryptLogs
 
   # S3 Temp Audit Bucket
-  MessageBatchBucketName:
+  AuditMessageBatchBucketName:
     Value: !Ref MessageBatchBucket
 
   # Firehose Message Batch
