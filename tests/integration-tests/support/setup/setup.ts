@@ -11,8 +11,8 @@ module.exports = async () => {
     AUDIT_MESSAGE_DELIMITER_FUNCTION_NAME: 'AuditMessageDelimiterFunctionName',
     AUDIT_MESSAGE_DELIMITER_LOGS_NAME: 'AuditMessageDelimiterLogsName',
     S3_COPY_AND_ENCRYPT_FUNCTION_NAME: 'S3CopyAndEncryptFunctionName',
-    S3_COPY_AND_ENCRYPT_LOGS_NAME: 'S3CopyAndEncryptLogsName',
-    TEMPORARY_MESSAGE_BATCH_BUCKET_NAME: 'TemporaryMessageBatchBucketName'
+    S3_COPY_AND_ENCRYPT_LOGS_NAME: 'S3CopyAndEncryptLogsName'
+    // TEMPORARY_MESSAGE_BATCH_BUCKET_NAME: 'TemporaryMessageBatchBucketName'
   }
   await setEnvVarsFromStackOutputs(stack, stackOutputMappings)
   await setEnvVarsFromSsm(ssmMappings)
@@ -25,7 +25,9 @@ const formatTestStackSsmParam = (parameterName: string) =>
   `/tests/${stack}/${parameterName}`
 
 const ssmMappings = {
-  FIREHOSE_DELIVERY_STREAM_NAME: formatTestStackSsmParam('AddRecordToFirehoseFunctionName'),
+  FIREHOSE_DELIVERY_STREAM_NAME: formatTestStackSsmParam(
+    'AddRecordToFirehoseFunctionName'
+  )
 }
 
 const setEnvVarsFromStackOutputs = async (

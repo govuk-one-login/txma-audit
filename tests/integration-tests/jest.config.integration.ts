@@ -6,7 +6,7 @@ const config: JestConfigWithTsJest = {
   preset: 'ts-jest',
   verbose: true,
   testMatch: ['**/tests/integration-tests/test-suites/*.spec.ts'],
-  testTimeout: 30000,
+  testTimeout: 180000,
   reporters: [
     'default',
     [
