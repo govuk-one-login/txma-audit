@@ -40,6 +40,8 @@ const parseFailedFirehosePuts = (
   params: PutRecordBatchCommandOutput,
   firehoseProcessingResults: ProcessingResult[]
 ): FirehoseProcessingResult => {
+  const successMessage = 'succeededToWriteToFirehose'
+
   if (params.FailedPutCount && params.FailedPutCount > 0) {
     logger.warn('Some audit events failed to reingest')
     const successfullProcessingResults: ProcessingResult[] = []
@@ -49,13 +51,13 @@ const parseFailedFirehosePuts = (
       if (response.ErrorCode && firehoseProcessingResults[index]) {
         firehoseProcessingResults[index] = {
           ...firehoseProcessingResults[index],
-          failureReason: 'succeededToWriteToFirehose'
+          statusReason: successMessage
         }
         successfullProcessingResults.push(firehoseProcessingResults[index])
       } else {
         firehoseProcessingResults[index] = {
           ...firehoseProcessingResults[index],
-          failureReason: 'FailedToWriteToFirehose'
+          statusReason: 'FailedToWriteToFirehose'
         }
         failedProcessingResults.push(firehoseProcessingResults[index])
       }
@@ -66,7 +68,12 @@ const parseFailedFirehosePuts = (
     }
   } else {
     return {
-      successfullProcessingResults: firehoseProcessingResults,
+      successfullProcessingResults: firehoseProcessingResults.map((element) => {
+        return {
+          ...element,
+          failureReason: successMessage
+        }
+      }),
       failedProcessingResults: []
     }
   }

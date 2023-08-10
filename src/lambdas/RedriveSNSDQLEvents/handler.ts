@@ -12,7 +12,7 @@ import { writeToFirehose } from './writeToFirehose'
 export type ProcessingResult = {
   sqsMessageId: string
   failed: boolean
-  failureReason: string
+  statusReason: string
   auditEvent?: AuditEvent
 }
 
@@ -94,10 +94,10 @@ export const generateLogMessage = (
   const logMessage: { [key: string]: string[] } = {}
   processingResultArrays.forEach((singleProcessingResultArray) => {
     singleProcessingResultArray.forEach((processsingResult) => {
-      if (!Object.keys(logMessage).includes(processsingResult.failureReason)) {
-        logMessage[`${processsingResult.failureReason}`] = []
+      if (!Object.keys(logMessage).includes(processsingResult.statusReason)) {
+        logMessage[`${processsingResult.statusReason}`] = []
       }
-      logMessage[`${processsingResult.failureReason}`].push(
+      logMessage[`${processsingResult.statusReason}`].push(
         processsingResult.auditEvent?.event_id as string
       )
     })
