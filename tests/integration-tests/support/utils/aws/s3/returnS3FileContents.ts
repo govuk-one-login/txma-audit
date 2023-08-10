@@ -11,7 +11,6 @@ export const getAuditEvent = async (
   retryCount = 0
 ): Promise<AuditEvent> => {
   const latestObjects = await getLatestXObjectKeysFromS3(bucket, 15)
-  console.log(latestObjects)
   const foundAuditEvent = (
     await Promise.all(
       latestObjects.map(async (key) => {
@@ -20,7 +19,14 @@ export const getAuditEvent = async (
         const contentsString = await readableToString(
           fileStream.pipe(createGunzip())
         )
-        return JSON.parse(`[${contentsString.replace(/}{/g, '},{')}]`)
+        // Files in the audit bucket can contain multiple events, separated by line breaks.
+        // The file ends with a line break as well.
+        // Each line is a chunk of JSON, so we split on line breaks and remove any empty entries from the array,
+        // and parse each line as JSON, before returning the array of events
+        return contentsString
+          .split('\n')
+          .filter((line) => line && line.length > 0)
+          .map((line) => JSON.parse(line))
       })
     )
   )
