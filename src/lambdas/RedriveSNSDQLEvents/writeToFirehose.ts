@@ -4,7 +4,7 @@ import { logger } from '../../sharedServices/logger'
 import { AuditEvent } from '../../types/auditEvent'
 import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
 import { getEnv } from '../../utils/helpers/getEnv'
-import { ProcessingResult } from './handler'
+import { ProcessingResult } from './helper'
 
 export type FirehoseProcessingResult = {
   successfullProcessingResults: ProcessingResult[]
