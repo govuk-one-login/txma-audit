@@ -22,42 +22,13 @@ export const handler = async (
 ): Promise<SQSBatchResponse> => {
   initialiseLogger(context)
 
-  const results: ProcessingResult[] = event.Records.map((sqsRecord) => {
-    const parsedRecord = tryParseJSON(sqsRecord.body) as AuditEvent
-
-    if (typeof parsedRecord.event_id === 'undefined') {
-      return {
-        sqsMessageId: sqsRecord.messageId,
-        failed: true,
-        statusReason: 'ParsingJSONError'
-      }
-    }
-    const markedAuditEvent: AuditEvent = {
-      ...parsedRecord,
-      txma: {
-        failedSNSPublish: {
-          audit: true
-        }
-      }
-    }
-    return {
-      sqsMessageId: sqsRecord.messageId,
-      failed: false,
-      statusReason: 'SuccessfullyParsed',
-      auditEvent: markedAuditEvent
-    }
-  })
-
-  const successfullyParsedRecords = results.filter(
-    (result) => result.failed === false
-  )
-  const unsuccessfullyParsedRecords = results.filter(
-    (result) => result.failed === true
-  )
-  const unsuccessfullyParsedRecordsSQSMessageId =
-    SQSBatchItemFailureFromProcessingResultArray(unsuccessfullyParsedRecords)
+  const { successfullyParsedRecords, unsuccessfullyParsedRecords } =
+    parseSQSEvent(event)
 
   const firehoseResponse = await writeToFirehose(successfullyParsedRecords)
+
+  const unsuccessfullyParsedRecordsSQSMessageId =
+    SQSBatchItemFailureFromProcessingResultArray(unsuccessfullyParsedRecords)
 
   const unsucessfullySentToFirehoseSQSMessageId =
     SQSBatchItemFailureFromProcessingResultArray(
@@ -104,4 +75,44 @@ export const generateEventIdLogMessageFromProcessingResult = (
   })
 
   return logMessage
+}
+
+export const parseSQSEvent = (event: SQSEvent) => {
+  const results: ProcessingResult[] = event.Records.map((sqsRecord) => {
+    const parsedRecord = tryParseJSON(sqsRecord.body) as AuditEvent
+
+    if (typeof parsedRecord.event_id === 'undefined') {
+      return {
+        sqsMessageId: sqsRecord.messageId,
+        failed: true,
+        statusReason: 'ParsingJSONError'
+      }
+    }
+    const markedAuditEvent: AuditEvent = {
+      ...parsedRecord,
+      txma: {
+        failedSNSPublish: {
+          audit: true
+        }
+      }
+    }
+    return {
+      sqsMessageId: sqsRecord.messageId,
+      failed: false,
+      statusReason: 'SuccessfullyParsed',
+      auditEvent: markedAuditEvent
+    }
+  })
+
+  const successfullyParsedRecords = results.filter(
+    (result) => result.failed === false
+  )
+  const unsuccessfullyParsedRecords = results.filter(
+    (result) => result.failed === true
+  )
+
+  return {
+    successfullyParsedRecords: successfullyParsedRecords,
+    unsuccessfullyParsedRecords: unsuccessfullyParsedRecords
+  }
 }
