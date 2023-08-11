@@ -34,7 +34,6 @@ describe('events processed by firehose', () => {
       getEnv('AUDIT_BUILD_MESSAGE_BATCH_NAME'),
       eventId
     )
-    console.log(eventBodyFromFraudBucket)
     expect(eventBodyFromFraudBucket).toEqual(event)
   })
 })

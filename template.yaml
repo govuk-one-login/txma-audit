@@ -1197,7 +1197,7 @@ Resources:
   # Start: Self Serve Automated Test resources #
   ##############################################
 
-    AuditMessageDelimiterFunctionNameParameter:
+  AuditMessageDelimiterFunctionNameParameter:
     Type: AWS::SSM::Parameter
     Condition: TestEnvironment
     Properties:

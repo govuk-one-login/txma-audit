@@ -1,6 +1,7 @@
 import {
   ListObjectsV2Command,
   ListObjectsV2CommandInput,
+  ListObjectsV2Output,
   _Object
 } from '@aws-sdk/client-s3'
 import { s3Client } from './s3Client'
@@ -10,8 +11,16 @@ export const listS3Objects = async (
   objects: _Object[] = []
 ) => {
   const command = new ListObjectsV2Command(input)
-  const response = await s3Client.send(command)
-
+  let response: ListObjectsV2Output
+  try {
+    response = await s3Client.send(command)
+  } catch (err) {
+    console.error(
+      `Got error listing files for input ${JSON.stringify(input)}`,
+      err
+    )
+    throw err
+  }
   if (!response.Contents) return []
 
   response.Contents.forEach((item) => objects.push(item))
