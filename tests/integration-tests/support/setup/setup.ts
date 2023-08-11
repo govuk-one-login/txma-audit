@@ -18,9 +18,6 @@ module.exports = async () => {
   await setEnvVarsFromStackOutputs(stack, stackOutputMappings)
   await setEnvVarsFromSsm(ssmMappings)
 }
-const secretMappings = {
-  FRAUD_HMAC_KEY: `tests/${stack}/FraudHMACKey`
-}
 
 const formatTestStackSsmParam = (parameterName: string) =>
   `/tests/${stack}/${parameterName}`
