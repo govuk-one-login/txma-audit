@@ -1243,6 +1243,10 @@ Outputs:
   S3CopyAndEncryptLogsName:
     Value: !Ref S3CopyAndEncryptLogs
 
-  # Tempory Audit S3 Bucket
-  TemporaryMessageBatchBucketName:
-    Value: !Ref TemporaryMessageBatchBucket
+  # S3 Temp Audit Bucket
+  AuditMessageBatchBucketName:
+    Value: !Ref MessageBatchBucket
+
+  # Firehose Message Batch
+  AuditMessageDeliveryStreamName:
+    Value: !Ref AuditMessageDeliveryStream
