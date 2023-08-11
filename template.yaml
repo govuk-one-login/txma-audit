@@ -1194,7 +1194,7 @@ Resources:
   ########################################
 
   ##############################################
-  # Start: Self Serve Automated Test resources #
+  # Start: Automated Test resources #
   ##############################################
 
   AuditMessageDelimiterFunctionNameParameter:
@@ -1207,7 +1207,7 @@ Resources:
       Description: Audit delivery lambda available for self serve integration tests
 
   ############################################
-  # End: Self Serve Automated Test resources #
+  # End: Automated Test resources #
   ############################################
 
   ################################
