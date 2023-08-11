@@ -5,7 +5,7 @@ import {
   parseSQSEvent,
   ProcessingResult,
   SQSBatchItemFailureFromProcessingResultArray
-} from './handler'
+} from './helper'
 
 export const baseProcessingResults: ProcessingResult[] = [
   {
