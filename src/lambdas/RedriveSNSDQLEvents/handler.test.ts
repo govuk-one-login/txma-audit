@@ -43,11 +43,12 @@ describe('testing helper functions', () => {
       baseProcessingResults
     )
 
-    const expectedResult = [
-      { itemIdentifier: '123456789' },
-      { itemIdentifier: '234567890' },
-      { itemIdentifier: '345678901' }
-    ]
+    const expectedResult = baseProcessingResults.map((result) => {
+      return {
+        itemIdentifier: result.sqsMessageId
+      }
+    })
+
     expect(result).toStrictEqual(expectedResult)
   })
 
