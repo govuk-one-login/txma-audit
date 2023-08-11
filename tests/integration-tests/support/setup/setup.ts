@@ -12,8 +12,8 @@ module.exports = async () => {
     AUDIT_MESSAGE_DELIMITER_LOGS_NAME: 'AuditMessageDelimiterLogsName',
     S3_COPY_AND_ENCRYPT_FUNCTION_NAME: 'S3CopyAndEncryptFunctionName',
     S3_COPY_AND_ENCRYPT_LOGS_NAME: 'S3CopyAndEncryptLogsName',
-    AUDIT_BUILD_MESSAGE_BATCH_NAME: 'AuditMessageBatchName',
-    FIREHOSE_AUDIT_MESSAGE_BATCH_NAME: 'FirehoseAuditMessageBatchName'
+    AUDIT_BUILD_MESSAGE_BATCH_NAME: 'AuditMessageBatchBucketName',
+    FIREHOSE_AUDIT_MESSAGE_BATCH_NAME: 'AuditMessageDeliveryStreamName'
   }
   await setEnvVarsFromStackOutputs(stack, stackOutputMappings)
   await setEnvVarsFromSsm(ssmMappings)

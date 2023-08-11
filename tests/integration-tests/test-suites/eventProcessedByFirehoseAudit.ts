@@ -17,32 +17,35 @@ import { logSuccessForEventIdInLogGroup } from '../support/utils/helpers'
 import { filterCloudWatchLogs } from '../support/utils/aws/cloudwatch/cloudWatchGetLogs'
 
 describe('events processed by firehose', () => {
-    let eventId: string
-    let messageId: string
-  
-    beforeAll(async () => {
-      eventId = randomUUID()
-      messageId = randomUUID()
-  
-      const event: SQSEvent = {
-        Records: [
-          {
-            ...mockSQSEvent.Records[0],
-            messageId: messageId,
-            body: JSON.stringify({
-              ...baseEvent,
-              event_id: eventId
-            })
-          }
-        ]
-      }
-  
-      await invokeLambdaFunction(getEnv('AUDIT_MESSAGE_DELIMITER_FUNCTION_NAME'), event)
-      console.log(`Event ID for ${baseEvent.event_name}: ${eventId}`)
-    })
-    // Hits lambda directly - Remove and hit infra firehose function instead
-  
-    /*
+  let eventId: string
+  let messageId: string
+
+  beforeAll(async () => {
+    eventId = randomUUID()
+    messageId = randomUUID()
+
+    const event: SQSEvent = {
+      Records: [
+        {
+          ...mockSQSEvent.Records[0],
+          messageId: messageId,
+          body: JSON.stringify({
+            ...baseEvent,
+            event_id: eventId
+          })
+        }
+      ]
+    }
+
+    await invokeLambdaFunction(
+      getEnv('AUDIT_MESSAGE_DELIMITER_FUNCTION_NAME'),
+      event
+    )
+    console.log(`Event ID for ${baseEvent.event_name}: ${eventId}`)
+  })
+  // Hits lambda directly - Remove and hit infra firehose function instead
+
+  /*
     Test logs of everything downstream. First should be correct for 1st lambda
     Replace below Splunk references with correct Audit components:
     - The Log group of the Delimiter function (Covered)
@@ -50,26 +53,26 @@ describe('events processed by firehose', () => {
 
     Check if we should be checking the S3 buckets also - Add to template regardless
     */
-    test('Audit event successfully processed, correct fields are obfuscated for a audit event', async () => {
-      // S3 Delimiter Function Cloudwatch Logs
-      const filterDelimiterLogsByUniqueMessageId = await filterCloudWatchLogs(
-        getEnv('AUDIT_MESSAGE_DELIMITER_LOGS_NAME'),
-        [cloudwatchLogFilters.eventPublished, messageId]
-      )
-      expect(filterDelimiterLogsByUniqueMessageId).not.toEqual([])
-      logSuccessForEventIdInLogGroup(
-        eventId,
-        getEnv('AUDIT_MESSAGE_DELIMITER_LOGS_NAME')
-      )
-      // S3 Copy And Encrypt Function Cloudwatch Logs
-      const filterEncryptLogsByUniqueMessageId = await filterCloudWatchLogs(
-        getEnv('S3_COPY_AND_ENCRYPT_LOGS_NAME'),
-        [cloudwatchLogFilters.eventPublished, messageId]
-      )
-      expect(filterEncryptLogsByUniqueMessageId).not.toEqual([])
-      logSuccessForEventIdInLogGroup(
-        eventId,
-        getEnv('S3_COPY_AND_ENCRYPT_LOGS_NAME')
-      )
-    })
-  })  
+  test('Audit event successfully processed, correct fields are obfuscated for a audit event', async () => {
+    // S3 Delimiter Function Cloudwatch Logs
+    const filterDelimiterLogsByUniqueMessageId = await filterCloudWatchLogs(
+      getEnv('AUDIT_MESSAGE_DELIMITER_LOGS_NAME'),
+      [cloudwatchLogFilters.eventPublished, messageId]
+    )
+    expect(filterDelimiterLogsByUniqueMessageId).not.toEqual([])
+    logSuccessForEventIdInLogGroup(
+      eventId,
+      getEnv('AUDIT_MESSAGE_DELIMITER_LOGS_NAME')
+    )
+    // S3 Copy And Encrypt Function Cloudwatch Logs
+    const filterEncryptLogsByUniqueMessageId = await filterCloudWatchLogs(
+      getEnv('S3_COPY_AND_ENCRYPT_LOGS_NAME'),
+      [cloudwatchLogFilters.eventPublished, messageId]
+    )
+    expect(filterEncryptLogsByUniqueMessageId).not.toEqual([])
+    logSuccessForEventIdInLogGroup(
+      eventId,
+      getEnv('S3_COPY_AND_ENCRYPT_LOGS_NAME')
+    )
+  })
+})

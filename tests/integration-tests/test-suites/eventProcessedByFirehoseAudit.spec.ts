@@ -29,7 +29,7 @@ describe('events processed by firehose', () => {
     console.log(`Event ID for ${baseEvent.event_name}: ${eventId}`)
   })
 
-  test('Audit event successfully processed, correct fields are obfuscated for a audit event', async () => {
+  test('Audit event successfully processed and found in Temp Audit S3 Bucket', async () => {
     const eventBodyFromFraudBucket = await getAuditEvent(
       getEnv('AUDIT_BUILD_MESSAGE_BATCH_NAME'),
       eventId
