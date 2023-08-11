@@ -11,7 +11,7 @@ export const baseEvent: AuditEvent = {
     ip_address: '3.8.95.217',
     session_id: 'an4O5JafsHBvtbKCu2vDrMGZx6djfN0lkCxZvgjfrko',
     email: 'test@test.com',
-    phone: '07826534152',
+    phone: '01234567890',
     transaction_id: 'blah',
     persistent_session_id: 'sakhsihqiuhiwg182hgso',
     device_id: 'ushig71wgbsjs'
