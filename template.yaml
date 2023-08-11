@@ -1193,9 +1193,9 @@ Resources:
   # End: Monitoring & alerting resources #
   ########################################
 
-  ############################################
+  ##############################################
   # Start: Self Serve Automated Test resources #
-  ############################################
+  ##############################################
 
     AuditMessageDelimiterFunctionNameParameter:
     Type: AWS::SSM::Parameter
