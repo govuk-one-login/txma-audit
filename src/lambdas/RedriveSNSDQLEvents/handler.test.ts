@@ -1,4 +1,5 @@
 import {
+  generateLogMessageFromProcessingResult,
   ProcessingResult,
   SQSBatchItemFailureFromProcessingResultArray
 } from './handler'
@@ -47,6 +48,25 @@ describe('testing helper functions', () => {
       { itemIdentifier: '234567890' },
       { itemIdentifier: '345678901' }
     ]
+    expect(result).toStrictEqual(expectedResult)
+  })
+
+  it('test generateLogMessageFromProcessingResult()', async () => {
+    const testInput: ProcessingResult[][] = [
+      baseProcessingResults.slice(),
+      baseProcessingResults.map((element) => {
+        return {
+          ...element,
+          statusReason: 'ParsingJSONError'
+        }
+      })
+    ]
+
+    const result = generateLogMessageFromProcessingResult(testInput)
+    const expectedResult = {
+      ParsingJSONError: ['987654321', '098765432', '109876543'],
+      SuccessfullyParsed: ['987654321', '098765432', '109876543']
+    }
     expect(result).toStrictEqual(expectedResult)
   })
 })

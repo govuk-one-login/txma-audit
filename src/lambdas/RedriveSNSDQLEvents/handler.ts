@@ -69,7 +69,7 @@ export const handler = async (
   )
 
   logger.info('processed the following event ids', {
-    event_id: generateLogMessage([
+    event_id: generateLogMessageFromProcessingResult([
       unsuccessfullyParsedRecords,
       firehoseResponse.failedProcessingResults,
       firehoseResponse.successfullProcessingResults
@@ -88,7 +88,7 @@ export const SQSBatchItemFailureFromProcessingResultArray = (
   })
 }
 
-export const generateLogMessage = (
+export const generateLogMessageFromProcessingResult = (
   processingResultArrays: ProcessingResult[][]
 ) => {
   const logMessage: { [key: string]: string[] } = {}
