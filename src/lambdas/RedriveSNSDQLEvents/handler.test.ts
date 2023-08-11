@@ -1,5 +1,6 @@
+import { SQSEvent } from 'aws-lambda'
 import {
-  generateLogMessageFromProcessingResult,
+  generateEventIdLogMessageFromProcessingResult,
   ProcessingResult,
   SQSBatchItemFailureFromProcessingResultArray
 } from './handler'
@@ -63,10 +64,14 @@ describe('testing helper functions', () => {
       })
     ]
 
-    const result = generateLogMessageFromProcessingResult(testInput)
+    const result = generateEventIdLogMessageFromProcessingResult(testInput)
     const expectedResult = {
-      ParsingJSONError: ['987654321', '098765432', '109876543'],
-      SuccessfullyParsed: ['987654321', '098765432', '109876543']
+      SuccessfullyParsed: testInput[0].map((result) => {
+        return result.auditEvent?.event_id
+      }),
+      ParsingJSONError: testInput[1].map((result) => {
+        return result.auditEvent?.event_id
+      })
     }
     expect(result).toStrictEqual(expectedResult)
   })
