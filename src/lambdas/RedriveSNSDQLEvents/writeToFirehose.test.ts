@@ -3,42 +3,9 @@ import { when } from 'jest-when'
 import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
 import { logger } from '../../sharedServices/logger'
 import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
-import { ProcessingResult } from './handler'
-import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
+import { baseProcessingResults } from './handler.test'
 import * as firehoseFunctions from './writeToFirehose'
-
-const baseProcessingResults: ProcessingResult[] = [
-  {
-    sqsMessageId: '123456789',
-    failed: false,
-    statusReason: 'SuccessfullyParsed',
-    auditEvent: {
-      event_id: '987654321',
-      event_name: 'EVENT_ONE',
-      timestamp: 1691673691
-    }
-  },
-  {
-    sqsMessageId: '234567890',
-    failed: false,
-    statusReason: 'SuccessfullyParsed',
-    auditEvent: {
-      event_id: '098765432',
-      event_name: 'EVENT_TWO',
-      timestamp: 1691673691
-    }
-  },
-  {
-    sqsMessageId: '345678901',
-    failed: false,
-    statusReason: 'SuccessfullyParsed',
-    auditEvent: {
-      event_id: '109876543',
-      event_name: 'EVENT_THREE',
-      timestamp: 1691673691
-    }
-  }
-]
+import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
 
 const baseFirehoseResponse: PutRecordBatchCommandOutput = {
   $metadata: {},

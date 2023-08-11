@@ -80,7 +80,7 @@ export const handler = async (
   }
 }
 
-const SQSBatchItemFailureFromProcessingResultArray = (
+export const SQSBatchItemFailureFromProcessingResultArray = (
   processingResultArray: ProcessingResult[]
 ): SQSBatchItemFailure[] => {
   return processingResultArray.map((element) => {
