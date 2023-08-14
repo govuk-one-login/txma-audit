@@ -1,6 +1,7 @@
+import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
 import { SQSEvent } from 'aws-lambda'
 import { ProcessingResult } from '../../../lambdas/RedriveSNSDQLEvents/helper'
-import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
+import { FirehoseProcessingResult } from '../../../lambdas/RedriveSNSDQLEvents/writeToFirehose'
 
 export const baseProcessingResults: ProcessingResult[] = [
   {
@@ -85,3 +86,15 @@ export const mockFireHoseRecords = [
     Data: Buffer.from('mockData2')
   }
 ]
+
+export const allSuccessFirehoseResponseExpectedResult: FirehoseProcessingResult =
+  {
+    failedProcessingResults: [],
+    successfullProcessingResults: baseProcessingResults.map((element) => {
+      return {
+        ...element,
+        failed: false,
+        statusReason: 'SucceededToWriteToFirehose'
+      }
+    })
+  }

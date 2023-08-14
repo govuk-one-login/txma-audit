@@ -1,33 +1,23 @@
 import { when } from 'jest-when'
 import { logger } from '../../sharedServices/logger'
 import { mockLambdaContext } from '../../utils/tests/mockLambdaContext'
+import {
+  allSuccessFirehoseResponseExpectedResult,
+  baseProcessingResults,
+  baseSQSEvent
+} from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
 import { handler } from './handler'
 import {
   generateEventIdLogMessageFromProcessingResult,
   parseSQSEvent,
   SQSBatchItemFailureFromProcessingResultArray
 } from './helper'
-import {
-  baseProcessingResults,
-  baseSQSEvent
-} from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
-import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
+import { writeToFirehose } from './writeToFirehose'
 
 const parseSQSEventResult = {
   successfullyParsedRecords: baseProcessingResults.slice(),
   unsuccessfullyParsedRecords: []
 }
-
-const writeToFirehoseResult = {
-  failedProcessingResults: [],
-  successfullProcessingResults: baseProcessingResults.map((element) => {
-    return {
-      ...element,
-      failed: false,
-      statusReason: 'SucceededToWriteToFirehose'
-    }
-  })
-} as FirehoseProcessingResult
 
 const parseFailureResults = baseProcessingResults.map((element) => {
   return { itemIdentifier: element.sqsMessageId.concat('json') }
@@ -58,7 +48,7 @@ describe('testing handler', () => {
 
     when(writeToFirehose)
       // .calledWith(parseSQSEventResult.successfullyParsedRecords)
-      .mockResolvedValue(writeToFirehoseResult)
+      .mockResolvedValue(allSuccessFirehoseResponseExpectedResult)
 
     const logMessage: { [key: string]: string[] } = {
       SucceededToWriteToFirehose: baseProcessingResults.map((element) => {
@@ -77,7 +67,9 @@ describe('testing handler', () => {
       .mockReturnValue([])
 
     when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(writeToFirehoseResult.failedProcessingResults)
+      .calledWith(
+        allSuccessFirehoseResponseExpectedResult.failedProcessingResults
+      )
       .mockReturnValue([])
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
@@ -90,7 +82,9 @@ describe('testing handler', () => {
       .mockReturnValueOnce(parseFailureResults)
 
     when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(writeToFirehoseResult.failedProcessingResults)
+      .calledWith(
+        allSuccessFirehoseResponseExpectedResult.failedProcessingResults
+      )
       .mockReturnValue([])
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
@@ -103,7 +97,9 @@ describe('testing handler', () => {
       .mockReturnValueOnce([])
 
     when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(writeToFirehoseResult.failedProcessingResults)
+      .calledWith(
+        allSuccessFirehoseResponseExpectedResult.failedProcessingResults
+      )
       .mockReturnValue(firehoseFailureResults)
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
@@ -116,7 +112,9 @@ describe('testing handler', () => {
       .mockReturnValueOnce(parseFailureResults)
 
     when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(writeToFirehoseResult.failedProcessingResults)
+      .calledWith(
+        allSuccessFirehoseResponseExpectedResult.failedProcessingResults
+      )
       .mockReturnValue(firehoseFailureResults)
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
@@ -130,8 +128,8 @@ describe('testing handler', () => {
       'processed the following event ids',
       {
         event_id: generateEventIdLogMessageFromProcessingResult([
-          writeToFirehoseResult.failedProcessingResults,
-          writeToFirehoseResult.successfullProcessingResults
+          allSuccessFirehoseResponseExpectedResult.failedProcessingResults,
+          allSuccessFirehoseResponseExpectedResult.successfullProcessingResults
         ])
       }
     )

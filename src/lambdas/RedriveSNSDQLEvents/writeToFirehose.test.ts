@@ -4,6 +4,7 @@ import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePu
 import { logger } from '../../sharedServices/logger'
 import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
 import {
+  allSuccessFirehoseResponseExpectedResult,
   baseFirehoseResponse,
   baseProcessingResults,
   mockFireHoseRecords
@@ -33,23 +34,13 @@ describe('test parseFirehoseResponse() function', () => {
     const allSuccessFirehoseResponse: PutRecordBatchCommandOutput = {
       ...baseFirehoseResponse
     }
-    const expectedResult: FirehoseProcessingResult = {
-      failedProcessingResults: [],
-      successfullProcessingResults: baseProcessingResults.map((element) => {
-        return {
-          ...element,
-          failed: false,
-          statusReason: 'SucceededToWriteToFirehose'
-        }
-      })
-    }
 
     expect(
       firehoseFunctions.parseFirehoseResponse(
         allSuccessFirehoseResponse,
         baseProcessingResults
       )
-    ).toStrictEqual(expectedResult)
+    ).toStrictEqual(allSuccessFirehoseResponseExpectedResult)
   })
 
   it('not all audit events succesfully published to firehose', async () => {
