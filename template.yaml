@@ -1064,7 +1064,7 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
-                - events.amazonaws.com
+                - sns.amazonaws.com
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
