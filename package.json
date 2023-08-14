@@ -30,6 +30,12 @@
     "@aws-sdk/util-endpoints": "3.387.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-cloudformation": "3.388.0",
+    "@aws-sdk/client-cloudwatch-logs": "3.388.0",
+    "@aws-sdk/client-lambda": "3.388.0",
+    "@aws-sdk/client-secrets-manager": "3.389.0",
+    "@aws-sdk/client-ssm": "3.388.0",
+    "@aws-sdk/util-endpoints": "3.387.0",
     "@jest/types": "29.6.1",
     "@types/aws-lambda": "8.10.119",
     "@types/jest": "29.5.3",
