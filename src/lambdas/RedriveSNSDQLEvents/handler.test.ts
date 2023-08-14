@@ -1,157 +1,136 @@
-import { SQSEvent } from 'aws-lambda'
-import { AuditEvent } from '../../types/auditEvent'
+import { when } from 'jest-when'
+import { logger } from '../../sharedServices/logger'
+import { mockLambdaContext } from '../../utils/tests/mockLambdaContext'
+import { handler } from './handler'
 import {
   generateEventIdLogMessageFromProcessingResult,
   parseSQSEvent,
-  ProcessingResult,
   SQSBatchItemFailureFromProcessingResultArray
 } from './helper'
+import { baseProcessingResults, baseSQSEvent } from './redriveSNSDLQTestHelper'
+import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
 
-export const baseProcessingResults: ProcessingResult[] = [
-  {
-    sqsMessageId: '123456789',
-    failed: false,
-    statusReason: 'SuccessfullyParsed',
-    auditEvent: {
-      event_id: '987654321',
-      event_name: 'EVENT_ONE',
-      timestamp: 1691673691,
-      txma: {
-        failedSNSPublish: {
-          audit: true
-        }
-      }
-    }
-  },
-  {
-    sqsMessageId: '234567890',
-    failed: false,
-    statusReason: 'SuccessfullyParsed',
-    auditEvent: {
-      event_id: '098765432',
-      event_name: 'EVENT_TWO',
-      timestamp: 1691673691,
-      txma: {
-        failedSNSPublish: {
-          audit: true
-        }
-      }
-    }
-  },
-  {
-    sqsMessageId: '345678901',
-    failed: false,
-    statusReason: 'SuccessfullyParsed',
-    auditEvent: {
-      event_id: '109876543',
-      event_name: 'EVENT_THREE',
-      timestamp: 1691673691,
-      txma: {
-        failedSNSPublish: {
-          audit: true
-        }
-      }
-    }
-  }
-]
+const parseSQSEventResult = {
+  successfullyParsedRecords: baseProcessingResults.slice(),
+  unsuccessfullyParsedRecords: []
+}
 
-const baseSQSEvent = {
-  Records: baseProcessingResults.map((result) => {
-    const event = JSON.stringify(result.auditEvent)
-    const response = {
-      messageId: result.sqsMessageId,
-      body: event
+const writeToFirehoseResult = {
+  failedProcessingResults: [],
+  successfullProcessingResults: baseProcessingResults.map((element) => {
+    return {
+      ...element,
+      failed: false,
+      statusReason: 'SucceededToWriteToFirehose'
     }
-    return response
   })
-} as SQSEvent
+} as FirehoseProcessingResult
 
-describe('testing helper functions', () => {
-  it('test SQSBatchItemFailureFromProcessingResultArray() to support partial failure response ', async () => {
-    const result = SQSBatchItemFailureFromProcessingResultArray(
-      baseProcessingResults
+const parseFailureResults = baseProcessingResults.map((element) => {
+  return { itemIdentifier: element.sqsMessageId.concat('json') }
+})
+
+const firehoseFailureResults = baseProcessingResults.map((element) => {
+  return { itemIdentifier: element.sqsMessageId.concat('firehose') }
+})
+
+jest.mock('./helper', () => ({
+  parseSQSEvent: jest.fn(),
+  generateEventIdLogMessageFromProcessingResult: jest.fn(),
+  SQSBatchItemFailureFromProcessingResultArray: jest.fn()
+}))
+
+jest.mock('./writeToFirehose', () => ({
+  writeToFirehose: jest.fn()
+}))
+
+describe('testing handler', () => {
+  beforeEach(() => {
+    jest.resetAllMocks()
+    jest.spyOn(logger, 'info')
+
+    when(parseSQSEvent)
+      // .calledWith(baseSQSEvent)
+      .mockReturnValue(parseSQSEventResult)
+
+    when(writeToFirehose)
+      // .calledWith(parseSQSEventResult.successfullyParsedRecords)
+      .mockResolvedValue(writeToFirehoseResult)
+
+    const logMessage: { [key: string]: string[] } = {
+      SucceededToWriteToFirehose: baseProcessingResults.map((element) => {
+        return element.auditEvent?.event_id as string
+      })
+    }
+
+    when(generateEventIdLogMessageFromProcessingResult).mockReturnValue(
+      logMessage
     )
+  })
 
-    const expectedResult = baseProcessingResults.map((result) => {
-      return {
-        itemIdentifier: result.sqsMessageId
-      }
+  it('No errors processing events', async () => {
+    when(SQSBatchItemFailureFromProcessingResultArray)
+      .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
+      .mockReturnValue([])
+
+    when(SQSBatchItemFailureFromProcessingResultArray)
+      .calledWith(writeToFirehoseResult.failedProcessingResults)
+      .mockReturnValue([])
+
+    const result = await handler(baseSQSEvent, mockLambdaContext)
+    expect(result).toStrictEqual({ batchItemFailures: [] })
+  })
+
+  it('Some events failed - parsing json error ', async () => {
+    when(SQSBatchItemFailureFromProcessingResultArray)
+      .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
+      .mockReturnValueOnce(parseFailureResults)
+
+    when(SQSBatchItemFailureFromProcessingResultArray)
+      .calledWith(writeToFirehoseResult.failedProcessingResults)
+      .mockReturnValue([])
+
+    const result = await handler(baseSQSEvent, mockLambdaContext)
+    expect(result).toStrictEqual({ batchItemFailures: parseFailureResults })
+  })
+
+  it('Some events failed - sending to firehose error ', async () => {
+    when(SQSBatchItemFailureFromProcessingResultArray)
+      .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
+      .mockReturnValueOnce([])
+
+    when(SQSBatchItemFailureFromProcessingResultArray)
+      .calledWith(writeToFirehoseResult.failedProcessingResults)
+      .mockReturnValue(firehoseFailureResults)
+
+    const result = await handler(baseSQSEvent, mockLambdaContext)
+    expect(result).toStrictEqual({ batchItemFailures: firehoseFailureResults })
+  })
+
+  it('Some events failed - sending to firehose error and json parsing error', async () => {
+    when(SQSBatchItemFailureFromProcessingResultArray)
+      .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
+      .mockReturnValueOnce(parseFailureResults)
+
+    when(SQSBatchItemFailureFromProcessingResultArray)
+      .calledWith(writeToFirehoseResult.failedProcessingResults)
+      .mockReturnValue(firehoseFailureResults)
+
+    const result = await handler(baseSQSEvent, mockLambdaContext)
+    expect(result).toStrictEqual({
+      batchItemFailures: parseFailureResults.concat(firehoseFailureResults)
     })
-
-    expect(result).toStrictEqual(expectedResult)
   })
 
-  it('test generateLogMessageFromProcessingResult()', async () => {
-    const testInput: ProcessingResult[][] = [
-      baseProcessingResults.slice(),
-      baseProcessingResults.map((element) => {
-        return {
-          ...element,
-          statusReason: 'ParsingJSONError'
-        }
-      })
-    ]
-
-    const result = generateEventIdLogMessageFromProcessingResult(testInput)
-    const expectedResult = {
-      SuccessfullyParsed: testInput[0].map((result) => {
-        return result.auditEvent?.event_id
-      }),
-      ParsingJSONError: testInput[1].map((result) => {
-        return result.auditEvent?.event_id
-      })
-    }
-    expect(result).toStrictEqual(expectedResult)
-  })
-
-  it('test parseSQSEvent(). All records successfully parsed', async () => {
-    const result = parseSQSEvent(baseSQSEvent)
-    const expectedResult = {
-      successfullyParsedRecords: baseProcessingResults.slice(),
-      unsuccessfullyParsedRecords: []
-    }
-    expect(result).toStrictEqual(expectedResult)
-  })
-
-  it('test parseSQSEvent(). partial records successfully parsed', async () => {
-    const partialyInvalidSQSEvent = {
-      Records: baseProcessingResults.map((result, index) => {
-        if (index === 0) {
-          const event = result.auditEvent as AuditEvent
-          delete event.event_id
-          const tweakedEvent = JSON.stringify(event)
-          const response = {
-            messageId: result.sqsMessageId,
-            body: tweakedEvent
-          }
-          return response
-        } else {
-          const event = JSON.stringify(result.auditEvent)
-          const response = {
-            messageId: result.sqsMessageId,
-            body: event
-          }
-          return response
-        }
-      })
-    } as SQSEvent
-
-    const result = parseSQSEvent(partialyInvalidSQSEvent)
-    const expectedResult = {
-      successfullyParsedRecords: baseProcessingResults.slice(1),
-      unsuccessfullyParsedRecords: baseProcessingResults
-        .slice(0, 1)
-        .map((processingResult) => {
-          const tweakedProcessingResult = { ...processingResult }
-          delete tweakedProcessingResult.auditEvent
-
-          return {
-            ...tweakedProcessingResult,
-            failed: true,
-            statusReason: 'ParsingJSONError'
-          }
-        })
-    }
-    expect(result).toStrictEqual(expectedResult)
+  afterEach(() => {
+    expect(logger.info).toHaveBeenCalledWith(
+      'processed the following event ids',
+      {
+        event_id: generateEventIdLogMessageFromProcessingResult([
+          writeToFirehoseResult.failedProcessingResults,
+          writeToFirehoseResult.successfullProcessingResults
+        ])
+      }
+    )
   })
 })

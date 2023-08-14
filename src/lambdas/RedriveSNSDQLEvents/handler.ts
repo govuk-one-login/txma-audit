@@ -40,7 +40,6 @@ export const handler = async (
 
   logger.info('processed the following event ids', {
     event_id: generateEventIdLogMessageFromProcessingResult([
-      unsuccessfullyParsedRecords,
       firehoseResponse.failedProcessingResults,
       firehoseResponse.successfullProcessingResults
     ])
