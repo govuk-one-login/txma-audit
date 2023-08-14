@@ -7,7 +7,10 @@ import {
   parseSQSEvent,
   SQSBatchItemFailureFromProcessingResultArray
 } from './helper'
-import { baseProcessingResults, baseSQSEvent } from './redriveSNSDLQTestHelper'
+import {
+  baseProcessingResults,
+  baseSQSEvent
+} from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
 import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
 
 const parseSQSEventResult = {

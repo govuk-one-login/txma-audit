@@ -1,5 +1,5 @@
 import { SQSEvent } from 'aws-lambda'
-import { ProcessingResult } from './helper'
+import { ProcessingResult } from '../../../lambdas/RedriveSNSDQLEvents/helper'
 
 export const baseProcessingResults: ProcessingResult[] = [
   {

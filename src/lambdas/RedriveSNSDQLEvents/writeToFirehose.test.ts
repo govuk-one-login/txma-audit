@@ -3,7 +3,7 @@ import { when } from 'jest-when'
 import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
 import { logger } from '../../sharedServices/logger'
 import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
-import { baseProcessingResults } from './redriveSNSDLQTestHelper'
+import { baseProcessingResults } from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
 import * as firehoseFunctions from './writeToFirehose'
 import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
 
