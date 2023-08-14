@@ -894,6 +894,27 @@ Resources:
             ArnEquals:
               aws:SourceArn: '{{resolve:ssm:EventProcessorSnsTopicArn}}'
 
+  AuditMessageDeliveryStreamSubscriptionDeadLetterQueueAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm that monitors the audit-message-delivery-stream-DLQ
+      AlarmName: !Sub ${AWS::StackName}-audit-message-delivery-stream-DLQ
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 60
+      Threshold: 1
+      DatapointsToAlarm: 1
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      OKActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.QueueName
+
   RedriveSNSDQLEventsFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
