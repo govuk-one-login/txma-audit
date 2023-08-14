@@ -3,34 +3,13 @@ import { when } from 'jest-when'
 import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
 import { logger } from '../../sharedServices/logger'
 import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
-import { baseProcessingResults } from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
+import {
+  baseFirehoseResponse,
+  baseProcessingResults,
+  mockFireHoseRecords
+} from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
 import * as firehoseFunctions from './writeToFirehose'
 import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
-
-const baseFirehoseResponse: PutRecordBatchCommandOutput = {
-  $metadata: {},
-  FailedPutCount: 0,
-  RequestResponses: [
-    {
-      RecordId: `FirehoseId-${baseProcessingResults[0].sqsMessageId}`
-    },
-    {
-      RecordId: `FirehoseId-${baseProcessingResults[1].sqsMessageId}`
-    },
-    {
-      RecordId: `FirehoseId-${baseProcessingResults[2].sqsMessageId}`
-    }
-  ]
-}
-
-const mockFireHoseRecords = [
-  {
-    Data: Buffer.from('mockData1')
-  },
-  {
-    Data: Buffer.from('mockData2')
-  }
-]
 
 jest.mock('../../sharedServices/firehose/firehosePutRecordBatch', () => ({
   firehosePutRecordBatch: jest.fn()

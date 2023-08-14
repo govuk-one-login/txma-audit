@@ -1,5 +1,6 @@
 import { SQSEvent } from 'aws-lambda'
 import { ProcessingResult } from '../../../lambdas/RedriveSNSDQLEvents/helper'
+import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
 
 export const baseProcessingResults: ProcessingResult[] = [
   {
@@ -59,3 +60,28 @@ export const baseSQSEvent = {
     return response
   })
 } as SQSEvent
+
+export const baseFirehoseResponse: PutRecordBatchCommandOutput = {
+  $metadata: {},
+  FailedPutCount: 0,
+  RequestResponses: [
+    {
+      RecordId: `FirehoseId-${baseProcessingResults[0].sqsMessageId}`
+    },
+    {
+      RecordId: `FirehoseId-${baseProcessingResults[1].sqsMessageId}`
+    },
+    {
+      RecordId: `FirehoseId-${baseProcessingResults[2].sqsMessageId}`
+    }
+  ]
+}
+
+export const mockFireHoseRecords = [
+  {
+    Data: Buffer.from('mockData1')
+  },
+  {
+    Data: Buffer.from('mockData2')
+  }
+]
