@@ -927,7 +927,7 @@ Resources:
         RedriveSNSDLQ:
           Type: SQS
           Properties:
-            Enabled: true
+            Enabled: false
             Queue: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
             FunctionResponseTypes:
               - ReportBatchItemFailures
