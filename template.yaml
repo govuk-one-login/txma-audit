@@ -1301,6 +1301,23 @@ Resources:
   # End: Monitoring & alerting resources #
   ########################################
 
+  ##############################################
+  # Start: Automated Test resources #
+  ##############################################
+
+  AuditMessageDelimiterFunctionNameParameter:
+    Type: AWS::SSM::Parameter
+    Condition: TestEnvironment
+    Properties:
+      Name: !Sub /${AWS::StackName}/AuditMessageDelimiterFunction
+      Type: String
+      Value: !Ref AuditMessageDelimiterFunction
+      Description: Audit delivery lambda available for self serve integration tests
+
+  ############################################
+  # End: Automated Test resources #
+  ############################################
+
   ################################
   # Start: Development resources #
   ################################
@@ -1350,3 +1367,11 @@ Outputs:
 
   S3CopyAndEncryptLogsName:
     Value: !Ref S3CopyAndEncryptLogs
+
+  # S3 Temp Audit Bucket
+  AuditMessageBatchBucketName:
+    Value: !Ref MessageBatchBucket
+
+  # Firehose Message Batch
+  AuditMessageDeliveryStreamName:
+    Value: !Ref AuditMessageDeliveryStream
