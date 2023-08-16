@@ -9,6 +9,11 @@ export type ProcessingResult = {
   auditEvent?: AuditEvent
 }
 
+export type parseSQSEventReturnType = {
+  successfullyParsedRecords: ProcessingResult[]
+  unsuccessfullyParsedRecords: ProcessingResult[]
+}
+
 export const SQSBatchItemFailureFromProcessingResultArray = (
   processingResultArray: ProcessingResult[]
 ): SQSBatchItemFailure[] => {
@@ -35,7 +40,7 @@ export const generateEventIdLogMessageFromProcessingResult = (
   return logMessage
 }
 
-export const parseSQSEvent = (event: SQSEvent) => {
+export const parseSQSEvent = (event: SQSEvent): parseSQSEventReturnType => {
   const results: ProcessingResult[] = event.Records.map((sqsRecord) => {
     const parsedRecord = tryParseJSON(sqsRecord.body) as AuditEvent
 
