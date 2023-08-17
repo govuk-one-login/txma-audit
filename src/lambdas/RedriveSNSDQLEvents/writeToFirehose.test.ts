@@ -1,15 +1,13 @@
-import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
 import { when } from 'jest-when'
 import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
 import { logger } from '../../sharedServices/logger'
 import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
 import {
-  allSuccessFirehoseResponseExpectedResult,
   baseFirehoseResponse,
   baseProcessingResults,
   mockFireHoseRecords
 } from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
-import * as firehoseFunctions from './writeToFirehose'
+import * as parseFirehoseResponse from './parseFirehoseResponse'
 import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
 
 jest.mock('../../sharedServices/firehose/firehosePutRecordBatch', () => ({
@@ -23,81 +21,13 @@ jest.mock(
   })
 )
 
-describe('test parseFirehoseResponse() function', () => {
-  beforeEach(() => {
-    jest.resetAllMocks()
-    jest.spyOn(logger, 'warn')
-    jest.spyOn(logger, 'info')
-  })
-
-  it('all audit events were published to firehose successfully', async () => {
-    const allSuccessFirehoseResponse: PutRecordBatchCommandOutput = {
-      ...baseFirehoseResponse
-    }
-
-    expect(
-      firehoseFunctions.parseFirehoseResponse(
-        allSuccessFirehoseResponse,
-        baseProcessingResults
-      )
-    ).toStrictEqual(allSuccessFirehoseResponseExpectedResult)
-  })
-
-  it('not all audit events succesfully published to firehose', async () => {
-    const partialSuccessFirehoseResponse: PutRecordBatchCommandOutput = {
-      ...baseFirehoseResponse,
-      FailedPutCount: 1,
-      RequestResponses: [
-        {
-          ErrorCode: 'TestErrorCode'
-        },
-        {
-          RecordId: `FirehoseId-${baseProcessingResults[1].sqsMessageId}`
-        },
-        {
-          RecordId: `FirehoseId-${baseProcessingResults[2].sqsMessageId}`
-        }
-      ]
-    }
-
-    const expectedResult: FirehoseProcessingResult = {
-      successfullProcessingResults: baseProcessingResults
-        .slice(1)
-        .map((element) => {
-          return {
-            ...element,
-            failed: false,
-            statusReason: 'SucceededToWriteToFirehose'
-          }
-        }),
-      failedProcessingResults: baseProcessingResults
-        .slice(0, 1)
-        .map((element) => {
-          return {
-            ...element,
-            failed: true,
-            statusReason: 'FailedToWriteToFirehose'
-          }
-        })
-    }
-    const result = firehoseFunctions.parseFirehoseResponse(
-      partialSuccessFirehoseResponse,
-      baseProcessingResults
-    )
-    expect(result).toStrictEqual(expectedResult)
-    expect(logger.warn).toHaveBeenCalledWith(
-      'Some audit events failed to reingest'
-    )
-  })
-})
-
 describe('test writeToFirehose() function', () => {
   beforeEach(() => {
     jest.resetAllMocks()
     jest.spyOn(logger, 'warn')
     jest.spyOn(logger, 'info')
     jest.spyOn(logger, 'error')
-    jest.spyOn(firehoseFunctions, 'parseFirehoseResponse')
+    jest.spyOn(parseFirehoseResponse, 'parseFirehoseResponse')
   })
 
   it('calls firehosePutRecordBatch() function.', async () => {
@@ -110,7 +40,7 @@ describe('test writeToFirehose() function', () => {
       mockDeliveryStreamName,
       mockFireHoseRecords
     )
-    expect(firehoseFunctions.parseFirehoseResponse).toHaveBeenCalledWith(
+    expect(parseFirehoseResponse.parseFirehoseResponse).toHaveBeenCalledWith(
       baseFirehoseResponse,
       baseProcessingResults
     )
