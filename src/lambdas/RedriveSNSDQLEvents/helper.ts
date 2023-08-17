@@ -54,6 +54,7 @@ export const parseSQSEvent = (event: SQSEvent): parseSQSEventReturnType => {
     const markedAuditEvent: AuditEvent = {
       ...parsedRecord,
       txma: {
+        ...parsedRecord.txma,
         failedSNSPublish: {
           audit: true
         }

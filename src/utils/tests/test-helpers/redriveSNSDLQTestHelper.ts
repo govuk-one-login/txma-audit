@@ -13,6 +13,7 @@ export const baseProcessingResults: ProcessingResult[] = [
       event_name: 'EVENT_ONE',
       timestamp: 1691673691,
       txma: {
+        obfuscated: true,
         failedSNSPublish: {
           audit: true
         }
