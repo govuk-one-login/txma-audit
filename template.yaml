@@ -864,6 +864,10 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
 
+  ############################
+  # Start: SNS DLQ Resouces  #
+  ############################
+
   AuditMessageDeliveryStreamSubscriptionDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -888,7 +892,111 @@ Resources:
             - !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
           Condition:
             ArnEquals:
-              aws:SourceArn: !Ref AuditMessageDeliveryStreamSubscription
+              aws:SourceArn: '{{resolve:ssm:EventProcessorSnsTopicArn}}'
+
+  AuditMessageDeliveryStreamSubscriptionDeadLetterQueueAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm that monitors the audit-message-delivery-stream-DLQ
+      AlarmName: !Sub ${AWS::StackName}-audit-message-delivery-stream-DLQ
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Period: 60
+      Threshold: 1
+      DatapointsToAlarm: 1
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      OKActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.QueueName
+
+  RedriveSNSDQLEventsFunction:
+    #checkov:skip=CKV_AWS_115:Defined in Globals section
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/RedriveSNSDQLEvents/
+      Environment:
+        Variables:
+          FIREHOSE_DELIVERY_STREAM_NAME: !Ref AuditMessageDeliveryStream
+      Events:
+        RedriveSNSDLQ:
+          Type: SQS
+          Properties:
+            Enabled: false
+            Queue: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+      FunctionName: !Sub ${AWS::StackName}-redrive-sns-dlq-events
+      Handler: handler.handler
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      MemorySize: 256
+      Role: !GetAtt RedriveSNSDQLEventsFunctionRole.Arn
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+
+  RedriveSNSDQLEventsFunctionLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-redrive-sns-dlq-events'
+      RetentionInDays: 7
+
+  RedriveSNSDQLEventsFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-redrive-sns-dlq-events-role
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaService
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref RedriveSNSDQLEventsFunctionPolicy
+        - !Ref AuditMessageFirehoseReingestPolicy
+
+  RedriveSNSDQLEventsFunctionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-redrive-sns-dlq-events-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowQueueAccess
+            Effect: Allow
+            Action:
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
+          - Sid: UseSqsKmsKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:ReEncrypt*
+            Resource:
+              - '{{resolve:ssm:SqsKmsKeyArn}}'
+
+  ############################
+  # End: SNS DLQ Resouces   #
+  ############################
 
   AuditMessageDeliveryStreamPolicy:
     Type: AWS::IAM::ManagedPolicy
