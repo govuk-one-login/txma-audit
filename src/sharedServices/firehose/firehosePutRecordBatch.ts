@@ -2,9 +2,9 @@ import {
   FirehoseClient,
   PutRecordBatchCommand,
   PutRecordBatchInput,
+  PutRecordBatchCommandOutput,
   _Record
 } from '@aws-sdk/client-firehose'
-import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
 import { getEnv } from '../../utils/helpers/getEnv'
 
 export const firehosePutRecordBatch = async (

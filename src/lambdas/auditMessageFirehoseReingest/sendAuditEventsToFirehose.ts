@@ -66,7 +66,7 @@ const getFailedAuditEventsFromBatchResult = (
   (result.RequestResponses || []).reduce(
     (failedEvents: AuditEvent[], response, index) => {
       if (response.ErrorCode && auditEvents[index]) {
-        failedEvents.push(auditEvents[index] as AuditEvent)
+        failedEvents.push(auditEvents[index])
       }
 
       return failedEvents
