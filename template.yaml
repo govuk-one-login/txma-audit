@@ -1164,7 +1164,7 @@ Resources:
       Period: 3600
       Statistic: Maximum
       Threshold: 3600
-      TreatMissingData: breaching
+      TreatMissingData: ignore
 
   AuditFirehoseDeliverySuccessPercentage:
     Type: AWS::CloudWatch::Alarm
@@ -1195,7 +1195,7 @@ Resources:
       OKActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
       Threshold: 75
-      TreatMissingData: breaching
+      TreatMissingData: ignore
 
   AuditMessageFirehoseProcessingFailureAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -1221,27 +1221,27 @@ Resources:
       Period: 60
       Statistic: Sum
       Threshold: 0
+      TreatMissingData: notBreaching
 
   FailureToPublishAuditMessageDeliveryStreamSubscription:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
       AlarmDescription: Alarm that monitors the AuditMessageDeliveryStream DLQ
       AlarmName: !Sub ${AWS::StackName}-failure-to-publish-audit-stream
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
-      Statistic: Sum
-      Period: 60
-      Threshold: 1
       DatapointsToAlarm: 1
-      MetricName: ApproximateNumberOfMessagesVisible
-      Namespace: AWS/SQS
-      AlarmActions:
-        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
-      OKActions:
-        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
       Dimensions:
         - Name: QueueName
           Value: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.QueueName
+      EvaluationPeriods: 1
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
 
   FailureToEncryptAuditMessageAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -1264,6 +1264,7 @@ Resources:
       Statistic: Sum
       Period: 60
       Threshold: 0
+      TreatMissingData: notBreaching
 
   NoAuditMessagesReceivedAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -1286,7 +1287,7 @@ Resources:
       Period: 7200 # 2 hours
       Statistic: Sum
       Threshold: 0
-      TreatMissingData: breaching
+      TreatMissingData: ignore
 
   # PagerDuty
   PagerDutySubscription:
