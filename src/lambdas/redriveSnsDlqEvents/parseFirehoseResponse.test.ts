@@ -4,7 +4,7 @@ import {
   allSuccessFirehoseResponseExpectedResult,
   baseFirehoseResponse,
   baseProcessingResults
-} from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
+} from '../../utils/tests/test-helpers/redriveSnsDlqTestHelper'
 import * as parseFirehoseResponse from './parseFirehoseResponse'
 import { FirehoseProcessingResult } from './writeToFirehose'
 
