@@ -935,7 +935,7 @@ Resources:
       Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       MemorySize: 256
-      Role: !GetAtt RedriveSnsDlqEventsFunction.Arn
+      Role: !GetAtt RedriveSnsDlqEventsFunctionRole.Arn
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
