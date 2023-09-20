@@ -6,7 +6,7 @@ import {
   baseFirehoseResponse,
   baseProcessingResults,
   mockFireHoseRecords
-} from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
+} from '../../utils/tests/test-helpers/redriveSnsDlqTestHelper'
 import * as parseFirehoseResponse from './parseFirehoseResponse'
 import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
 
