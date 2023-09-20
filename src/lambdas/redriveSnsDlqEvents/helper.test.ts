@@ -3,7 +3,7 @@ import { AuditEvent } from '../../types/auditEvent'
 import {
   baseProcessingResults,
   baseSQSEvent
-} from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
+} from '../../utils/tests/test-helpers/redriveSnsDlqTestHelper'
 import {
   generateEventIdLogMessageFromProcessingResult,
   parseSQSEvent,

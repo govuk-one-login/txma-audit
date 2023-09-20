@@ -1,7 +1,7 @@
 import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
 import { SQSEvent } from 'aws-lambda'
-import { ProcessingResult } from '../../../lambdas/RedriveSNSDQLEvents/helper'
-import { FirehoseProcessingResult } from '../../../lambdas/RedriveSNSDQLEvents/writeToFirehose'
+import { ProcessingResult } from '../../../lambdas/redriveSnsDlqEvents/helper'
+import { FirehoseProcessingResult } from '../../../lambdas/redriveSnsDlqEvents/writeToFirehose'
 
 export const baseProcessingResults: ProcessingResult[] = [
   {

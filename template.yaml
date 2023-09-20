@@ -915,11 +915,11 @@ Resources:
         - Name: QueueName
           Value: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.QueueName
 
-  RedriveSNSDQLEventsFunction:
+  RedriveSnsDlqEventsFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/RedriveSNSDQLEvents/
+      CodeUri: dist/redriveSnsDlqEvents/
       Environment:
         Variables:
           FIREHOSE_DELIVERY_STREAM_NAME: !Ref AuditMessageDeliveryStream
@@ -935,21 +935,21 @@ Resources:
       Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
       MemorySize: 256
-      Role: !GetAtt RedriveSNSDQLEventsFunctionRole.Arn
+      Role: !GetAtt RedriveSnsDlqEventsFunctionRole.Arn
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
 
-  RedriveSNSDQLEventsFunctionLogs:
+  RedriveSnsDlqEventsFunctionLogs:
     Type: AWS::Logs::LogGroup
     Properties:
       KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
       LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-redrive-sns-dlq-events'
       RetentionInDays: 7
 
-  RedriveSNSDQLEventsFunctionRole:
+  RedriveSnsDlqEventsFunctionRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub ${AWS::StackName}-redrive-sns-dlq-events-role
@@ -968,10 +968,10 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        - !Ref RedriveSNSDQLEventsFunctionPolicy
+        - !Ref RedriveSnsDlqEventsFunctionPolicy
         - !Ref AuditMessageFirehoseReingestPolicy
 
-  RedriveSNSDQLEventsFunctionPolicy:
+  RedriveSnsDlqEventsFunctionPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       ManagedPolicyName: !Sub ${AWS::StackName}-redrive-sns-dlq-events-policy

@@ -5,7 +5,7 @@ import {
   allSuccessFirehoseResponseExpectedResult,
   baseProcessingResults,
   baseSQSEvent
-} from '../../utils/tests/test-helpers/redriveSNSDLQTestHelper'
+} from '../../utils/tests/test-helpers/redriveSnsDlqTestHelper'
 import { handler } from './handler'
 import {
   generateEventIdLogMessageFromProcessingResult,
