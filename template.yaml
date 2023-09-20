@@ -315,6 +315,10 @@ Resources:
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
             ExpiredObjectDeleteMarker: true
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: s3:ObjectRestore:Completed
+            Queue: '{{resolve:ssm:AuditFileGlacierRestoreQueueArn}}'
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
