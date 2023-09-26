@@ -1320,8 +1320,8 @@ Resources:
       Description: Audit delivery lambda available for self serve integration tests
 
   PermanentMessageBatchBucketParameter:
-    Condition: TestRoleResources
     Type: AWS::SSM::Parameter
+    Condition: TestRoleResources
     Properties:
       Name: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch
       Type: String
@@ -1348,16 +1348,16 @@ Resources:
       ServiceToken: '{{resolve:ssm:EmptyS3BucketsFunctionArn}}'
 
   IntegrationTestsAddRecordToFirehoseFunctionNameParameter:
-    Condition: TestEnvironment
     Type: AWS::SSM::Parameter
+    Condition: TestEnvironment
     Properties:
       Name: !Sub /tests/${AWS::StackName}/AddRecordToFirehoseFunctionName
       Type: String
       Value: '{{resolve:ssm:/tests/AddFirehoseRecordFunctionName}}'
 
   AddRecordToFirehoseLambdaPolicy:
-    Condition: TestRoleResources
     Type: AWS::Lambda::Permission
+    Condition: TestRoleResources
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt IntegrationTestsAddRecordToFirehoseFunctionNameParameter.Value
