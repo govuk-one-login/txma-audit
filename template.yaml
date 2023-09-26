@@ -1319,6 +1319,15 @@ Resources:
       Value: !Ref AuditMessageDelimiterFunction
       Description: Audit delivery lambda available for self serve integration tests
 
+  PermanentMessageBatchBucketParameter:
+    Condition: TestRoleResources
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch
+      Type: String
+      Value: !Ref PermanentMessageBatchBucket
+      Description: Audit permanent message back bucket available for event replay integration tests
+
   ############################################
   # End: Automated Test resources #
   ############################################
