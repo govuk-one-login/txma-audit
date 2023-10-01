@@ -44,7 +44,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@jest/types", "npm:29.6.3"],\
             ["@types/aws-lambda", "npm:8.10.119"],\
             ["@types/jest", "npm:29.5.4"],\
-            ["@types/jest-when", "npm:3.5.2"],\
+            ["@types/jest-when", "npm:3.5.3"],\
             ["@types/node", "npm:18.17.14"],\
             ["@typescript-eslint/eslint-plugin", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:6.5.0"],\
             ["@typescript-eslint/parser", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:6.5.0"],\
@@ -4267,10 +4267,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["@types/jest-when", [\
-        ["npm:3.5.2", {\
-          "packageLocation": "./.yarn/cache/@types-jest-when-npm-3.5.2-8b6f3f4c13-106230dd71.zip/node_modules/@types/jest-when/",\
+        ["npm:3.5.3", {\
+          "packageLocation": "./.yarn/cache/@types-jest-when-npm-3.5.3-0e9eb05086-5dc2661ad5.zip/node_modules/@types/jest-when/",\
           "packageDependencies": [\
-            ["@types/jest-when", "npm:3.5.2"],\
+            ["@types/jest-when", "npm:3.5.3"],\
             ["@types/jest", "npm:29.5.2"]\
           ],\
           "linkType": "HARD"\
@@ -5592,7 +5592,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@jest/types", "npm:29.6.3"],\
             ["@types/aws-lambda", "npm:8.10.119"],\
             ["@types/jest", "npm:29.5.4"],\
-            ["@types/jest-when", "npm:3.5.2"],\
+            ["@types/jest-when", "npm:3.5.3"],\
             ["@types/node", "npm:18.17.14"],\
             ["@typescript-eslint/eslint-plugin", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:6.5.0"],\
             ["@typescript-eslint/parser", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:6.5.0"],\
