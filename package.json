@@ -37,7 +37,7 @@
     "@aws-sdk/client-ssm": "3.405.0",
     "@aws-sdk/util-endpoints": "3.398.0",
     "@jest/types": "29.6.3",
-    "@types/aws-lambda": "8.10.119",
+    "@types/aws-lambda": "8.10.122",
     "@types/jest": "29.5.4",
     "@types/jest-when": "3.5.2",
     "@types/node": "18.17.14",
