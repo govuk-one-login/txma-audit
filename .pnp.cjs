@@ -31,7 +31,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-crypto/encrypt-node", "npm:4.0.0"],\
             ["@aws-crypto/kms-keyring-node", "npm:4.0.0"],\
             ["@aws-crypto/material-management", "npm:4.0.0"],\
-            ["@aws-lambda-powertools/logger", "npm:1.12.1"],\
+            ["@aws-lambda-powertools/logger", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:1.14.0"],\
             ["@aws-sdk/client-cloudformation", "npm:3.405.0"],\
             ["@aws-sdk/client-cloudwatch-logs", "npm:3.405.0"],\
             ["@aws-sdk/client-firehose", "npm:3.405.0"],\
@@ -278,21 +278,34 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["@aws-lambda-powertools/commons", [\
-        ["npm:1.12.1", {\
-          "packageLocation": "./.yarn/cache/@aws-lambda-powertools-commons-npm-1.12.1-5857cfd794-1d6032bb26.zip/node_modules/@aws-lambda-powertools/commons/",\
+        ["npm:1.14.0", {\
+          "packageLocation": "./.yarn/cache/@aws-lambda-powertools-commons-npm-1.14.0-aefae9d9f3-7025ff5d7d.zip/node_modules/@aws-lambda-powertools/commons/",\
           "packageDependencies": [\
-            ["@aws-lambda-powertools/commons", "npm:1.12.1"]\
+            ["@aws-lambda-powertools/commons", "npm:1.14.0"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@aws-lambda-powertools/logger", [\
-        ["npm:1.12.1", {\
-          "packageLocation": "./.yarn/cache/@aws-lambda-powertools-logger-npm-1.12.1-7bb4b17117-87fa705ee6.zip/node_modules/@aws-lambda-powertools/logger/",\
+        ["npm:1.14.0", {\
+          "packageLocation": "./.yarn/cache/@aws-lambda-powertools-logger-npm-1.14.0-a3311b99e9-acb59fd46c.zip/node_modules/@aws-lambda-powertools/logger/",\
           "packageDependencies": [\
-            ["@aws-lambda-powertools/logger", "npm:1.12.1"],\
-            ["@aws-lambda-powertools/commons", "npm:1.12.1"],\
+            ["@aws-lambda-powertools/logger", "npm:1.14.0"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:1.14.0", {\
+          "packageLocation": "./.yarn/__virtual__/@aws-lambda-powertools-logger-virtual-f9bda40e5f/0/cache/@aws-lambda-powertools-logger-npm-1.14.0-a3311b99e9-acb59fd46c.zip/node_modules/@aws-lambda-powertools/logger/",\
+          "packageDependencies": [\
+            ["@aws-lambda-powertools/logger", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:1.14.0"],\
+            ["@aws-lambda-powertools/commons", "npm:1.14.0"],\
+            ["@middy/core", null],\
+            ["@types/middy__core", null],\
             ["lodash.merge", "npm:4.6.2"]\
+          ],\
+          "packagePeers": [\
+            "@middy/core",\
+            "@types/middy__core"\
           ],\
           "linkType": "HARD"\
         }]\
@@ -5579,7 +5592,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@aws-crypto/encrypt-node", "npm:4.0.0"],\
             ["@aws-crypto/kms-keyring-node", "npm:4.0.0"],\
             ["@aws-crypto/material-management", "npm:4.0.0"],\
-            ["@aws-lambda-powertools/logger", "npm:1.12.1"],\
+            ["@aws-lambda-powertools/logger", "virtual:6d13f9a8f75f34c2ef957ddbe45e530aa2433685f43a2f0d41749e379df19ab8dea9416517f41c80fa5445f770f3b0401c9be72724df3cd936074369709ae8fc#npm:1.14.0"],\
             ["@aws-sdk/client-cloudformation", "npm:3.405.0"],\
             ["@aws-sdk/client-cloudwatch-logs", "npm:3.405.0"],\
             ["@aws-sdk/client-firehose", "npm:3.405.0"],\
