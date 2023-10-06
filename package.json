@@ -4,7 +4,7 @@
   "description": "TxMA Audit",
   "repository": {
     "type": "git",
-    "repository": "https://github.com/alphagov/di-txma-audit"
+    "repository": "https://github.com/govuk-one-login/txma-audit"
   },
   "author": "GDS",
   "license": "MIT",
