@@ -1,10 +1,10 @@
 {
-  "name": "di-txma-audit",
+  "name": "txma-audit",
   "version": "1.0.0",
   "description": "TxMA Audit",
   "repository": {
     "type": "git",
-    "repository": "https://github.com/alphagov/di-txma-audit"
+    "repository": "https://github.com/govuk-one-login/txma-audit"
   },
   "author": "GDS",
   "license": "MIT",

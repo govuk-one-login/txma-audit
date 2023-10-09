@@ -1,4 +1,4 @@
-# di-txma-audit
+# TxMA Audit
 
 Digital Identity Auditing Services
 
