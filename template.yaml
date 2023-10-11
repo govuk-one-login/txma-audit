@@ -105,6 +105,8 @@ Resources:
       - AuditFileReadyToEncryptQueuePolicy
       - AuditMessageFailedProcessingQueuePolicy
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-message-batch
       BucketEncryption:
@@ -273,6 +275,8 @@ Resources:
 
   PermanentMessageBatchBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       BucketName: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch
       BucketEncryption:
