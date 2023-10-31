@@ -61,7 +61,6 @@ jobs:
             dist/
             samconfig.toml
             template.yaml
-          retention-days: 7
 
   check-yarn-cache:
     name: Check Yarn cache
