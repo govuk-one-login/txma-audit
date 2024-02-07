@@ -1,6 +1,6 @@
 # TxMA Audit
 
-Digital Identity Auditing Services
+Digital Identity Auditing Service
 
 This project contains source code and supporting files for creating the Event Processor and Audit serverless architecture.
 
