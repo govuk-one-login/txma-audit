@@ -463,7 +463,7 @@ Resources:
     Properties:
       KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
       LogGroupName: !Sub /aws/lambda/${AWS::StackName}-s3-copy-and-encrypt
-      RetentionInDays: 7
+      RetentionInDays: 30
 
   S3CopyAndEncryptFunctionRole:
     Type: AWS::IAM::Role
@@ -627,7 +627,7 @@ Resources:
     Properties:
       KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
       LogGroupName: !Sub /aws/lambda/${AWS::StackName}-audit-message-delimiter
-      RetentionInDays: 7
+      RetentionInDays: 30
 
   AuditMessageDelimiterFunctionRole:
     Type: AWS::IAM::Role
@@ -671,7 +671,7 @@ Resources:
     Properties:
       KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
       LogGroupName: !Sub /aws/lambda/${AWS::StackName}-audit-firehose-reingest
-      RetentionInDays: 7
+      RetentionInDays: 30
 
   AuditMessageFirehoseReingestPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -819,7 +819,7 @@ Resources:
     Properties:
       KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
       LogGroupName: !Sub /aws/kinesisfirehose/${AWS::StackName}-message-batch
-      RetentionInDays: 7
+      RetentionInDays: 30
 
   AuditMessageDeliveryStreamDestinationLogStream:
     Type: AWS::Logs::LogStream
@@ -956,7 +956,7 @@ Resources:
     Properties:
       KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
       LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-redrive-sns-dlq-events'
-      RetentionInDays: 7
+      RetentionInDays: 30
 
   RedriveSnsDlqEventsFunctionRole:
     Type: AWS::IAM::Role
