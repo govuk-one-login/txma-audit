@@ -10,7 +10,7 @@ export const baseEvent: AuditEvent = {
     govuk_signin_journey_id: 'Iwc0V7rjWLKpsMXXsDqJEm2fZvY',
     ip_address: '3.8.95.217',
     session_id: 'an4O5JafsHBvtbKCu2vDrMGZx6djfN0lkCxZvgjfrko',
-    email: 'test@test.com',
+    email: 'test@example.com',
     phone: '01234567890',
     transaction_id: 'blah',
     persistent_session_id: 'sakhsihqiuhiwg182hgso',
