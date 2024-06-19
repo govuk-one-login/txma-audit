@@ -93,6 +93,7 @@ Globals:
     VpcConfig:
       SecurityGroupIds:
         - Fn::ImportValue: !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
+    AutoPublishAlias: live
 
 Resources:
   #################################
