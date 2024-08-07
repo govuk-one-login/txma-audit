@@ -1,4 +1,4 @@
-import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
+import { KmsKeyringNode } from '@aws-crypto/client-node'
 import { buildEncrypt } from '@aws-crypto/encrypt-node'
 import { Readable } from 'stream'
 import { getEnv } from '../../utils/helpers/getEnv'
