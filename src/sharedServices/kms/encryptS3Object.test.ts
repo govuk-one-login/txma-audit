@@ -1,5 +1,5 @@
 import { buildEncrypt, MessageHeader } from '@aws-crypto/encrypt-node'
-import { KmsKeyringNode } from '@aws-crypto/kms-keyring-node'
+import { KmsKeyringNode } from '@aws-crypto/client-node'
 import { when } from 'jest-when'
 import { createDataStream } from '../../utils/tests/test-helpers/test-helper'
 import {
@@ -14,7 +14,7 @@ jest.mock('@aws-crypto/encrypt-node', () => ({
     encrypt: jest.fn()
   })
 }))
-jest.mock('@aws-crypto/kms-keyring-node', () => ({
+jest.mock('@aws-crypto/client-node', () => ({
   KmsKeyringNode: jest.fn()
 }))
 
