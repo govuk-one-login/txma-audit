@@ -1218,6 +1218,49 @@ Resources:
   # Start: Monitoring & alerting resources #
   ##########################################
 
+  # Metric Filters
+  S3CopyAndEncryptFunctionFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: '{ $.level = "ERROR" }'
+      LogGroupName: !Ref S3CopyAndEncryptLogs
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: TxMA/Audit/Logs
+          MetricName: 'S3CopyAndEncryptFunctionMetric'
+
+  AuditMessageDelimiterFunctionFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: '{ $.level = "ERROR" }'
+      LogGroupName: !Ref AuditMessageDelimiterLogs
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: TxMA/Audit/Logs
+          MetricName: 'AuditMessageDelimiterFunctionMetric'
+
+  AuditMessageFirehoseReingestFunctionFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      # can't just do '%Error (deleting|updating) s3 object%' as AWS doesn't support parentheses in log filter regexes
+      # see https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html#regex-expressions
+      FilterPattern: '?"Error deleting s3 object" ?"Error updating s3 object"'
+      LogGroupName: !Ref AuditMessageFirehoseReingestLogs
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: TxMA/Audit/Logs
+          MetricName: 'AuditMessageFirehoseReingestFunctionMetric'
+
+  RedriveSnsDlqEventsFunctionFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterPattern: 'failed to publish to firehose'
+      LogGroupName: !Ref RedriveSnsDlqEventsFunctionLogs
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: TxMA/Audit/Logs
+          MetricName: 'RedriveSnsDlqEventsFunctionMetric'
+
   # CloudWatch Alarms
   AuditFirehoseDeliveryFreshness:
     Type: AWS::CloudWatch::Alarm
@@ -1362,6 +1405,97 @@ Resources:
       Statistic: Sum
       Threshold: 0
       TreatMissingData: ignore
+
+  AgeOfOldestMessageOnAuditFileReadyToEncryptQueueAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: >-
+        Alarm that monitors the age of the oldest message on the AuditFileReadyToEncrypt Queue.
+        If messages remain on the queue for more than one hour it suggests that our
+        system isn't processing data.
+      AlarmName: !Sub ${AWS::StackName}-audit-file-ready-to-encrypt-queue-oldest-message-age
+      ComparisonOperator: GreaterThanThreshold
+      DatapointsToAlarm: 1
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt AuditFileReadyToEncryptQueue.QueueName
+      EvaluationPeriods: 1
+      MetricName: ApproximateAgeOfOldestMessage
+      Namespace: AWS/SQS
+      Statistic: Maximum
+      Period: 60
+      Threshold: 3600
+      TreatMissingData: ignore
+
+  S3CopyAndEncryptFunctionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: An alarm for the S3CopyAndEncryptFunction lambda
+      AlarmName: !Sub ${AWS::StackName}-s3-copy-and-encrypt-alarm
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 1
+      MetricName: S3CopyAndEncryptFunctionMetric
+      Namespace: TxMA/Audit/Logs
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+
+  AuditMessageDelimiterFunctionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: An alarm for the AuditMessageDelimiterFunction lambda
+      AlarmName: !Sub ${AWS::StackName}-audit-message-delimiter-alarm
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 1
+      MetricName: AuditMessageDelimiterFunctionMetric
+      Namespace: TxMA/Audit/Logs
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+
+  AuditMessageFirehoseReingestFunctionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: An alarm for the AuditMessageFirehoseReingestFunction lambda for if fails to update or delete the failed processing object
+      AlarmName: !Sub ${AWS::StackName}-audit-message-firehose-reingest-alarm
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 1
+      MetricName: AuditMessageFirehoseReingestFunctionMetric
+      Namespace: TxMA/Audit/Logs
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+
+  RedriveSnsDlqEventsFunctionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
+      AlarmDescription: An alarm for the RedriveSnsDlqEventsFunction lambda for if it fails to publish to firehose
+      AlarmName: !Sub ${AWS::StackName}-redrive-sns-dlq-events-alarm
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 1
+      MetricName: RedriveSnsDlqEventsFunctionMetric
+      Namespace: TxMA/Audit/Logs
+      Period: 3600
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
 
   # PagerDuty
   PagerDutySubscription:
