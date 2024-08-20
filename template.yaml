@@ -72,6 +72,9 @@ Conditions:
     ]
   TestRoleResources:
     !And [Condition: TestEnvironment, !Not [!Equals [!Ref TestRoleArn, none]]]
+  UseCanaryDeploy: !Or
+    - !Equals [!Ref Environment, production]
+    - !Equals [!Ref Environment, integration]
 
 Mappings:
   EnvironmentConfiguration:
@@ -495,6 +498,37 @@ Resources:
                 aws:SourceAccount: !Ref AWS::AccountId
 
   # Lambda resources
+  LambdaDeployRole:
+    Type: AWS::IAM::Role
+    # checkov:skip=CKV_AWS_111: "Ensure IAM policies does not allow write access without constraints
+    # The network interface permissions can only be applied at the '*' resource level
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codedeploy.eu-west-2.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda'
+
+  AuditDeploymentStrategy:
+    Condition: UseCanaryDeploy
+    Type: AWS::CodeDeploy::DeploymentConfig
+    Properties:
+      ComputePlatform: Lambda
+      TrafficRoutingConfig:
+        Type: TimeBasedLinear
+        TimeBasedLinear:
+          LinearInterval: 1
+          LinearPercentage: 20
+
   S3CopyAndEncryptFunction:
     #checkov:skip=CKV_AWS_115:Defined in Globals section
     Type: AWS::Serverless::Function
@@ -522,6 +556,18 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+      DeploymentPreference:
+        Type: !If
+          - UseCanaryDeploy
+          - !Ref AuditDeploymentStrategy
+          - AllAtOnce
+        Role: !GetAtt LambdaDeployRole.Arn
+        Alarms: !If
+          - UseCanaryDeploy
+          - - !Ref S3CopyAndEncryptFunctionAlarm
+            - !Ref FailureToEncryptAuditMessageAlarm
+            - !Ref AgeOfOldestMessageOnAuditFileReadyToEncryptQueueAlarm
+          - - !Ref 'AWS::NoValue'
 
   S3CopyAndEncryptLogs:
     Type: AWS::Logs::LogGroup
@@ -730,6 +776,16 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+      DeploymentPreference:
+        Type: !If
+          - UseCanaryDeploy
+          - !Ref AuditDeploymentStrategy
+          - AllAtOnce
+        Role: !GetAtt LambdaDeployRole.Arn
+        Alarms: !If
+          - UseCanaryDeploy
+          - - !Ref AuditMessageDelimiterFunctionAlarm
+          - - !Ref 'AWS::NoValue'
 
   AuditMessageFirehoseReingestLogs:
     Type: AWS::Logs::LogGroup
@@ -838,6 +894,16 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+      DeploymentPreference:
+        Type: !If
+          - UseCanaryDeploy
+          - !Ref AuditDeploymentStrategy
+          - AllAtOnce
+        Role: !GetAtt LambdaDeployRole.Arn
+        Alarms: !If
+          - UseCanaryDeploy
+          - - !Ref AuditMessageFirehoseReingestFunctionAlarm
+          - - !Ref 'AWS::NoValue'
 
   # Kinesis Firehose resources
   AuditMessageFailedProcessingQueue:
@@ -1015,6 +1081,16 @@ Resources:
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
           - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+      DeploymentPreference:
+        Type: !If
+          - UseCanaryDeploy
+          - !Ref AuditDeploymentStrategy
+          - AllAtOnce
+        Role: !GetAtt LambdaDeployRole.Arn
+        Alarms: !If
+          - UseCanaryDeploy
+          - - !Ref RedriveSnsDlqEventsFunctionAlarm
+          - - !Ref 'AWS::NoValue'
 
   RedriveSnsDlqEventsFunctionLogs:
     Type: AWS::Logs::LogGroup
