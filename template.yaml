@@ -458,7 +458,7 @@ Resources:
   AuditFileReadyToEncryptDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-DLQ
+      QueueName: !Sub ${AWS::StackName}-${Environment}-audit-file-ready-to-encrypt-dlq
       KmsMasterKeyId: '{{resolve:ssm:AuditFileReadyToEncryptQueueKmsKeyArn}}'
       MessageRetentionPeriod: 1209600 # 14 days
 
@@ -1011,7 +1011,7 @@ Resources:
   AuditMessageDeliveryStreamSubscriptionDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${AWS::StackName}-${Environment}-audit-message-delivery-stream-DLQ
+      QueueName: !Sub ${AWS::StackName}-${Environment}-audit-message-delivery-stream-dlq
       KmsMasterKeyId: '{{resolve:ssm:SqsKmsKeyArn}}'
       MessageRetentionPeriod: 1209600 # 14 Days
 
