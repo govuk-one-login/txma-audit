@@ -28,6 +28,9 @@
     "@aws-sdk/client-s3": "3.624.0",
     "@aws-sdk/client-s3-control": "3.624.0"
   },
+  "resolutions": {
+    "micromatch": "4.0.8"
+  },
   "devDependencies": {
     "@aws-sdk/client-cloudformation": "3.624.0",
     "@aws-sdk/client-cloudwatch-logs": "3.624.0",
