@@ -1,17 +1,15 @@
 import {
   CopyObjectCommand,
   CopyObjectCommandOutput,
-  S3Client,
   StorageClass
 } from '@aws-sdk/client-s3'
-import { getEnv } from '../../utils/helpers/getEnv'
+import { client } from './s3Client'
 
 export const s3ChangeStorageClass = (
   bucket: string,
   key: string,
   storageClass: StorageClass
 ): Promise<CopyObjectCommandOutput> => {
-  const client = new S3Client({ region: getEnv('AWS_REGION') })
   return client.send(
     new CopyObjectCommand({
       CopySource: `${bucket}/${key}`,

@@ -80,14 +80,19 @@ Mappings:
   EnvironmentConfiguration:
     dev:
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
+      XRAYENABLED: true
     build:
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
+      XRAYENABLED: true
     staging:
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
+      XRAYENABLED: true
     integration:
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
+      XRAYENABLED: true
     production:
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables
+      XRAYENABLED: true
 
 Globals:
   Function:
@@ -99,7 +104,12 @@ Globals:
       - !Ref AWS::NoValue
     Environment:
       Variables:
-        NODE_OPTIONS: --enable-source-maps
+        NODE_OPTIONS: !If
+          - TestEnvironment
+          - ' '
+          - '--enable-source-maps'
+        XRAY_ENABLED:
+          !FindInMap [EnvironmentConfiguration, !Ref Environment, XRAYENABLED]
         AWS_LAMBDA_EXEC_WRAPPER: /opt/dynatrace
         DT_CONNECTION_AUTH_TOKEN: !Sub
           - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_AUTH_TOKEN}}'
@@ -152,6 +162,10 @@ Globals:
       SecurityGroupIds:
         - Fn::ImportValue: !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
     AutoPublishAlias: live
+    Tracing: !If
+      - TestEnvironment
+      - Active
+      - PassThrough
     Layers:
       - !Sub
         - '{{resolve:secretsmanager:${SecretArn}:SecretString:NODEJS_LAYER}}'
@@ -596,6 +610,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref S3CopyAndEncryptPolicy
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
 
   S3CopyAndEncryptPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -759,6 +774,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
 
   AuditMessageDelimiterFunction:
     #checkov:skip=CKV_AWS_115: Currently want this function to scale without limitation
@@ -858,6 +874,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref AuditMessageFirehoseReingestPolicy
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -1120,6 +1137,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref RedriveSnsDlqEventsFunctionPolicy
         - !Ref AuditMessageFirehoseReingestPolicy
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
 
   RedriveSnsDlqEventsFunctionPolicy:
     Type: AWS::IAM::ManagedPolicy

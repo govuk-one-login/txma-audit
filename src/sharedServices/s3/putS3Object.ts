@@ -1,17 +1,11 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  PutObjectCommandInput
-} from '@aws-sdk/client-s3'
-import { getEnv } from '../../utils/helpers/getEnv'
+import { PutObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3'
+import { client } from './s3Client'
 
 export const putS3Object = async (
   bucket: string,
   fileKey: string,
   data: Buffer
 ): Promise<void> => {
-  const client = new S3Client({ region: getEnv('AWS_REGION') })
-
   const input = {
     Bucket: bucket,
     Key: fileKey,
