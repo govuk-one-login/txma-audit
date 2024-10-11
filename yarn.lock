@@ -1232,13 +1232,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/types@npm:3.609.0, @aws-sdk/types@npm:^3.222.0":
+"@aws-sdk/types@npm:3.609.0":
   version: 3.609.0
   resolution: "@aws-sdk/types@npm:3.609.0"
   dependencies:
     "@smithy/types": ^3.3.0
     tslib: ^2.6.2
   checksum: 522768d08f104065b0ff6a37eddaa7803186014acee1c0011b3dbd3ef841e47ae694e58f608aeec8a39d22d644d759ade996fe51d18b880617778dc2dbbe1ede
+  languageName: node
+  linkType: hard
+
+"@aws-sdk/types@npm:^3.222.0, @aws-sdk/types@npm:^3.4.1":
+  version: 3.664.0
+  resolution: "@aws-sdk/types@npm:3.664.0"
+  dependencies:
+    "@smithy/types": ^3.5.0
+    tslib: ^2.6.2
+  checksum: 8516830bcc6c9906255569945c420ff5dbdb102c00c203271626d6bcbab51c10a72cf0c69778e2dbc8298845c0dc016a62d8e31b851f77f2d6ecfe76da7439e8
   languageName: node
   linkType: hard
 
@@ -2693,6 +2703,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@smithy/service-error-classification@npm:^2.0.4":
+  version: 2.1.5
+  resolution: "@smithy/service-error-classification@npm:2.1.5"
+  dependencies:
+    "@smithy/types": ^2.12.0
+  checksum: 00ac54110a258c7a47c62d4f655d4998bd40e5adb47e10281b28df7a585f2f1e960dc35325eac006636280e7fb2b81dbeb32b89e08bac87acc136c4d29a4dc53
+  languageName: node
+  linkType: hard
+
 "@smithy/service-error-classification@npm:^3.0.3":
   version: 3.0.3
   resolution: "@smithy/service-error-classification@npm:3.0.3"
@@ -2742,12 +2761,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@smithy/types@npm:^3.3.0":
-  version: 3.3.0
-  resolution: "@smithy/types@npm:3.3.0"
+"@smithy/types@npm:^2.12.0":
+  version: 2.12.0
+  resolution: "@smithy/types@npm:2.12.0"
   dependencies:
     tslib: ^2.6.2
-  checksum: 29bb5f83c41e32f8d4094a2aba2d3dfbd763ab5943784a700f3fa22df0dcf0ccac1b1907f7a87fbb9f6f2269fcd4750524bcb48f892249e200ffe397c0981309
+  checksum: 2dd93746624d87afbf51c22116fc69f82e95004b78cf681c4a283d908155c22a2b7a3afbd64a3aff7deefb6619276f186e212422ad200df3b42c32ef5330374e
+  languageName: node
+  linkType: hard
+
+"@smithy/types@npm:^3.3.0, @smithy/types@npm:^3.5.0":
+  version: 3.5.0
+  resolution: "@smithy/types@npm:3.5.0"
+  dependencies:
+    tslib: ^2.6.2
+  checksum: 5d297005549991f6928daf038e0610c959423add6e435af970b8c8dcac988bf62b0cdbf4dd5df43197d9bc7af5c290792f17af6e2f5051be2ffa40dd98ab4659
   languageName: node
   linkType: hard
 
@@ -3018,6 +3046,15 @@ __metadata:
   dependencies:
     "@babel/types": ^7.20.7
   checksum: 2bdc65eb62232c2d5c1086adeb0c31e7980e6fd7e50a3483b4a724a1a1029c84d9cb59749cf8de612f9afa2bc14c85b8f50e64e21f8a4398fa77eb9059a4283c
+  languageName: node
+  linkType: hard
+
+"@types/cls-hooked@npm:^4.3.3":
+  version: 4.3.8
+  resolution: "@types/cls-hooked@npm:4.3.8"
+  dependencies:
+    "@types/node": "*"
+  checksum: 033a9decedc4edcbc9a47ac6b3cfa9db9dbb50518a4d8c6835e563fcf47ede849739b7f9acc7dbb9938c58075823053d524544e20194264c33f5e37d5865d8fe
   languageName: node
   linkType: hard
 
@@ -3535,10 +3572,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"async-hook-jl@npm:^1.7.6":
+  version: 1.7.6
+  resolution: "async-hook-jl@npm:1.7.6"
+  dependencies:
+    stack-chain: ^1.3.7
+  checksum: f84421c83ad5bc4e54a3a6ad7be4fb911840a17c01e5ee3f8e4e9cd077a42c7bc206dbc6b36d52eaca5fa37f16a15f83d63135976cf3e17d5bdc2824f6002705
+  languageName: node
+  linkType: hard
+
 "async@npm:^3.2.3":
   version: 3.2.5
   resolution: "async@npm:3.2.5"
   checksum: 5ec77f1312301dee02d62140a6b1f7ee0edd2a0f983b6fd2b0849b969f245225b990b47b8243e7b9ad16451a53e7f68e753700385b706198ced888beedba3af4
+  languageName: node
+  linkType: hard
+
+"atomic-batcher@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "atomic-batcher@npm:1.0.2"
+  checksum: 0f06a3b41622918bef3f2ed403eaeab4459ae04176ad6b05e43681594a5baa5feb596d4495857babab1c1ac759f16c5757e2d8bcf1e54d9a7a706b852a26b128
   languageName: node
   linkType: hard
 
@@ -3562,6 +3615,20 @@ __metadata:
     sinon: ^16.1.3
     tslib: ^2.1.0
   checksum: fbb11b5783fe6ba9b5c10a4395193d5b4b1583040cce61bcd341dce25327ee86e3b00166c2fb3d47aedaa890c129e1c3fabe944086419d50ba12a417ebe2ede9
+  languageName: node
+  linkType: hard
+
+"aws-xray-sdk-core@npm:3.10.1":
+  version: 3.10.1
+  resolution: "aws-xray-sdk-core@npm:3.10.1"
+  dependencies:
+    "@aws-sdk/types": ^3.4.1
+    "@smithy/service-error-classification": ^2.0.4
+    "@types/cls-hooked": ^4.3.3
+    atomic-batcher: ^1.0.2
+    cls-hooked: ^4.2.2
+    semver: ^7.5.3
+  checksum: efb7776881e00bf49fff7060cdc548d238987bde4ebd56d03016605aeebcaa93d4f84fe47d24de9661e20119f1dddc9ab15ba05edd9dd54e096195a232640178
   languageName: node
   linkType: hard
 
@@ -3877,6 +3944,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cls-hooked@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "cls-hooked@npm:4.2.2"
+  dependencies:
+    async-hook-jl: ^1.7.6
+    emitter-listener: ^1.0.1
+    semver: ^5.4.1
+  checksum: 3a8a4e30b03a81ec275eb9c079c49d4497013e7fa36259e86c9b6aff7990e85eebbc97552ed8a035c19403f0b825000df9bada5c1c0ac7cf1b2506c3a903df60
+  languageName: node
+  linkType: hard
+
 "co@npm:^4.6.0":
   version: 4.6.0
   resolution: "co@npm:4.6.0"
@@ -4123,6 +4201,15 @@ __metadata:
   version: 1.5.5
   resolution: "electron-to-chromium@npm:1.5.5"
   checksum: fcdd2797ece1ece6764b88b5fc36cfc6a571e08b832c6777d8bbefa19cae22a36614411aacc5687d9fea7e1db86469f53c3952ca2579c5fe705dea7ed270d8cc
+  languageName: node
+  linkType: hard
+
+"emitter-listener@npm:^1.0.1":
+  version: 1.1.2
+  resolution: "emitter-listener@npm:1.1.2"
+  dependencies:
+    shimmer: ^1.2.0
+  checksum: 05166bad42a27e51a765ebac3b7d26ac111564fc2d36443cd819f95ef88ea1b9ba6f2895becbcea36f8009890a2a8cb7c36eb9e776d4978e370bd33cb0a181e8
   languageName: node
   linkType: hard
 
@@ -6666,6 +6753,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"semver@npm:^5.4.1":
+  version: 5.7.2
+  resolution: "semver@npm:5.7.2"
+  bin:
+    semver: bin/semver
+  checksum: fb4ab5e0dd1c22ce0c937ea390b4a822147a9c53dbd2a9a0132f12fe382902beef4fbf12cf51bb955248d8d15874ce8cd89532569756384f994309825f10b686
+  languageName: node
+  linkType: hard
+
 "semver@npm:^6.3.0, semver@npm:^6.3.1":
   version: 6.3.1
   resolution: "semver@npm:6.3.1"
@@ -6697,6 +6793,13 @@ __metadata:
   version: 3.0.0
   resolution: "shebang-regex@npm:3.0.0"
   checksum: 1a2bcae50de99034fcd92ad4212d8e01eedf52c7ec7830eedcf886622804fe36884278f2be8be0ea5fde3fd1c23911643a4e0f726c8685b61871c8908af01222
+  languageName: node
+  linkType: hard
+
+"shimmer@npm:^1.2.0":
+  version: 1.2.1
+  resolution: "shimmer@npm:1.2.1"
+  checksum: aa0d6252ad1c682a4fdfda69e541be987f7a265ac7b00b1208e5e48cc68dc55f293955346ea4c71a169b7324b82c70f8400b3d3d2d60b2a7519f0a3522423250
   languageName: node
   linkType: hard
 
@@ -6817,6 +6920,13 @@ __metadata:
   dependencies:
     minipass: ^7.0.3
   checksum: 4603d53a05bcd44188747d38f1cc43833b9951b5a1ee43ba50535bdfc5fe4a0897472dbe69837570a5417c3c073377ef4f8c1a272683b401857f72738ee57299
+  languageName: node
+  linkType: hard
+
+"stack-chain@npm:^1.3.7":
+  version: 1.3.7
+  resolution: "stack-chain@npm:1.3.7"
+  checksum: c2428e794a60e1f8e3b66898657d10b81ea18eefd0842d65f18bad6f53fbca597075079bbda8df5b409aebb82d2055bf9c4a8d439df18c554756ead197fc2260
   languageName: node
   linkType: hard
 
@@ -7163,6 +7273,7 @@ __metadata:
     "@typescript-eslint/parser": 6.21.0
     aws-sdk-client-mock: 3.1.0
     aws-sdk-client-mock-jest: 3.1.0
+    aws-xray-sdk-core: 3.10.1
     commander: 11.1.0
     esbuild: 0.19.12
     eslint: 8.57.0
