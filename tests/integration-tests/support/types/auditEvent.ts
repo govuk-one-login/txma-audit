@@ -9,8 +9,6 @@ export interface AuditEvent {
   restricted?: unknown
   timestamp: number
   timestamp_formatted?: string
-  event_timestamp_ms?: number
-  event_timestamp_ms_formatted?: string
   user?: AuditEventUserObject
   txma?: unknown
 }
