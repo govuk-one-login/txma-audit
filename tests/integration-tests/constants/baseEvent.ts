@@ -3,6 +3,8 @@ import { AuditEvent } from '../support/types/auditEvent'
 export const baseEvent: AuditEvent = {
   event_name: 'AUTH_IPV_CAPACITY_REQUESTED',
   component_id: 'AuthAccountMgmt',
+  event_timestamp_ms: 1675073725000,
+  event_timestamp_ms_formatted: '2023-01-30T10:15:25.000Z',
   timestamp: 1675073725,
   timestamp_formatted: '2023-01-30T10:15:25.000Z',
   user: {
