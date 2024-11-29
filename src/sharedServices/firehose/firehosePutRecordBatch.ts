@@ -1,22 +1,20 @@
 import {
-  FirehoseClient,
   PutRecordBatchCommand,
   PutRecordBatchInput,
   PutRecordBatchCommandOutput,
   _Record
 } from '@aws-sdk/client-firehose'
-import { getEnv } from '../../utils/helpers/getEnv'
 import AWSXRay from 'aws-xray-sdk-core'
+import { firehoseClient as firehoseClientRaw } from '../../utils/awsSdkClients'
 
 export const firehosePutRecordBatch = async (
   streamName: string,
   records: _Record[]
 ): Promise<PutRecordBatchCommandOutput> => {
-  const clientRaw = new FirehoseClient({ region: getEnv('AWS_REGION') })
   const client =
     process.env.XRAY_ENABLED === 'true'
-      ? AWSXRay.captureAWSv3Client(clientRaw)
-      : clientRaw
+      ? AWSXRay.captureAWSv3Client(firehoseClientRaw)
+      : firehoseClientRaw
 
   const input: PutRecordBatchInput = {
     DeliveryStreamName: streamName,
