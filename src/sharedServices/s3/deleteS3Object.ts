@@ -3,7 +3,7 @@ import {
   DeleteObjectCommandInput
 } from '@aws-sdk/client-s3'
 
-import { client } from './s3Client'
+import { s3Client } from '../../utils/awsSdkClients'
 
 export const deleteS3Object = async (
   bucket: string,
@@ -14,5 +14,5 @@ export const deleteS3Object = async (
     Key: fileKey
   } as DeleteObjectCommandInput
 
-  await client.send(new DeleteObjectCommand(input))
+  await s3Client.send(new DeleteObjectCommand(input))
 }

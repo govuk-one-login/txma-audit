@@ -3,14 +3,14 @@ import {
   CopyObjectCommandOutput,
   StorageClass
 } from '@aws-sdk/client-s3'
-import { client } from './s3Client'
+import { s3Client } from '../../utils/awsSdkClients'
 
 export const s3ChangeStorageClass = (
   bucket: string,
   key: string,
   storageClass: StorageClass
 ): Promise<CopyObjectCommandOutput> => {
-  return client.send(
+  return s3Client.send(
     new CopyObjectCommand({
       CopySource: `${bucket}/${key}`,
       Bucket: bucket,
