@@ -1,12 +1,12 @@
 import { HeadObjectCommand } from '@aws-sdk/client-s3'
-import { client } from './s3Client'
+import { s3Client } from '../../utils/awsSdkClients'
 
 export const s3FileExists = async (
   bucket: string,
   s3Key: string
 ): Promise<boolean> => {
   try {
-    const headObjectResponse = await client.send(
+    const headObjectResponse = await s3Client.send(
       new HeadObjectCommand({
         Bucket: bucket,
         Key: s3Key

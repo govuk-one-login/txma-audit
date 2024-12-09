@@ -1,5 +1,5 @@
 import { PutObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3'
-import { client } from './s3Client'
+import { s3Client } from '../../utils/awsSdkClients'
 
 export const putS3Object = async (
   bucket: string,
@@ -12,5 +12,5 @@ export const putS3Object = async (
     Body: data
   } as PutObjectCommandInput
 
-  await client.send(new PutObjectCommand(input))
+  await s3Client.send(new PutObjectCommand(input))
 }
