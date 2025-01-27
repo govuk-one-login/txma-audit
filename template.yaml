@@ -727,6 +727,8 @@ Resources:
               Type: string
             - Name: extensions
               Type: string
+            - Name: txma
+              Type: string
           Compressed: true
           InputFormat: org.apache.hadoop.mapred.TextInputFormat
           Location: !Sub s3://${MessageBatchBucket}/firehose/
