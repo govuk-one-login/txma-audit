@@ -2,14 +2,14 @@ import { SQSBatchItemFailure, SQSEvent } from 'aws-lambda'
 import { AuditEvent } from '../../types/auditEvent'
 import { tryParseJSON } from '../../utils/helpers/tryParseJson'
 
-export type ProcessingResult = {
+export interface ProcessingResult {
   sqsMessageId: string
   failed: boolean
   statusReason: string
   auditEvent?: AuditEvent
 }
 
-export type parseSQSEventReturnType = {
+export interface parseSQSEventReturnType {
   successfullyParsedRecords: ProcessingResult[]
   unsuccessfullyParsedRecords: ProcessingResult[]
 }
@@ -25,7 +25,7 @@ export const SQSBatchItemFailureFromProcessingResultArray = (
 export const generateEventIdLogMessageFromProcessingResult = (
   processingResultArrays: ProcessingResult[][]
 ) => {
-  const logMessage: { [key: string]: string[] } = {}
+  const logMessage: Record<string, string[]> = {}
   processingResultArrays.forEach((singleProcessingResultArray) => {
     singleProcessingResultArray.forEach((processsingResult) => {
       if (!Object.keys(logMessage).includes(processsingResult.statusReason)) {

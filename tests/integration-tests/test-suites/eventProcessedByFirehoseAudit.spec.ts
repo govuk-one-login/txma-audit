@@ -6,14 +6,12 @@ import { getAuditEvent } from '../support/utils/aws/s3/getAuditEvent'
 
 describe('events processed by firehose', () => {
   let eventId: string
-  let messageId: string
   const timestampMs = 1689936499616
   const timestampMsFormatted = '2023-07-21T10:48:19.616Z'
   let event: unknown
 
   beforeAll(async () => {
     eventId = randomUUID()
-    messageId = randomUUID()
 
     event = {
       ...baseEvent,

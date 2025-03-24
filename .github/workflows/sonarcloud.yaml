@@ -14,16 +14,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v3
+      - name: Setup node
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - name: Node - Enable Corepack
-        run: corepack enable
+          node-version: 22
+          cache: npm
+      - name: Install node packages
+        run: npm ci
       - name: Generate coverage report
-        run: yarn test:cov
+        run: npm run test:cov
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:

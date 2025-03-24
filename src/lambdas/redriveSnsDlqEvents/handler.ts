@@ -8,7 +8,7 @@ import {
 } from './helper'
 import { writeToFirehose } from './writeToFirehose'
 
-export type ProcessingResult = {
+export interface ProcessingResult {
   sqsMessageId: string
   failed: boolean
   statusReason: string

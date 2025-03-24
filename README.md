@@ -7,51 +7,27 @@ This project contains source code and supporting files for creating the Event Pr
 ## PreRequisites
 
 - [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) - Used to build and deploy the application
-- [Node.js](https://nodejs.org/en/) version 18 - Recommended way to install is via [NVM](https://github.com/nvm-sh/nvm)
+- [Node.js](https://nodejs.org/en/) version 22 - Recommended way to install is via [NVM](https://github.com/nvm-sh/nvm)
 - [Docker](https://docs.docker.com/get-docker/) - Required to run SAM locally and run integration tests
-- [Yarn](https://yarnpkg.com/getting-started/install) version 3 - The package manager for the project
 - [Checkov](https://www.checkov.io/) - Scans cloud infrastructure configurations to find misconfigurations before they're deployed. Added as a Husky pre-commit hook.
 - [Husky](https://typicode.github.io/husky/#/?id=install) - For pre-push validations
-- [Yelp/detect-secrets](https://github.com/Yelp/detect-secrets) - For detecting secrets in codebase
 
-Enable Git Hooks to be used with Husky. In the root of the project run the following command:
+## Getting Started
+
+The project uses NPM. To get started run
 
 ```bash
-yarn husky install
+npm install
 ```
 
-Also, if running on Linux you may need to make sure the Husky scripts are executable:
+to install dependencies. The npm `postinstall` script should take care of installing husky.
+
+If running on Linux you may need to make sure the Husky scripts are executable:
 
 ```bash
 chmod ug+x .husky/*
 chmod ug+x .git/hooks/*
 ```
-
-## Getting Started
-
-The project is using [Yarn Zero Installs](https://yarnpkg.com/features/zero-installs). So as long as Yarn itself is installed, everything should be ready to go out of the box. As long as you are running Node v16.10+, the easiest way to install Yarn is to enable corepack.
-
-```
-corepack enable
-```
-
-Zero installs works because the dependencies are committed via the `.yarn` folder. These are all compressed, so the folder size is much smaller than `node_modules` would be.
-
-In order to ensure that dependencies cannot be altered by anything other than Yarn itself, we run `yarn install --check-cache` in the pipeline. This avoids the possibility of malicous users altering any dependency code.The project is using [Yarn Zero Installs](https://yarnpkg.com/features/zero-installs). So as long as Yarn itself is installed, everything should be ready to go out of the box. As long as you are running Node v16.10+, the easiest way to install Yarn is to enable corepack.
-
-```
-corepack enable
-```
-
-Then the only other thing that needs to be enabled is the Husky hooks.
-
-```
-yarn husky install
-```
-
-Zero installs works because the dependencies are committed via the `.yarn` folder. These are all compressed, so the folder size is much smaller than `node_modules` would be.
-
-In order to ensure that dependencies cannot be altered by anything other than Yarn itself, we run `yarn install --check-cache` in the pipeline. This avoids the possibility of malicous users altering any dependency code.
 
 ## Audit
 
@@ -75,23 +51,22 @@ The Serverless Application Model Command Line Interface (SAM CLI) is an extensio
 To use the SAM CLI, you need the following tools.
 
 - SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-- Node.js - [Install Node.js 18](https://nodejs.org/en/), including the NPM package management tool.
+- Node.js - [Install Node.js 22](https://nodejs.org/en/), including the NPM package management tool.
 - Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
-- Yarn - [Install Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
 
 To build and deploy your application for the first time, run the following from the root directory:
 
 ```bash
-yarn deploy:dev
+npm run deploy:dev
 ```
 
 _Note 1_: The SAM deploy command the script runs contains the `--resolve-s3` argument in order to automatically create an s3 bucket to store the lambda zip.
 
-_Note 2_: When deploying locally you can change which AWS profile from your config file is used by updating the `AWS_PROFILE` environment valriable e.g.
+_Note 2_: When deploying locally you can change which AWS profile from your config file is used by updating the `AWS_PROFILE` environment variable e.g.
 
 ```bash
 export AWS_PROFILE=<aws profile name>
-yarn deploy:dev
+npm run deploy:dev
 ```
 
 You can also provide overrides directly when calling sam deploy if you need to provide different parameters to the stacks:
@@ -132,10 +107,10 @@ aws lambda invoke --function-name <function name> --invocation-type Event --payl
 
 ## Unit tests
 
-Use yarn to install the [Jest test framework](https://jestjs.io/) and run unit tests.
+Unit tests use the [Jest test framework](https://jestjs.io/) and are run with npm.
 
 ```bash
-yarn test
+npm run test
 ```
 
 ## Cleanup

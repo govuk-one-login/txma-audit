@@ -30,9 +30,7 @@ interface Extensions {
   [key: string]: unknown
 }
 
-interface EvidenceEvent {
-  [key: string]: unknown
-}
+type EvidenceEvent = Record<string, unknown>
 
 interface TxmaMetadata {
   obfuscated?: boolean

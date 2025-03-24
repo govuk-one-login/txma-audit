@@ -30,6 +30,4 @@ export interface Extensions {
   [key: string]: unknown
 }
 
-export interface EvidenceEvent {
-  [key: string]: unknown
-}
+export type EvidenceEvent = Record<string, unknown>
