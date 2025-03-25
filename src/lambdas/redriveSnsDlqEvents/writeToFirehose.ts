@@ -6,7 +6,7 @@ import { getEnv } from '../../utils/helpers/getEnv'
 import { ProcessingResult } from './helper'
 import { parseFirehoseResponse } from './parseFirehoseResponse'
 
-export type FirehoseProcessingResult = {
+export interface FirehoseProcessingResult {
   successfullProcessingResults: ProcessingResult[]
   failedProcessingResults: ProcessingResult[]
 }

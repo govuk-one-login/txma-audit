@@ -9,11 +9,8 @@
 .nvmrc
 .pnp.*
 .prettierignore
-.secrets.baseline
-.yarn/
 CODEOWNERS
 coverage/
 dist/
 Dockerfile
 sonar-project.properties
-yarn.lock

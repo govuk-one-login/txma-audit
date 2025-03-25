@@ -1,4 +1,4 @@
-export type EnvironmentVar = {
+export interface EnvironmentVar {
   name:
     | 'AWS_REGION'
     | 'AUDIT_MESSAGE_DELIMITER_FUNCTION_NAME'

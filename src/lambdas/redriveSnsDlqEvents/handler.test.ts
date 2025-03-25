@@ -50,7 +50,7 @@ describe('testing handler', () => {
       // .calledWith(parseSQSEventResult.successfullyParsedRecords)
       .mockResolvedValue(allSuccessFirehoseResponseExpectedResult)
 
-    const logMessage: { [key: string]: string[] } = {
+    const logMessage: Record<string, string[]> = {
       SucceededToWriteToFirehose: baseProcessingResults.map((element) => {
         return element.auditEvent?.event_id as string
       })

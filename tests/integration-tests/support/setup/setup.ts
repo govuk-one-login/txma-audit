@@ -30,9 +30,7 @@ const ssmMappings = {
 
 const setEnvVarsFromStackOutputs = async (
   stack: string,
-  stackOutputMappings: {
-    [key: string]: string
-  }
+  stackOutputMappings: Record<string, string>
 ) => {
   const stackOutputs = await retrieveStackOutputs(stack, region)
 
@@ -43,7 +41,7 @@ const setEnvVarsFromStackOutputs = async (
   }
 }
 
-const setEnvVarsFromSsm = async (ssmMappings: { [key: string]: string }) => {
+const setEnvVarsFromSsm = async (ssmMappings: Record<string, string>) => {
   for (const [k, v] of Object.entries(ssmMappings)) {
     process.env[k] = process.env[k]
       ? process.env[k]

@@ -15,12 +15,16 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
+          cache: npm
+      - name: Install node packages
+        run: npm ci
       - name: Setup Python 3.8
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.8'
       - name: Setup SAM CLI
@@ -30,16 +34,12 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.GH_ACTIONS_VALIDATE_ROLE_ARN }}
-      - name: Node - Enable Corepack
-        run: corepack enable
-      - name: Install ESBuild binaries
-        run: yarn unplug
       - name: Run linting
         if: always()
-        run: yarn lint
+        run: npm run lint
       - name: Run tests
         if: always()
-        run: yarn test
+        run: npm run test
       - name: Validate SAM template
         if: always()
         run: sam validate --lint
@@ -52,7 +52,7 @@ jobs:
           quiet: true
           skip_check: CKV_AWS_116
       - name: Build Lambda functions
-        run: yarn build
+        run: npm run build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -62,23 +62,6 @@ jobs:
             samconfig.toml
             template.yaml
           retention-days: 7
-
-  check-yarn-cache:
-    name: Check Yarn cache
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Node - Enable Corepack
-        run: corepack enable
-      - name: Install ESBuild binaries
-        run: yarn unplug
-      - name: Check Yarn cache
-        run: yarn install --immutable --immutable-cache --check-cache
 
   deploy-feature:
     name: Deploy feature branch to dev account
@@ -95,7 +78,7 @@ jobs:
         with:
           name: sam-build
       - name: Setup Python 3.8
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.8'
       - name: Setup SAM CLI
@@ -135,7 +118,7 @@ jobs:
             SIGNING_PROFILE_SECRET: SIGNING_PROFILE_NAME
     name: Package for deployment
     if: github.ref == 'refs/heads/main'
-    needs: [validate-build, check-yarn-cache]
+    needs: [validate-build]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -143,13 +126,13 @@ jobs:
       contents: read
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download build artifact
         uses: actions/download-artifact@v4.1.7
         with:
           name: sam-build
       - name: Setup Python 3.8
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.8'
       - name: Setup SAM CLI
