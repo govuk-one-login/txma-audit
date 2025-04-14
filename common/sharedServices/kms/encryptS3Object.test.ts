@@ -7,7 +7,7 @@ import {
   TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
   TEST_S3_OBJECT_DATA_STRING
 } from '../../utils/tests/testConstants'
-import { encryptS3Object } from './encryptS3Object'
+import { encryptS3Object } from '../../../common/sharedServices/kms/encryptS3Object'
 
 jest.mock('@aws-crypto/encrypt-node', () => ({
   buildEncrypt: jest.fn().mockReturnValue({

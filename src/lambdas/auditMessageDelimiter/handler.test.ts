@@ -1,5 +1,5 @@
 import { handler } from './handler'
-import { TestHelper } from '../../utils/tests/test-helpers/test-helper'
+import { TestHelper } from '../../../common/utils/tests/test-helpers/test-helper'
 import { FirehoseTransformationResult } from 'aws-lambda'
 
 describe('Unit test for app eventProcessorHandler', function () {

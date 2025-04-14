@@ -1,9 +1,9 @@
 import { Readable } from 'node:stream'
 import { constants, createGunzip } from 'node:zlib'
-import { getS3ObjectAsStream } from '../../sharedServices/s3/getS3ObjectAsStream'
-import { AuditEvent } from '../../types/auditEvent'
-import { base64ToObject } from '../../utils/helpers/base64ToObject'
-import { readableToString } from '../../utils/helpers/readableToString'
+import { getS3ObjectAsStream } from '../../../common/sharedServices/s3/getS3ObjectAsStream'
+import { AuditEvent } from '../../../common/types/auditEvent'
+import { base64ToObject } from '../../../common/utils/helpers/base64ToObject'
+import { readableToString } from '../../../common/utils/helpers/readableToString'
 
 export const getAuditEventsFromS3Object = async (
   bucketName: string,

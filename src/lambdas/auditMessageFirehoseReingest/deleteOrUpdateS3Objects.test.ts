@@ -1,14 +1,14 @@
 import { when } from 'jest-when'
-import { deleteS3Object } from '../../sharedServices/s3/deleteS3Object'
-import { putS3Object } from '../../sharedServices/s3/putS3Object'
-import { S3ObjectDetails } from '../../types/s3ObjectDetails'
+import { deleteS3Object } from '../../../common/sharedServices/s3/deleteS3Object'
+import { putS3Object } from '../../../common/sharedServices/s3/putS3Object'
+import { S3ObjectDetails } from '../../../common/types/s3ObjectDetails'
 import { deleteOrUpdateS3Objects } from './deleteOrUpdateS3Objects'
 
-jest.mock('../../sharedServices/s3/deleteS3Object', () => ({
+jest.mock('../../../common/sharedServices/s3/deleteS3Object', () => ({
   deleteS3Object: jest.fn()
 }))
 
-jest.mock('../../sharedServices/s3/putS3Object', () => ({
+jest.mock('../../../common/sharedServices/s3/putS3Object', () => ({
   putS3Object: jest.fn()
 }))
 

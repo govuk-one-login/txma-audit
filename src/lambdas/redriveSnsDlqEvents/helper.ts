@@ -1,6 +1,6 @@
 import { SQSBatchItemFailure, SQSEvent } from 'aws-lambda'
-import { AuditEvent } from '../../types/auditEvent'
-import { tryParseJSON } from '../../utils/helpers/tryParseJson'
+import { AuditEvent } from '../../../common/types/auditEvent'
+import { tryParseJSON } from '../../../common/utils/helpers/tryParseJson'
 
 export interface ProcessingResult {
   sqsMessageId: string

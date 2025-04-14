@@ -1,8 +1,8 @@
-import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
-import { logger } from '../../sharedServices/logger'
-import { AuditEvent } from '../../types/auditEvent'
-import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
-import { getEnv } from '../../utils/helpers/getEnv'
+import { firehosePutRecordBatch } from '../../../common/sharedServices/firehose/firehosePutRecordBatch'
+import { logger } from '../../../common/sharedServices/logger'
+import { AuditEvent } from '../../../common/types/auditEvent'
+import { auditEventsToFirehoseRecords } from '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords'
+import { getEnv } from '../../../common/utils/helpers/getEnv'
 import { ProcessingResult } from './helper'
 import { parseFirehoseResponse } from './parseFirehoseResponse'
 

@@ -1,10 +1,10 @@
 import { PutRecordBatchOutput } from '@aws-sdk/client-firehose'
-import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
-import { logger } from '../../sharedServices/logger'
-import { AuditEvent } from '../../types/auditEvent'
-import { S3ObjectDetails } from '../../types/s3ObjectDetails'
-import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
-import { getEnv } from '../../utils/helpers/getEnv'
+import { firehosePutRecordBatch } from '../../../common/sharedServices/firehose/firehosePutRecordBatch'
+import { logger } from '../../../common/sharedServices/logger'
+import { AuditEvent } from '../../../common/types/auditEvent'
+import { S3ObjectDetails } from '../../../common/types/s3ObjectDetails'
+import { auditEventsToFirehoseRecords } from '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords'
+import { getEnv } from '../../../common/utils/helpers/getEnv'
 
 export const sendAuditEventsToFirehose = async (
   s3ObjectDetails: S3ObjectDetails[]

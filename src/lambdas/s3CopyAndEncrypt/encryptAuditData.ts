@@ -1,8 +1,8 @@
-import { encryptS3Object } from '../../sharedServices/kms/encryptS3Object'
-import { logger } from '../../sharedServices/logger'
-import { getS3ObjectAsStream } from '../../sharedServices/s3/getS3ObjectAsStream'
-import { putS3Object } from '../../sharedServices/s3/putS3Object'
-import { getEnv } from '../../utils/helpers/getEnv'
+import { encryptS3Object } from '../../../common/sharedServices/kms/encryptS3Object'
+import { logger } from '../../../common/sharedServices/logger'
+import { getS3ObjectAsStream } from '../../../common/sharedServices/s3/getS3ObjectAsStream'
+import { putS3Object } from '../../../common/sharedServices/s3/putS3Object'
+import { getEnv } from '../../../common/utils/helpers/getEnv'
 
 export const encryptAuditData = async (
   eventBucket: string,

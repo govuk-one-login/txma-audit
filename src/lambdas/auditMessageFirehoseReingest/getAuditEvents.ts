@@ -1,5 +1,5 @@
-import { logger } from '../../sharedServices/logger'
-import { S3ObjectDetails } from '../../types/s3ObjectDetails'
+import { logger } from '../../../common/sharedServices/logger'
+import { S3ObjectDetails } from '../../../common/types/s3ObjectDetails'
 import { getAuditEventsFromS3Object } from './getAuditEventsFromS3Object'
 
 export const getAuditEvents = async (

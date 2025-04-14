@@ -2,7 +2,7 @@ import {
   TEST_AUDIT_BUCKET_ARN,
   TEST_S3_BATCH_TASK_ID,
   TEST_S3_OBJECT_KEY
-} from '../testConstants'
+} from '../../../../common/utils/tests/testConstants'
 
 export const testS3BatchEvent = {
   invocationSchemaVersion: '1.0',

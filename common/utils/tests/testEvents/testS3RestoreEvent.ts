@@ -2,7 +2,7 @@ import {
   TEST_AUDIT_BUCKET_ARN,
   TEST_AUDIT_BUCKET_NAME,
   TEST_S3_OBJECT_KEY
-} from '../testConstants'
+} from '../../../../common/utils/tests/testConstants'
 
 export const testS3RestoreEvent = {
   Records: [

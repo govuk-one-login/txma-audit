@@ -6,12 +6,12 @@ import {
 } from '@aws-sdk/client-s3'
 import { mockClient } from 'aws-sdk-client-mock'
 import 'aws-sdk-client-mock-jest'
-import { createDataStream } from '../../utils/tests/test-helpers/test-helper'
+import { createDataStream } from '../../../common/utils/tests/test-helpers/test-helper'
 import {
   TEST_TEMPORARY_BUCKET_NAME,
   TEST_S3_OBJECT_KEY,
   TEST_S3_OBJECT_DATA_STRING
-} from '../../utils/tests/testConstants'
+} from '../../../common/utils/tests/testConstants'
 import { getS3ObjectAsStream } from './getS3ObjectAsStream'
 
 const s3Mock = mockClient(S3Client)

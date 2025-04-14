@@ -9,7 +9,7 @@ import {
   TEST_PERMANENT_BUCKET_NAME,
   TEST_S3_OBJECT_KEY,
   TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER
-} from '../../utils/tests/testConstants'
+} from '../../../common/utils/tests/testConstants'
 import { putS3Object } from './putS3Object'
 
 const s3Mock = mockClient(S3Client)

@@ -5,7 +5,7 @@ import 'aws-sdk-client-mock-jest'
 import {
   TEST_PERMANENT_BUCKET_NAME,
   TEST_S3_OBJECT_KEY
-} from '../../utils/tests/testConstants'
+} from '../../../common/utils/tests/testConstants'
 const s3Mock = mockClient(S3Client)
 
 describe('s3ChangeStorageClass', () => {
