@@ -43,6 +43,7 @@ COPY package.json yarn.lock tsconfig.json .pnp* ./
 COPY tests/integration-tests ./tests/integration-tests
 COPY .yarn ./.yarn
 COPY tests/run-tests.sh /
+COPY common ./common
 
 RUN corepack enable
 RUN yarn unplug
