@@ -1,7 +1,7 @@
 import { FirehoseClient, PutRecordBatchCommand } from '@aws-sdk/client-firehose'
 import { mockClient } from 'aws-sdk-client-mock'
 import 'aws-sdk-client-mock-jest'
-import { firehosePutRecordBatch } from './firehosePutRecordBatch'
+import { firehosePutRecordBatch } from '../../../common/sharedServices/firehose/firehosePutRecordBatch'
 
 describe('firehosePutRecordBatch', () => {
   const firehoseMockClient = mockClient(FirehoseClient)

@@ -1,9 +1,9 @@
-import { mockLambdaContext } from '../../utils/tests/mockLambdaContext'
+import { mockLambdaContext } from '../../../common/utils/tests/mockLambdaContext'
 import { encryptAuditData } from './encryptAuditData'
 import {
   testS3TestEvent,
   testS3SqsEvent
-} from '../../utils/tests/testEvents/testS3SqsEvent'
+} from '../../../common/utils/tests/testEvents/testS3SqsEvent'
 import { handler } from './handler'
 
 jest.mock('./encryptAuditData.ts', () => ({

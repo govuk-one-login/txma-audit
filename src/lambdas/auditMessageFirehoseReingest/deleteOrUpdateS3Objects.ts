@@ -1,10 +1,10 @@
 import { constants, gzipSync } from 'node:zlib'
-import { logger } from '../../sharedServices/logger'
-import { deleteS3Object } from '../../sharedServices/s3/deleteS3Object'
-import { putS3Object } from '../../sharedServices/s3/putS3Object'
-import { AuditEvent } from '../../types/auditEvent'
-import { S3ObjectDetails } from '../../types/s3ObjectDetails'
-import { objectToBase64 } from '../../utils/helpers/objectToBase64'
+import { logger } from '../../../common/sharedServices/logger'
+import { deleteS3Object } from '../../../common/sharedServices/s3/deleteS3Object'
+import { putS3Object } from '../../../common/sharedServices/s3/putS3Object'
+import { AuditEvent } from '../../../common/types/auditEvent'
+import { S3ObjectDetails } from '../../../common/types/s3ObjectDetails'
+import { objectToBase64 } from '../../../common/utils/helpers/objectToBase64'
 
 export const deleteOrUpdateS3Objects = async (results: S3ObjectDetails[]) => {
   return Promise.all(

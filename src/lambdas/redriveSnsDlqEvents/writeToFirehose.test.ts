@@ -1,21 +1,24 @@
 import { when } from 'jest-when'
-import { firehosePutRecordBatch } from '../../sharedServices/firehose/firehosePutRecordBatch'
-import { logger } from '../../sharedServices/logger'
-import { auditEventsToFirehoseRecords } from '../../utils/helpers/firehose/auditEventsToFirehoseRecords'
+import { firehosePutRecordBatch } from '../../../common/sharedServices/firehose/firehosePutRecordBatch'
+import { logger } from '../../../common/sharedServices/logger'
+import { auditEventsToFirehoseRecords } from '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords'
 import {
   baseFirehoseResponse,
   baseProcessingResults,
   mockFireHoseRecords
-} from '../../utils/tests/test-helpers/redriveSnsDlqTestHelper'
+} from '../../../common/utils/tests/test-helpers/redriveSnsDlqTestHelper'
 import * as parseFirehoseResponse from './parseFirehoseResponse'
 import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
 
-jest.mock('../../sharedServices/firehose/firehosePutRecordBatch', () => ({
-  firehosePutRecordBatch: jest.fn()
-}))
+jest.mock(
+  '../../../common/sharedServices/firehose/firehosePutRecordBatch',
+  () => ({
+    firehosePutRecordBatch: jest.fn()
+  })
+)
 
 jest.mock(
-  '../../utils/helpers/firehose/auditEventsToFirehoseRecords.ts',
+  '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords.ts',
   () => ({
     auditEventsToFirehoseRecords: jest.fn()
   })

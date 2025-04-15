@@ -1,5 +1,5 @@
 import { invokeLambdaFunction } from '../support/utils/aws/lambda/invokeLambda'
-import { getEnv } from '../support/utils/getEnv'
+import { getEnv } from '../../../common/utils/helpers/getEnv'
 import { randomUUID } from 'crypto'
 import { baseEvent } from '../constants/baseEvent'
 import { getAuditEvent } from '../support/utils/aws/s3/getAuditEvent'

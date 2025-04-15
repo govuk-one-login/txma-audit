@@ -1,5 +1,5 @@
 import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
-import { logger } from '../../sharedServices/logger'
+import { logger } from '../../../common/sharedServices/logger'
 import { ProcessingResult } from './helper'
 import { FirehoseProcessingResult } from './writeToFirehose'
 

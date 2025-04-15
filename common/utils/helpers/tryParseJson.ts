@@ -1,4 +1,4 @@
-import { logger } from '../../sharedServices/logger'
+import { logger } from '../../../common/sharedServices/logger'
 
 export const tryParseJSON = (jsonString: string) => {
   try {

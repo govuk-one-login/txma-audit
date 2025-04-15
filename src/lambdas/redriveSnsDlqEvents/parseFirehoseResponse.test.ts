@@ -1,19 +1,22 @@
 import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
-import { logger } from '../../sharedServices/logger'
+import { logger } from '../../../common/sharedServices/logger'
 import {
   allSuccessFirehoseResponseExpectedResult,
   baseFirehoseResponse,
   baseProcessingResults
-} from '../../utils/tests/test-helpers/redriveSnsDlqTestHelper'
+} from '../../../common/utils/tests/test-helpers/redriveSnsDlqTestHelper'
 import * as parseFirehoseResponse from './parseFirehoseResponse'
 import { FirehoseProcessingResult } from './writeToFirehose'
 
-jest.mock('../../sharedServices/firehose/firehosePutRecordBatch', () => ({
-  firehosePutRecordBatch: jest.fn()
-}))
+jest.mock(
+  '../../../common/sharedServices/firehose/firehosePutRecordBatch',
+  () => ({
+    firehosePutRecordBatch: jest.fn()
+  })
+)
 
 jest.mock(
-  '../../utils/helpers/firehose/auditEventsToFirehoseRecords.ts',
+  '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords.ts',
   () => ({
     auditEventsToFirehoseRecords: jest.fn()
   })

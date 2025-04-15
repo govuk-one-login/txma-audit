@@ -6,7 +6,7 @@ import {
   FirehoseTransformationResultRecord
 } from 'aws-lambda'
 
-import { logger } from '../../sharedServices/logger'
+import { logger } from '../../../common/sharedServices/logger'
 
 export const handler = async (
   event: FirehoseTransformationEvent

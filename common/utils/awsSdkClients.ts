@@ -1,4 +1,4 @@
-import { getEnv } from '../utils/helpers/getEnv'
+import { getEnv } from '../../common/utils/helpers/getEnv'
 import AWSXRay from 'aws-xray-sdk-core'
 
 import { FirehoseClient } from '@aws-sdk/client-firehose'

@@ -1,11 +1,11 @@
 import { when } from 'jest-when'
-import { logger } from '../../sharedServices/logger'
-import { mockLambdaContext } from '../../utils/tests/mockLambdaContext'
+import { logger } from '../../../common/sharedServices/logger'
+import { mockLambdaContext } from '../../../common/utils/tests/mockLambdaContext'
 import {
   allSuccessFirehoseResponseExpectedResult,
   baseProcessingResults,
   baseSQSEvent
-} from '../../utils/tests/test-helpers/redriveSnsDlqTestHelper'
+} from '../../../common/utils/tests/test-helpers/redriveSnsDlqTestHelper'
 import { handler } from './handler'
 import {
   generateEventIdLogMessageFromProcessingResult,

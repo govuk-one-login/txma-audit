@@ -1,6 +1,6 @@
 import { Context, SQSBatchResponse, SQSEvent } from 'aws-lambda'
-import { initialiseLogger, logger } from '../../sharedServices/logger'
-import { AuditEvent } from '../../types/auditEvent'
+import { initialiseLogger, logger } from '../../../common/sharedServices/logger'
+import { AuditEvent } from '../../../common/types/auditEvent'
 import {
   generateEventIdLogMessageFromProcessingResult,
   parseSQSEvent,

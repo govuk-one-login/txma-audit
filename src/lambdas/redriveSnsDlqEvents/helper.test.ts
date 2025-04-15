@@ -1,9 +1,9 @@
 import { SQSEvent } from 'aws-lambda'
-import { AuditEvent } from '../../types/auditEvent'
+import { AuditEvent } from '../../../common/types/auditEvent'
 import {
   baseProcessingResults,
   baseSQSEvent
-} from '../../utils/tests/test-helpers/redriveSnsDlqTestHelper'
+} from '../../../common/utils/tests/test-helpers/redriveSnsDlqTestHelper'
 import {
   generateEventIdLogMessageFromProcessingResult,
   parseSQSEvent,

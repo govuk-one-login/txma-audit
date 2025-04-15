@@ -5,9 +5,9 @@ import {
   SQSEvent,
   SQSRecord
 } from 'aws-lambda'
-import { initialiseLogger, logger } from '../../sharedServices/logger'
-import { S3ObjectDetails } from '../../types/s3ObjectDetails'
-import { tryParseJSON } from '../../utils/helpers/tryParseJson'
+import { initialiseLogger, logger } from '../../../common/sharedServices/logger'
+import { S3ObjectDetails } from '../../../common/types/s3ObjectDetails'
+import { tryParseJSON } from '../../../common/utils/helpers/tryParseJson'
 import { deleteOrUpdateS3Objects } from './deleteOrUpdateS3Objects'
 import { getAuditEvents } from './getAuditEvents'
 import { sendAuditEventsToFirehose } from './sendAuditEventsToFirehose'
