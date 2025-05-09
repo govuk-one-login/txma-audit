@@ -1,7 +1,29 @@
 {
-  "eslint.nodePath": ".",
-  "prettier.prettierPath": "./prettier/",
-  "search.exclude": {},
-  "typescript.tsdk": "./typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "editor.formatOnSave": true,
+  "files.autoSave": "onFocusChange",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  // required for cloudformation so the yaml extensions doesnt generate errors for these tags
+  "yaml.customTags": [
+    "!Base64 scalar",
+    "!Cidr scalar",
+    "!And sequence",
+    "!Equals sequence",
+    "!If sequence",
+    "!Not sequence",
+    "!Or sequence",
+    "!Condition scalar",
+    "!FindInMap sequence",
+    "!GetAtt scalar",
+    "!GetAtt sequence",
+    "!GetAZs scalar",
+    "!ImportValue scalar",
+    "!Join sequence",
+    "!Select sequence",
+    "!Split sequence",
+    "!Sub scalar",
+    "!Sub sequence",
+    "!Transform mapping",
+    "!Ref scalar"
+  ]
 }
