@@ -1,7 +1,6 @@
 {
-  "eslint.nodePath": ".",
-  "prettier.prettierPath": "./prettier/",
-  "search.exclude": {},
-  "typescript.tsdk": "./typescript/lib",
+  "editor.formatOnSave": true,
+  "files.autoSave": "onFocusChange",
+  "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true
 }
