@@ -3,6 +3,7 @@
   "files.autoSave": "onFocusChange",
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
+  // required for cloudformation so the yaml extensions doesnt generate errors for these tags
   "yaml.customTags": [
     "!Base64 scalar",
     "!Cidr scalar",
