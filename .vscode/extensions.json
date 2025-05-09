@@ -7,6 +7,7 @@
     "visualstudioexptteam.vscodeintellicode",
     "mylesmurphy.prettify-ts",
     "yoavbls.pretty-ts-errors",
-    "sonarsource.sonarlint-vscode"
+    "sonarsource.sonarlint-vscode",
+    "redhat.vscode-yaml"
   ]
 }
