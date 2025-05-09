@@ -11,7 +11,7 @@
 cd /test-app || exit 1
 
 if [ "$TEST_ENVIRONMENT" == "build" ]; then
-  yarn test:integration
+  npm run test:integration
   TESTS_EXIT_CODE=$?
 else
   echo "No Test Environment Set"
