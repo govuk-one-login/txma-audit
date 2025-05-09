@@ -1,6 +1,7 @@
 ARG ALPINE_VERSION=3.16
+ARG ALPINE_VERSION_NODE=3.21
 
-FROM python:alpine${ALPINE_VERSION} as builder
+FROM python:alpine${ALPINE_VERSION} AS builder
 
 ARG AWS_CLI_VERSION=2.8.13
 
@@ -25,7 +26,7 @@ RUN /aws-cli-bin/aws --version
 RUN rm -rf /usr/local/aws-cli/v2/current/dist/aws_completer /usr/local/aws-cli/v2/current/dist/awscli/data/ac.index /usr/local/aws-cli/v2/current/dist/awscli/examples
 RUN find /usr/local/aws-cli/v2/current/dist/awscli/botocore/data -name examples-1.json -delete
 
-FROM node:16-alpine${ALPINE_VERSION} as run-tests
+FROM node:22-alpine${ALPINE_VERSION_NODE} AS run-tests
 
 COPY --from=builder /usr/local/bin/python /usr/local/bin/python
 COPY --from=builder /usr/local/lib/ /usr/local/lib/
@@ -35,20 +36,19 @@ COPY --from=builder /aws-cli-bin/ /usr/local/bin/
 RUN apk update && \
       apk upgrade && \
       apk add --no-cache \
-      bash
+      bash curl
 
 WORKDIR /test-app
 
-COPY package.json yarn.lock tsconfig.json .pnp* ./
-COPY tests/integration-tests ./tests/integration-tests
-COPY .yarn ./.yarn
-COPY tests/run-tests.sh /
+COPY package.json package-lock.json tsconfig.json .pnp* ./
+COPY tests ./tests
 COPY common ./common
 
-RUN corepack enable
-RUN yarn unplug
-RUN chmod +x /run-tests.sh
+RUN npm install
 
 WORKDIR /test-app/tests
+
+RUN mv ./run-tests.sh /run-tests.sh
+RUN chmod +x /run-tests.sh
 
 ENTRYPOINT ["/run-tests.sh"]
