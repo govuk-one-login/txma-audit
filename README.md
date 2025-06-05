@@ -131,3 +131,25 @@ See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-applica
 - [Testing Lambdas](https://www.trek10.com/blog/lambda-destinations-what-we-learned-the-hard-way)
 - [AWS SAM TypeScript](https://aws.amazon.com/blogs/compute/building-typescript-projects-with-aws-sam-cli/)
 - [Deploying Lambdas](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-cli-command-reference-sam-deploy.html)
+
+## GitHub Workflows and Actions
+
+### security updates
+
+When actions rely on other GitHub repositories it's important to pin the commit sha as the version to prevent supply chain attacks.
+To keep these up to date we have a script which will check all the used repositories in the actions, and update them to the latest tags.
+To run this create a personal access token that has read:repo permissions and save it in an environment variable like:
+
+```bash
+export GITHUB_TOKEN=ghp_########
+```
+
+You can run the update script through npm like so:
+
+```bash
+npm run updateGitHubActions
+```
+
+It takes a little time to download all the repository data so give it a minute or so.
+
+Once it has run check the changes and commit as usual.
