@@ -5,7 +5,6 @@
 
 # To run this, you will need to create a personal access token in github and pass it as the env variable `GITHUB_TOKEN`
 
-
 if [ -z "$GITHUB_TOKEN" ]
 then
   echo "\$GITHUB_TOKEN is not defined."
@@ -29,6 +28,9 @@ for fileName in $fileList; do
     repoString=$(doRepo $repo)
     repoEscaped=$(sed 's/[/]/\\\//g' <<<"$repo")
     repoStringEscaped=$(sed 's/[/]/\\\//g' <<<"$repoString")
-    sed -i '' "s/${repoEscaped}.*/${repoStringEscaped}/g" "./$fileName"
+    # Differences in BSD and GNU sed mean it's easier to create backups and delete them later
+    sed -i.bak "s/${repoEscaped}.*/${repoStringEscaped}/g" "./$fileName"
   done
 done
+
+rm .github/workflows/*.bak
