@@ -17,7 +17,8 @@
     "postinstall": "husky",
     "test": "jest",
     "test:cov": "jest --coverage",
-    "test:integration": "jest -c ./tests/integration-tests/jest.config.integration.ts"
+    "test:integration": "jest -c ./tests/integration-tests/jest.config.integration.ts",
+    "updateGitHubActions": "updateGitHubActions.sh"
   },
   "dependencies": {
     "@aws-crypto/client-node": "4.2.0",
