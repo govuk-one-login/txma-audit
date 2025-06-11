@@ -1,7 +1,7 @@
 import type { JestConfigWithTsJest } from 'ts-jest'
 
 const config: JestConfigWithTsJest = {
-  coveragePathIgnorePatterns: ['/.yarn/', '/dist/'],
+  coveragePathIgnorePatterns: ['/dist/'],
   globalSetup: '<rootDir>/support/setup/setup.ts',
   preset: 'ts-jest',
   verbose: true,

@@ -8,10 +8,9 @@
   },
   "author": "GDS",
   "license": "MIT",
-  "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "tsc --noEmit && ts-node ./esbuild.config.ts",
-    "deploy:dev": "yarn build && sam deploy --resolve-s3",
+    "deploy:dev": "npm run build && sam deploy --resolve-s3",
     "lint": "prettier . --check || exit 1 ; eslint . --max-warnings=0",
     "lint:fix": "prettier . --write ; eslint . --fix",
     "postinstall": "husky",
