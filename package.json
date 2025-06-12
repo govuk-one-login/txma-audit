@@ -52,7 +52,7 @@
     "@typescript-eslint/parser": "8.27.0",
     "aws-sdk-client-mock": "4.1.0",
     "aws-sdk-client-mock-jest": "4.1.0",
-    "commander": "13.1.0",
+    "commander": "14.0.0",
     "esbuild": "0.25.1",
     "eslint": "9.23.0",
     "eslint-config-prettier": "10.1.1",
