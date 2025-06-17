@@ -8,6 +8,9 @@
   },
   "author": "GDS",
   "license": "MIT",
+  "engines": {
+    "node": "^22.0.0"
+  },
   "scripts": {
     "build": "tsc --noEmit && ts-node ./esbuild.config.ts",
     "deploy:dev": "npm run build && sam deploy --resolve-s3",
