@@ -24,13 +24,13 @@
     "tsFile": "ts-node"
   },
   "dependencies": {
-    "@aws-crypto/client-node": "4.2.0",
-    "@aws-crypto/encrypt-node": "4.2.0",
+    "@aws-crypto/client-node": "4.2.1",
+    "@aws-crypto/encrypt-node": "4.2.1",
     "@aws-crypto/material-management": "4.2.1",
-    "@aws-lambda-powertools/logger": "2.16.0",
-    "@aws-sdk/client-firehose": "3.772.0",
-    "@aws-sdk/client-s3": "3.772.0",
-    "@aws-sdk/client-s3-control": "3.772.0",
+    "@aws-lambda-powertools/logger": "2.22.0",
+    "@aws-sdk/client-firehose": "3.835.0",
+    "@aws-sdk/client-s3": "3.835.0",
+    "@aws-sdk/client-s3-control": "3.835.0",
     "aws-xray-sdk-core": "3.10.3"
   },
   "resolutions": {
