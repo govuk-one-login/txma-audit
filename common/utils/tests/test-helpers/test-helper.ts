@@ -25,13 +25,16 @@ export class TestHelper {
     message: string,
     numberOfRecords = 1
   ): FirehoseTransformationEvent {
-    const event = JSON.parse(JSON.stringify(this.firehoseTransformationEvent))
+    const event = JSON.parse(
+      JSON.stringify(this.firehoseTransformationEvent)
+    ) as FirehoseTransformationEvent
     const encodedMessage: string = Buffer.from(message).toString('base64')
 
     for (let i = 0; i < numberOfRecords; i++) {
       const record = this.firehoseTransformationEventRecord
       record.data = encodedMessage
-      event.records.push(record)
+      const records = event.records as unknown[]
+      records.push(record)
     }
 
     return event

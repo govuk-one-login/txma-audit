@@ -16,7 +16,7 @@ jest.mock('./handler', () => ({
 }))
 
 describe('testing helper functions', () => {
-  it('test SQSBatchItemFailureFromProcessingResultArray() to support partial failure response ', async () => {
+  it('test SQSBatchItemFailureFromProcessingResultArray() to support partial failure response', () => {
     const result = SQSBatchItemFailureFromProcessingResultArray(
       baseProcessingResults
     )
@@ -30,7 +30,7 @@ describe('testing helper functions', () => {
     expect(result).toStrictEqual(expectedResult)
   })
 
-  it('test generateLogMessageFromProcessingResult()', async () => {
+  it('test generateLogMessageFromProcessingResult()', () => {
     const testInput: ProcessingResult[][] = [
       baseProcessingResults.slice(),
       baseProcessingResults.map((element) => {
@@ -53,7 +53,7 @@ describe('testing helper functions', () => {
     expect(result).toStrictEqual(expectedResult)
   })
 
-  it('test parseSQSEvent(). All records successfully parsed', async () => {
+  it('test parseSQSEvent(). All records successfully parsed', () => {
     const result = parseSQSEvent(baseSQSEvent)
     const expectedResult = {
       successfullyParsedRecords: baseProcessingResults.slice(),
@@ -62,7 +62,7 @@ describe('testing helper functions', () => {
     expect(result).toStrictEqual(expectedResult)
   })
 
-  it('test parseSQSEvent(). partial records successfully parsed', async () => {
+  it('test parseSQSEvent(). partial records successfully parsed', () => {
     const partialyInvalidSQSEvent = {
       Records: baseProcessingResults.map((result, index) => {
         if (index === 0) {

@@ -26,7 +26,7 @@ export const getAuditEvent = async (
         return contentsString
           .split('\n')
           .filter((line) => line && line.length > 0)
-          .map((line) => JSON.parse(line))
+          .map((line) => JSON.parse(line) as AuditEvent)
       })
     )
   )

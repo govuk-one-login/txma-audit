@@ -3,7 +3,7 @@ import { getOutputValue, retrieveStackOutputs } from './retrieveStackOutputs'
 
 const region = 'eu-west-2'
 const stack = process.env.STACK_NAME ? process.env.STACK_NAME : 'audit'
-
+console.log(`Using stack: ${stack} in region: ${region}`)
 module.exports = async () => {
   process.env['AWS_REGION'] = region
   process.env['STACK_NAME'] = stack

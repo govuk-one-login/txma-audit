@@ -29,7 +29,7 @@ describe('InitiateCopyAndEncrypt', function () {
   })
 
   it('throws an error if there is no data in the SQS Event', async () => {
-    expect(handler({ Records: [] }, mockLambdaContext)).rejects.toThrow(
+    await expect(handler({ Records: [] }, mockLambdaContext)).rejects.toThrow(
       'No data in event'
     )
     expect(encryptAuditData).not.toHaveBeenCalled()

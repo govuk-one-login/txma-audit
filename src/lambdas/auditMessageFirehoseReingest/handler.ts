@@ -12,6 +12,22 @@ import { deleteOrUpdateS3Objects } from './deleteOrUpdateS3Objects'
 import { getAuditEvents } from './getAuditEvents'
 import { sendAuditEventsToFirehose } from './sendAuditEventsToFirehose'
 
+interface S3EventRecord {
+  s3?: {
+    bucket?: {
+      name?: string
+    }
+    object?: {
+      key?: string
+    }
+  }
+}
+
+interface S3EventBody {
+  Records?: S3EventRecord[]
+  Event?: string
+}
+
 export const handler = async (
   event: SQSEvent,
   context: Context
@@ -79,7 +95,8 @@ const messageIdsToBatchItemFailures = (messageIds: string[]) =>
   }))
 
 const isS3TestEvent = (record: SQSRecord) => {
-  const isS3TestEvent = tryParseJSON(record.body).Event === 's3:TestEvent'
+  const parsedBody = tryParseJSON(record.body) as S3EventBody
+  const isS3TestEvent = parsedBody.Event === 's3:TestEvent'
 
   if (isS3TestEvent) {
     logger.info('Event is of type s3:TestEvent, ignoring')
@@ -89,9 +106,10 @@ const isS3TestEvent = (record: SQSRecord) => {
 }
 
 const hasFailuresPrefix = (record: SQSRecord) => {
-  const s3EventData = tryParseJSON(record.body).Records[0].s3
-  const key: string = s3EventData?.object?.key
-  const bucket: string = s3EventData?.bucket?.name
+  const parsedBody = tryParseJSON(record.body) as S3EventBody
+  const s3EventData = parsedBody.Records?.[0]?.s3
+  const key = s3EventData?.object?.key ?? ''
+  const bucket = s3EventData?.bucket?.name ?? ''
 
   if (key && bucket) {
     const isFailuresKey = key.startsWith('failures/')
@@ -108,11 +126,12 @@ const hasFailuresPrefix = (record: SQSRecord) => {
 }
 
 const getS3ObjectDetails = (record: SQSRecord): S3ObjectDetails => {
-  const s3EventData = tryParseJSON(record.body).Records[0].s3
+  const parsedBody = tryParseJSON(record.body) as S3EventBody
+  const s3EventData = parsedBody.Records?.[0]?.s3
 
   return {
-    bucket: s3EventData?.bucket?.name,
-    key: s3EventData?.object?.key,
+    bucket: s3EventData?.bucket?.name ?? '',
+    key: s3EventData?.object?.key ?? '',
     sqsRecordMessageId: record.messageId
   }
 }
