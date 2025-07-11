@@ -20,6 +20,8 @@ export default [
       }
     }
   },
+  // ...tsEslint.configs.strictTypeChecked,
+  // ...tsEslint.configs.stylisticTypeChecked,
   {
     ignores: [
       '.aws-sam',
