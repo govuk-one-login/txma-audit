@@ -130,8 +130,8 @@ const getS3ObjectDetails = (record: SQSRecord): S3ObjectDetails => {
   const s3EventData = parsedBody.Records?.[0]?.s3
 
   return {
-    bucket: s3EventData?.bucket?.name ?? '',
-    key: s3EventData?.object?.key ?? '',
+    bucket: s3EventData?.bucket?.name,
+    key: s3EventData?.object?.key,
     sqsRecordMessageId: record.messageId
   }
 }
