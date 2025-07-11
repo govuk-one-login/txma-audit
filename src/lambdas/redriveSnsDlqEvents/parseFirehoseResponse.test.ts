@@ -29,7 +29,7 @@ describe('test parseFirehoseResponse() function', () => {
     jest.spyOn(logger, 'info')
   })
 
-  it('all audit events were published to firehose successfully', async () => {
+  it('all audit events were published to firehose successfully', () => {
     const allSuccessFirehoseResponse: PutRecordBatchCommandOutput = {
       ...baseFirehoseResponse
     }
@@ -42,7 +42,7 @@ describe('test parseFirehoseResponse() function', () => {
     ).toStrictEqual(allSuccessFirehoseResponseExpectedResult)
   })
 
-  it('not all audit events succesfully published to firehose', async () => {
+  it('not all audit events succesfully published to firehose', () => {
     const partialSuccessFirehoseResponse: PutRecordBatchCommandOutput = {
       ...baseFirehoseResponse,
       FailedPutCount: 1,

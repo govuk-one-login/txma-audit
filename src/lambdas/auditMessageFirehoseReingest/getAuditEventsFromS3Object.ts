@@ -22,7 +22,7 @@ const getAuditEvents = async (contents: Readable): Promise<AuditEvent[]> => {
   const base64AuditEvents: string[] = jsonString
     .split('\n')
     .filter((line) => line.length > 0)
-    .map((line) => JSON.parse(line).rawData)
+    .map((line) => (JSON.parse(line) as { rawData: string }).rawData)
 
   return base64AuditEvents.map(
     (base64AuditEvent) => base64ToObject(base64AuditEvent) as AuditEvent

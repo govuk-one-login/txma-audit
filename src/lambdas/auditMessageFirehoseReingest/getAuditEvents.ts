@@ -11,7 +11,10 @@ export const getAuditEvents = async (
   const promises: Promise<S3ObjectDetails>[] = s3ObjectDetails.map(
     async (details) => ({
       ...details,
-      auditEvents: await getAuditEventsFromS3Object(details.bucket, details.key)
+      auditEvents: await getAuditEventsFromS3Object(
+        details.bucket as string,
+        details.key as string
+      )
     })
   )
 

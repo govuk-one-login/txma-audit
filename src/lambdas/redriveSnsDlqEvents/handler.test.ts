@@ -74,9 +74,19 @@ describe('testing handler', () => {
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
     expect(result).toStrictEqual({ batchItemFailures: [] })
+
+    expect(logger.info).toHaveBeenCalledWith(
+      'processed the following event ids',
+      {
+        event_id: generateEventIdLogMessageFromProcessingResult([
+          allSuccessFirehoseResponseExpectedResult.failedProcessingResults,
+          allSuccessFirehoseResponseExpectedResult.successfullProcessingResults
+        ])
+      }
+    )
   })
 
-  it('Some events failed - parsing json error ', async () => {
+  it('Some events failed - parsing json error', async () => {
     when(SQSBatchItemFailureFromProcessingResultArray)
       .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
       .mockReturnValueOnce(parseFailureResults)
@@ -89,9 +99,19 @@ describe('testing handler', () => {
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
     expect(result).toStrictEqual({ batchItemFailures: parseFailureResults })
+
+    expect(logger.info).toHaveBeenCalledWith(
+      'processed the following event ids',
+      {
+        event_id: generateEventIdLogMessageFromProcessingResult([
+          allSuccessFirehoseResponseExpectedResult.failedProcessingResults,
+          allSuccessFirehoseResponseExpectedResult.successfullProcessingResults
+        ])
+      }
+    )
   })
 
-  it('Some events failed - sending to firehose error ', async () => {
+  it('Some events failed - sending to firehose error', async () => {
     when(SQSBatchItemFailureFromProcessingResultArray)
       .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
       .mockReturnValueOnce([])
@@ -121,9 +141,7 @@ describe('testing handler', () => {
     expect(result).toStrictEqual({
       batchItemFailures: parseFailureResults.concat(firehoseFailureResults)
     })
-  })
 
-  afterEach(() => {
     expect(logger.info).toHaveBeenCalledWith(
       'processed the following event ids',
       {

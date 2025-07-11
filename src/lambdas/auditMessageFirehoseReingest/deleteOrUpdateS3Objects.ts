@@ -15,11 +15,14 @@ export const deleteOrUpdateS3Objects = async (results: S3ObjectDetails[]) => {
       ) {
         await updateFailedProcessingS3Object(
           result.auditEventsFailedReingest,
-          result.bucket,
-          result.key
+          result.bucket as string,
+          result.key as string
         )
       } else {
-        await deleteFailedProcessingS3Object(result.bucket, result.key)
+        await deleteFailedProcessingS3Object(
+          result.bucket as string,
+          result.key as string
+        )
       }
     })
   )

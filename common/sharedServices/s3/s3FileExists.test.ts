@@ -29,7 +29,7 @@ describe('s3FileExists', () => {
   it('should throw if some other error is returned', async () => {
     const someError = 'some other error'
     s3Mock.on(HeadObjectCommand).rejects(someError)
-    expect(
+    await expect(
       s3FileExists(TEST_PERMANENT_BUCKET_NAME, TEST_S3_OBJECT_KEY)
     ).rejects.toThrow(someError)
 

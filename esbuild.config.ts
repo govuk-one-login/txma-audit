@@ -17,13 +17,14 @@ const lambdasPath = 'src/lambdas'
 
 const { Resources } = yamlParse(
   readFileSync(join(__dirname, 'template.yaml'), 'utf-8')
-)
+) as { Resources: Record<string, IAwsResource> }
 
-const awsResources = Object.values(Resources) as IAwsResource[]
+const awsResources = Object.values(Resources)
 
 const lambdas = awsResources.filter(
-  (resource) => resource.Type === 'AWS::Serverless::Function'
-) as ILambdaFunction[]
+  (resource): resource is ILambdaFunction =>
+    resource.Type === 'AWS::Serverless::Function'
+)
 
 const entries = lambdas.reduce((entryPoints: string[], lambda) => {
   const lambdaName = lambda.Properties.CodeUri.split('/')[1]

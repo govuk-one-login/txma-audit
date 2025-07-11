@@ -26,7 +26,7 @@ const givenDataAvailable = () => {
   } as GetObjectCommandOutput)
 }
 
-describe('getS3Object - ', () => {
+describe('getS3Object -', () => {
   it('getS3ObjectAsStream returns a stream read from the file', async () => {
     givenDataAvailable()
     const testDataStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)

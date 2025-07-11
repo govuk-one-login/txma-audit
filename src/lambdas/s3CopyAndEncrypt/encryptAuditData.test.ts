@@ -56,7 +56,7 @@ describe('encryptAuditData', () => {
   )
 
   it('throws an error if the source bucket is invalid', async () => {
-    expect(
+    await expect(
       encryptAuditData(TEST_WRONG_S3_BUCKET, TEST_S3_OBJECT_KEY)
     ).rejects.toThrow(`Incorrect source bucket - ${TEST_WRONG_S3_BUCKET}`)
     expect(getS3ObjectAsStream).not.toHaveBeenCalled()

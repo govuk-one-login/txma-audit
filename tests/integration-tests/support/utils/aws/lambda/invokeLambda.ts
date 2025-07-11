@@ -24,7 +24,7 @@ const jsonToUint8Array = (json: unknown): Uint8Array => {
   try {
     jsonStr = JSON.stringify(json)
     JSON.parse(jsonStr) // Ensure the JSON is valid!!
-  } catch (error) {
+  } catch {
     throw new Error('Invalid JSON payload')
   }
   const encoder = new TextEncoder()
