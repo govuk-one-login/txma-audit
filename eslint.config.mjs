@@ -37,17 +37,14 @@ export default [
     }
   },
   {
-    files: ['tests/**/*.ts', 'scripts/**/*.ts'],
-    rules: { 'no-console': ['off'] }
-  },
-  {
     files: ['**/*.test.{js,ts}', '**/*.spec.{js,ts}', 'tests/**/*.{js,ts}'],
     plugins: {
       jest: eslintPluginJest
     },
     rules: {
       ...eslintPluginJest.configs.recommended.rules,
-      '@typescript-eslint/unbound-method': 'off'
+      '@typescript-eslint/unbound-method': 'off',
+      'no-console': ['off']
     }
   },
   eslintConfigPrettier
