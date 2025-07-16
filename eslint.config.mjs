@@ -3,7 +3,7 @@ import pluginJs from '@eslint/js'
 import tsEslint from 'typescript-eslint'
 import tsEslintParser from '@typescript-eslint/parser'
 import eslintConfigPrettier from 'eslint-config-prettier'
-// import eslintPluginJest from 'eslint-plugin-jest'
+import eslintPluginJest from 'eslint-plugin-jest'
 
 export default [
   { files: ['**/*.{js,ts}'] },
@@ -11,15 +11,15 @@ export default [
   pluginJs.configs.recommended,
   ...tsEslint.configs.recommended,
   ...tsEslint.configs.stylistic,
-  // ...tsEslint.configs.recommendedTypeChecked,
-  // {
-  //   languageOptions: {
-  //     parserOptions: {
-  //       projectService: true,
-  //       tsconfigRootDir: import.meta.dirname
-  //     }
-  //   }
-  // },
+  ...tsEslint.configs.recommendedTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname
+      }
+    }
+  },
   // ...tsEslint.configs.strictTypeChecked,
   // ...tsEslint.configs.stylisticTypeChecked,
   {
@@ -33,21 +33,24 @@ export default [
   },
   {
     rules: {
-      'no-console': 'error',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrors: 'none'
-        }
-      ]
+      'no-console': 'error'
     }
   },
   {
-    files: ['tests/**/*.ts', 'scripts/**/*.ts'],
-    rules: { 'no-console': ['off'] }
+    files: [
+      '**/*.test.{js,ts}',
+      '**/*.spec.{js,ts}',
+      'tests/**/*.{js,ts}',
+      'scripts/**/*.ts'
+    ],
+    plugins: {
+      jest: eslintPluginJest
+    },
+    rules: {
+      ...eslintPluginJest.configs.recommended.rules,
+      '@typescript-eslint/unbound-method': 'off',
+      'no-console': ['off']
+    }
   },
   eslintConfigPrettier
 ]

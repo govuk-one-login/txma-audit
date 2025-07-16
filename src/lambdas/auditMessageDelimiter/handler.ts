@@ -8,6 +8,7 @@ import {
 
 import { logger } from '../../../common/sharedServices/logger'
 
+/* eslint-disable @typescript-eslint/require-await */
 export const handler = async (
   event: FirehoseTransformationEvent
 ): Promise<FirehoseTransformationResult> => {

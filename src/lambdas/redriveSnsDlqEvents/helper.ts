@@ -42,7 +42,7 @@ export const generateEventIdLogMessageFromProcessingResult = (
 
 export const parseSQSEvent = (event: SQSEvent): parseSQSEventReturnType => {
   const results: ProcessingResult[] = event.Records.map((sqsRecord) => {
-    const parsedRecord: AuditEvent = tryParseJSON(sqsRecord.body)
+    const parsedRecord = tryParseJSON(sqsRecord.body) as AuditEvent
 
     if (typeof parsedRecord.event_id === 'undefined') {
       return {
