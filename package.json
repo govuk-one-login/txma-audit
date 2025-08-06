@@ -20,7 +20,6 @@
     "test": "jest",
     "test:cov": "jest --coverage",
     "test:integration": "jest -c ./tests/integration-tests/jest.config.integration.ts",
-    "updateGitHubActions": "./updateGitHubActions.sh",
     "tsFile": "ts-node"
   },
   "dependencies": {
