@@ -1,11 +1,35 @@
-import type { Config } from '@jest/types'
+import type { JestConfigWithTsJest } from 'ts-jest'
 
-const config: Config.InitialOptions = {
-  coveragePathIgnorePatterns: ['/node_modules/', '/dist/'],
+const baseCoverage = [
+  // scan all files
+  '<rootDir>/**/*.ts',
+  // scripts can be ignored
+  '!**/scripts/**',
+  // types can be ignored
+  '!**/interface/**',
+  '!**/interfaces/**',
+  '!**/type/**',
+  '!**/types/**',
+  // The buildLogger function doesn't have anything we can meaningfully test
+  '!**/logger.ts',
+  // ignoring the tests folder
+  '!**/tests/**',
+  // ignore config files
+  '!**/*.config.ts',
+  // ignore .files
+  '!**/.*'
+]
+
+const config: JestConfigWithTsJest = {
+  coveragePathIgnorePatterns: ['/node_modules/', '/.yarn/', '/dist/'],
   preset: 'ts-jest',
   verbose: true,
+  testEnvironment: 'node',
+  testMatch: ['**/*.test.ts', '<rootDir>/common/**/*.test.ts'],
   setupFiles: ['<rootDir>/common/utils/tests/setup/testEnvVars.ts'],
-  testMatch: ['**/*.test.ts', '<rootDir>/common/**/*.test.ts']
+  collectCoverageFrom: ['Optional', 'options', 'per', 'repo'].concat(
+    baseCoverage
+  )
 }
 
 export default config
