@@ -25,6 +25,7 @@ export default [
   {
     ignores: [
       '.aws-sam',
+      'coverage',
       'dist/',
       '/tests/',
       'node_modules',
