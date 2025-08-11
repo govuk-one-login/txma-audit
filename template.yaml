@@ -1534,7 +1534,7 @@ Resources:
     Properties:
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
-      AlarmDescription: An alarm for the S3CopyAndEncryptFunction lambda
+      AlarmDescription: This alarm is raised when a log message with level ERROR in the function S3CopyAndEncryptFunction is present.
       AlarmName: !Sub ${AWS::StackName}-s3-copy-and-encrypt-alarm
       ComparisonOperator: GreaterThanOrEqualToThreshold
       DatapointsToAlarm: 1
@@ -1551,7 +1551,7 @@ Resources:
     Properties:
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
-      AlarmDescription: An alarm for the AuditMessageDelimiterFunction lambda
+      AlarmDescription: This alarm is raised when a log message with level ERROR in the function AuditMessageDelimiterFunction is present.
       AlarmName: !Sub ${AWS::StackName}-audit-message-delimiter-alarm
       ComparisonOperator: GreaterThanOrEqualToThreshold
       DatapointsToAlarm: 1
@@ -1568,7 +1568,7 @@ Resources:
     Properties:
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
-      AlarmDescription: An alarm for the AuditMessageFirehoseReingestFunction lambda for if fails to update or delete the failed processing object
+      AlarmDescription: This alarm is raised when a log message in the AuditMessageFirehoseReingestFunction function indicates it has failed to update or delete the failed processing object.
       AlarmName: !Sub ${AWS::StackName}-audit-message-firehose-reingest-alarm
       ComparisonOperator: GreaterThanOrEqualToThreshold
       DatapointsToAlarm: 1
@@ -1585,7 +1585,7 @@ Resources:
     Properties:
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
-      AlarmDescription: An alarm for the RedriveSnsDlqEventsFunction lambda for if it fails to publish to firehose
+      AlarmDescription: This alarm is raised when a log message in the RedriveSnsDlqEventsFunction function indicates it has failed to publish to firehose
       AlarmName: !Sub ${AWS::StackName}-redrive-sns-dlq-events-alarm
       ComparisonOperator: GreaterThanOrEqualToThreshold
       DatapointsToAlarm: 1
