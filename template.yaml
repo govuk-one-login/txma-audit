@@ -167,14 +167,7 @@ Globals:
       - Active
       - PassThrough
     Layers:
-      - !Sub
-        - '{{resolve:secretsmanager:${SecretArn}:SecretString:NODEJS_LAYER}}'
-        - SecretArn:
-            !FindInMap [
-              EnvironmentConfiguration,
-              !Ref Environment,
-              dynatraceSecretArn
-            ]
+      - https://github.com/govuk-one-login/txma-event-self-serve/blob/main/template/consumers/sqs/base.json.njk#L630
 
 Resources:
   #################################
