@@ -40,7 +40,7 @@ jobs:
         run: npm run lint
       - name: Run tests
         if: ${{ steps.npm_install.outcome == 'success' }}
-        run: npm run test:cov
+        run: npm run test
       - name: Validate SAM template
         if: always()
         run: sam validate --lint
