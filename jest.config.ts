@@ -29,7 +29,15 @@ const config: JestConfigWithTsJest = {
   setupFiles: ['<rootDir>/common/utils/tests/setup/testEnvVars.ts'],
   collectCoverageFrom: ['Optional', 'options', 'per', 'repo'].concat(
     baseCoverage
-  )
+  ),
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: -10
+    }
+  }
 }
 
 export default config
