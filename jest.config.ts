@@ -35,6 +35,11 @@ const config: JestConfigWithTsJest = {
       branches: 80,
       functions: 80,
       lines: 80
+    },
+    '**/*.ts': {
+      branches: 80,
+      functions: 80,
+      lines: 80
     }
   }
 }
