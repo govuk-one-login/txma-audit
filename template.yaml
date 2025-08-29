@@ -48,11 +48,6 @@ Conditions:
     - !Not [!Equals [!Ref Environment, dev]]
     - !Not [!Equals [!Ref Environment, build]]
     - !Not [!Equals [!Ref Environment, staging]]
-  IsProdOrInt:
-    !Or [
-      !Equals [!Ref Environment, integration],
-      !Equals [!Ref Environment, production]
-    ]
   IsProductionOrStaging: !Or
     - !Equals [!Ref Environment, staging]
     - !Condition IsProduction
@@ -1016,7 +1011,6 @@ Resources:
 
   AuditMessageDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
-    Condition: IsProdOrInt
     Properties:
       TopicArn: '{{resolve:ssm:EventProcessorSnsTopicArn}}'
       Endpoint: !GetAtt AuditMessageDeliveryStream.Arn
