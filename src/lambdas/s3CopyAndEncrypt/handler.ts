@@ -9,7 +9,7 @@ export const handler = async (
   initialiseLogger(context)
 
   if (event.Records.length === 0) {
-    throw new Error('No data in event')
+    throw new Error('No data in event.')
   }
 
   const eventData = tryParseJSON(event.Records[0].body) as {
