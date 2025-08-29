@@ -48,10 +48,11 @@ Conditions:
     - !Not [!Equals [!Ref Environment, dev]]
     - !Not [!Equals [!Ref Environment, build]]
     - !Not [!Equals [!Ref Environment, staging]]
-  IsProdOrInt: !Or [
+  IsProdOrInt:
+    !Or [
       !Equals [!Ref Environment, integration],
       !Equals [!Ref Environment, production]
-    ] 
+    ]
   IsProductionOrStaging: !Or
     - !Equals [!Ref Environment, staging]
     - !Condition IsProduction
