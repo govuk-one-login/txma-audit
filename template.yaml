@@ -48,7 +48,6 @@ Conditions:
     - !Not [!Equals [!Ref Environment, dev]]
     - !Not [!Equals [!Ref Environment, build]]
     - !Not [!Equals [!Ref Environment, staging]]
-
   IsProdOrInt: !Or [
       !Equals [!Ref Environment, integration],
       !Equals [!Ref Environment, production]
