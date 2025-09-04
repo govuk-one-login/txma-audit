@@ -27,9 +27,9 @@
     "@aws-crypto/encrypt-node": "4.2.1",
     "@aws-crypto/material-management": "4.2.1",
     "@aws-lambda-powertools/logger": "2.25.2",
-    "@aws-sdk/client-firehose": "3.873.0",
-    "@aws-sdk/client-s3": "3.873.0",
-    "@aws-sdk/client-s3-control": "3.873.0",
+    "@aws-sdk/client-firehose": "3.879.0",
+    "@aws-sdk/client-s3": "3.879.0",
+    "@aws-sdk/client-s3-control": "3.879.0",
     "aws-xray-sdk-core": "3.10.3"
   },
   "resolutions": {
