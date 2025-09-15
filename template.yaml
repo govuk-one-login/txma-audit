@@ -1276,7 +1276,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref AuditMessageDeliveryStreamLogs
-      FilterPattern: ''
+      FilterPattern: '{ $.level = * && $.level != %TRACE|DEBUG% }'
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
   CslsAuditMessageDelimiterFunctionSubscription:
@@ -1284,7 +1284,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref AuditMessageDelimiterLogs
-      FilterPattern: ''
+      FilterPattern: '{ $.level = * && $.level != %TRACE|DEBUG% }'
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
   CslsAuditMessageFirehoseReingestLogsSubscription:
@@ -1292,7 +1292,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref AuditMessageFirehoseReingestLogs
-      FilterPattern: ''
+      FilterPattern: '{ $.level = * && $.level != %TRACE|DEBUG% }'
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
   CslsS3CopyAndEncryptLogsSubscription:
@@ -1300,7 +1300,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref S3CopyAndEncryptLogs
-      FilterPattern: ''
+      FilterPattern: '{ $.level = * && $.level != %TRACE|DEBUG% }'
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
   ###########################
