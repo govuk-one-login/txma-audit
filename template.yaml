@@ -1063,6 +1063,7 @@ Resources:
       DatapointsToAlarm: 1
       MetricName: ApproximateNumberOfMessagesVisible
       Namespace: AWS/SQS
+      TreatMissingData: notBreaching
       AlarmActions:
         - !ImportValue txma-alarms-slack-alerts-BuildNotificationTopicArn
       OKActions:
