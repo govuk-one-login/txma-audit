@@ -13,7 +13,7 @@
 
 [Provide step-by-step instructions for testing the changes made in this pull request. Were there any tests you weren't able to include but would have liked to? ]
 
-## :frame_with_picture: Screenshots (if applicable)
+## :framed_picture: Screenshots (if applicable)
 
 [Include any screenshots or visual representations of the changes. Delete this section if not applicable.]
 

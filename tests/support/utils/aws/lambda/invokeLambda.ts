@@ -1,4 +1,4 @@
-import { getEnv } from '../../../../../../common/utils/helpers/getEnv'
+import { getEnv } from '../../../../../common/utils/helpers/getEnv'
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
 import { TextEncoder, TextDecoder } from 'node:util'
 
