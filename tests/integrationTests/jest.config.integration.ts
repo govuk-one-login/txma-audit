@@ -2,10 +2,10 @@ import type { JestConfigWithTsJest } from 'ts-jest'
 
 const config: JestConfigWithTsJest = {
   coveragePathIgnorePatterns: ['/dist/'],
-  globalSetup: '<rootDir>/support/setup/setup.ts',
+  globalSetup: '../support/setup/setup.ts',
   preset: 'ts-jest',
   verbose: true,
-  testMatch: ['**/tests/integration-tests/test-suites/*.spec.ts'],
+  testMatch: ['**/tests/integrationTests/testSuites/*.spec.ts'],
   testTimeout: 300000,
   reporters: [
     'default',
