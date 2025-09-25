@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { baseEvent } from '../../constants/baseEvent'
 import { getAuditEvent } from '../../support/utils/aws/s3/getAuditEvent'
 
-describe('events processed by firehose', () => {
+describe('events processed by firehose e2e', () => {
   let eventId: string
   const timestampMs = 1689936499616
   const timestampMsFormatted = '2023-07-21T10:48:19.616Z'
