@@ -33,6 +33,10 @@ Parameters:
     Type: String
     Description: The name of the stack containing the VPC
     Default: none
+  LogSubscriptionFilterPattern:
+    Type: String
+    Description: The default filter used when forwarding CloudWatch logs to external logging apps such as CSLS and Splunk
+    Default: '{ $.errorMessage || ($.level = * && $.level != %TRACE|DEBUG%) }'
 
 Conditions:
   DevEnvironment: !Equals [!Ref Environment, dev]
@@ -1277,7 +1281,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref AuditMessageDeliveryStreamLogs
-      FilterPattern: '{ $.level = * && $.level != %TRACE|DEBUG% }'
+      FilterPattern: !Ref LogSubscriptionFilterPattern
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
   CslsAuditMessageDelimiterFunctionSubscription:
@@ -1285,7 +1289,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref AuditMessageDelimiterLogs
-      FilterPattern: '{ $.level = * && $.level != %TRACE|DEBUG% }'
+      FilterPattern: !Ref LogSubscriptionFilterPattern
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
   CslsAuditMessageFirehoseReingestLogsSubscription:
@@ -1293,7 +1297,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref AuditMessageFirehoseReingestLogs
-      FilterPattern: '{ $.level = * && $.level != %TRACE|DEBUG% }'
+      FilterPattern: !Ref LogSubscriptionFilterPattern
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
   CslsS3CopyAndEncryptLogsSubscription:
@@ -1301,7 +1305,7 @@ Resources:
     Condition: IsProductionOrStaging
     Properties:
       LogGroupName: !Ref S3CopyAndEncryptLogs
-      FilterPattern: '{ $.level = * && $.level != %TRACE|DEBUG% }'
+      FilterPattern: !Ref LogSubscriptionFilterPattern
       DestinationArn: '{{resolve:ssm:CSLSLogsDestination}}'
 
   ###########################
