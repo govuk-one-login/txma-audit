@@ -1,7 +1,10 @@
 import { invokeLambdaFunction } from '../../support/utils/aws/lambda/invokeLambda'
 import { getEnv } from '../../../common/utils/helpers/getEnv'
 import { randomUUID } from 'crypto'
-import { baseEvent } from '../../constants/baseEvent'
+import {
+  baseEvent,
+  txmaMetaDataEnrichmentSuccessful
+} from '../../constants/baseEvent'
 import { getAuditEvent } from '../../support/utils/aws/s3/getAuditEvent'
 
 describe('events processed by firehose e2e', () => {
@@ -15,6 +18,7 @@ describe('events processed by firehose e2e', () => {
 
     event = {
       ...baseEvent,
+      ...txmaMetaDataEnrichmentSuccessful,
       event_id: eventId,
       timestamp_ms: timestampMs,
       timestamp_ms_formatted: timestampMsFormatted
