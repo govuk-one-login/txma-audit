@@ -1,5 +1,31 @@
 import { AuditEvent } from '../support/types/auditEvent'
 
+export const txmaMetaDataEnrichmentSuccessful = {
+  txma: {
+    enrichment: [
+      {
+        count: 0,
+        event_id: 'a9e6cf46-eb1c-48d7-b9e8-3ac3f5f854b7',
+        service: 'client_id_enrichment'
+      }
+    ],
+    obfuscated: true
+  }
+}
+
+export const txmaMetaDataEnrichmentUnsuccessful = {
+  txma: {
+    enrichment: [
+      {
+        count: 5,
+        service: 'client_id_enrichment',
+        status: 'failed'
+      }
+    ],
+    obfuscated: true
+  }
+}
+
 export const baseEvent: AuditEvent = {
   event_name: 'AUTH_IPV_CAPACITY_REQUESTED',
   component_id: 'AuthAccountMgmt',
