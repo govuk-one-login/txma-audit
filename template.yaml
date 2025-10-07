@@ -58,6 +58,8 @@ Conditions:
   IsPipelineTestStage: !Or
     - !Equals [!Ref Environment, build]
     - !Equals [!Ref Environment, staging]
+  IsStaging: !Equals [!Ref Environment, staging]
+  IsNotStaging: !Not [!Equals [!Ref Environment, staging]]
   IsTestableEnv: !Or
     - !Condition IsPipelineTestStage
     - !Equals [!Ref Environment, dev]
@@ -1015,6 +1017,19 @@ Resources:
 
   AuditMessageDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
+    Condition: IsNotStaging
+    Properties:
+      TopicArn: '{{resolve:ssm:EventProcessorSnsTopicArn}}'
+      Endpoint: !GetAtt AuditMessageDeliveryStream.Arn
+      Protocol: firehose
+      RawMessageDelivery: true
+      SubscriptionRoleArn: !GetAtt AuditMessageDeliveryEventProcessingSnsSubscriptionRole.Arn
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt AuditMessageDeliveryStreamSubscriptionDeadLetterQueue.Arn
+
+  AuditMessageDeliveryStreamSubscription1:
+    Type: AWS::SNS::Subscription
+    Condition: IsStaging
     Properties:
       TopicArn: '{{resolve:ssm:EventProcessorSnsTopicArn}}'
       Endpoint: !GetAtt AuditMessageDeliveryStream.Arn
