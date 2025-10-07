@@ -105,6 +105,16 @@ jobs:
             --no-fail-on-empty-changeset \
             --resolve-s3
 
+  upload-testing-image:
+    name: Upload testing image
+    needs: [validate-build]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
+    secrets: inherit
+    uses: ./.github/workflows/upload-testing-image-to-ecr.yaml
+
   package:
     strategy:
       matrix:
@@ -119,7 +129,7 @@ jobs:
             SIGNING_PROFILE_SECRET: SIGNING_PROFILE_NAME
     name: Package for deployment
     if: github.ref == 'refs/heads/main'
-    needs: [validate-build]
+    needs: [upload-testing-image]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
