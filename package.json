@@ -17,10 +17,10 @@
     "lint": "prettier . --check || exit 1 ; eslint . --max-warnings=0",
     "lint:fix": "prettier . --write ; eslint . --fix",
     "postinstall": "husky",
-    "test": "jest",
-    "test:cov": "jest --coverage",
-    "test:integration": "jest -c ./tests/integrationTests/jest.config.integration.ts",
-    "test:e2e": "jest -c ./tests/e2eTests/jest.config.e2e.ts",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:cov": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
+    "test:integration": "node --experimental-vm-modules node_modules/.bin/jest -c ./tests/integrationTests/jest.config.integration.ts",
+    "test:e2e": "node --experimental-vm-modules node_modules/.bin/jest -c ./tests/e2eTests/jest.config.e2e.ts",
     "tsFile": "ts-node"
   },
   "dependencies": {
