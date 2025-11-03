@@ -40,7 +40,6 @@ Parameters:
 
 Conditions:
   DevEnvironment: !Equals [!Ref Environment, dev]
-  BuildEnvironment: !Equals [!Ref Environment, build]
   UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, none]]
   UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, none]]
   UseTestRole: !Not [!Equals [!Ref TestRoleArn, none]]
@@ -209,7 +208,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: !If [BuildEnvironment, GLACIER_IR, GLACIER]
+                StorageClass: !If [TestEnvironment, GLACIER_IR, GLACIER]
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
@@ -323,7 +322,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: !If [BuildEnvironment, GLACIER_IR, GLACIER]
+                StorageClass: !If [TestEnvironment, GLACIER_IR, GLACIER]
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
@@ -379,7 +378,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: !If [BuildEnvironment, GLACIER_IR, GLACIER]
+                StorageClass: !If [TestEnvironment, GLACIER_IR, GLACIER]
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
@@ -434,7 +433,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: !If [BuildEnvironment, GLACIER_IR, GLACIER]
+                StorageClass: !If [TestEnvironment, GLACIER_IR, GLACIER]
           - Id: DeleteAutoTestObjects
             Status: Enabled
             ExpirationInDays: 1
