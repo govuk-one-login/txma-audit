@@ -251,6 +251,9 @@ Resources:
         - Id: EntireBucket
         - Id: Failures
           Prefix: failures/
+      Tags:
+        - Key: BackupFrequency
+          Value: Bihourly
 
   MessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -447,6 +450,9 @@ Resources:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
+      Tags:
+        - Key: BackupFrequency
+          Value: Bihourly
 
   ###############################
   # End: Audit Bucket resources #
