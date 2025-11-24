@@ -208,7 +208,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: GLACIER_IR
+                StorageClass: GLACIER
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
@@ -251,9 +251,6 @@ Resources:
         - Id: EntireBucket
         - Id: Failures
           Prefix: failures/
-      Tags:
-        - Key: BackupFrequency
-          Value: Bihourly
 
   MessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -325,7 +322,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: GLACIER_IR
+                StorageClass: GLACIER
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
@@ -410,6 +407,11 @@ Resources:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
+      Tags: !If
+        - IsProduction
+        - !Ref AWS::NoValue
+        - - Key: BackupFrequency
+            Value: Bihourly
 
   MessageBatchBucketTxMA2:
     Type: AWS::S3::Bucket
@@ -436,7 +438,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: GLACIER_IR
+                StorageClass: GLACIER
           - Id: DeleteAutoTestObjects
             Status: Enabled
             ExpirationInDays: 1
@@ -450,9 +452,6 @@ Resources:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
-      Tags:
-        - Key: BackupFrequency
-          Value: Bihourly
 
   ###############################
   # End: Audit Bucket resources #
