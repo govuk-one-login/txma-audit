@@ -208,7 +208,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: GLACIER_IR
+                StorageClass: GLACIER
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
@@ -322,7 +322,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: GLACIER_IR
+                StorageClass: GLACIER
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
@@ -438,7 +438,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: GLACIER_IR
+                StorageClass: GLACIER
           - Id: DeleteAutoTestObjects
             Status: Enabled
             ExpirationInDays: 1
