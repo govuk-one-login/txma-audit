@@ -215,7 +215,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
-                NoncurrentDays: 29
+                NoncurrentDays: 31
             - !Ref AWS::NoValue
           - !If
             - IsTestableEnv
@@ -223,7 +223,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
-                NoncurrentDays: 29
+                NoncurrentDays: 31
             - !Ref AWS::NoValue
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
@@ -329,7 +329,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
-                NoncurrentDays: 29
+                NoncurrentDays: 31
             - !Ref AWS::NoValue
           - !If
             - IsTestableEnv
@@ -337,7 +337,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
-                NoncurrentDays: 29
+                NoncurrentDays: 31
             - !Ref AWS::NoValue
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
