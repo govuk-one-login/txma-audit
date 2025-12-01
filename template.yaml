@@ -215,7 +215,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
-                NoncurrentDays: 30
+                NoncurrentDays: 29
             - !Ref AWS::NoValue
           - !If
             - IsTestableEnv
@@ -223,7 +223,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
-                NoncurrentDays: 30
+                NoncurrentDays: 29
             - !Ref AWS::NoValue
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
@@ -329,7 +329,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
-                NoncurrentDays: 30
+                NoncurrentDays: 29
             - !Ref AWS::NoValue
           - !If
             - IsTestableEnv
@@ -337,7 +337,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
-                NoncurrentDays: 30
+                NoncurrentDays: 29
             - !Ref AWS::NoValue
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
@@ -385,7 +385,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 2557
               NoncurrentVersionExpiration:
-                NoncurrentDays: 30
+                NoncurrentDays: 31
             - !Ref AWS::NoValue
           - !If
             - IsTestableEnv
@@ -393,7 +393,7 @@ Resources:
               Status: Enabled
               ExpirationInDays: 120
               NoncurrentVersionExpiration:
-                NoncurrentDays: 30
+                NoncurrentDays: 31
             - !Ref AWS::NoValue
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
@@ -438,7 +438,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: GLACIER
+                StorageClass: GLACIER_IR
           - Id: DeleteAutoTestObjects
             Status: Enabled
             ExpirationInDays: 1
@@ -452,6 +452,9 @@ Resources:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
+      Tags:
+        - Key: BackupFrequency
+          Value: Daily
 
   ###############################
   # End: Audit Bucket resources #
