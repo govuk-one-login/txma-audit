@@ -208,7 +208,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: GLACIER
+                StorageClass: GLACIER_IR
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
