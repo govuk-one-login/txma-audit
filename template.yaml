@@ -208,7 +208,7 @@ Resources:
             Status: Enabled
             Transitions:
               - TransitionInDays: 90
-                StorageClass: GLACIER
+                StorageClass: GLACIER_IR
           - !If
             - IsProduction
             - Id: ProductionExpirationRule
@@ -251,6 +251,9 @@ Resources:
         - Id: EntireBucket
         - Id: Failures
           Prefix: failures/
+      Tags:
+        - Key: BackupFrequency
+          Value: Bihourly
 
   MessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -407,11 +410,9 @@ Resources:
           - ObjectOwnership: BucketOwnerPreferred
       MetricsConfigurations:
         - Id: EntireBucket
-      Tags: !If
-        - IsProduction
-        - !Ref AWS::NoValue
-        - - Key: BackupFrequency
-            Value: Bihourly
+      Tags:
+        - Key: BackupFrequency
+          Value: Bihourly
 
   MessageBatchBucketTxMA2:
     Type: AWS::S3::Bucket
