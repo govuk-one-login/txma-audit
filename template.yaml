@@ -1617,6 +1617,75 @@ Resources:
   # End: Monitoring & alerting resources #
   ########################################
 
+  ####################
+  # GitHub Actions IAM Role for BaaS
+  ####################
+
+  GHActionsBaaSDeployRole:
+    #checkov:skip=CKV_AWS_62:Role needs S3 operations permissions which require wildcard resources
+    #checkov:skip=CKV_AWS_111:S3 operations require wildcard resources for restore management
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowGitHubActionsToAssumeRole
+            Effect: Allow
+            Principal:
+              Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub:
+                  - repo:govuk-one-login/txma-audit:*
+      Policies:
+        - PolicyName: GitHubActionsBaaSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: STSAccess
+                Effect: Allow
+                Action:
+                  - sts:GetCallerIdentity
+                Resource: '*'
+              - Sid: S3ListBuckets
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-permanent-message-batch'
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch'
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch-restored'
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-permanent-message-batch-restored'
+              - Sid: S3ObjectOperations
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                  - s3:HeadObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-permanent-message-batch/*'
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch/*'
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-message-batch-restored/*'
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-${Environment}-permanent-message-batch-restored/*'
+              - Sid: UseS3Encryption
+                Effect: Allow
+                Action:
+                  - kms:Decrypt
+                  - kms:GenerateDataKey
+                  - kms:ReEncrypt*
+                Resource:
+                  - 'arn:aws:kms:eu-west-2:*:key/*'
+                Condition:
+                  StringEquals:
+                    kms:ViaService: s3.eu-west-2.amazonaws.com
+
   ##############################################
   # Start: Automated Test resources #
   ##############################################
@@ -1670,6 +1739,13 @@ Resources:
   ##############################
 
 Outputs:
+  # GitHub Actions Role
+  GABaaSRoleArn:
+    Description: 'ARN of the GitHub Actions role for BaaS operations'
+    Value: !GetAtt GHActionsBaaSDeployRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-GitHubActionsBaaSRoleArn'
+
   # S3 Delimiter Function
   AuditMessageDelimiterFunctionName:
     Value: !Ref AuditMessageDelimiterFunction
