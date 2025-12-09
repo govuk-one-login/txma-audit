@@ -538,6 +538,42 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda'
 
+  EventReplayPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-event-replay-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          {
+            "Effect": "Allow",
+            "Action": "*",
+            "Resource": "*"
+          }
+
+  EventReplayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-event-replay-role
+      Description: "This role allows approved team members to run event replay"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "sts:AssumeRole"
+            Condition:
+              ArnLike:
+                aws:PrincipalARN:
+                  !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
+      ManagedPolicyArns:
+        - !Ref EventReplayPolicy
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
   AuditDeploymentStrategy:
     Condition: UseCanaryDeploy
     Type: AWS::CodeDeploy::DeploymentConfig
