@@ -545,34 +545,32 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          {
-            "Effect": "Allow",
-            "Action": "*",
-            "Resource": "*"
-          }
+          - Effect: 'Allow'
+            Action: '*'
+            Resource: '*'
 
   EventReplayRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub ${AWS::StackName}-event-replay-role
-      Description: "This role allows approved team members to run event replay"
+      Description: 'This role allows approved team members to run event replay'
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
               AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action: "sts:AssumeRole"
+            Action: 'sts:AssumeRole'
             Condition:
               ArnLike:
-                aws:PrincipalARN:
-                  !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
+                aws:PrincipalARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
       ManagedPolicyArns:
         - !Ref EventReplayPolicy
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
+      Path: /runbooks/
 
   AuditDeploymentStrategy:
     Condition: UseCanaryDeploy
