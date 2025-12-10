@@ -538,17 +538,6 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda'
 
-  EventReplayPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      ManagedPolicyName: !Sub ${AWS::StackName}-event-replay-policy
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Action: '*'
-            Resource: '*'
-
   EventReplayRole:
     Type: AWS::IAM::Role
     Properties:
@@ -564,13 +553,24 @@ Resources:
             Condition:
               ArnLike:
                 aws:PrincipalARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
+      Policy:
+        - PolicyName: AllowIAMPassRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowIAMPassRole
+                Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource: '*'
       ManagedPolicyArns:
-        - !Ref EventReplayPolicy
+        - arn:aws:iam::aws:policy/PowerUserAccess
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
       Path: /runbooks/
+
 
   AuditDeploymentStrategy:
     Condition: UseCanaryDeploy
