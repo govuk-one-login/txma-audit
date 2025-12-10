@@ -539,7 +539,8 @@ Resources:
         - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda'
 
   EventReplayRole:
-    # checkov:skip=CKV_AWS_109: " Event replay role requires broad IAM PassRole permissions for operational functionality Type: AWS::IAM::Role
+    # checkov:skip=CKV_AWS_109: " Event replay role requires broad IAM PassRole permissions for operational functionality
+    Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub ${AWS::StackName}-event-replay-role
       Description: 'This role allows approved team members to run event replay'
