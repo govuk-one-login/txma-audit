@@ -538,6 +538,40 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda'
 
+  EventReplayRole:
+    # checkov:skip=CKV_AWS_109: " Event replay role requires broad IAM PassRole permissions for operational functionality
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-event-replay-role
+      Description: 'This role allows approved team members to run event replay'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: 'sts:AssumeRole'
+            Condition:
+              ArnLike:
+                aws:PrincipalARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
+      Policies:
+        - PolicyName: AllowIAMPassRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowIAMPassRole
+                Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/PowerUserAccess
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      Path: /runbooks/
+
   AuditDeploymentStrategy:
     Condition: UseCanaryDeploy
     Type: AWS::CodeDeploy::DeploymentConfig
