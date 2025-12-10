@@ -571,7 +571,6 @@ Resources:
         - !Ref AWS::NoValue
       Path: /runbooks/
 
-
   AuditDeploymentStrategy:
     Condition: UseCanaryDeploy
     Type: AWS::CodeDeploy::DeploymentConfig
