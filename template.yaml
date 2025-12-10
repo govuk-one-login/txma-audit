@@ -538,7 +538,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda'
 
-  # checkov:skip=CKV_AWS_109:
+  # checkov:skip=CKV_AWS_109: "need to ignore constraints for now
   EventReplayRole:
     Type: AWS::IAM::Role
     Properties:
