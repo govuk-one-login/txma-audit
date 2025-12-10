@@ -553,7 +553,7 @@ Resources:
             Condition:
               ArnLike:
                 aws:PrincipalARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
-      Policy:
+      Policies:
         - PolicyName: AllowIAMPassRole
           PolicyDocument:
             Version: 2012-10-17
