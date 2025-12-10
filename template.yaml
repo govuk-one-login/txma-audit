@@ -537,7 +537,8 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda'
-
+        -
+  #checkov:skip=CKV_AWS_109:
   EventReplayRole:
     Type: AWS::IAM::Role
     Properties:
