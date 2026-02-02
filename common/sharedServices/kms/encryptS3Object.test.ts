@@ -4,6 +4,7 @@ import { when } from 'jest-when'
 import { createDataStream } from '../../utils/tests/test-helpers/test-helper'
 import {
   TEST_GENERATOR_KEY_ID,
+  TEST_ADDITIONAL_KEY_ID,
   TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
   TEST_S3_OBJECT_DATA_STRING
 } from '../../utils/tests/testConstants'
@@ -21,7 +22,8 @@ jest.mock('@aws-crypto/client-node', () => ({
 describe('encryptS3Object', () => {
   it('returns a buffer of encrypted data', async () => {
     when(KmsKeyringNode as jest.Mock).mockImplementation(() => ({
-      generatorKeyId: TEST_GENERATOR_KEY_ID
+      generatorKeyId: TEST_GENERATOR_KEY_ID,
+      keyIds: [TEST_ADDITIONAL_KEY_ID]
     }))
     when(buildEncrypt().encrypt).mockResolvedValue({
       result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
@@ -31,11 +33,15 @@ describe('encryptS3Object', () => {
     const result = await encryptS3Object(testDataStream)
     expect(result).toEqual(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
     expect(KmsKeyringNode).toHaveBeenCalledWith({
-      generatorKeyId: TEST_GENERATOR_KEY_ID
+      generatorKeyId: TEST_GENERATOR_KEY_ID,
+      keyIds: [TEST_ADDITIONAL_KEY_ID]
     })
     expect(buildEncrypt).toHaveBeenCalled()
     expect(buildEncrypt().encrypt).toHaveBeenCalledWith(
-      { generatorKeyId: TEST_GENERATOR_KEY_ID },
+      {
+        generatorKeyId: TEST_GENERATOR_KEY_ID,
+        keyIds: [TEST_ADDITIONAL_KEY_ID]
+      },
       testDataStream
     )
   })
