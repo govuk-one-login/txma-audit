@@ -52,6 +52,8 @@ Conditions:
     - !Not [!Equals [!Ref Environment, dev]]
     - !Not [!Equals [!Ref Environment, build]]
     - !Not [!Equals [!Ref Environment, staging]]
+  ISNotProduction:
+    !Not [ Condition: ISProduction ]
   IsProductionOrStaging: !Or
     - !Equals [!Ref Environment, staging]
     - !Condition IsProduction
@@ -600,7 +602,9 @@ Resources:
           AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
-          BACKUP_KEY_ID: '{{resolve:ssm:S3BackupEncryptionGeneratorKmsKeyArn}}'
+          BACKUP_KEY_ID: !If
+            - ISNotProduction
+            - '{{resolve:ssm:S3BackupEncryptionGeneratorKmsKeyArn}}'
       FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
       Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
