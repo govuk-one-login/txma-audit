@@ -598,12 +598,13 @@ Resources:
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
       Environment:
         Variables:
+          BACKUP_ENCRYPTION_ENABLED: !If [ IsNotProduction, true, false]
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
           BACKUP_KEY_ID: !If
-            - ISNotProduction
+            - BACKUP_ENCRYPTION_ENABLED
             - '{{resolve:ssm:S3BackupEncryptionGeneratorKmsKeyArn}}'
       FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
       Handler: handler.handler
