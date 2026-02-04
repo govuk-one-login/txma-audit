@@ -570,7 +570,6 @@ Resources:
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
-      Path: /runbooks/
 
   AuditDeploymentStrategy:
     Condition: UseCanaryDeploy
