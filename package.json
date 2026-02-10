@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@aws-crypto/client-node": "4.2.1",
+    "@aws-crypto/decrypt-node": "4.2.1",
     "@aws-crypto/encrypt-node": "4.2.1",
     "@aws-crypto/material-management": "4.2.1",
     "@aws-lambda-powertools/logger": "2.30.0",

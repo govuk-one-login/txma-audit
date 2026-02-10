@@ -701,6 +701,120 @@ Resources:
             Resource:
               - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
 
+  ##################################################
+  # Start: S3 Key Rotation (Migration) Resources   #
+  ##################################################
+
+  S3KeyRotationFunction:
+    #checkov:skip=CKV_AWS_115: One-off migration task, no concurrency limits needed
+    #checkov:skip=CKV_AWS_116: DLQ not required for S3 Batch Operations
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/s3KeyRotation/
+      Environment:
+        Variables:
+          WRAPPER_KEY_1_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+          WRAPPER_KEY_2_ID: '{{resolve:ssm:S3EncryptionWrapperKey2Arn}}'
+      FunctionName: !Sub ${AWS::StackName}-s3-key-rotation
+      Handler: handler.handler
+      KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
+      MemorySize: 2048
+      Timeout: 900
+      Role: !GetAtt S3KeyRotationFunctionRole.Arn
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+          - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdC
+
+  S3KeyRotationLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-s3-key-rotation
+      RetentionInDays: 30
+
+  S3KeyRotationFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-s3-key-rotation-role
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowLambdaService
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+          - Sid: AllowS3BatchOperations
+            Effect: Allow
+            Principal:
+              Service:
+                - batchoperations.s3.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - !Ref S3KeyRotationPolicy
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+
+  S3KeyRotationPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-s3-key-rotation-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PermanentS3ReadWrite
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:PutObject
+            Resource:
+              - !GetAtt PermanentMessageBatchBucket.Arn
+              - !Sub ${PermanentMessageBatchBucket.Arn}/*
+          - Sid: S3BatchOperations
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:PutObject
+            Resource:
+              - !Sub arn:aws:s3:::${AWS::StackName}-*-s3-batch-reports/*
+          - Sid: UseWrapperKey1
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+            Resource:
+              - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+          - Sid: UseWrapperKey2
+            Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource:
+              - '{{resolve:ssm:S3EncryptionWrapperKey2Arn}}'
+          - Sid: UseWrapperKeysForReEncryption
+            Effect: Allow
+            Action:
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:CreateGrant
+            Resource:
+              - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+              - '{{resolve:ssm:S3EncryptionWrapperKey2Arn}}'
+
+  ################################################
+  # End: S3 Key Rotation (Migration) Resources   #
+  ################################################
+
   #############################
   # End: Encryption resources #
   #############################
@@ -1716,6 +1830,16 @@ Outputs:
 
   S3CopyAndEncryptLogsName:
     Value: !Ref S3CopyAndEncryptLogs
+
+  # S3 Key Rotation Function (Migration)
+  S3KeyRotationFunctionName:
+    Value: !Ref S3KeyRotationFunction
+
+  S3KeyRotationFunctionArn:
+    Value: !GetAtt S3KeyRotationFunction.Arn
+
+  S3KeyRotationLogsName:
+    Value: !Ref S3KeyRotationLogs
 
   # S3 Temp Audit Bucket
   AuditMessageBatchBucketName:
