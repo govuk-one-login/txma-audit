@@ -5,7 +5,7 @@ import { logger } from '../../../common/sharedServices/logger'
 import { getS3ObjectAsStream } from '../../../common/sharedServices/s3/getS3ObjectAsStream'
 import { putS3Object } from '../../../common/sharedServices/s3/putS3Object'
 import { getEnv } from '../../../common/utils/helpers/getEnv'
-import { Readable } from 'stream'
+import { Readable } from 'node:stream'
 
 /**
  * Re-encrypts an S3 object to use dual KMS wrapper keys.

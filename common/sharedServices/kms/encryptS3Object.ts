@@ -1,6 +1,6 @@
 import { KmsKeyringNode } from '@aws-crypto/client-node'
 import { buildEncrypt } from '@aws-crypto/encrypt-node'
-import { Readable } from 'stream'
+import { Readable } from 'node:stream'
 import { getEnv } from '../../utils/helpers/getEnv'
 
 export const encryptS3Object = async (data: Readable): Promise<Buffer> => {
