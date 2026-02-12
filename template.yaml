@@ -606,6 +606,7 @@ Resources:
           BACKUP_KEY_ID: !If
             - DevAndBuildEnvironment
             - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
+            - ${AWS::NoValue}
       FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
       Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
@@ -707,7 +708,10 @@ Resources:
               - kms:Encrypt*
             Resource:
               - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+              - !If
+              - DevAndBuildEnvironment
               - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
+              - ${AWS::NoValue}
 
   #############################
   # End: Encryption resources #
