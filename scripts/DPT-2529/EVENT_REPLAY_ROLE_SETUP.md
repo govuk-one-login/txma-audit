@@ -21,31 +21,31 @@ Ensure you're connected to your organization's VPN or on an allowed network.
 **For Dev Environment:**
 
 ```bash
-./create-event-replay-role.sh audit audit-dev
+./create-event-replay-role.sh audit-dev
 ```
 
 **For Build Environment:**
 
 ```bash
-./create-event-replay-role.sh audit audit-build
+./create-event-replay-role.sh audit-build
 ```
 
 **For Staging Environment:**
 
 ```bash
-./create-event-replay-role.sh audit audit-staging
+./create-event-replay-role.sh audit-staging
 ```
 
 **For Integration Environment:**
 
 ```bash
-./create-event-replay-role.sh audit audit-integration
+./create-event-replay-role.sh audit-integration
 ```
 
 **For Production Environment:**
 
 ```bash
-./create-event-replay-role.sh audit audit-production
+./create-event-replay-role.sh audit-production
 ```
 
 ## What the Script Does
