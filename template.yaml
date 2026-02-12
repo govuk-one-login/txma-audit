@@ -707,6 +707,7 @@ Resources:
               - kms:Encrypt*
             Resource:
               - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+              - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
 
   #############################
   # End: Encryption resources #
