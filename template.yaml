@@ -39,30 +39,30 @@ Parameters:
     Default: '{ $.errorMessage = * || ($.level = * && $.level != %TRACE|DEBUG%) }'
 
 Conditions:
-  DevEnvironment: !Equals [!Ref Environment, dev]
-  UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, none]]
-  UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, none]]
-  UseTestRole: !Not [!Equals [!Ref TestRoleArn, none]]
+  DevEnvironment: !Equals [ !Ref Environment, dev ]
+  UsePermissionsBoundary: !Not [ !Equals [ !Ref PermissionsBoundary, none ] ]
+  UseCodeSigning: !Not [ !Equals [ !Ref CodeSigningConfigArn, none ] ]
+  UseTestRole: !Not [ !Equals [ !Ref TestRoleArn, none ] ]
   IsPagerDutyEnvironment:
     !Or [
-      !Equals [!Ref Environment, staging],
-      !Equals [!Ref Environment, production]
+      !Equals [ !Ref Environment, staging ],
+      !Equals [ !Ref Environment, production ]
     ]
   IsProduction: !And
-    - !Not [!Equals [!Ref Environment, dev]]
-    - !Not [!Equals [!Ref Environment, build]]
-    - !Not [!Equals [!Ref Environment, staging]]
+    - !Not [ !Equals [ !Ref Environment, dev ] ]
+    - !Not [ !Equals [ !Ref Environment, build ] ]
+    - !Not [ !Equals [ !Ref Environment, staging ] ]
   ISNotProduction:
     !Not [ Condition: ISProduction ]
   IsProductionOrStaging: !Or
-    - !Equals [!Ref Environment, staging]
+    - !Equals [ !Ref Environment, staging ]
     - !Condition IsProduction
   IsPipelineTestStage: !Or
-    - !Equals [!Ref Environment, build]
-    - !Equals [!Ref Environment, staging]
+    - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
   IsTestableEnv: !Or
     - !Condition IsPipelineTestStage
-    - !Equals [!Ref Environment, dev]
+    - !Equals [ !Ref Environment, dev ]
   DeployTestRolePolicy: !And
     - !Condition IsPipelineTestStage
     - !Condition UseTestRole
@@ -72,15 +72,15 @@ Conditions:
   TestEnvironment:
     !Not [
       !Or [
-        !Equals [!Ref Environment, production],
-        !Equals [!Ref Environment, integration]
+        !Equals [ !Ref Environment, production ],
+        !Equals [ !Ref Environment, integration ]
       ]
     ]
   TestRoleResources:
-    !And [Condition: TestEnvironment, !Not [!Equals [!Ref TestRoleArn, none]]]
+    !And [ Condition: TestEnvironment, !Not [ !Equals [ !Ref TestRoleArn, none ] ] ]
   UseCanaryDeploy: !Or
-    - !Equals [!Ref Environment, production]
-    - !Equals [!Ref Environment, integration]
+    - !Equals [ !Ref Environment, production ]
+    - !Equals [ !Ref Environment, integration ]
 
 Mappings:
   EnvironmentConfiguration:
@@ -115,7 +115,7 @@ Globals:
           - ' '
           - '--enable-source-maps'
         XRAY_ENABLED:
-          !FindInMap [EnvironmentConfiguration, !Ref Environment, XRAYENABLED]
+          !FindInMap [ EnvironmentConfiguration, !Ref Environment, XRAYENABLED ]
         AWS_LAMBDA_EXEC_WRAPPER: /opt/dynatrace
         DT_CONNECTION_AUTH_TOKEN: !Sub
           - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_AUTH_TOKEN}}'
@@ -598,14 +598,14 @@ Resources:
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
       Environment:
         Variables:
-          BACKUP_ENCRYPTION_ENABLED: !If [ IsNotProduction, true, false]
+          BACKUP_ENCRYPTION_ENABLED: !If [ IsNotProduction, true, false ]
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
           BACKUP_KEY_ID: !If
             - BACKUP_ENCRYPTION_ENABLED
-            - '{{resolve:ssm:S3BackupEncryptionGeneratorKmsKeyArn}}'
+            - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
       FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
       Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
@@ -727,7 +727,7 @@ Resources:
           !Join [
             '',
             [
-              !Join ['', !Split ['-', !Ref AWS::StackName]],
+              !Join [ '', !Split [ '-', !Ref AWS::StackName ] ],
               !Sub '_${Environment}_message_batch_table'
             ]
           ]
@@ -742,7 +742,7 @@ Resources:
           storage.location.template:
             !Join [
               '',
-              ['s3://', !Ref MessageBatchBucket, '/firehose/${datetime}/']
+              [ 's3://', !Ref MessageBatchBucket, '/firehose/${datetime}/' ]
             ]
         PartitionKeys:
           - Name: datetime
