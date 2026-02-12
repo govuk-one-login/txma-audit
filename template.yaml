@@ -54,7 +54,6 @@ Conditions:
     - !Not [!Equals [!Ref Environment, dev]]
     - !Not [!Equals [!Ref Environment, build]]
     - !Not [!Equals [!Ref Environment, staging]]
-  IsNotProduction: !Not [Condition: IsProduction]
   IsProductionOrStaging: !Or
     - !Equals [!Ref Environment, staging]
     - !Condition IsProduction
