@@ -7,6 +7,7 @@ export const TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER = Buffer.from(
 )
 export const TEST_FIREHOSE_DELIVERY_STREAM_NAME = 'mockDeliveryStreamName'
 export const TEST_GENERATOR_KEY_ID = 'testGeneratorKeyId'
+export const TEST_ADDITIONAL_KEY_ID = 'testAdditionalKeyId'
 export const TEST_S3_OBJECT_KEY = 'testKey'
 export const TEST_WRONG_S3_BUCKET = 'wrongTestBucket'
 export const TEST_AUDIT_BUCKET_NAME = 'testAuditBucket'
