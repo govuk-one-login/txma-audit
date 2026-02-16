@@ -6,7 +6,7 @@ import { getEnv } from '../../utils/helpers/getEnv'
 export const encryptS3Object = async (data: Readable): Promise<Buffer> => {
   let keyring: KmsKeyringNode
 
-  if (process.env.BACKUP_ENCRYPTION_ENABLED) {
+  if (process.env.BACKUP_ENCRYPTION_ENABLED === 'true') {
     keyring = new KmsKeyringNode({
       generatorKeyId: getEnv('GENERATOR_KEY_ID'),
       keyIds: [getEnv('BACKUP_KEY_ID')]
