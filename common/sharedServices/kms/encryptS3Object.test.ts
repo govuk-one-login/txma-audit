@@ -8,8 +8,8 @@ import {
   TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
   TEST_S3_OBJECT_DATA_STRING
 } from '../../utils/tests/testConstants'
-import * as env from '../../../common/utils/helpers/getEnv'
 import { encryptS3Object } from '../../../common/sharedServices/kms/encryptS3Object'
+import * as env from '../../../common/utils/helpers/getEnv'
 
 jest.mock('@aws-crypto/encrypt-node', () => ({
   buildEncrypt: jest.fn().mockReturnValue({
@@ -21,14 +21,22 @@ jest.mock('@aws-crypto/client-node', () => ({
 }))
 
 jest.mock('../../utils/helpers/getEnv', () => ({
-  getEnv: null
+  getEnv: jest.fn()
 }))
 
-const mockGetEnv = env as {getEnv: jest.Mock}
+const mockGetEnv = env as { getEnv: jest.Mock }
 
 describe('encryptS3Object', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
   it('returns a buffer of encrypted data when backup enabled', async () => {
-    mockGetEnv.getEnv = jest.fn().mockReturnValue('true')
+    mockGetEnv.getEnv.mockImplementation((key: string) => {
+      if (key === 'BACKUP_ENCRYPTION_ENABLED') return 'true'
+      if (key === 'GENERATOR_KEY_ID') return TEST_GENERATOR_KEY_ID
+      if (key === 'BACKUP_KEY_ID') return TEST_ADDITIONAL_KEY_ID
+      return ''
+    })
     when(KmsKeyringNode as jest.Mock).mockImplementation(() => ({
       generatorKeyId: TEST_GENERATOR_KEY_ID,
       keyIds: [TEST_ADDITIONAL_KEY_ID]
@@ -54,7 +62,12 @@ describe('encryptS3Object', () => {
     )
   })
   it('returns a buffer of encrypted data when backup not enabled', async () => {
-    mockGetEnv.getEnv = jest.fn().mockReturnValue('false')
+    mockGetEnv.getEnv.mockImplementation((key: string) => {
+      if (key === 'BACKUP_ENCRYPTION_ENABLED') return 'false'
+      if (key === 'GENERATOR_KEY_ID') return TEST_GENERATOR_KEY_ID
+      if (key === 'BACKUP_KEY_ID') return TEST_ADDITIONAL_KEY_ID
+      return ''
+    })
     when(KmsKeyringNode as jest.Mock).mockImplementation(() => ({
       generatorKeyId: TEST_GENERATOR_KEY_ID
     }))
@@ -74,6 +87,34 @@ describe('encryptS3Object', () => {
         generatorKeyId: TEST_GENERATOR_KEY_ID
       },
       testDataStream
+    )
+  })
+  it('treats any non-"true" value for BACKUP_ENCRYPTION_ENABLED as disabled', async () => {
+    mockGetEnv.getEnv.mockImplementation((key: string) => {
+      if (key === 'BACKUP_ENCRYPTION_ENABLED') return 'TRUE' // uppercase
+      if (key === 'GENERATOR_KEY_ID') return TEST_GENERATOR_KEY_ID
+      return ''
+    })
+    when(KmsKeyringNode as jest.Mock).mockImplementation(() => ({
+      generatorKeyId: TEST_GENERATOR_KEY_ID
+    }))
+    when(buildEncrypt().encrypt).mockResolvedValue({
+      result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
+      messageHeader: {} as MessageHeader
+    })
+
+    const testDataStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
+    await encryptS3Object(testDataStream)
+
+    expect(KmsKeyringNode).toHaveBeenCalledWith({
+      generatorKeyId: TEST_GENERATOR_KEY_ID
+    })
+    // Verify it was NOT called with keyIds
+    expect(KmsKeyringNode).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        generatorKeyId: TEST_GENERATOR_KEY_ID,
+        keyIds: expect.any(Array) as unknown[]
+      })
     )
   })
 })
