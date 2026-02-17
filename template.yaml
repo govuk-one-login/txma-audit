@@ -569,10 +569,7 @@ Resources:
           AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
           GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
-          BACKUP_KEY_ID: !If
-            - DevAndBuildEnvironment
-            - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
-            - !Ref AWS::NoValue
+          BACKUP_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
       FunctionName: !Sub ${AWS::StackName}-s3-copy-and-encrypt
       Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
@@ -672,11 +669,9 @@ Resources:
               - kms:Decrypt
               - kms:GenerateDataKey*
               - kms:Encrypt*
-            Resource: !If
-              - DevAndBuildEnvironment
-              - - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
-                - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
-              - - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+            Resource:
+              - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+              - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
 
   #############################
   # End: Encryption resources #
