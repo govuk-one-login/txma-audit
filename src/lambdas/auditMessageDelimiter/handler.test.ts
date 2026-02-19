@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import { handler } from './handler'
 import { TestHelper } from '../../../common/utils/tests/test-helpers/test-helper'
 import { FirehoseTransformationResult } from 'aws-lambda'
