@@ -1,26 +1,30 @@
+import { describe, it, expect, beforeEach } from 'vitest'
 import {
   S3Client,
   HeadObjectCommand,
   HeadObjectOutput
 } from '@aws-sdk/client-s3'
 import { mockClient } from 'aws-sdk-client-mock'
-import 'aws-sdk-client-mock-jest'
 import {
   TEST_PERMANENT_BUCKET_NAME,
   TEST_S3_OBJECT_KEY
 } from '../../../common/utils/tests/testConstants'
 import { s3FileExists } from './s3FileExists'
 const s3Mock = mockClient(S3Client)
+
 describe('s3FileExists', () => {
   beforeEach(() => {
-    jest.resetAllMocks()
+    s3Mock.reset()
   })
   it('should return false if a file not exists error is returned', async () => {
     s3Mock.on(HeadObjectCommand).rejects({ name: 'NotFound' })
     expect(
       await s3FileExists(TEST_PERMANENT_BUCKET_NAME, TEST_S3_OBJECT_KEY)
     ).toEqual(false)
-    expect(s3Mock).toHaveReceivedCommandWith(HeadObjectCommand, {
+
+    const calls = s3Mock.commandCalls(HeadObjectCommand)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].args[0].input).toEqual({
       Bucket: TEST_PERMANENT_BUCKET_NAME,
       Key: TEST_S3_OBJECT_KEY
     })
@@ -33,7 +37,9 @@ describe('s3FileExists', () => {
       s3FileExists(TEST_PERMANENT_BUCKET_NAME, TEST_S3_OBJECT_KEY)
     ).rejects.toThrow(someError)
 
-    expect(s3Mock).toHaveReceivedCommandWith(HeadObjectCommand, {
+    const calls = s3Mock.commandCalls(HeadObjectCommand)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].args[0].input).toEqual({
       Bucket: TEST_PERMANENT_BUCKET_NAME,
       Key: TEST_S3_OBJECT_KEY
     })
@@ -47,7 +53,9 @@ describe('s3FileExists', () => {
       await s3FileExists(TEST_PERMANENT_BUCKET_NAME, TEST_S3_OBJECT_KEY)
     ).toEqual(true)
 
-    expect(s3Mock).toHaveReceivedCommandWith(HeadObjectCommand, {
+    const calls = s3Mock.commandCalls(HeadObjectCommand)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].args[0].input).toEqual({
       Bucket: TEST_PERMANENT_BUCKET_NAME,
       Key: TEST_S3_OBJECT_KEY
     })

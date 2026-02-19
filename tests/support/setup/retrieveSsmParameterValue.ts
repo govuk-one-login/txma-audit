@@ -19,7 +19,8 @@ export const retrieveSsmParameterValue = async (
     }
   } catch (error) {
     throw new Error(
-      `SSM parameter with name ${name} not found. \n${String(error)}`
+      `SSM parameter with name ${name} not found. \n${String(error)}`,
+      { cause: error }
     )
   }
 }

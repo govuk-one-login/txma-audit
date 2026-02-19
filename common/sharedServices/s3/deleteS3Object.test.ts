@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import {
   DeleteObjectCommand,
   DeleteObjectCommandInput,
@@ -5,7 +6,6 @@ import {
 } from '@aws-sdk/client-s3'
 import { mockClient } from 'aws-sdk-client-mock'
 import { deleteS3Object } from './deleteS3Object'
-import 'aws-sdk-client-mock-jest'
 import {
   TEST_TEMPORARY_BUCKET_NAME,
   TEST_S3_OBJECT_KEY
@@ -22,9 +22,8 @@ describe('deleteS3Object', () => {
   it('deletes an object', async () => {
     await deleteS3Object(TEST_TEMPORARY_BUCKET_NAME, TEST_S3_OBJECT_KEY)
 
-    expect(s3Mock).toHaveReceivedCommandWith(
-      DeleteObjectCommand,
-      putObjectCommandInput
-    )
+    const calls = s3Mock.commandCalls(DeleteObjectCommand)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].args[0].input).toEqual(putObjectCommandInput)
   })
 })

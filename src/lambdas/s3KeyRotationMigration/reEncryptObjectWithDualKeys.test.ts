@@ -5,36 +5,42 @@ import { getS3ObjectAsStream } from '../../../common/sharedServices/s3/getS3Obje
 import { putS3Object } from '../../../common/sharedServices/s3/putS3Object'
 import { createDataStream } from '../../../common/utils/tests/test-helpers/test-helper'
 import { reEncryptObjectWithDualKeys } from './reEncryptObjectWithDualKeys'
+import type { Mock, MockedFunction } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 
-jest.mock('@aws-crypto/client-node', () => ({
-  KmsKeyringNode: jest.fn()
+vi.mock('@aws-crypto/client-node', () => ({
+  KmsKeyringNode: vi.fn()
 }))
 
-jest.mock('@aws-crypto/decrypt-node', () => ({
-  buildDecrypt: jest.fn().mockReturnValue({
-    decrypt: jest.fn()
+vi.mock('@aws-crypto/decrypt-node', () => ({
+  buildDecrypt: vi.fn().mockReturnValue({
+    decrypt: vi.fn()
   })
 }))
 
-jest.mock('@aws-crypto/encrypt-node', () => ({
-  buildEncrypt: jest.fn().mockReturnValue({
-    encrypt: jest.fn()
+vi.mock('@aws-crypto/encrypt-node', () => ({
+  buildEncrypt: vi.fn().mockReturnValue({
+    encrypt: vi.fn()
   })
 }))
 
-jest.mock('../../../common/sharedServices/s3/getS3ObjectAsStream', () => ({
-  getS3ObjectAsStream: jest.fn()
+vi.mock('../../../common/sharedServices/s3/getS3ObjectAsStream', () => ({
+  getS3ObjectAsStream: vi.fn()
 }))
 
-jest.mock('../../../common/sharedServices/s3/putS3Object', () => ({
-  putS3Object: jest.fn()
+vi.mock('../../../common/sharedServices/s3/putS3Object', () => ({
+  putS3Object: vi.fn()
 }))
 
-const mockKmsKeyringNode = KmsKeyringNode as jest.Mock
-const mockBuildDecrypt = buildDecrypt as jest.Mock
-const mockBuildEncrypt = buildEncrypt as jest.Mock
-const mockGetS3ObjectAsStream = getS3ObjectAsStream as jest.Mock
-const mockPutS3Object = putS3Object as jest.Mock
+const mockKmsKeyringNode = KmsKeyringNode as MockedFunction<
+  typeof KmsKeyringNode
+>
+const mockBuildDecrypt = buildDecrypt as MockedFunction<typeof buildDecrypt>
+const mockBuildEncrypt = buildEncrypt as MockedFunction<typeof buildEncrypt>
+const mockGetS3ObjectAsStream = getS3ObjectAsStream as MockedFunction<
+  typeof getS3ObjectAsStream
+>
+const mockPutS3Object = putS3Object as MockedFunction<typeof putS3Object>
 
 const TEST_BUCKET = 'test-audit-bucket'
 const TEST_KEY = 'audit-data/2024/01/15/file.gz.enc'
@@ -45,22 +51,26 @@ const TEST_PLAINTEXT_DATA = Buffer.from('decrypted audit data')
 const TEST_ENCRYPTED_DATA = Buffer.from('encrypted-with-dual-keys')
 
 describe('reEncryptObjectWithDualKeys', () => {
-  let mockDecrypt: jest.Mock
-  let mockEncrypt: jest.Mock
+  let mockDecrypt: Mock
+  let mockEncrypt: Mock
 
   beforeEach(() => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
     process.env.GENERATOR_KEY_ID = TEST_GENERATOR_KEY
     process.env.BACKUP_KEY_ID = TEST_BACKUP_KEY
 
     // KmsKeyringNode is mocked to just return the config object for testing
     mockKmsKeyringNode.mockImplementation(<T>(config: T): T => config)
 
-    mockDecrypt = jest.fn()
-    mockEncrypt = jest.fn()
+    mockDecrypt = vi.fn()
+    mockEncrypt = vi.fn()
 
-    mockBuildDecrypt.mockReturnValue({ decrypt: mockDecrypt })
-    mockBuildEncrypt.mockReturnValue({ encrypt: mockEncrypt })
+    mockBuildDecrypt.mockReturnValue({
+      decrypt: mockDecrypt
+    } as unknown as ReturnType<typeof buildDecrypt>)
+    mockBuildEncrypt.mockReturnValue({
+      encrypt: mockEncrypt
+    } as unknown as ReturnType<typeof buildEncrypt>)
   })
 
   afterEach(() => {
