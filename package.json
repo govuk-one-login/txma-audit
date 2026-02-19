@@ -56,9 +56,10 @@
     "aws-sdk-client-mock": "4.1.0",
     "commander": "14.0.2",
     "esbuild": "0.27.3",
-    "eslint": "^10.0.0",
-    "eslint-config-prettier": "^6.15.0",
-    "eslint-plugin-vitest": "^0.0.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-vitest": "^0.5.4",
+    "@vitest/eslint-plugin": "1.6.9",
     "globals": "^16.5.0",
     "husky": "9.1.7",
     "lint-staged": "16.2.6",
@@ -66,7 +67,7 @@
     "ts-node": "10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.14.0",
+    "typescript-eslint": "^8.46.4",
     "vitest": "^4.0.18",
     "yaml-cfn": "0.3.2"
   },
@@ -75,8 +76,8 @@
     "*.{js,ts}": "eslint --fix ."
   },
   "overrides": {
-    "ajv": "8.18.0",
     "minimatch": "10.2.2",
-    "fast-xml-parser": "5.3.6"
+    "fast-xml-parser": "5.3.6",
+    "@typescript-eslint/utils": "8.56.0"
   }
 }

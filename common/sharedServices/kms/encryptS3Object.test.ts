@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { buildEncrypt, MessageHeader } from '@aws-crypto/encrypt-node'
 import { KmsKeyringNode } from '@aws-crypto/client-node'
 import { createDataStream } from '../../utils/tests/test-helpers/test-helper'
@@ -8,12 +8,14 @@ import {
   TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
   TEST_S3_OBJECT_DATA_STRING
 } from '../../utils/tests/testConstants'
-import { encryptS3Object } from '../../../common/sharedServices/kms/encryptS3Object'
-import * as env from '../../../common/utils/helpers/getEnv'
+import { encryptS3Object } from '../../sharedServices/kms/encryptS3Object'
+import * as env from '../../utils/helpers/getEnv'
+
+const mockEncrypt = vi.fn()
 
 vi.mock('@aws-crypto/encrypt-node', () => ({
   buildEncrypt: vi.fn(() => ({
-    encrypt: vi.fn()
+    encrypt: mockEncrypt
   }))
 }))
 vi.mock('@aws-crypto/client-node', () => ({
@@ -24,11 +26,11 @@ vi.mock('../../utils/helpers/getEnv', () => ({
   getEnv: vi.fn()
 }))
 
-const mockGetEnv = env as { getEnv: vi.Mock }
+const mockGetEnv = env as { getEnv: ReturnType<typeof vi.fn> }
 
 describe('encryptS3Object', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
   it('returns a buffer of encrypted data when backup enabled', async () => {
     mockGetEnv.getEnv.mockImplementation((key: string) => {
@@ -37,28 +39,23 @@ describe('encryptS3Object', () => {
       if (key === 'BACKUP_KEY_ID') return TEST_ADDITIONAL_KEY_ID
       return ''
     })
-    when(KmsKeyringNode as jest.Mock).mockImplementation(() => ({
-      generatorKeyId: TEST_GENERATOR_KEY_ID,
-      keyIds: [TEST_ADDITIONAL_KEY_ID]
-    }))
-    when(buildEncrypt().encrypt).mockResolvedValue({
-      result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
-      messageHeader: {} as MessageHeader
-    })
 
-    ;(buildEncrypt as any).mockReturnValue({
-      encrypt: mockEncrypt
-    })
-    ;(KmsKeyringNode as any).mockImplementation(function (
+    vi.mocked(KmsKeyringNode).mockImplementation(function (
       this: any,
       config: any
     ) {
       this.generatorKeyId = config.generatorKeyId
       this.keyIds = config.keyIds
+    } as any)
+
+    mockEncrypt.mockResolvedValue({
+      result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
+      messageHeader: {} as MessageHeader
     })
 
     const testDataStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
     const result = await encryptS3Object(testDataStream)
+
     expect(result).toEqual(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
     expect(KmsKeyringNode).toHaveBeenCalledWith({
       generatorKeyId: TEST_GENERATOR_KEY_ID,
@@ -80,21 +77,28 @@ describe('encryptS3Object', () => {
       if (key === 'BACKUP_KEY_ID') return TEST_ADDITIONAL_KEY_ID
       return ''
     })
-    when(KmsKeyringNode as jest.Mock).mockImplementation(() => ({
-      generatorKeyId: TEST_GENERATOR_KEY_ID
-    }))
-    when(buildEncrypt().encrypt).mockResolvedValue({
+
+    vi.mocked(KmsKeyringNode).mockImplementation(function (
+      this: any,
+      config: any
+    ) {
+      this.generatorKeyId = config.generatorKeyId
+    } as any)
+
+    mockEncrypt.mockResolvedValue({
       result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
       messageHeader: {} as MessageHeader
     })
+
     const testDataStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
     const result = await encryptS3Object(testDataStream)
+
     expect(result).toEqual(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
     expect(KmsKeyringNode).toHaveBeenCalledWith({
       generatorKeyId: TEST_GENERATOR_KEY_ID
     })
     expect(buildEncrypt).toHaveBeenCalled()
-    expect(buildEncrypt().encrypt).toHaveBeenCalledWith(
+    expect(mockEncrypt).toHaveBeenCalledWith(
       {
         generatorKeyId: TEST_GENERATOR_KEY_ID
       },
@@ -107,10 +111,15 @@ describe('encryptS3Object', () => {
       if (key === 'GENERATOR_KEY_ID') return TEST_GENERATOR_KEY_ID
       return ''
     })
-    when(KmsKeyringNode as jest.Mock).mockImplementation(() => ({
-      generatorKeyId: TEST_GENERATOR_KEY_ID
-    }))
-    when(buildEncrypt().encrypt).mockResolvedValue({
+
+    vi.mocked(KmsKeyringNode).mockImplementation(function (
+      this: any,
+      config: any
+    ) {
+      this.generatorKeyId = config.generatorKeyId
+    } as any)
+
+    mockEncrypt.mockResolvedValue({
       result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
       messageHeader: {} as MessageHeader
     })
