@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mockLambdaContext } from '../../../common/utils/tests/mockLambdaContext'
 import { encryptAuditData } from './encryptAuditData'
 import {
@@ -6,13 +7,13 @@ import {
 } from '../../../common/utils/tests/testEvents/testS3SqsEvent'
 import { handler } from './handler'
 
-jest.mock('./encryptAuditData.ts', () => ({
-  encryptAuditData: jest.fn()
+vi.mock('./encryptAuditData.ts', () => ({
+  encryptAuditData: vi.fn()
 }))
 
 describe('InitiateCopyAndEncrypt', function () {
   beforeEach(() => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
   })
 
   it('handles s3 testEvents emitted when a new notification link is established', async () => {

@@ -1,4 +1,4 @@
-import { when } from 'jest-when'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { logger } from '../../../common/sharedServices/logger'
 import { mockLambdaContext } from '../../../common/utils/tests/mockLambdaContext'
 import {
@@ -27,28 +27,24 @@ const firehoseFailureResults = baseProcessingResults.map((element) => {
   return { itemIdentifier: element.sqsMessageId.concat('firehose') }
 })
 
-jest.mock('./helper', () => ({
-  parseSQSEvent: jest.fn(),
-  generateEventIdLogMessageFromProcessingResult: jest.fn(),
-  SQSBatchItemFailureFromProcessingResultArray: jest.fn()
+vi.mock('./helper', () => ({
+  parseSQSEvent: vi.fn(),
+  generateEventIdLogMessageFromProcessingResult: vi.fn(),
+  SQSBatchItemFailureFromProcessingResultArray: vi.fn()
 }))
 
-jest.mock('./writeToFirehose', () => ({
-  writeToFirehose: jest.fn()
+vi.mock('./writeToFirehose', () => ({
+  writeToFirehose: vi.fn()
 }))
 
 describe('testing handler', () => {
   beforeEach(() => {
-    jest.resetAllMocks()
-    jest.spyOn(logger, 'info')
-
-    when(parseSQSEvent)
-      // .calledWith(baseSQSEvent)
-      .mockReturnValue(parseSQSEventResult)
-
-    when(writeToFirehose)
-      // .calledWith(parseSQSEventResult.successfullyParsedRecords)
-      .mockResolvedValue(allSuccessFirehoseResponseExpectedResult)
+    vi.resetAllMocks()
+    vi.spyOn(logger, 'info')
+    ;(parseSQSEvent as any).mockReturnValue(parseSQSEventResult)
+    ;(writeToFirehose as any).mockResolvedValue(
+      allSuccessFirehoseResponseExpectedResult
+    )
 
     const logMessage: Record<string, string[]> = {
       SucceededToWriteToFirehose: baseProcessingResults.map((element) => {
@@ -56,21 +52,13 @@ describe('testing handler', () => {
       })
     }
 
-    when(generateEventIdLogMessageFromProcessingResult).mockReturnValue(
+    ;(generateEventIdLogMessageFromProcessingResult as any).mockReturnValue(
       logMessage
     )
   })
 
   it('No errors processing events', async () => {
-    when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
-      .mockReturnValue([])
-
-    when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(
-        allSuccessFirehoseResponseExpectedResult.failedProcessingResults
-      )
-      .mockReturnValue([])
+    ;(SQSBatchItemFailureFromProcessingResultArray as any).mockReturnValue([])
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
     expect(result).toStrictEqual({ batchItemFailures: [] })
@@ -87,15 +75,9 @@ describe('testing handler', () => {
   })
 
   it('Some events failed - parsing json error', async () => {
-    when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
+    ;(SQSBatchItemFailureFromProcessingResultArray as any)
       .mockReturnValueOnce(parseFailureResults)
-
-    when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(
-        allSuccessFirehoseResponseExpectedResult.failedProcessingResults
-      )
-      .mockReturnValue([])
+      .mockReturnValueOnce([])
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
     expect(result).toStrictEqual({ batchItemFailures: parseFailureResults })
@@ -112,30 +94,18 @@ describe('testing handler', () => {
   })
 
   it('Some events failed - sending to firehose error', async () => {
-    when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
+    ;(SQSBatchItemFailureFromProcessingResultArray as any)
       .mockReturnValueOnce([])
-
-    when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(
-        allSuccessFirehoseResponseExpectedResult.failedProcessingResults
-      )
-      .mockReturnValue(firehoseFailureResults)
+      .mockReturnValueOnce(firehoseFailureResults)
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
     expect(result).toStrictEqual({ batchItemFailures: firehoseFailureResults })
   })
 
   it('Some events failed - sending to firehose error and json parsing error', async () => {
-    when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(parseSQSEventResult.unsuccessfullyParsedRecords)
+    ;(SQSBatchItemFailureFromProcessingResultArray as any)
       .mockReturnValueOnce(parseFailureResults)
-
-    when(SQSBatchItemFailureFromProcessingResultArray)
-      .calledWith(
-        allSuccessFirehoseResponseExpectedResult.failedProcessingResults
-      )
-      .mockReturnValue(firehoseFailureResults)
+      .mockReturnValueOnce(firehoseFailureResults)
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
     expect(result).toStrictEqual({

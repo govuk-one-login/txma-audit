@@ -7,7 +7,7 @@ This project contains source code and supporting files for creating the Event Pr
 ## PreRequisites
 
 - [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) - Used to build and deploy the application
-- [Node.js](https://nodejs.org/en/) version 22 - Recommended way to install is via [NVM](https://github.com/nvm-sh/nvm)
+- [Node.js](https://nodejs.org/en/) version 24 - Recommended way to install is via [NVM](https://github.com/nvm-sh/nvm)
 - [Docker](https://docs.docker.com/get-docker/) - Required to run SAM locally and run integration tests
 - [Checkov](https://www.checkov.io/) - Scans cloud infrastructure configurations to find misconfigurations before they're deployed. Added as a Husky pre-commit hook.
 - [Husky](https://typicode.github.io/husky/get-started.html) - For pre-push validations
@@ -51,7 +51,7 @@ The Serverless Application Model Command Line Interface (SAM CLI) is an extensio
 To use the SAM CLI, you need the following tools.
 
 - SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
-- Node.js - [Install Node.js 22](https://nodejs.org/en/), including the NPM package management tool.
+- Node.js - [Install Node.js 24](https://nodejs.org/en/), including the NPM package management tool.
 - Docker - [Install Docker](https://docs.docker.com/desktop/)
 
 To build and deploy your application for the first time, run the following from the root directory:
@@ -107,22 +107,31 @@ aws lambda invoke --function-name <function name> --invocation-type Event --payl
 
 ## Unit tests
 
-Unit tests use the [Jest test framework](https://jestjs.io/) and are run with npm.
+Unit tests use the [Vitest test framework](https://vitest.dev/) and are run with npm.
 
 ```bash
 # Runs all unit tests
 npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:cov
+
+# Run tests with UI (opens browser)
+npm run test:ui
 ```
 
 Or to run a specific test file:
 
 ```bash
-npm test src/lambdas/redriveSnsDlqEvents/helper.test.ts
+npx vitest run src/lambdas/redriveSnsDlqEvents/helper.test.ts
 ```
 
 ## Integration tests
 
-Integration tests also use Jest, but are run against a deployed stack in an AWS environment. A branch-specific stack is deployed when you publish your branch onto GitHub.
+Integration tests also use Vitest, but are run against a deployed stack in an AWS environment. A branch-specific stack is deployed when you publish your branch onto GitHub.
 
 The integration tests are run with npm.
 
@@ -133,6 +142,27 @@ export STACK_NAME=<stack-name>
 # Runs all integration tests
 npm run test:integration
 ```
+
+## Testing Framework Migration
+
+This project has been migrated from Jest to Vitest and from CommonJS to ESM (February 2026). Key changes:
+
+### For Developers
+
+- **Module system:** Now uses ES Modules (ESM) - `"type": "module"` in package.json
+- **Test framework:** Now uses [Vitest](https://vitest.dev/) instead of Jest
+- **Node version:** Upgraded to Node.js 24 (from 22)
+- **Lambda runtime:** Uses `nodejs24.x` runtime
+- **Test imports:** Must explicitly import test functions:
+  ```typescript
+  import { describe, it, expect, vi } from 'vitest'
+  ```
+- **Mock functions:** Use `vi.*` instead of `jest.*`:
+  ```typescript
+  vi.fn() // instead of jest.fn()
+  vi.mock() // instead of jest.mock()
+  vi.spyOn() // instead of jest.spyOn()
+  ```
 
 ## Cleanup
 

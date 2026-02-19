@@ -1,9 +1,9 @@
-import { when } from 'jest-when'
+import { describe, it, expect, vi } from 'vitest'
 import { getAuditEvents } from './getAuditEvents'
 import { getAuditEventsFromS3Object } from './getAuditEventsFromS3Object'
 
-jest.mock('./getAuditEventsFromS3Object', () => ({
-  getAuditEventsFromS3Object: jest.fn()
+vi.mock('./getAuditEventsFromS3Object', () => ({
+  getAuditEventsFromS3Object: vi.fn()
 }))
 
 describe('getAuditEvents', () => {
@@ -33,7 +33,7 @@ describe('getAuditEvents', () => {
   ]
 
   it('returns the audit events from the provided s3 objects', async () => {
-    when(getAuditEventsFromS3Object).mockResolvedValue(auditEvents)
+    ;(getAuditEventsFromS3Object as any).mockResolvedValue(auditEvents)
 
     const expectedResult = {
       successfulResults: [
@@ -59,7 +59,9 @@ describe('getAuditEvents', () => {
   })
 
   it('returns the failed ids when the audit events cannot be retrieved', async () => {
-    when(getAuditEventsFromS3Object).mockRejectedValue(new Error('mockError'))
+    ;(getAuditEventsFromS3Object as any).mockRejectedValue(
+      new Error('mockError')
+    )
 
     const expectedResult = {
       successfulResults: [],

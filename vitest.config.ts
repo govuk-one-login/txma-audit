@@ -26,7 +26,13 @@ export default defineConfig({
     environment: 'node',
     include: [
       'vitest-setup.test.ts',
-      '**/auditMessageDelimiter/handler.test.ts'
+      '**/auditMessageDelimiter/handler.test.ts',
+      '**/sharedServices/s3/*.test.ts',
+      '**/sharedServices/firehose/*.test.ts',
+      '**/sharedServices/kms/*.test.ts',
+      '**/s3CopyAndEncrypt/*.test.ts',
+      '**/redriveSnsDlqEvents/*.test.ts',
+      '**/auditMessageFirehoseReingest/*.test.ts'
     ],
     exclude: ['**/node_modules/**', '**/dist/**'],
     setupFiles: ['./common/utils/tests/setup/testEnvVars.ts'],

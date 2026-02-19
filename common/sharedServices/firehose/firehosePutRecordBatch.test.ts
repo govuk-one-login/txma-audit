@@ -1,6 +1,6 @@
+import { describe, it, expect } from 'vitest'
 import { FirehoseClient, PutRecordBatchCommand } from '@aws-sdk/client-firehose'
 import { mockClient } from 'aws-sdk-client-mock'
-import 'aws-sdk-client-mock-jest'
 import { firehosePutRecordBatch } from '../../../common/sharedServices/firehose/firehosePutRecordBatch'
 
 describe('firehosePutRecordBatch', () => {
@@ -27,12 +27,12 @@ describe('firehosePutRecordBatch', () => {
     )
 
     expect(result).toEqual({ FailedPutCount: 0, RequestResponses: [] })
-    expect(firehoseMockClient).toHaveReceivedCommandWith(
-      PutRecordBatchCommand,
-      {
-        DeliveryStreamName: mockDeliveryStreamName,
-        Records: mockFirehoseRecords
-      }
-    )
+
+    const calls = firehoseMockClient.commandCalls(PutRecordBatchCommand)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].args[0].input).toEqual({
+      DeliveryStreamName: mockDeliveryStreamName,
+      Records: mockFirehoseRecords
+    })
   })
 })

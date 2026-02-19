@@ -1,4 +1,4 @@
-import { when } from 'jest-when'
+import { describe, it, expect, vi } from 'vitest'
 import { Readable, Writable } from 'node:stream'
 import { getS3ObjectAsStream } from '../../../common/sharedServices/s3/getS3ObjectAsStream'
 import { AuditEvent } from '../../../common/types/auditEvent'
@@ -6,19 +6,19 @@ import { objectToBase64 } from '../../../common/utils/helpers/objectToBase64'
 import { readableToString } from '../../../common/utils/helpers/readableToString'
 import { getAuditEventsFromS3Object } from './getAuditEventsFromS3Object'
 
-jest.mock('../../../common/sharedServices/s3/getS3ObjectAsStream', () => ({
-  getS3ObjectAsStream: jest.fn()
+vi.mock('../../../common/sharedServices/s3/getS3ObjectAsStream', () => ({
+  getS3ObjectAsStream: vi.fn()
 }))
 
-jest.mock('../../../common/utils/helpers/readableToString', () => ({
-  readableToString: jest.fn()
+vi.mock('../../../common/utils/helpers/readableToString', () => ({
+  readableToString: vi.fn()
 }))
 
-jest.mock('node:zlib', () => ({
-  constants: jest.fn(),
-  createGunzip: jest.fn().mockImplementation(() => {
+vi.mock('node:zlib', () => ({
+  constants: vi.fn(),
+  createGunzip: vi.fn().mockImplementation(() => {
     const writable = new Writable()
-    writable._write = jest.fn()
+    writable._write = vi.fn()
 
     return writable
   })
@@ -64,9 +64,8 @@ describe('getAuditEventsFromS3Object', () => {
     const readable = new Readable()
     readable.push(fileContents)
     readable.push(null)
-
-    when(getS3ObjectAsStream).mockResolvedValue(readable)
-    when(readableToString).mockResolvedValue(fileContents)
+    ;(getS3ObjectAsStream as any).mockResolvedValue(readable)
+    ;(readableToString as any).mockResolvedValue(fileContents)
 
     const result = await getAuditEventsFromS3Object(bucketName, key)
     expect(result).toEqual(auditEvents)

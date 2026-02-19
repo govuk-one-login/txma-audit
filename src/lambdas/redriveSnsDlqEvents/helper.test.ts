@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from 'vitest'
 import { SQSEvent } from 'aws-lambda'
 import { AuditEvent } from '../../../common/types/auditEvent'
 import {
@@ -11,8 +12,8 @@ import {
   SQSBatchItemFailureFromProcessingResultArray
 } from './helper'
 
-jest.mock('./handler', () => ({
-  parseSQSEvent: jest.fn()
+vi.mock('./handler', () => ({
+  parseSQSEvent: vi.fn()
 }))
 
 describe('testing helper functions', () => {

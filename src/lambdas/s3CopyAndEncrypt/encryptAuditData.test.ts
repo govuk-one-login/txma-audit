@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { encryptS3Object } from '../../../common/sharedServices/kms/encryptS3Object'
 import { getS3ObjectAsStream } from '../../../common/sharedServices/s3/getS3ObjectAsStream'
 import { putS3Object } from '../../../common/sharedServices/s3/putS3Object'
@@ -12,31 +13,30 @@ import {
   TEST_TEMPORARY_BUCKET_NAME,
   TEST_WRONG_S3_BUCKET
 } from '../../../common/utils/tests/testConstants'
-import { when } from 'jest-when'
 
-jest.mock('../../../common/sharedServices/s3/getS3ObjectAsStream', () => ({
-  getS3ObjectAsStream: jest.fn()
+vi.mock('../../../common/sharedServices/s3/getS3ObjectAsStream', () => ({
+  getS3ObjectAsStream: vi.fn()
 }))
 
-jest.mock('../../../common/sharedServices/s3/putS3Object', () => ({
-  putS3Object: jest.fn()
+vi.mock('../../../common/sharedServices/s3/putS3Object', () => ({
+  putS3Object: vi.fn()
 }))
 
-jest.mock('../../../common/sharedServices/kms/encryptS3Object', () => ({
-  encryptS3Object: jest.fn()
+vi.mock('../../../common/sharedServices/kms/encryptS3Object', () => ({
+  encryptS3Object: vi.fn()
 }))
 
 describe('encryptAuditData', () => {
   beforeEach(() => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
   })
 
   it.each([TEST_TEMPORARY_BUCKET_NAME, TEST_AUDIT_BUCKET_NAME])(
     'retrieves and copies an S3 object from the bucket %p',
     async (bucketName: string) => {
       const s3ObjectStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
-      when(getS3ObjectAsStream).mockResolvedValue(s3ObjectStream)
-      when(encryptS3Object).mockResolvedValue(
+      ;(getS3ObjectAsStream as any).mockResolvedValue(s3ObjectStream)
+      ;(encryptS3Object as any).mockResolvedValue(
         TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER
       )
 

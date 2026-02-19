@@ -1,26 +1,26 @@
-import { when } from 'jest-when'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { deleteS3Object } from '../../../common/sharedServices/s3/deleteS3Object'
 import { putS3Object } from '../../../common/sharedServices/s3/putS3Object'
 import { S3ObjectDetails } from '../../../common/types/s3ObjectDetails'
 import { deleteOrUpdateS3Objects } from './deleteOrUpdateS3Objects'
 
-jest.mock('../../../common/sharedServices/s3/deleteS3Object', () => ({
-  deleteS3Object: jest.fn()
+vi.mock('../../../common/sharedServices/s3/deleteS3Object', () => ({
+  deleteS3Object: vi.fn()
 }))
 
-jest.mock('../../../common/sharedServices/s3/putS3Object', () => ({
-  putS3Object: jest.fn()
+vi.mock('../../../common/sharedServices/s3/putS3Object', () => ({
+  putS3Object: vi.fn()
 }))
 
 describe('deleteOrUpdateS3Objects', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   const bucket = 'mockBucket'
 
   it('should delete s3 objects that have no failed events', async () => {
-    when(deleteS3Object).mockResolvedValue()
+    ;(deleteS3Object as any).mockResolvedValue()
 
     const results: S3ObjectDetails[] = [
       {
@@ -47,7 +47,7 @@ describe('deleteOrUpdateS3Objects', () => {
   })
 
   it('should update s3 objects that have failed events', async () => {
-    when(putS3Object).mockResolvedValue()
+    ;(putS3Object as any).mockResolvedValue()
 
     const results: S3ObjectDetails[] = [
       {

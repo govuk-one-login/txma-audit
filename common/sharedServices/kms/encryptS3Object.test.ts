@@ -1,6 +1,6 @@
+import { describe, it, expect, vi } from 'vitest'
 import { buildEncrypt, MessageHeader } from '@aws-crypto/encrypt-node'
 import { KmsKeyringNode } from '@aws-crypto/client-node'
-import { when } from 'jest-when'
 import { createDataStream } from '../../utils/tests/test-helpers/test-helper'
 import {
   TEST_GENERATOR_KEY_ID,
@@ -11,20 +11,20 @@ import {
 import { encryptS3Object } from '../../../common/sharedServices/kms/encryptS3Object'
 import * as env from '../../../common/utils/helpers/getEnv'
 
-jest.mock('@aws-crypto/encrypt-node', () => ({
-  buildEncrypt: jest.fn().mockReturnValue({
-    encrypt: jest.fn()
-  })
+vi.mock('@aws-crypto/encrypt-node', () => ({
+  buildEncrypt: vi.fn(() => ({
+    encrypt: vi.fn()
+  }))
 }))
-jest.mock('@aws-crypto/client-node', () => ({
-  KmsKeyringNode: jest.fn()
-}))
-
-jest.mock('../../utils/helpers/getEnv', () => ({
-  getEnv: jest.fn()
+vi.mock('@aws-crypto/client-node', () => ({
+  KmsKeyringNode: vi.fn()
 }))
 
-const mockGetEnv = env as { getEnv: jest.Mock }
+vi.mock('../../utils/helpers/getEnv', () => ({
+  getEnv: vi.fn()
+}))
+
+const mockGetEnv = env as { getEnv: vi.Mock }
 
 describe('encryptS3Object', () => {
   beforeEach(() => {
@@ -45,6 +45,18 @@ describe('encryptS3Object', () => {
       result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
       messageHeader: {} as MessageHeader
     })
+
+    ;(buildEncrypt as any).mockReturnValue({
+      encrypt: mockEncrypt
+    })
+    ;(KmsKeyringNode as any).mockImplementation(function (
+      this: any,
+      config: any
+    ) {
+      this.generatorKeyId = config.generatorKeyId
+      this.keyIds = config.keyIds
+    })
+
     const testDataStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
     const result = await encryptS3Object(testDataStream)
     expect(result).toEqual(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
@@ -53,11 +65,11 @@ describe('encryptS3Object', () => {
       keyIds: [TEST_ADDITIONAL_KEY_ID]
     })
     expect(buildEncrypt).toHaveBeenCalled()
-    expect(buildEncrypt().encrypt).toHaveBeenCalledWith(
-      {
+    expect(mockEncrypt).toHaveBeenCalledWith(
+      expect.objectContaining({
         generatorKeyId: TEST_GENERATOR_KEY_ID,
         keyIds: [TEST_ADDITIONAL_KEY_ID]
-      },
+      }),
       testDataStream
     )
   })

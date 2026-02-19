@@ -1,25 +1,25 @@
-import { when } from 'jest-when'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { firehosePutRecordBatch } from '../../../common/sharedServices/firehose/firehosePutRecordBatch'
 import { S3ObjectDetails } from '../../../common/types/s3ObjectDetails'
 import { auditEventsToFirehoseRecords } from '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords'
 import { sendAuditEventsToFirehose } from './sendAuditEventsToFirehose'
 
-jest.mock(
+vi.mock(
   '../../../common/sharedServices/firehose/firehosePutRecordBatch.ts',
   () => ({
-    firehosePutRecordBatch: jest.fn()
+    firehosePutRecordBatch: vi.fn()
   })
 )
 
-jest.mock(
+vi.mock(
   '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords.ts',
   () => ({
-    auditEventsToFirehoseRecords: jest.fn()
+    auditEventsToFirehoseRecords: vi.fn()
   })
 )
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('sendAuditEventsToFirehose', () => {
@@ -67,12 +67,12 @@ describe('sendAuditEventsToFirehose', () => {
   ]
 
   it('should successfully send a batch of audit events to a Firehose stream', async () => {
-    when(firehosePutRecordBatch).mockResolvedValue({
+    ;(firehosePutRecordBatch as any).mockResolvedValue({
       FailedPutCount: 0,
       RequestResponses: [],
       $metadata: {}
     })
-    when(auditEventsToFirehoseRecords).mockReturnValue(mockFirehoseRecords)
+    ;(auditEventsToFirehoseRecords as any).mockReturnValue(mockFirehoseRecords)
 
     const result = await sendAuditEventsToFirehose(mockS3ObjectDetailsArray)
 
@@ -90,8 +90,8 @@ describe('sendAuditEventsToFirehose', () => {
   })
 
   it('should return all audit events in the auditEventsFailedReingest array when the Firehose PutBatch throws an error', async () => {
-    when(firehosePutRecordBatch).mockRejectedValue(new Error('mockError'))
-    when(auditEventsToFirehoseRecords).mockReturnValue(mockFirehoseRecords)
+    ;(firehosePutRecordBatch as any).mockRejectedValue(new Error('mockError'))
+    ;(auditEventsToFirehoseRecords as any).mockReturnValue(mockFirehoseRecords)
 
     const result = await sendAuditEventsToFirehose(mockS3ObjectDetailsArray)
 
@@ -109,7 +109,7 @@ describe('sendAuditEventsToFirehose', () => {
   })
 
   it('should return failed events in the auditEventsFailedReingest array when the Firehose PutBatch returns a partial success response', async () => {
-    when(firehosePutRecordBatch).mockResolvedValue({
+    ;(firehosePutRecordBatch as any).mockResolvedValue({
       FailedPutCount: 1,
       RequestResponses: [
         {
@@ -122,7 +122,7 @@ describe('sendAuditEventsToFirehose', () => {
       ],
       $metadata: {}
     })
-    when(auditEventsToFirehoseRecords).mockReturnValue(mockFirehoseRecords)
+    ;(auditEventsToFirehoseRecords as any).mockReturnValue(mockFirehoseRecords)
 
     const expectedResult = mockS3ObjectDetailsArray
     expectedResult[0].auditEventsFailedReingest = [

@@ -1,5 +1,5 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SQSEvent } from 'aws-lambda'
-import { when } from 'jest-when'
 import { mockLambdaContext } from '../../../common/utils/tests/mockLambdaContext'
 import { testS3TestEvent } from '../../../common/utils/tests/testEvents/testS3SqsEvent'
 import { deleteOrUpdateS3Objects } from './deleteOrUpdateS3Objects'
@@ -7,16 +7,16 @@ import { getAuditEvents } from './getAuditEvents'
 import { handler } from './handler'
 import { sendAuditEventsToFirehose } from './sendAuditEventsToFirehose'
 
-jest.mock('./getAuditEvents', () => ({
-  getAuditEvents: jest.fn()
+vi.mock('./getAuditEvents', () => ({
+  getAuditEvents: vi.fn()
 }))
 
-jest.mock('./sendAuditEventsToFirehose', () => ({
-  sendAuditEventsToFirehose: jest.fn()
+vi.mock('./sendAuditEventsToFirehose', () => ({
+  sendAuditEventsToFirehose: vi.fn()
 }))
 
-jest.mock('./deleteOrUpdateS3Objects', () => ({
-  deleteOrUpdateS3Objects: jest.fn()
+vi.mock('./deleteOrUpdateS3Objects', () => ({
+  deleteOrUpdateS3Objects: vi.fn()
 }))
 
 describe('handler', () => {
@@ -46,11 +46,11 @@ describe('handler', () => {
   } as SQSEvent
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('successfully receives an SQS event, and returns an SQS Batch response', async () => {
-    when(getAuditEvents).mockResolvedValue({
+    ;(getAuditEvents as any).mockResolvedValue({
       successfulResults: [
         {
           auditEvents: [],
@@ -61,7 +61,7 @@ describe('handler', () => {
       ],
       failedIds: []
     })
-    when(sendAuditEventsToFirehose).mockResolvedValue([
+    ;(sendAuditEventsToFirehose as any).mockResolvedValue([
       {
         auditEvents: [],
         auditEventsFailedReingest: [],
@@ -70,7 +70,7 @@ describe('handler', () => {
         sqsRecordMessageId: mockMessageId
       }
     ])
-    when(deleteOrUpdateS3Objects).mockResolvedValue([])
+    ;(deleteOrUpdateS3Objects as any).mockResolvedValue([])
 
     const expectedResult = {
       batchItemFailures: []
@@ -106,7 +106,7 @@ describe('handler', () => {
   })
 
   it('handles partial failures', async () => {
-    when(getAuditEvents).mockResolvedValue({
+    ;(getAuditEvents as any).mockResolvedValue({
       successfulResults: [
         {
           auditEvents: [],
@@ -117,7 +117,7 @@ describe('handler', () => {
       ],
       failedIds: ['messageId2']
     })
-    when(sendAuditEventsToFirehose).mockResolvedValue([
+    ;(sendAuditEventsToFirehose as any).mockResolvedValue([
       {
         auditEvents: [],
         auditEventsFailedReingest: [],
@@ -126,7 +126,7 @@ describe('handler', () => {
         sqsRecordMessageId: mockMessageId
       }
     ])
-    when(deleteOrUpdateS3Objects).mockResolvedValue([])
+    ;(deleteOrUpdateS3Objects as any).mockResolvedValue([])
 
     const expectedResult = {
       batchItemFailures: [
@@ -142,12 +142,12 @@ describe('handler', () => {
   })
 
   it('ignores s3 test events', async () => {
-    when(getAuditEvents).mockResolvedValue({
+    ;(getAuditEvents as any).mockResolvedValue({
       successfulResults: [],
       failedIds: []
     })
-    when(sendAuditEventsToFirehose).mockResolvedValue([])
-    when(deleteOrUpdateS3Objects).mockResolvedValue([])
+    ;(sendAuditEventsToFirehose as any).mockResolvedValue([])
+    ;(deleteOrUpdateS3Objects as any).mockResolvedValue([])
 
     await handler(testS3TestEvent, mockLambdaContext)
 
@@ -177,12 +177,12 @@ describe('handler', () => {
       ]
     } as SQSEvent
 
-    when(getAuditEvents).mockResolvedValue({
+    ;(getAuditEvents as any).mockResolvedValue({
       successfulResults: [],
       failedIds: []
     })
-    when(sendAuditEventsToFirehose).mockResolvedValue([])
-    when(deleteOrUpdateS3Objects).mockResolvedValue([])
+    ;(sendAuditEventsToFirehose as any).mockResolvedValue([])
+    ;(deleteOrUpdateS3Objects as any).mockResolvedValue([])
 
     await handler(sqsEvent, mockLambdaContext)
 
@@ -209,12 +209,12 @@ describe('handler', () => {
       ]
     } as SQSEvent
 
-    when(getAuditEvents).mockResolvedValue({
+    ;(getAuditEvents as any).mockResolvedValue({
       successfulResults: [],
       failedIds: []
     })
-    when(sendAuditEventsToFirehose).mockResolvedValue([])
-    when(deleteOrUpdateS3Objects).mockResolvedValue([])
+    ;(sendAuditEventsToFirehose as any).mockResolvedValue([])
+    ;(deleteOrUpdateS3Objects as any).mockResolvedValue([])
 
     await handler(sqsEvent, mockLambdaContext)
 
@@ -241,12 +241,12 @@ describe('handler', () => {
       ]
     } as SQSEvent
 
-    when(getAuditEvents).mockResolvedValue({
+    ;(getAuditEvents as any).mockResolvedValue({
       successfulResults: [],
       failedIds: []
     })
-    when(sendAuditEventsToFirehose).mockResolvedValue([])
-    when(deleteOrUpdateS3Objects).mockResolvedValue([])
+    ;(sendAuditEventsToFirehose as any).mockResolvedValue([])
+    ;(deleteOrUpdateS3Objects as any).mockResolvedValue([])
 
     await handler(sqsEvent, mockLambdaContext)
 

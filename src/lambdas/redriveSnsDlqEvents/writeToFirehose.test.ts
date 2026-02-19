@@ -1,4 +1,4 @@
-import { when } from 'jest-when'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { firehosePutRecordBatch } from '../../../common/sharedServices/firehose/firehosePutRecordBatch'
 import { logger } from '../../../common/sharedServices/logger'
 import { auditEventsToFirehoseRecords } from '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords'
@@ -10,33 +10,33 @@ import {
 import * as parseFirehoseResponse from './parseFirehoseResponse'
 import { FirehoseProcessingResult, writeToFirehose } from './writeToFirehose'
 
-jest.mock(
+vi.mock(
   '../../../common/sharedServices/firehose/firehosePutRecordBatch',
   () => ({
-    firehosePutRecordBatch: jest.fn()
+    firehosePutRecordBatch: vi.fn()
   })
 )
 
-jest.mock(
+vi.mock(
   '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords.ts',
   () => ({
-    auditEventsToFirehoseRecords: jest.fn()
+    auditEventsToFirehoseRecords: vi.fn()
   })
 )
 
 describe('test writeToFirehose() function', () => {
   beforeEach(() => {
-    jest.resetAllMocks()
-    jest.spyOn(logger, 'warn')
-    jest.spyOn(logger, 'info')
-    jest.spyOn(logger, 'error')
-    jest.spyOn(parseFirehoseResponse, 'parseFirehoseResponse')
+    vi.resetAllMocks()
+    vi.spyOn(logger, 'warn')
+    vi.spyOn(logger, 'info')
+    vi.spyOn(logger, 'error')
+    vi.spyOn(parseFirehoseResponse, 'parseFirehoseResponse')
   })
 
   it('calls firehosePutRecordBatch() function.', async () => {
     const mockDeliveryStreamName = 'mockDeliveryStreamName'
-    when(auditEventsToFirehoseRecords).mockReturnValue(mockFireHoseRecords)
-    when(firehosePutRecordBatch).mockResolvedValue(baseFirehoseResponse)
+    ;(auditEventsToFirehoseRecords as any).mockReturnValue(mockFireHoseRecords)
+    ;(firehosePutRecordBatch as any).mockResolvedValue(baseFirehoseResponse)
 
     await writeToFirehose(baseProcessingResults)
     expect(firehosePutRecordBatch).toHaveBeenCalledWith(
@@ -53,8 +53,8 @@ describe('test writeToFirehose() function', () => {
     const mockDeliveryStreamName = 'mockDeliveryStreamName'
     const error = new Error('mockError')
 
-    when(auditEventsToFirehoseRecords).mockReturnValue(mockFireHoseRecords)
-    when(firehosePutRecordBatch).mockRejectedValue(error)
+    ;(auditEventsToFirehoseRecords as any).mockReturnValue(mockFireHoseRecords)
+    ;(firehosePutRecordBatch as any).mockRejectedValue(error)
 
     const result = await writeToFirehose(baseProcessingResults)
     const expectedResult: FirehoseProcessingResult = {
