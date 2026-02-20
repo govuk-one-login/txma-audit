@@ -7,23 +7,21 @@
 set -e
 
 # Check required parameters
-if [ -z "$1" ]; then
-    echo "Usage: $0 <aws-profile>"
-    echo "Example: $0 audit-dev"
+if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "Usage: $0 <stack-name> <aws-profile>"
+    echo "Example: $0 audit audit-dev"
     echo ""
     echo "Note: You must be connected to VPN or on an allowed network."
     echo "      CloudShell will not work due to IP restrictions."
     exit 1
 fi
 
-AWS_PROFILE=$1
-
-# Get stack name from samconfig.toml
-STACK_NAME=$(grep '^stack_name = ' samconfig.toml | cut -d'=' -f2 | tr -d ' "')
+STACK_NAME=$1
+AWS_PROFILE=$2
 ROLE_NAME="${STACK_NAME}-event-replay-role"
 
 echo "Creating EventReplayRole: ${ROLE_NAME}"
-echo "Stack: ${STACK_NAME} (from samconfig.toml)"
+echo "Stack: ${STACK_NAME}"
 echo "AWS Profile: ${AWS_PROFILE}"
 echo ""
 echo "⚠️  Ensure you are connected to VPN or on an allowed network."
@@ -42,13 +40,6 @@ echo "Account ID: ${ACCOUNT_ID}"
 
 # Get PermissionsBoundary from SSM if it exists
 PERMISSIONS_BOUNDARY=$(aws ssm get-parameter --name "PermissionsBoundary" --profile ${AWS_PROFILE} --query Parameter.Value --output text 2>/dev/null || echo "")
-
-TAGS_JSON='[
-  {"Key":"Product","Value":"GOV.UK Sign In"},
-  {"Key":"System","Value":"TxMA"},
-  {"Key":"Environment","Value":"dev"},
-  {"Key":"Owner","Value":"di-txma-team-2@digital.cabinet-office.gov.uk"}
-]'
 
 # Create trust policy
 TRUST_POLICY=$(cat <<EOF
@@ -72,22 +63,6 @@ TRUST_POLICY=$(cat <<EOF
 EOF
 )
 
-# Create inline policy
-INLINE_POLICY=$(cat <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowIAMPassRole",
-      "Effect": "Allow",
-      "Action": "iam:PassRole",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-)
-
 # Create the role
 if [ -n "$PERMISSIONS_BOUNDARY" ]; then
     aws iam create-role \
@@ -96,7 +71,7 @@ if [ -n "$PERMISSIONS_BOUNDARY" ]; then
         --assume-role-policy-document "${TRUST_POLICY}" \
         --description "This role allows approved team members to run event replay" \
         --permissions-boundary ${PERMISSIONS_BOUNDARY} \
-        --tags "${TAGS_JSON}" \
+        --max-session-duration 14400 \
         --profile ${AWS_PROFILE}
 else
     aws iam create-role \
@@ -104,7 +79,7 @@ else
         --path /runbooks/ \
         --assume-role-policy-document "${TRUST_POLICY}" \
         --description "This role allows approved team members to run event replay" \
-        --tags "${TAGS_JSON}" \
+        --max-session-duration 14400 \
         --profile ${AWS_PROFILE}
 fi
 
@@ -118,10 +93,11 @@ aws iam attach-role-policy \
 
 echo "Attached PowerUserAccess policy"
 
-# Add inline policy
+# Add inline policy to allow assuming roles
+INLINE_POLICY='{"Version":"2012-10-17","Statement":[{"Sid":"AllowSTSAssumeRole","Effect":"Allow","Action":"sts:AssumeRole","Resource":"*"},{"Sid":"AllowIAMPassRole","Effect":"Allow","Action":"iam:PassRole","Resource":"*"}]}'
 aws iam put-role-policy \
     --role-name ${ROLE_NAME} \
-    --policy-name AllowIAMPassRole \
+    --policy-name AllowSTSAssumeRole \
     --policy-document "${INLINE_POLICY}" \
     --profile ${AWS_PROFILE}
 

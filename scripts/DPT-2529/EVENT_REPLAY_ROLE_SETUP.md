@@ -72,12 +72,36 @@ After creation, verify the role exists in CloudShell:
 aws iam get-role --role-name audit-event-replay-role
 ```
 
+## Execution
+
+Export the following environment variables:
+
+```bash
+export ACCOUNT_ID=<account-id>
+export AWS_PROFILE=<profile>
+```
+
+Assume the role when running an Event Replay
+
+```bash
+CREDS=$(aws sts assume-role --role-arn "arn:aws:iam::${ACCOUNT_ID}:role/runbooks/audit-event-replay-role" --role-session-name "ReplaySession" --profile $AWS_PROFILE)
+```
+
+Unset the SSO Profile and export the temporary credentials to run the replay with the assumed role:
+
+```bash
+unset AWS_PROFILE
+export AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r '.Credentials.AccessKeyId')
+export AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r '.Credentials.SecretAccessKey')
+export AWS_SESSION_TOKEN=$(echo $CREDS | jq -r '.Credentials.SessionToken')
+```
+
 ## Deletion
 
 To delete the role from CloudShell:
 
 ```bash
-aws iam detach-role-policy --role-name audit-event-replay-role --policy-arn arn:aws:iam::aws:policy/PowerUserAccess --profile audit-dev
-aws iam delete-role-policy --role-name audit-event-replay-role --policy-name AllowIAMPassRole --profile audit-dev
-aws iam delete-role --role-name audit-event-replay-role --profile audit-dev
+aws iam detach-role-policy --role-name audit-event-replay-role --policy-arn arn:aws:iam::aws:policy/PowerUserAccess --profile $AWS_PROFILE
+aws iam delete-role-policy --role-name audit-event-replay-role --policy-name AllowSTSAssumeRole --profile $AWS_PROFILE
+aws iam delete-role --role-name audit-event-replay-role --profile $AWS_PROFILE
 ```
