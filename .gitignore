@@ -24,3 +24,6 @@ tempMessageZip.gzip
 # Tests
 tests/bin/
 tests/**/reports/
+
+# Local debugging
+scripts/debug/events/env-vars.json
