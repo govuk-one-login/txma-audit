@@ -783,6 +783,49 @@ Resources:
               - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
               - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
 
+  S3BatchOperationsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: S3BatchLambdaInvokeRole
+      # Trust Policy: Allows S3 Batch Operations to assume this role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: batchoperations.s3.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3BatchLambdaInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # 1. Permission to read the job manifest file
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource: 'arn:aws:s3:::your-manifest-bucket/manifest.csv'
+
+              # 2. Permission to invoke the target Lambda function
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: 'arn:aws:lambda:region:account-id:function:your-function-name'
+
+              # 3. Permission to write the completion report
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: 'arn:aws:s3:::your-report-bucket/reports/*'
+
+              # 4. Optional: Permissions for job monitoring/logging (if using CloudWatch)
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: 'arn:aws:logs:*:*:*'
   ################################################
   # End: S3 Key Rotation (Migration) Resources   #
   ################################################
