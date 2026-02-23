@@ -31,10 +31,10 @@ One-time data migration Lambda to transition audit objects from single-key to du
 
 ```bash
 # Run all tests
-npm test -- src/lambdas/s3KeyRotation
+npm test -- src/lambdas/s3KeyRotationMigration
 
 # Run specific test file
-npm test -- src/lambdas/s3KeyRotation/handler.test.ts
+npm test -- src/lambdas/s3KeyRotationMigration/handler.test.ts
 ```
 
 ## Local Testing
@@ -43,6 +43,6 @@ npm test -- src/lambdas/s3KeyRotation/handler.test.ts
 # Using AWS CLI
 aws lambda invoke \
   --function-name txma-audit-s3-key-rotation \
-  --payload file://src/lambdas/s3KeyRotation/test-event.json \
+  --payload file://src/lambdas/s3KeyRotationMigration/test-event.json \
   response.json
 ```
