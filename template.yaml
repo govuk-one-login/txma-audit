@@ -723,12 +723,6 @@ Resources:
               Service:
                 - lambda.amazonaws.com
             Action: sts:AssumeRole
-          - Sid: AllowS3BatchOperations
-            Effect: Allow
-            Principal:
-              Service:
-                - batchoperations.s3.amazonaws.com
-            Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref S3KeyRotationPolicy
@@ -786,7 +780,11 @@ Resources:
   S3BatchOperationsRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: S3BatchLambdaInvokeRole
+      RoleName: !Sub ${AWS::StackName}-S3BatchLambdaInvokeRole
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
       # Trust Policy: Allows S3 Batch Operations to assume this role
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -824,13 +822,6 @@ Resources:
                   - !GetAtt PermanentMessageBatchBucket.Arn
                   - !Sub ${PermanentMessageBatchBucket.Arn}/reports/*
 
-              # 4. Optional: Permissions for job monitoring/logging (if using CloudWatch)
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: 'arn:aws:logs:*:*:*'
   ################################################
   # End: S3 Key Rotation (Migration) Resources   #
   ################################################
