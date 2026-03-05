@@ -1864,6 +1864,10 @@ Outputs:
   S3KeyRotationLogsName:
     Value: !Ref S3KeyRotationLogs
 
+  # S3 Permanent Audit Bucket
+  PermanentMessageBatchBucketName:
+    Value: !Ref PermanentMessageBatchBucket
+
   # S3 Temp Audit Bucket
   AuditMessageBatchBucketName:
     Value: !Ref MessageBatchBucket

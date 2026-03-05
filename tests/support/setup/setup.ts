@@ -15,6 +15,9 @@ const setupFunction = async () => {
       AUDIT_MESSAGE_DELIMITER_LOGS_NAME: 'AuditMessageDelimiterLogsName',
       S3_COPY_AND_ENCRYPT_FUNCTION_NAME: 'S3CopyAndEncryptFunctionName',
       S3_COPY_AND_ENCRYPT_LOGS_NAME: 'S3CopyAndEncryptLogsName',
+      S3_KEY_ROTATION_FUNCTION_NAME: 'S3KeyRotationFunctionName',
+      S3_KEY_ROTATION_LOGS_NAME: 'S3KeyRotationLogsName',
+      PERMANENT_MESSAGE_BATCH_BUCKET_NAME: 'PermanentMessageBatchBucketName',
       AUDIT_BUILD_MESSAGE_BATCH_NAME: 'AuditMessageBatchBucketName',
       FIREHOSE_AUDIT_MESSAGE_BATCH_NAME: 'AuditMessageDeliveryStreamName'
     }
@@ -33,7 +36,9 @@ const formatTestStackSsmParam = (parameterName: string) =>
 const ssmMappings = {
   FIREHOSE_DELIVERY_STREAM_NAME: formatTestStackSsmParam(
     'AddRecordToFirehoseFunctionName'
-  )
+  ),
+  GENERATOR_KEY_ID: 'S3EncryptionGeneratorKmsKeyArn',
+  BACKUP_KEY_ID: 'S3EncryptionGeneratorKmsKeyArnBck'
 }
 
 const setEnvVarsFromStackOutputs = async (
