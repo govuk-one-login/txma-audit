@@ -682,7 +682,7 @@ Resources:
     #checkov:skip=CKV_AWS_116: DLQ not required for S3 Batch Operations
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/s3KeyRotation/
+      CodeUri: dist/s3KeyRotationMigration/
       Environment:
         Variables:
           GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
@@ -722,6 +722,12 @@ Resources:
             Principal:
               Service:
                 - lambda.amazonaws.com
+            Action: sts:AssumeRole
+          - Sid: AllowS3BatchOperations
+            Effect: Allow
+            Principal:
+              Service:
+                - batchoperations.s3.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
