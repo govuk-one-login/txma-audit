@@ -26,6 +26,10 @@ vi.mock('../../utils/helpers/getEnv', () => ({
   getEnv: vi.fn()
 }))
 
+vi.mock('./createKmsClientProvider', () => ({
+  createKmsClientProvider: vi.fn(() => vi.fn())
+}))
+
 const mockGetEnv = env as { getEnv: ReturnType<typeof vi.fn> }
 
 describe('encryptS3Object', () => {
@@ -66,7 +70,8 @@ describe('encryptS3Object', () => {
     expect(result).toEqual(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
     expect(KmsKeyringNode).toHaveBeenCalledWith({
       generatorKeyId: TEST_GENERATOR_KEY_ID,
-      keyIds: [TEST_ADDITIONAL_KEY_ID]
+      keyIds: [TEST_ADDITIONAL_KEY_ID],
+      clientProvider: expect.any(Function) // eslint-disable-line @typescript-eslint/no-unsafe-assignment
     })
     expect(buildEncrypt).toHaveBeenCalled()
     expect(mockEncrypt).toHaveBeenCalledWith(
@@ -106,7 +111,8 @@ describe('encryptS3Object', () => {
 
     expect(result).toEqual(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
     expect(KmsKeyringNode).toHaveBeenCalledWith({
-      generatorKeyId: TEST_GENERATOR_KEY_ID
+      generatorKeyId: TEST_GENERATOR_KEY_ID,
+      clientProvider: expect.any(Function) // eslint-disable-line @typescript-eslint/no-unsafe-assignment
     })
     expect(buildEncrypt).toHaveBeenCalled()
     expect(mockEncrypt).toHaveBeenCalledWith(
@@ -143,7 +149,8 @@ describe('encryptS3Object', () => {
     await encryptS3Object(testDataStream)
 
     expect(KmsKeyringNode).toHaveBeenCalledWith({
-      generatorKeyId: TEST_GENERATOR_KEY_ID
+      generatorKeyId: TEST_GENERATOR_KEY_ID,
+      clientProvider: expect.any(Function) // eslint-disable-line @typescript-eslint/no-unsafe-assignment
     })
     // Verify it was NOT called with keyIds
     expect(KmsKeyringNode).not.toHaveBeenCalledWith(

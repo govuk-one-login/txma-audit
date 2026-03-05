@@ -1,8 +1,9 @@
-# S3 Key Rotation Lambda
+# S3 Key Rotation Migration Lambda
 
 ## Purpose
 
-One-time data migration Lambda to transition audit objects from single-key to dual-key encryption for KMS key rotation.
+One-off migration Lambda that transitions audit objects in the Permanent Message Batch S3 bucket from single-key encryption to dual-key (Wrapper Key 1 + Wrapper Key 2) encryption.
+This enables KMS key rotation by ensuring every object is recoverable using either wrapper key.
 
 ## Files
 
