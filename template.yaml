@@ -783,6 +783,51 @@ Resources:
               - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
               - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
 
+  S3BatchOperationsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-S3BatchLambdaInvokeRole
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      # Trust Policy: Allows S3 Batch Operations to assume this role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: batchoperations.s3.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3BatchLambdaInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # 1. Permission to read the bucket
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource:
+                  - !GetAtt PermanentMessageBatchBucket.Arn
+                  - !Sub ${PermanentMessageBatchBucket.Arn}/*
+
+              # 2. Permission to invoke the target Lambda function
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt S3KeyRotationFunction.Arn
+
+              # 3. Permission to write the completion report
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !GetAtt PermanentMessageBatchBucket.Arn
+                  - !Sub ${PermanentMessageBatchBucket.Arn}/reports/*
+
   ################################################
   # End: S3 Key Rotation (Migration) Resources   #
   ################################################
