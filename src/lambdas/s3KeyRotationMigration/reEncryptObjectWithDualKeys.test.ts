@@ -1,6 +1,9 @@
 import { KmsKeyringNode } from '@aws-crypto/client-node'
-import { buildDecrypt } from '@aws-crypto/decrypt-node'
 import { buildEncrypt } from '@aws-crypto/encrypt-node'
+import {
+  decryptS3Object,
+  DualKeyDecryptionError
+} from '../../../common/sharedServices/kms/decryptS3Object'
 import { getS3ObjectAsStream } from '../../../common/sharedServices/s3/getS3ObjectAsStream'
 import { putS3Object } from '../../../common/sharedServices/s3/putS3Object'
 import { createDataStream } from '../../../common/utils/tests/test-helpers/test-helper'
@@ -10,16 +13,26 @@ jest.mock('@aws-crypto/client-node', () => ({
   KmsKeyringNode: jest.fn()
 }))
 
-jest.mock('@aws-crypto/decrypt-node', () => ({
-  buildDecrypt: jest.fn().mockReturnValue({
-    decrypt: jest.fn()
-  })
-}))
-
 jest.mock('@aws-crypto/encrypt-node', () => ({
   buildEncrypt: jest.fn().mockReturnValue({
     encrypt: jest.fn()
   })
+}))
+
+jest.mock('../../../common/sharedServices/kms/decryptS3Object', () => ({
+  decryptS3Object: jest.fn(),
+  DualKeyDecryptionError: class DualKeyDecryptionError extends Error {
+    primaryKeyError: Error
+    secondaryKeyError: Error
+    constructor(primaryKeyError: Error, secondaryKeyError: Error) {
+      super(
+        'Decryption failed: Both primary and secondary KMS keys are unavailable'
+      )
+      this.name = 'DualKeyDecryptionError'
+      this.primaryKeyError = primaryKeyError
+      this.secondaryKeyError = secondaryKeyError
+    }
+  }
 }))
 
 jest.mock('../../../common/sharedServices/s3/getS3ObjectAsStream', () => ({
@@ -31,8 +44,8 @@ jest.mock('../../../common/sharedServices/s3/putS3Object', () => ({
 }))
 
 const mockKmsKeyringNode = KmsKeyringNode as jest.Mock
-const mockBuildDecrypt = buildDecrypt as jest.Mock
 const mockBuildEncrypt = buildEncrypt as jest.Mock
+const mockDecryptS3Object = decryptS3Object as jest.Mock
 const mockGetS3ObjectAsStream = getS3ObjectAsStream as jest.Mock
 const mockPutS3Object = putS3Object as jest.Mock
 
@@ -45,7 +58,6 @@ const TEST_PLAINTEXT_DATA = Buffer.from('decrypted audit data')
 const TEST_ENCRYPTED_DATA = Buffer.from('encrypted-with-dual-keys')
 
 describe('reEncryptObjectWithDualKeys', () => {
-  let mockDecrypt: jest.Mock
   let mockEncrypt: jest.Mock
 
   beforeEach(() => {
@@ -56,10 +68,7 @@ describe('reEncryptObjectWithDualKeys', () => {
     // KmsKeyringNode is mocked to just return the config object for testing
     mockKmsKeyringNode.mockImplementation(<T>(config: T): T => config)
 
-    mockDecrypt = jest.fn()
     mockEncrypt = jest.fn()
-
-    mockBuildDecrypt.mockReturnValue({ decrypt: mockDecrypt })
     mockBuildEncrypt.mockReturnValue({ encrypt: mockEncrypt })
   })
 
@@ -68,18 +77,13 @@ describe('reEncryptObjectWithDualKeys', () => {
     delete process.env.BACKUP_KEY_ID
   })
 
-  it('successfully re-encrypts an object with dual keys', async () => {
+  it('successfully re-encrypts an object with dual keys using primary key', async () => {
     const encryptedStream = createDataStream('encrypted-content')
-    const mockMessageHeader = {
-      encryptedDataKeys: [
-        { providerId: 'aws-kms', providerInfo: TEST_GENERATOR_KEY }
-      ]
-    }
 
     mockGetS3ObjectAsStream.mockResolvedValue(encryptedStream)
-    mockDecrypt.mockResolvedValue({
+    mockDecryptS3Object.mockResolvedValue({
       plaintext: TEST_PLAINTEXT_DATA,
-      messageHeader: mockMessageHeader
+      usedKey: 'primary'
     })
     mockEncrypt.mockResolvedValue({
       result: TEST_ENCRYPTED_DATA
@@ -90,14 +94,8 @@ describe('reEncryptObjectWithDualKeys', () => {
     // Verify S3 object retrieval
     expect(mockGetS3ObjectAsStream).toHaveBeenCalledWith(TEST_BUCKET, TEST_KEY)
 
-    // Verify decrypt keyring setup
-    expect(mockKmsKeyringNode).toHaveBeenCalledWith({
-      keyIds: [TEST_GENERATOR_KEY]
-    })
-
-    // Verify decryption
-    expect(mockBuildDecrypt).toHaveBeenCalled()
-    expect(mockDecrypt).toHaveBeenCalled()
+    // Verify decryption was called with the stream
+    expect(mockDecryptS3Object).toHaveBeenCalledWith(encryptedStream)
 
     // Verify encrypt keyring setup with dual keys
     expect(mockKmsKeyringNode).toHaveBeenCalledWith({
@@ -108,6 +106,31 @@ describe('reEncryptObjectWithDualKeys', () => {
     // Verify encryption
     expect(mockBuildEncrypt).toHaveBeenCalled()
     expect(mockEncrypt).toHaveBeenCalled()
+
+    // Verify S3 object write
+    expect(mockPutS3Object).toHaveBeenCalledWith(
+      TEST_BUCKET,
+      TEST_KEY,
+      TEST_ENCRYPTED_DATA
+    )
+  })
+
+  it('successfully re-encrypts using secondary key when primary fails (fallback)', async () => {
+    const encryptedStream = createDataStream('encrypted-content')
+
+    mockGetS3ObjectAsStream.mockResolvedValue(encryptedStream)
+    mockDecryptS3Object.mockResolvedValue({
+      plaintext: TEST_PLAINTEXT_DATA,
+      usedKey: 'secondary'
+    })
+    mockEncrypt.mockResolvedValue({
+      result: TEST_ENCRYPTED_DATA
+    })
+
+    await reEncryptObjectWithDualKeys(TEST_BUCKET, TEST_KEY)
+
+    // Verify decryption was called (fallback handled internally by decryptS3Object)
+    expect(mockDecryptS3Object).toHaveBeenCalledWith(encryptedStream)
 
     // Verify S3 object write
     expect(mockPutS3Object).toHaveBeenCalledWith(
@@ -144,31 +167,33 @@ describe('reEncryptObjectWithDualKeys', () => {
       reEncryptObjectWithDualKeys(TEST_BUCKET, TEST_KEY)
     ).rejects.toThrow('S3 access denied')
 
-    expect(mockDecrypt).not.toHaveBeenCalled()
+    expect(mockDecryptS3Object).not.toHaveBeenCalled()
   })
 
-  it('propagates decryption errors', async () => {
+  it('propagates DualKeyDecryptionError when both keys fail', async () => {
     const encryptedStream = createDataStream('encrypted-content')
     mockGetS3ObjectAsStream.mockResolvedValue(encryptedStream)
-    mockDecrypt.mockRejectedValue(new Error('KMS decryption failed'))
+
+    const dualKeyError = new DualKeyDecryptionError(
+      new Error('Primary key failed'),
+      new Error('Secondary key failed')
+    )
+    mockDecryptS3Object.mockRejectedValue(dualKeyError)
 
     await expect(
       reEncryptObjectWithDualKeys(TEST_BUCKET, TEST_KEY)
-    ).rejects.toThrow('KMS decryption failed')
+    ).rejects.toThrow(DualKeyDecryptionError)
 
     expect(mockEncrypt).not.toHaveBeenCalled()
   })
 
   it('propagates encryption errors', async () => {
     const encryptedStream = createDataStream('encrypted-content')
-    const mockMessageHeader = {
-      encryptedDataKeys: [{ providerId: 'aws-kms' }]
-    }
 
     mockGetS3ObjectAsStream.mockResolvedValue(encryptedStream)
-    mockDecrypt.mockResolvedValue({
+    mockDecryptS3Object.mockResolvedValue({
       plaintext: TEST_PLAINTEXT_DATA,
-      messageHeader: mockMessageHeader
+      usedKey: 'primary'
     })
     mockEncrypt.mockRejectedValue(new Error('KMS encryption failed'))
 
@@ -181,14 +206,11 @@ describe('reEncryptObjectWithDualKeys', () => {
 
   it('propagates S3 write errors', async () => {
     const encryptedStream = createDataStream('encrypted-content')
-    const mockMessageHeader = {
-      encryptedDataKeys: [{ providerId: 'aws-kms' }]
-    }
 
     mockGetS3ObjectAsStream.mockResolvedValue(encryptedStream)
-    mockDecrypt.mockResolvedValue({
+    mockDecryptS3Object.mockResolvedValue({
       plaintext: TEST_PLAINTEXT_DATA,
-      messageHeader: mockMessageHeader
+      usedKey: 'primary'
     })
     mockEncrypt.mockResolvedValue({
       result: TEST_ENCRYPTED_DATA
@@ -200,19 +222,13 @@ describe('reEncryptObjectWithDualKeys', () => {
     ).rejects.toThrow('S3 write failed')
   })
 
-  it('handles objects with multiple encrypted data keys', async () => {
+  it('re-encrypts successfully regardless of which key was used for decryption', async () => {
     const encryptedStream = createDataStream('encrypted-content')
-    const mockMessageHeader = {
-      encryptedDataKeys: [
-        { providerId: 'aws-kms', providerInfo: TEST_GENERATOR_KEY },
-        { providerId: 'aws-kms', providerInfo: 'some-other-key' }
-      ]
-    }
 
     mockGetS3ObjectAsStream.mockResolvedValue(encryptedStream)
-    mockDecrypt.mockResolvedValue({
+    mockDecryptS3Object.mockResolvedValue({
       plaintext: TEST_PLAINTEXT_DATA,
-      messageHeader: mockMessageHeader
+      usedKey: 'secondary'
     })
     mockEncrypt.mockResolvedValue({
       result: TEST_ENCRYPTED_DATA
