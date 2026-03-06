@@ -773,6 +773,7 @@ Resources:
           - Sid: UseWrapperKey2
             Effect: Allow
             Action:
+              - kms:Decrypt
               - kms:Encrypt
               - kms:GenerateDataKey*
               - kms:DescribeKey
