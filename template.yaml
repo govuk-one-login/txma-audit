@@ -826,7 +826,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !GetAtt PermanentMessageBatchBucket.Arn
-                  - !Sub ${PermanentMessageBatchBucket.Arn}/reports/*
+                  - !Sub ${PermanentMessageBatchBucket.Arn}/*
 
   ################################################
   # End: S3 Key Rotation (Migration) Resources   #
