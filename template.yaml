@@ -564,7 +564,7 @@ Resources:
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
       Environment:
         Variables:
-          BACKUP_ENCRYPTION_ENABLED: !If [DevAndBuildEnvironment, true, false]
+          BACKUP_ENCRYPTION_ENABLED: !If [DevAndBuildAndStageEnvironment, true, false]
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
