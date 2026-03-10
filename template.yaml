@@ -40,8 +40,8 @@ Parameters:
 
 Conditions:
   DevEnvironment: !Equals [!Ref Environment, dev]
-  DevAndBuildEnvironment:
-    !Or [!Equals [!Ref Environment, dev], !Equals [!Ref Environment, build]]
+  DevAndBuildAndStageEnvironment:
+    !Or [!Equals [!Ref Environment, dev], !Equals [!Ref Environment, build], !Equals [!Ref Environment, staging]]
   UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, none]]
   UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, none]]
   UseTestRole: !Not [!Equals [!Ref TestRoleArn, none]]
