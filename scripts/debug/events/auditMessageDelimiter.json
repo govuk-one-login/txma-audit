@@ -1,0 +1,12 @@
+{
+  "invocationId": "test-invocation-id",
+  "deliveryStreamArn": "arn:aws:firehose:eu-west-2:123456789012:deliverystream/test-stream",
+  "region": "eu-west-2",
+  "records": [
+    {
+      "recordId": "test-record-id-1",
+      "approximateArrivalTimestamp": 1640995200000,
+      "data": "eyJldmVudF9pZCI6InRlc3QtZXZlbnQtMSIsImV2ZW50X25hbWUiOiJURVNUX0VWRU5UIn0="
+    }
+  ]
+}
