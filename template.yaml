@@ -41,7 +41,11 @@ Parameters:
 Conditions:
   DevEnvironment: !Equals [!Ref Environment, dev]
   DevAndBuildAndStageEnvironment:
-    !Or [!Equals [!Ref Environment, dev], !Equals [!Ref Environment, build], !Equals [!Ref Environment, staging]]
+    !Or [
+      !Equals [!Ref Environment, dev],
+      !Equals [!Ref Environment, build],
+      !Equals [!Ref Environment, staging]
+    ]
   UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, none]]
   UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, none]]
   UseTestRole: !Not [!Equals [!Ref TestRoleArn, none]]
@@ -564,7 +568,8 @@ Resources:
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
       Environment:
         Variables:
-          BACKUP_ENCRYPTION_ENABLED: !If [DevAndBuildAndStageEnvironment, true, false]
+          BACKUP_ENCRYPTION_ENABLED:
+            !If [DevAndBuildAndStageEnvironment, true, false]
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
