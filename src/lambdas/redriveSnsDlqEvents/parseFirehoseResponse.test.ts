@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { PutRecordBatchCommandOutput } from '@aws-sdk/client-firehose'
 import { logger } from '../../../common/sharedServices/logger'
 import {
@@ -8,25 +9,25 @@ import {
 import * as parseFirehoseResponse from './parseFirehoseResponse'
 import { FirehoseProcessingResult } from './writeToFirehose'
 
-jest.mock(
+vi.mock(
   '../../../common/sharedServices/firehose/firehosePutRecordBatch',
   () => ({
-    firehosePutRecordBatch: jest.fn()
+    firehosePutRecordBatch: vi.fn()
   })
 )
 
-jest.mock(
+vi.mock(
   '../../../common/utils/helpers/firehose/auditEventsToFirehoseRecords.ts',
   () => ({
-    auditEventsToFirehoseRecords: jest.fn()
+    auditEventsToFirehoseRecords: vi.fn()
   })
 )
 
 describe('test parseFirehoseResponse() function', () => {
   beforeEach(() => {
-    jest.resetAllMocks()
-    jest.spyOn(logger, 'warn')
-    jest.spyOn(logger, 'info')
+    vi.resetAllMocks()
+    vi.spyOn(logger, 'warn')
+    vi.spyOn(logger, 'info')
   })
 
   it('all audit events were published to firehose successfully', () => {

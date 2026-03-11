@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import {
   S3Client,
   GetObjectCommandInput,
@@ -5,7 +6,6 @@ import {
   GetObjectCommandOutput
 } from '@aws-sdk/client-s3'
 import { mockClient } from 'aws-sdk-client-mock'
-import 'aws-sdk-client-mock-jest'
 import { createDataStream } from '../../../common/utils/tests/test-helpers/test-helper'
 import {
   TEST_TEMPORARY_BUCKET_NAME,
@@ -36,10 +36,9 @@ describe('getS3Object -', () => {
       TEST_S3_OBJECT_KEY
     )
 
-    expect(s3Mock).toHaveReceivedCommandWith(
-      GetObjectCommand,
-      getObjectCommandInput
-    )
+    const calls = s3Mock.commandCalls(GetObjectCommand)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].args[0].input).toEqual(getObjectCommandInput)
     expect(returnedData).toEqual(testDataStream)
   })
 })

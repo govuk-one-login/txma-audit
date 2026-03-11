@@ -1,10 +1,10 @@
+import { describe, it, expect } from 'vitest'
 import {
   PutObjectCommand,
   PutObjectCommandInput,
   S3Client
 } from '@aws-sdk/client-s3'
 import { mockClient } from 'aws-sdk-client-mock'
-import 'aws-sdk-client-mock-jest'
 import {
   TEST_PERMANENT_BUCKET_NAME,
   TEST_S3_OBJECT_KEY,
@@ -28,9 +28,8 @@ describe('putS3Object', () => {
       TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER
     )
 
-    expect(s3Mock).toHaveReceivedCommandWith(
-      PutObjectCommand,
-      putObjectCommandInput
-    )
+    const calls = s3Mock.commandCalls(PutObjectCommand)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].args[0].input).toEqual(putObjectCommandInput)
   })
 })

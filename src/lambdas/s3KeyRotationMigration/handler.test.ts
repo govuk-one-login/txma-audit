@@ -1,13 +1,17 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Context, S3BatchEvent } from 'aws-lambda'
-import { when } from 'jest-when'
+import type { MockedFunction } from 'vitest'
 import { handler } from './handler'
 import { reEncryptObjectWithDualKeys } from './reEncryptObjectWithDualKeys'
 
-jest.mock('./reEncryptObjectWithDualKeys', () => ({
-  reEncryptObjectWithDualKeys: jest.fn()
+vi.mock('./reEncryptObjectWithDualKeys', () => ({
+  reEncryptObjectWithDualKeys: vi.fn()
 }))
 
-const mockReEncryptObjectWithDualKeys = reEncryptObjectWithDualKeys as jest.Mock
+const mockReEncryptObjectWithDualKeys =
+  reEncryptObjectWithDualKeys as MockedFunction<
+    typeof reEncryptObjectWithDualKeys
+  >
 
 const mockContext = {
   functionName: 'test-function',
@@ -33,7 +37,7 @@ const createS3BatchEvent = (
 
 describe('S3 Key Rotation Handler', () => {
   beforeEach(() => {
-    jest.resetAllMocks()
+    vi.resetAllMocks()
   })
 
   it('successfully processes a single task', async () => {
@@ -88,13 +92,9 @@ describe('S3 Key Rotation Handler', () => {
   it('handles task failures gracefully', async () => {
     const event = createS3BatchEvent(2, 'audit-bucket')
 
-    when(mockReEncryptObjectWithDualKeys)
-      .calledWith('audit-bucket', 'test-key-0')
-      .mockResolvedValue(undefined)
-
-    when(mockReEncryptObjectWithDualKeys)
-      .calledWith('audit-bucket', 'test-key-1')
-      .mockRejectedValue(new Error('KMS key not found'))
+    mockReEncryptObjectWithDualKeys
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('KMS key not found'))
 
     const result = await handler(event, mockContext)
 
@@ -114,17 +114,10 @@ describe('S3 Key Rotation Handler', () => {
   it('continues processing remaining tasks when one fails', async () => {
     const event = createS3BatchEvent(3, 'audit-bucket')
 
-    when(mockReEncryptObjectWithDualKeys)
-      .calledWith('audit-bucket', 'test-key-0')
-      .mockResolvedValue(undefined)
-
-    when(mockReEncryptObjectWithDualKeys)
-      .calledWith('audit-bucket', 'test-key-1')
-      .mockRejectedValue(new Error('Access denied'))
-
-    when(mockReEncryptObjectWithDualKeys)
-      .calledWith('audit-bucket', 'test-key-2')
-      .mockResolvedValue(undefined)
+    mockReEncryptObjectWithDualKeys
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('Access denied'))
+      .mockResolvedValueOnce(undefined)
 
     const result = await handler(event, mockContext)
 

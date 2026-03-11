@@ -3,7 +3,7 @@ import pluginJs from '@eslint/js'
 import tsEslint from 'typescript-eslint'
 import tsEslintParser from '@typescript-eslint/parser'
 import eslintConfigPrettier from 'eslint-config-prettier'
-import eslintPluginJest from 'eslint-plugin-jest'
+import vitest from '@vitest/eslint-plugin'
 
 export default [
   { files: ['**/*.{js,ts}'] },
@@ -45,10 +45,10 @@ export default [
       'scripts/**/*.ts'
     ],
     plugins: {
-      jest: eslintPluginJest
+      vitest: vitest
     },
     rules: {
-      ...eslintPluginJest.configs.recommended.rules,
+      ...vitest.configs.recommended.rules,
       '@typescript-eslint/unbound-method': 'off',
       'no-console': ['off']
     }
