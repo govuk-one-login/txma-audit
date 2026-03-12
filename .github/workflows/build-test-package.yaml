@@ -64,10 +64,26 @@ jobs:
             template.yaml
           retention-days: 7
 
+  cleanup-stacks:
+    name: Stack Janitor
+    if: startsWith(github.ref, 'refs/heads/feature') || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main')
+    needs: [validate-build]
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/cleanup-stale-stacks.yaml
+    with:
+      stack_limit_threshold: 90
+      stacks_to_delete: 5
+      protected_stack_prefixes: 'main,prod,staging'
+      dry_run: true
+    secrets:
+      GH_ACTIONS_DEV_DEPLOY_ROLE_ARN: ${{ secrets.GH_ACTIONS_DEV_DEPLOY_ROLE_ARN }}
+
   deploy-feature:
     name: Deploy feature branch to dev account
     if: startsWith(github.ref, 'refs/heads/feature') || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main')
-    needs: [validate-build]
+    needs: [validate-build, cleanup-stacks]
     permissions:
       id-token: write
       contents: read
@@ -89,7 +105,7 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.GH_ACTIONS_DEV_DEPLOY_ROLE_ARN }}
-      - name: Deploy to feature stack in the dev account
+      - name: Check and prepare stack for deployment
         env:
           FEATURE_BRANCH_NAME: ${{ github.event.ref }}
         run: |
@@ -100,10 +116,365 @@ jobs:
             cut -c -32
           )
 
-          sam deploy \
-            --stack-name ${stack_name} \
-            --no-fail-on-empty-changeset \
-            --resolve-s3
+          echo "Checking stack status for: ${stack_name}"
+
+          # Get current stack status
+          STACK_STATUS=$(aws cloudformation describe-stacks \
+            --stack-name "${stack_name}" \
+            --query 'Stacks[0].StackStatus' \
+            --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+
+          echo "Current stack status: ${STACK_STATUS}"
+
+          # Function to wait for any pending deletions to complete
+          wait_for_deletion() {
+            local name=$1
+            local max_attempts=60
+            local attempt=0
+            
+            while [ $attempt -lt $max_attempts ]; do
+              status=$(aws cloudformation describe-stacks \
+                --stack-name "${name}" \
+                --query 'Stacks[0].StackStatus' \
+                --output text 2>/dev/null || echo "DELETED")
+              
+              if [ "${status}" = "DELETED" ] || [ "${status}" = "DELETE_COMPLETE" ]; then
+                echo "Stack ${name} deleted successfully"
+                return 0
+              elif [ "${status}" = "DELETE_FAILED" ]; then
+                echo "::warning::Stack deletion failed. Checking for retained resources..."
+                # List retained resources
+                aws cloudformation describe-stack-resources \
+                  --stack-name "${name}" \
+                  --query 'StackResources[?ResourceStatus==`DELETE_FAILED`].[LogicalResourceId,PhysicalResourceId,ResourceType]' \
+                  --output table 2>/dev/null || true
+                return 1
+              fi
+              
+              echo "Waiting for stack deletion... (attempt $((attempt + 1))/${max_attempts})"
+              sleep 10
+              attempt=$((attempt + 1))
+            done
+            
+            echo "::warning::Timeout waiting for stack deletion"
+            return 1
+          }
+
+          case "${STACK_STATUS}" in
+            "DELETE_IN_PROGRESS")
+              echo "Stack deletion is in progress. Waiting for completion..."
+              wait_for_deletion "${stack_name}"
+              ;;
+            "DELETE_FAILED")
+              echo "::warning::Stack is in DELETE_FAILED state. Listing failed resources..."
+              aws cloudformation describe-stack-resources \
+                --stack-name "${stack_name}" \
+                --query 'StackResources[?ResourceStatus==`DELETE_FAILED`].[LogicalResourceId,PhysicalResourceId,ResourceType,ResourceStatusReason]' \
+                --output table 2>/dev/null || true
+              
+              echo "Attempting to force delete with retain option for problematic resources..."
+              # Get resources that failed to delete
+              FAILED_RESOURCES=$(aws cloudformation describe-stack-resources \
+                --stack-name "${stack_name}" \
+                --query 'StackResources[?ResourceStatus==`DELETE_FAILED`].LogicalResourceId' \
+                --output text 2>/dev/null || echo "")
+              
+              if [ -n "${FAILED_RESOURCES}" ]; then
+                echo "Retaining resources: ${FAILED_RESOURCES}"
+                aws cloudformation delete-stack \
+                  --stack-name "${stack_name}" \
+                  --retain-resources ${FAILED_RESOURCES} || true
+              else
+                aws cloudformation delete-stack --stack-name "${stack_name}" || true
+              fi
+              wait_for_deletion "${stack_name}"
+              ;;
+            "ROLLBACK_COMPLETE"|"ROLLBACK_FAILED"|"CREATE_FAILED")
+              echo "::warning::Stack is in ${STACK_STATUS} state. Deleting stack before redeployment..."
+              aws cloudformation delete-stack --stack-name "${stack_name}"
+              wait_for_deletion "${stack_name}"
+              echo "Stack deleted successfully. Proceeding with fresh deployment."
+              ;;
+            "UPDATE_ROLLBACK_FAILED")
+              echo "::warning::Stack is in UPDATE_ROLLBACK_FAILED state. Attempting to continue rollback..."
+              aws cloudformation continue-update-rollback --stack-name "${stack_name}" || {
+                echo "::warning::Continue rollback failed. Attempting to delete stack..."
+                aws cloudformation delete-stack --stack-name "${stack_name}"
+                wait_for_deletion "${stack_name}"
+              }
+              ;;
+            "CREATE_IN_PROGRESS"|"UPDATE_IN_PROGRESS"|"UPDATE_ROLLBACK_IN_PROGRESS"|"ROLLBACK_IN_PROGRESS")
+              echo "Stack operation in progress. Waiting for completion..."
+              aws cloudformation wait stack-update-complete --stack-name "${stack_name}" 2>/dev/null || \
+              aws cloudformation wait stack-create-complete --stack-name "${stack_name}" 2>/dev/null || {
+                echo "::warning::Stack operation may have failed. Checking status..."
+                NEW_STATUS=$(aws cloudformation describe-stacks \
+                  --stack-name "${stack_name}" \
+                  --query 'Stacks[0].StackStatus' \
+                  --output text 2>/dev/null || echo "UNKNOWN")
+                echo "New stack status: ${NEW_STATUS}"
+              }
+              ;;
+            "DOES_NOT_EXIST")
+              echo "Stack does not exist. Will create new stack."
+              ;;
+            *)
+              echo "Stack is ready for deployment (status: ${STACK_STATUS})"
+              ;;
+          esac
+
+          # Save stack name for use in deployment step
+          echo "STACK_NAME=${stack_name}" >> $GITHUB_ENV
+      - name: Pre-flight resource collision check
+        run: |
+          stack_name="${STACK_NAME}"
+          echo "Checking for potential resource collisions for stack: ${stack_name}"
+
+          COLLISION_FOUND=false
+
+          # Check for orphaned CloudWatch Log Groups
+          echo "::group::Checking CloudWatch Log Groups"
+          LOG_GROUPS=$(aws logs describe-log-groups \
+            --log-group-name-prefix "/aws/lambda/${stack_name}" \
+            --query 'logGroups[*].logGroupName' \
+            --output text 2>/dev/null || echo "")
+
+          FIREHOSE_LOG_GROUPS=$(aws logs describe-log-groups \
+            --log-group-name-prefix "/aws/kinesisfirehose/${stack_name}" \
+            --query 'logGroups[*].logGroupName' \
+            --output text 2>/dev/null || echo "")
+
+          ALL_LOG_GROUPS="${LOG_GROUPS} ${FIREHOSE_LOG_GROUPS}"
+
+          if [ -n "$(echo ${ALL_LOG_GROUPS} | tr -d '[:space:]')" ]; then
+            echo "::warning::Found existing log groups that may cause conflicts:"
+            for lg in ${ALL_LOG_GROUPS}; do
+              echo "  - ${lg}"
+            done
+            
+            echo ""
+            echo "Attempting to delete orphaned log groups..."
+            for lg in ${ALL_LOG_GROUPS}; do
+              if [ -n "${lg}" ]; then
+                echo "Deleting log group: ${lg}"
+                aws logs delete-log-group --log-group-name "${lg}" 2>/dev/null || \
+                  echo "::warning::Could not delete log group: ${lg}"
+              fi
+            done
+          else
+            echo "No conflicting log groups found."
+          fi
+          echo "::endgroup::"
+
+          # Check for orphaned IAM roles
+          echo "::group::Checking IAM Roles"
+          ROLES=$(aws iam list-roles \
+            --query "Roles[?starts_with(RoleName, '${stack_name}-')].RoleName" \
+            --output text 2>/dev/null || echo "")
+
+          if [ -n "$(echo ${ROLES} | tr -d '[:space:]')" ]; then
+            echo "::warning::Found existing IAM roles that may cause conflicts:"
+            for role in ${ROLES}; do
+              echo "  - ${role}"
+            done
+            COLLISION_FOUND=true
+          else
+            echo "No conflicting IAM roles found."
+          fi
+          echo "::endgroup::"
+
+          # Check for orphaned SQS queues
+          echo "::group::Checking SQS Queues"
+          QUEUES=$(aws sqs list-queues \
+            --queue-name-prefix "${stack_name}" \
+            --query 'QueueUrls' \
+            --output text 2>/dev/null || echo "")
+
+          if [ -n "$(echo ${QUEUES} | tr -d '[:space:]')" ]; then
+            echo "::warning::Found existing SQS queues that may cause conflicts:"
+            for queue in ${QUEUES}; do
+              echo "  - ${queue}"
+            done
+            COLLISION_FOUND=true
+          else
+            echo "No conflicting SQS queues found."
+          fi
+          echo "::endgroup::"
+
+          # Check for orphaned S3 buckets  
+          echo "::group::Checking S3 Buckets"
+          BUCKETS=$(aws s3api list-buckets \
+            --query "Buckets[?starts_with(Name, '${stack_name}-')].Name" \
+            --output text 2>/dev/null || echo "")
+
+          if [ -n "$(echo ${BUCKETS} | tr -d '[:space:]')" ]; then
+            echo "::warning::Found existing S3 buckets that may cause conflicts:"
+            for bucket in ${BUCKETS}; do
+              echo "  - ${bucket}"
+            done
+            COLLISION_FOUND=true
+          else
+            echo "No conflicting S3 buckets found."
+          fi
+          echo "::endgroup::"
+
+          # Check for orphaned Kinesis Firehose delivery streams
+          echo "::group::Checking Kinesis Firehose Delivery Streams"
+          STREAMS=$(aws firehose list-delivery-streams \
+            --delivery-stream-type DirectPut \
+            --query "DeliveryStreamNames[?starts_with(@, '${stack_name}-')]" \
+            --output text 2>/dev/null || echo "")
+
+          if [ -n "$(echo ${STREAMS} | tr -d '[:space:]')" ]; then
+            echo "::warning::Found existing Firehose streams that may cause conflicts:"
+            for stream in ${STREAMS}; do
+              echo "  - ${stream}"
+            done
+            COLLISION_FOUND=true
+          else
+            echo "No conflicting Firehose streams found."
+          fi
+          echo "::endgroup::"
+
+          # Check for orphaned Glue tables
+          echo "::group::Checking Glue Tables"
+          # Get the Glue database name from SSM
+          GLUE_DB=$(aws ssm get-parameter \
+            --name "AuditDataAnalysisGlueDatabaseName" \
+            --query 'Parameter.Value' \
+            --output text 2>/dev/null || echo "")
+
+          if [ -n "${GLUE_DB}" ]; then
+            # The Glue table name format is: {stackname}_${Environment}_message_batch_table (with hyphens removed)
+            TABLE_PREFIX=$(echo "${stack_name}" | tr -d '-')
+            TABLES=$(aws glue get-tables \
+              --database-name "${GLUE_DB}" \
+              --query "TableList[?starts_with(Name, '${TABLE_PREFIX}')].Name" \
+              --output text 2>/dev/null || echo "")
+            
+            if [ -n "$(echo ${TABLES} | tr -d '[:space:]')" ]; then
+              echo "::warning::Found existing Glue tables that may cause conflicts:"
+              for table in ${TABLES}; do
+                echo "  - ${GLUE_DB}.${table}"
+              done
+              
+              echo ""
+              echo "Attempting to delete orphaned Glue tables..."
+              for table in ${TABLES}; do
+                if [ -n "${table}" ]; then
+                  echo "Deleting Glue table: ${table}"
+                  aws glue delete-table --database-name "${GLUE_DB}" --name "${table}" 2>/dev/null || \
+                    echo "::warning::Could not delete Glue table: ${table}"
+                fi
+              done
+            else
+              echo "No conflicting Glue tables found."
+            fi
+          else
+            echo "Could not retrieve Glue database name from SSM. Skipping Glue table check."
+          fi
+          echo "::endgroup::"
+
+          if [ "${COLLISION_FOUND}" = "true" ]; then
+            echo ""
+            echo "::warning::Potential resource collisions detected. These resources may have been"
+            echo "::warning::left behind from a previous stack deletion. If deployment fails with"
+            echo "::warning::ResourceExistenceCheck errors, you may need to manually delete these resources."
+          else
+            echo "No resource collisions detected. Proceeding with deployment."
+          fi
+      - name: Deploy to feature stack in the dev account
+        env:
+          FEATURE_BRANCH_NAME: ${{ github.event.ref }}
+        run: |
+          # Use stack name from previous step if available, otherwise compute it
+          if [ -z "${STACK_NAME}" ]; then
+            stack_name=$(
+              echo ${FEATURE_BRANCH_NAME##*/} | \
+              tr -cd '[a-zA-Z0-9-]' | \
+              tr '[:upper:]' '[:lower:]' | \
+              cut -c -32
+            )
+          else
+            stack_name="${STACK_NAME}"
+          fi
+
+          echo "Deploying stack: ${stack_name}"
+
+          # Function to check and clean up failed stack
+          cleanup_failed_stack() {
+            local name=$1
+            local status=$(aws cloudformation describe-stacks \
+              --stack-name "${name}" \
+              --query 'Stacks[0].StackStatus' \
+              --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+            
+            if [ "${status}" = "ROLLBACK_COMPLETE" ] || [ "${status}" = "ROLLBACK_FAILED" ] || [ "${status}" = "CREATE_FAILED" ]; then
+              echo "::warning::Stack is in ${status} state. Cleaning up before retry..."
+              aws cloudformation delete-stack --stack-name "${name}"
+              echo "Waiting for stack deletion..."
+              aws cloudformation wait stack-delete-complete --stack-name "${name}" 2>/dev/null || true
+              return 0
+            fi
+            return 1
+          }
+
+          # Attempt deployment with retry on ROLLBACK_COMPLETE
+          MAX_ATTEMPTS=2
+          ATTEMPT=1
+
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Deployment attempt ${ATTEMPT}/${MAX_ATTEMPTS}"
+            
+            if sam deploy \
+              --stack-name ${stack_name} \
+              --no-fail-on-empty-changeset \
+              --resolve-s3; then
+              echo "Deployment completed successfully!"
+              exit 0
+            fi
+            
+            echo "::warning::Deployment attempt ${ATTEMPT} failed."
+            
+            # Check if failure was due to ROLLBACK_COMPLETE
+            if cleanup_failed_stack "${stack_name}"; then
+              echo "Stack cleaned up. Retrying deployment..."
+              ATTEMPT=$((ATTEMPT + 1))
+              continue
+            fi
+            
+            # If not a recoverable failure, break and report
+            break
+          done
+
+          echo "::error::Deployment failed after ${ATTEMPT} attempt(s). Checking for errors..."
+
+          # Get the latest events to understand the failure
+          echo "Recent stack events:"
+          aws cloudformation describe-stack-events \
+            --stack-name "${stack_name}" \
+            --max-items 20 \
+            --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED` || ResourceStatus==`ROLLBACK_COMPLETE`].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' \
+            --output table 2>/dev/null || true
+
+          # Check for Early Validation errors
+          echo ""
+          echo "Checking for Early Validation errors:"
+          aws cloudformation describe-stack-events \
+            --stack-name "${stack_name}" \
+            --query 'StackEvents[?contains(ResourceStatusReason, `EarlyValidation`) || contains(ResourceStatusReason, `ResourceExistenceCheck`)].[Timestamp,LogicalResourceId,ResourceStatusReason]' \
+            --output table 2>/dev/null || true
+
+          echo ""
+          echo "::warning::Common causes of deployment failures:"
+          echo "::warning::  1. ROLLBACK_COMPLETE - Stack creation failed and rolled back (will be auto-cleaned on retry)"
+          echo "::warning::  2. ResourceExistenceCheck - Resources with same names already exist"
+          echo "::warning::  3. Permission issues - IAM role lacks required permissions"
+          echo "::warning::  4. Resource limits - AWS service limits reached"
+          echo ""
+          echo "::notice::If this is a transient failure, re-running the workflow should resolve it."
+
+          exit 1
 
   upload-testing-image:
     name: Upload testing image

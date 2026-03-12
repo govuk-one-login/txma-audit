@@ -1,0 +1,223 @@
+name: Cleanup Stale CloudFormation Stacks
+
+on:
+  workflow_call:
+    inputs:
+      stack_limit_threshold:
+        description: 'Percentage of stack limit at which cleanup should trigger (e.g., 90 for 90%)'
+        required: false
+        type: number
+        default: 90
+      stacks_to_delete:
+        description: 'Number of oldest stacks to delete when limit is reached'
+        required: false
+        type: number
+        default: 10
+      protected_stack_prefixes:
+        description: 'Comma-separated list of stack name prefixes to protect from deletion'
+        required: false
+        type: string
+        default: 'main,prod,staging'
+      dry_run:
+        description: 'If true, only report what would be deleted without actually deleting'
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      GH_ACTIONS_DEV_DEPLOY_ROLE_ARN:
+        required: true
+    outputs:
+      stacks_deleted:
+        description: 'Number of stacks that were deleted'
+        value: ${{ jobs.cleanup-stacks.outputs.stacks_deleted }}
+      cleanup_triggered:
+        description: 'Whether cleanup was triggered due to limit threshold'
+        value: ${{ jobs.cleanup-stacks.outputs.cleanup_triggered }}
+
+env:
+  AWS_REGION: eu-west-2
+
+jobs:
+  cleanup-stacks:
+    name: Check and cleanup stale stacks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      stacks_deleted: ${{ steps.cleanup.outputs.stacks_deleted }}
+      cleanup_triggered: ${{ steps.cleanup.outputs.cleanup_triggered }}
+    steps:
+      - name: Assume the dev account deployment role
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_DEV_DEPLOY_ROLE_ARN }}
+
+      - name: Check stack limit and cleanup if necessary
+        id: cleanup
+        env:
+          STACK_LIMIT_THRESHOLD: ${{ inputs.stack_limit_threshold }}
+          STACKS_TO_DELETE: ${{ inputs.stacks_to_delete }}
+          PROTECTED_PREFIXES: ${{ inputs.protected_stack_prefixes }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          echo "::group::Checking CloudFormation stack limits"
+
+          # AWS default limit for CloudFormation stacks per account
+          STACK_LIMIT=2000
+
+          # Get current stack count (excluding DELETE_COMPLETE stacks)
+          CURRENT_STACK_COUNT=$(aws cloudformation list-stacks \
+            --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE ROLLBACK_COMPLETE UPDATE_ROLLBACK_COMPLETE CREATE_IN_PROGRESS UPDATE_IN_PROGRESS DELETE_IN_PROGRESS ROLLBACK_IN_PROGRESS UPDATE_ROLLBACK_IN_PROGRESS CREATE_FAILED DELETE_FAILED UPDATE_ROLLBACK_FAILED \
+            --query 'length(StackSummaries)' \
+            --output text)
+
+          echo "Current stack count: ${CURRENT_STACK_COUNT}"
+          echo "Stack limit: ${STACK_LIMIT}"
+
+          # Calculate usage percentage
+          USAGE_PERCENTAGE=$((CURRENT_STACK_COUNT * 100 / STACK_LIMIT))
+          echo "Usage percentage: ${USAGE_PERCENTAGE}%"
+          echo "Threshold: ${STACK_LIMIT_THRESHOLD}%"
+
+          echo "::endgroup::"
+
+          if [ "${USAGE_PERCENTAGE}" -lt "${STACK_LIMIT_THRESHOLD}" ]; then
+            echo "Stack usage (${USAGE_PERCENTAGE}%) is below threshold (${STACK_LIMIT_THRESHOLD}%). No cleanup needed."
+            echo "cleanup_triggered=false" >> $GITHUB_OUTPUT
+            echo "stacks_deleted=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "::warning::Stack usage (${USAGE_PERCENTAGE}%) has reached threshold (${STACK_LIMIT_THRESHOLD}%). Initiating cleanup..."
+          echo "cleanup_triggered=true" >> $GITHUB_OUTPUT
+
+          echo "::group::Identifying stacks for cleanup"
+
+          # Convert protected prefixes to array
+          IFS=',' read -ra PROTECTED_ARRAY <<< "${PROTECTED_PREFIXES}"
+
+          # Get all feature branch stacks sorted by creation time (oldest first)
+          # Feature stacks are identified as lowercase alphanumeric stacks that are NOT protected
+          STACKS_JSON=$(aws cloudformation list-stacks \
+            --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE UPDATE_ROLLBACK_COMPLETE \
+            --query 'StackSummaries[*].{Name:StackName,CreationTime:CreationTime}' \
+            --output json)
+
+          # Filter and sort stacks, excluding protected ones - output both name and creation time
+          CANDIDATE_STACKS_WITH_TIME=$(echo "${STACKS_JSON}" | jq -r --arg protected "${PROTECTED_PREFIXES}" '
+            . as $stacks |
+            ($protected | split(",")) as $protected_list |
+            [.[] | select(
+              .Name as $name |
+              ($protected_list | all(. as $prefix | $name | startswith($prefix) | not)) and
+              ($name | test("^[a-z0-9-]+$"))
+            )] |
+            sort_by(.CreationTime) |
+            .[0:'"${STACKS_TO_DELETE}"'] |
+            .[] | "\(.Name)|\(.CreationTime)"
+          ')
+
+          # Extract just the stack names for deletion commands
+          CANDIDATE_STACKS=$(echo "${CANDIDATE_STACKS_WITH_TIME}" | cut -d'|' -f1)
+
+          if [ -z "${CANDIDATE_STACKS}" ]; then
+            echo "No eligible stacks found for cleanup."
+            echo "stacks_deleted=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Stacks identified for cleanup (with creation times):"
+          echo "${CANDIDATE_STACKS_WITH_TIME}" | while IFS='|' read -r name creation_time; do
+            if [ -n "${name}" ]; then
+              echo "  - ${name} (created: ${creation_time})"
+            fi
+          done
+
+          echo "::endgroup::"
+
+          if [ "${DRY_RUN}" = "true" ]; then
+            echo "::notice::DRY RUN: The following stacks would be deleted:"
+            echo "${CANDIDATE_STACKS_WITH_TIME}" | while IFS='|' read -r name creation_time; do
+              if [ -n "${name}" ]; then
+                echo "  - ${name} (created: ${creation_time})"
+              fi
+            done
+            STACK_COUNT=$(echo "${CANDIDATE_STACKS}" | wc -l | tr -d ' ')
+            echo "stacks_deleted=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "::group::Deleting stacks"
+
+          DELETED_COUNT=0
+          DELETED_STACKS_INFO=""
+          FAILED_STACKS=""
+
+          while IFS='|' read -r stack_name creation_time; do
+            if [ -n "${stack_name}" ]; then
+              echo "Deleting stack: ${stack_name} (created: ${creation_time})"
+              
+              # Delete the stack
+              if aws cloudformation delete-stack --stack-name "${stack_name}"; then
+                echo "Delete initiated for: ${stack_name}"
+                ((DELETED_COUNT++)) || true
+                DELETED_STACKS_INFO="${DELETED_STACKS_INFO}${stack_name}|${creation_time}\n"
+              else
+                echo "::warning::Failed to initiate delete for stack: ${stack_name}"
+                FAILED_STACKS="${FAILED_STACKS}${stack_name}|${creation_time}\n"
+              fi
+            fi
+          done <<< "${CANDIDATE_STACKS_WITH_TIME}"
+
+          # Wait for deletions to complete (with timeout)
+          echo "Waiting for stack deletions to complete..."
+          while IFS= read -r stack_name; do
+            if [ -n "${stack_name}" ]; then
+              echo "Waiting for ${stack_name} to be deleted..."
+              aws cloudformation wait stack-delete-complete --stack-name "${stack_name}" 2>/dev/null || \
+                echo "::warning::Stack ${stack_name} deletion may not have completed within timeout"
+            fi
+          done <<< "${CANDIDATE_STACKS}"
+
+          echo "::endgroup::"
+
+          # Print summary for cross-referencing
+          echo ""
+          echo "=============================================="
+          echo "       STACK CLEANUP SUMMARY"
+          echo "=============================================="
+          echo "Cleanup Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "GitHub Run ID: ${GITHUB_RUN_ID}"
+          echo "GitHub Run URL: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          echo "Total stacks deleted: ${DELETED_COUNT}"
+          echo ""
+
+          if [ -n "${DELETED_STACKS_INFO}" ]; then
+            echo "Deleted stacks:"
+            echo "----------------------------------------------"
+            printf "%-35s | %s\n" "STACK NAME" "CREATED AT"
+            echo "----------------------------------------------"
+            echo -e "${DELETED_STACKS_INFO}" | while IFS='|' read -r stack creation_time; do
+              if [ -n "${stack}" ]; then
+                printf "  ✓ %-32s | %s\n" "${stack}" "${creation_time}"
+              fi
+            done
+            echo "----------------------------------------------"
+          fi
+
+          if [ -n "${FAILED_STACKS}" ]; then
+            echo ""
+            echo "::warning::Failed to delete the following stacks:"
+            echo -e "${FAILED_STACKS}" | while IFS='|' read -r stack creation_time; do
+              if [ -n "${stack}" ]; then
+                printf "  ✗ %-32s | %s\n" "${stack}" "${creation_time}"
+              fi
+            done
+          fi
+
+          echo "=============================================="
+          echo ""
+
+          echo "stacks_deleted=${DELETED_COUNT}" >> $GITHUB_OUTPUT
