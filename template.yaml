@@ -40,11 +40,12 @@ Parameters:
 
 Conditions:
   DevEnvironment: !Equals [!Ref Environment, dev]
-  DevAndBuildAndStageEnvironment:
+  DevAndBuildAndStageAndIntEnvironment:
     !Or [
       !Equals [!Ref Environment, dev],
       !Equals [!Ref Environment, build],
-      !Equals [!Ref Environment, staging]
+      !Equals [!Ref Environment, staging],
+      !Equals [!Ref Environment, integration]
     ]
   UsePermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, none]]
   UseCodeSigning: !Not [!Equals [!Ref CodeSigningConfigArn, none]]
@@ -569,7 +570,7 @@ Resources:
       Environment:
         Variables:
           BACKUP_ENCRYPTION_ENABLED:
-            !If [DevAndBuildAndStageEnvironment, true, false]
+            !If [DevAndBuildAndStageAndIntEnvironment, true, false]
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket
