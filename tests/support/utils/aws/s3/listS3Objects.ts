@@ -13,7 +13,7 @@ export const listS3Objects = async (
   const command = new ListObjectsV2Command(input)
   let response: ListObjectsV2Output
   try {
-    response = await s3Client.send(command)
+    response = await s3Client().send(command)
   } catch (err) {
     console.error(
       `Got error listing files for input ${JSON.stringify(input)}`,
