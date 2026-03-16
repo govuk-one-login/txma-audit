@@ -4,19 +4,27 @@ import { getOutputValue, retrieveStackOutputs } from './retrieveStackOutputs'
 const region = 'eu-west-2'
 const stack = process.env.STACK_NAME ? process.env.STACK_NAME : 'audit'
 
-module.exports = async () => {
-  process.env['AWS_REGION'] = region
-  process.env['STACK_NAME'] = stack
-  const stackOutputMappings = {
-    AUDIT_MESSAGE_DELIMITER_FUNCTION_NAME: 'AuditMessageDelimiterFunctionName',
-    AUDIT_MESSAGE_DELIMITER_LOGS_NAME: 'AuditMessageDelimiterLogsName',
-    S3_COPY_AND_ENCRYPT_FUNCTION_NAME: 'S3CopyAndEncryptFunctionName',
-    S3_COPY_AND_ENCRYPT_LOGS_NAME: 'S3CopyAndEncryptLogsName',
-    AUDIT_BUILD_MESSAGE_BATCH_NAME: 'AuditMessageBatchBucketName',
-    FIREHOSE_AUDIT_MESSAGE_BATCH_NAME: 'AuditMessageDeliveryStreamName'
+const setupFunction = async () => {
+  try {
+    process.env['AWS_REGION'] = region
+    process.env['STACK_NAME'] = stack
+
+    const stackOutputMappings = {
+      AUDIT_MESSAGE_DELIMITER_FUNCTION_NAME:
+        'AuditMessageDelimiterFunctionName',
+      AUDIT_MESSAGE_DELIMITER_LOGS_NAME: 'AuditMessageDelimiterLogsName',
+      S3_COPY_AND_ENCRYPT_FUNCTION_NAME: 'S3CopyAndEncryptFunctionName',
+      S3_COPY_AND_ENCRYPT_LOGS_NAME: 'S3CopyAndEncryptLogsName',
+      AUDIT_BUILD_MESSAGE_BATCH_NAME: 'AuditMessageBatchBucketName',
+      FIREHOSE_AUDIT_MESSAGE_BATCH_NAME: 'AuditMessageDeliveryStreamName'
+    }
+
+    await setEnvVarsFromStackOutputs(stack, stackOutputMappings)
+    await setEnvVarsFromSsm(ssmMappings)
+  } catch (error) {
+    console.error('Setup error:', error)
+    throw error
   }
-  await setEnvVarsFromStackOutputs(stack, stackOutputMappings)
-  await setEnvVarsFromSsm(ssmMappings)
 }
 
 const formatTestStackSsmParam = (parameterName: string) =>
@@ -48,3 +56,10 @@ const setEnvVarsFromSsm = async (ssmMappings: Record<string, string>) => {
       : await retrieveSsmParameterValue(v, region)
   }
 }
+
+// Export in multiple ways for compatibility
+export default setupFunction
+export { setupFunction as setup }
+
+// Also call it at module level as a last resort
+await setupFunction()
