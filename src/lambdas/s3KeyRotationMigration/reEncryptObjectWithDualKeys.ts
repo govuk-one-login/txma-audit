@@ -5,6 +5,7 @@ import { logger } from '../../../common/sharedServices/logger'
 import { getS3ObjectAsStream } from '../../../common/sharedServices/s3/getS3ObjectAsStream'
 import { putS3Object } from '../../../common/sharedServices/s3/putS3Object'
 import { getEnv } from '../../../common/utils/helpers/getEnv'
+import { createKmsClientProvider } from '../../../common/sharedServices/kms/createKmsClientProvider'
 import { Readable } from 'node:stream'
 
 /**
@@ -39,9 +40,12 @@ export const reEncryptObjectWithDualKeys = async (
   const encryptedObjectStream = await getS3ObjectAsStream(bucketName, key)
   logger.info('Retrieved encrypted object from S3', { key })
 
+  const clientProvider = createKmsClientProvider()
+
   // decrypt using Generator Key
   const decryptKeyring = new KmsKeyringNode({
-    keyIds: [generatorKeyId]
+    keyIds: [generatorKeyId],
+    clientProvider
   })
 
   const { decrypt } = buildDecrypt()
@@ -60,7 +64,8 @@ export const reEncryptObjectWithDualKeys = async (
   // this creates encrypted data keys for both wrapper keys
   const encryptKeyring = new KmsKeyringNode({
     generatorKeyId: generatorKeyId,
-    keyIds: [backupKeyId]
+    keyIds: [backupKeyId],
+    clientProvider
   })
   const { encrypt } = buildEncrypt()
   const plaintextStream = Readable.from(plaintext)
