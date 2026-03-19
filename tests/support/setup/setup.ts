@@ -19,7 +19,9 @@ const setupFunction = async () => {
       S3_KEY_ROTATION_LOGS_NAME: 'S3KeyRotationLogsName',
       PERMANENT_MESSAGE_BATCH_BUCKET_NAME: 'PermanentMessageBatchBucketName',
       AUDIT_BUILD_MESSAGE_BATCH_NAME: 'AuditMessageBatchBucketName',
-      FIREHOSE_AUDIT_MESSAGE_BATCH_NAME: 'AuditMessageDeliveryStreamName'
+      FIREHOSE_AUDIT_MESSAGE_BATCH_NAME: 'AuditMessageDeliveryStreamName',
+      GENERATOR_KEY_ID: 'GeneratorKeyId',
+      BACKUP_KEY_ID: 'BackupKeyId'
     }
 
     await setEnvVarsFromStackOutputs(stack, stackOutputMappings)
@@ -36,9 +38,7 @@ const formatTestStackSsmParam = (parameterName: string) =>
 const ssmMappings = {
   FIREHOSE_DELIVERY_STREAM_NAME: formatTestStackSsmParam(
     'AddRecordToFirehoseFunctionName'
-  ),
-  GENERATOR_KEY_ID: 'S3EncryptionGeneratorKmsKeyArn',
-  BACKUP_KEY_ID: 'S3EncryptionGeneratorKmsKeyArnBck'
+  )
 }
 
 const setEnvVarsFromStackOutputs = async (

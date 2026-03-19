@@ -1864,6 +1864,13 @@ Outputs:
   S3KeyRotationLogsName:
     Value: !Ref S3KeyRotationLogs
 
+  # KMS Key ARNs (for integration tests)
+  GeneratorKeyId:
+    Value: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+
+  BackupKeyId:
+    Value: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
+
   # S3 Permanent Audit Bucket
   PermanentMessageBatchBucketName:
     Value: !Ref PermanentMessageBatchBucket
