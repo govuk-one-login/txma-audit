@@ -32,6 +32,10 @@ vi.mock('../../../common/sharedServices/s3/putS3Object', () => ({
   putS3Object: vi.fn()
 }))
 
+vi.mock('../../../common/sharedServices/kms/createKmsClientProvider', () => ({
+  createKmsClientProvider: vi.fn(() => vi.fn())
+}))
+
 const mockKmsKeyringNode = KmsKeyringNode as MockedFunction<
   typeof KmsKeyringNode
 >
@@ -102,7 +106,8 @@ describe('reEncryptObjectWithDualKeys', () => {
 
     // Verify decrypt keyring setup
     expect(mockKmsKeyringNode).toHaveBeenCalledWith({
-      keyIds: [TEST_GENERATOR_KEY]
+      keyIds: [TEST_GENERATOR_KEY],
+      clientProvider: expect.any(Function) // eslint-disable-line @typescript-eslint/no-unsafe-assignment
     })
 
     // Verify decryption
@@ -112,7 +117,8 @@ describe('reEncryptObjectWithDualKeys', () => {
     // Verify encrypt keyring setup with dual keys
     expect(mockKmsKeyringNode).toHaveBeenCalledWith({
       generatorKeyId: TEST_GENERATOR_KEY,
-      keyIds: [TEST_BACKUP_KEY]
+      keyIds: [TEST_BACKUP_KEY],
+      clientProvider: expect.any(Function) // eslint-disable-line @typescript-eslint/no-unsafe-assignment
     })
 
     // Verify encryption
