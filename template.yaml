@@ -421,6 +421,26 @@ Resources:
         - Key: BackupFrequency
           Value: Bihourly
 
+  PermanentMessageBatchBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: DeployTestRolePolicy
+    Properties:
+      Bucket: !Ref PermanentMessageBatchBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Ref TestRoleArn
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt PermanentMessageBatchBucket.Arn
+              - !Sub ${PermanentMessageBatchBucket.Arn}/*
+
   MessageBatchBucketTxMA2:
     Type: AWS::S3::Bucket
     Condition: IsTestableEnv
@@ -1833,6 +1853,14 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt IntegrationTestsAddRecordToFirehoseFunctionNameParameter.Value
+      Principal: !Ref TestRoleArn
+
+  S3KeyRotationLambdaInvokePolicy:
+    Condition: TestRoleResources
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref S3KeyRotationFunction
       Principal: !Ref TestRoleArn
 
   ##############################
