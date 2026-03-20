@@ -24,7 +24,7 @@ jobs:
       - name: Install node packages
         id: npm_install
         run: npm ci
-      - name: Setup Python 3.8
+      - name: Setup Python 3.13
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.13'
@@ -78,10 +78,10 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: sam-build
-      - name: Setup Python 3.8
+      - name: Setup Python 3.13
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.8'
+          python-version: '3.13'
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@d78e1a4a9656d3b223e59b80676a797f20093133 # v2
       - name: Assume the dev account deployment role
@@ -142,10 +142,10 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: sam-build
-      - name: Setup Python 3.8
+      - name: Setup Python 3.13
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: '3.8'
+          python-version: '3.13'
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@d78e1a4a9656d3b223e59b80676a797f20093133 # v2
       - name: Assume AWS role
