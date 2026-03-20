@@ -2,17 +2,21 @@ import { KmsKeyringNode } from '@aws-crypto/client-node'
 import { buildEncrypt } from '@aws-crypto/encrypt-node'
 import { Readable } from 'node:stream'
 import { getEnv } from '../../utils/helpers/getEnv'
+import { createKmsClientProvider } from './createKmsClientProvider'
 
 export const encryptS3Object = async (data: Readable): Promise<Buffer> => {
+  const clientProvider = createKmsClientProvider()
   let keyring: KmsKeyringNode
   if (getEnv('BACKUP_ENCRYPTION_ENABLED') === 'true') {
     keyring = new KmsKeyringNode({
       generatorKeyId: getEnv('GENERATOR_KEY_ID'),
-      keyIds: [getEnv('BACKUP_KEY_ID')]
+      keyIds: [getEnv('BACKUP_KEY_ID')],
+      clientProvider
     })
   } else {
     keyring = new KmsKeyringNode({
-      generatorKeyId: getEnv('GENERATOR_KEY_ID')
+      generatorKeyId: getEnv('GENERATOR_KEY_ID'),
+      clientProvider
     })
   }
   // considering including context in encryption - considered good practice to do so
