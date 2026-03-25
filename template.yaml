@@ -1863,25 +1863,6 @@ Resources:
       FunctionName: !Ref S3KeyRotationFunction
       Principal: !Ref TestRoleArn
 
-  TestRoleKmsAccessPolicy:
-    Condition: TestRoleResources
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: !Sub ${AWS::StackName}-test-role-kms-access
-      Roles:
-        - !Select [1, !Split [':role/', !Ref TestRoleArn]]
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - kms:Decrypt
-              - kms:DescribeKey
-              - kms:GenerateDataKey
-            Resource:
-              - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
-              - '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
-
   ##############################
   # End: Development resources #
   ##############################
