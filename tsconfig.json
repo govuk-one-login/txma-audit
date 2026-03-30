@@ -3,7 +3,6 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "node",
     "noImplicitAny": true,
     "outDir": "./dist/",
     "skipLibCheck": true,
