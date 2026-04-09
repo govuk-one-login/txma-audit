@@ -36,9 +36,8 @@ describe('encryptS3Object', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
-  it('returns a buffer of encrypted data when backup enabled', async () => {
+  it('returns a buffer of encrypted data', async () => {
     mockGetEnv.getEnv.mockImplementation((key: string) => {
-      if (key === 'BACKUP_ENCRYPTION_ENABLED') return 'true'
       if (key === 'GENERATOR_KEY_ID') return TEST_GENERATOR_KEY_ID
       if (key === 'BACKUP_KEY_ID') return TEST_ADDITIONAL_KEY_ID
       return ''
@@ -80,84 +79,6 @@ describe('encryptS3Object', () => {
         keyIds: [TEST_ADDITIONAL_KEY_ID]
       }),
       testDataStream
-    )
-  })
-  it('returns a buffer of encrypted data when backup not enabled', async () => {
-    mockGetEnv.getEnv.mockImplementation((key: string) => {
-      if (key === 'BACKUP_ENCRYPTION_ENABLED') return 'false'
-      if (key === 'GENERATOR_KEY_ID') return TEST_GENERATOR_KEY_ID
-      if (key === 'BACKUP_KEY_ID') return TEST_ADDITIONAL_KEY_ID
-      return ''
-    })
-
-    vi.mocked(KmsKeyringNode).mockImplementation(function (
-      this: KmsKeyringNode,
-      config?: { generatorKeyId?: string }
-    ) {
-      if (config) {
-        Object.assign(this, {
-          generatorKeyId: config.generatorKeyId
-        })
-      }
-    } as never)
-
-    mockEncrypt.mockResolvedValue({
-      result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
-      messageHeader: {} as MessageHeader
-    })
-
-    const testDataStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
-    const result = await encryptS3Object(testDataStream)
-
-    expect(result).toEqual(TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER)
-    expect(KmsKeyringNode).toHaveBeenCalledWith({
-      generatorKeyId: TEST_GENERATOR_KEY_ID,
-      clientProvider: expect.any(Function) // eslint-disable-line @typescript-eslint/no-unsafe-assignment
-    })
-    expect(buildEncrypt).toHaveBeenCalled()
-    expect(mockEncrypt).toHaveBeenCalledWith(
-      {
-        generatorKeyId: TEST_GENERATOR_KEY_ID
-      },
-      testDataStream
-    )
-  })
-  it('treats any non-"true" value for BACKUP_ENCRYPTION_ENABLED as disabled', async () => {
-    mockGetEnv.getEnv.mockImplementation((key: string) => {
-      if (key === 'BACKUP_ENCRYPTION_ENABLED') return 'TRUE' // uppercase
-      if (key === 'GENERATOR_KEY_ID') return TEST_GENERATOR_KEY_ID
-      return ''
-    })
-
-    vi.mocked(KmsKeyringNode).mockImplementation(function (
-      this: KmsKeyringNode,
-      config?: { generatorKeyId?: string }
-    ) {
-      if (config) {
-        Object.assign(this, {
-          generatorKeyId: config.generatorKeyId
-        })
-      }
-    } as never)
-
-    mockEncrypt.mockResolvedValue({
-      result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
-      messageHeader: {} as MessageHeader
-    })
-
-    const testDataStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
-    await encryptS3Object(testDataStream)
-
-    expect(KmsKeyringNode).toHaveBeenCalledWith({
-      generatorKeyId: TEST_GENERATOR_KEY_ID,
-      clientProvider: expect.any(Function) // eslint-disable-line @typescript-eslint/no-unsafe-assignment
-    })
-    // Verify it was NOT called with keyIds
-    expect(KmsKeyringNode).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        generatorKeyId: TEST_GENERATOR_KEY_ID,
-        keyIds: expect.any(Array) as unknown[]
-      })
     )
   })
 })
