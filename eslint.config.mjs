@@ -29,7 +29,8 @@ export default [
       'dist/',
       '/tests/',
       'node_modules',
-      'eslint.config.mjs'
+      'eslint.config.mjs',
+      'scripts/release-notes/generate.mjs'
     ]
   },
   {
