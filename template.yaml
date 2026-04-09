@@ -582,7 +582,6 @@ Resources:
             Queue: !GetAtt AuditFileReadyToEncryptQueue.Arn
       Environment:
         Variables:
-          BACKUP_ENCRYPTION_ENABLED: 'true'
           AUDIT_BUCKET_NAME: !Ref MessageBatchBucket
           AUDIT_PERMANENT_BUCKET_NAME: !Ref PermanentMessageBatchBucket
           AUDIT_TEMPORARY_BUCKET_NAME: !Ref TemporaryMessageBatchBucket

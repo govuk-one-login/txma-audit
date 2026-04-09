@@ -50,7 +50,6 @@ FINAL=$(echo "$MERGED" | jq --arg pattern "$EXCLUDE_PATTERN" '
   | .NODE_OPTIONS = " "
   | .AWS_REGION = "eu-west-2"
   | .XRAY_ENABLED = "false"
-  | .BACKUP_ENCRYPTION_ENABLED = "false"
   | .AWS_XRAY_CONTEXT_MISSING = "LOG_ERROR"
   | {Parameters: .}
 ')
