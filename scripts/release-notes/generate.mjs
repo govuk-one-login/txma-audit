@@ -1,4 +1,10 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'fs'
+import {
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  readdirSync,
+  existsSync
+} from 'fs'
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
 const PKG_VERSION = pkg.version
@@ -6,12 +12,12 @@ const PKG_VERSION = pkg.version
 const {
   SONAR_METRICS,
   JIRA_TICKETS,
-  PREV_TAG,
   CHECKOV_OUTCOME,
   VERSION,
   RUN_URL,
   BRANCH,
-  REPO
+  REPO,
+  PREV_SHA
 } = process.env
 
 const SHORT_SHA = VERSION?.slice(0, 7) ?? 'unknown'
@@ -42,6 +48,37 @@ const ratingClass = (r) =>
 const metricVal = (k, suffix = '') =>
   sonar[k] != null ? sonar[k] + suffix : 'N/A'
 
+const CSS = `
+  :root { --green:#2ea44f; --red:#d73a49; --orange:#e36209; --blue:#0366d6; --grey:#6a737d; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; background:#f6f8fa; color:#24292e; }
+  header { background:#24292e; color:#fff; padding:20px 40px; display:flex; align-items:center; gap:16px; }
+  header h1 { font-size:1.4rem; }
+  .version-badge { background:#2ea44f; padding:4px 10px; border-radius:20px; font-size:.85rem; font-weight:600; }
+  main { max-width:1100px; margin:32px auto; padding:0 24px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin-bottom:28px; }
+  .card { background:#fff; border:1px solid #e1e4e8; border-radius:8px; padding:20px; }
+  .card h2 { font-size:.9rem; text-transform:uppercase; letter-spacing:.05em; color:var(--grey); margin-bottom:14px; }
+  .metric-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f0f0f0; font-size:.9rem; }
+  .metric-row:last-child { border-bottom:none; }
+  .metric-val { font-weight:600; }
+  .rating-a { color:var(--green); } .rating-b { color:#6cc644; } .rating-c { color:var(--orange); }
+  .rating-d { color:#e05d44; } .rating-e { color:var(--red); }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:.8rem; font-weight:600; text-decoration:none; margin:2px; }
+  .badge-jira { background:#0052cc; color:#fff; }
+  .badge-pass { background:#e6f4ea; color:var(--green); border:1px solid var(--green); }
+  .badge-fail { background:#ffeef0; color:var(--red); border:1px solid var(--red); }
+  .badge-info { background:#f1f8ff; color:var(--blue); border:1px solid #c8e1ff; }
+  table { width:100%; border-collapse:collapse; font-size:.875rem; }
+  th { background:#f6f8fa; text-align:left; padding:8px 12px; border-bottom:2px solid #e1e4e8; font-size:.8rem; text-transform:uppercase; color:var(--grey); }
+  td { padding:8px 12px; border-bottom:1px solid #f0f0f0; vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  a { color:var(--blue); text-decoration:none; } a:hover { text-decoration:underline; }
+  .na { color:var(--grey); font-style:italic; font-size:.875rem; }
+  .section-title { font-size:1rem; font-weight:600; margin:28px 0 12px; }
+  footer { text-align:center; padding:24px; color:var(--grey); font-size:.8rem; border-top:1px solid #e1e4e8; margin-top:40px; }
+`
+
 const jiraHtml = jiraTickets.length
   ? jiraTickets
       .map(
@@ -65,42 +102,16 @@ const commitsHtml = commits.length
       .join('')
   : '<tr><td colspan="4">No commits found</td></tr>'
 
-const html = `<!DOCTYPE html>
+const prevShaShort = PREV_SHA?.slice(0, 7) ?? 'initial'
+
+const releaseHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="release-sha" content="${VERSION}">
   <title>Release Notes - TxMA Audit v${PKG_VERSION}</title>
-  <style>
-    :root { --green:#2ea44f; --red:#d73a49; --orange:#e36209; --blue:#0366d6; --grey:#6a737d; }
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; background:#f6f8fa; color:#24292e; }
-    header { background:#24292e; color:#fff; padding:20px 40px; display:flex; align-items:center; gap:16px; }
-    header h1 { font-size:1.4rem; }
-    header .version { background:#2ea44f; padding:4px 10px; border-radius:20px; font-size:.85rem; font-weight:600; }
-    main { max-width:1100px; margin:32px auto; padding:0 24px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin-bottom:28px; }
-    .card { background:#fff; border:1px solid #e1e4e8; border-radius:8px; padding:20px; }
-    .card h2 { font-size:.9rem; text-transform:uppercase; letter-spacing:.05em; color:var(--grey); margin-bottom:14px; }
-    .metric-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f0f0f0; font-size:.9rem; }
-    .metric-row:last-child { border-bottom:none; }
-    .metric-val { font-weight:600; }
-    .rating-a { color:var(--green); } .rating-b { color:#6cc644; } .rating-c { color:var(--orange); }
-    .rating-d { color:#e05d44; } .rating-e { color:var(--red); }
-    .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:.8rem; font-weight:600; text-decoration:none; margin:2px; }
-    .badge-jira { background:#0052cc; color:#fff; }
-    .badge-pass { background:#e6f4ea; color:var(--green); border:1px solid var(--green); }
-    .badge-fail { background:#ffeef0; color:var(--red); border:1px solid var(--red); }
-    .badge-info { background:#f1f8ff; color:var(--blue); border:1px solid #c8e1ff; }
-    table { width:100%; border-collapse:collapse; font-size:.875rem; }
-    th { background:#f6f8fa; text-align:left; padding:8px 12px; border-bottom:2px solid #e1e4e8; font-size:.8rem; text-transform:uppercase; color:var(--grey); }
-    td { padding:8px 12px; border-bottom:1px solid #f0f0f0; vertical-align:top; }
-    tr:last-child td { border-bottom:none; }
-    a { color:var(--blue); text-decoration:none; } a:hover { text-decoration:underline; }
-    .na { color:var(--grey); font-style:italic; font-size:.875rem; }
-    .section-title { font-size:1rem; font-weight:600; margin:28px 0 12px; }
-    footer { text-align:center; padding:24px; color:var(--grey); font-size:.8rem; border-top:1px solid #e1e4e8; margin-top:40px; }
-  </style>
+  <style>${CSS}</style>
 </head>
 <body>
   <header>
@@ -110,9 +121,10 @@ const html = `<!DOCTYPE html>
         Built on ${BUILD_DATE} &nbsp;|&nbsp;
         Branch: <strong style="color:#fff">${BRANCH}</strong> &nbsp;|&nbsp;
         Commit: <a href="https://github.com/${REPO}/commit/${VERSION}" style="color:#58a6ff">${SHORT_SHA}</a>
+        &nbsp;|&nbsp; <a href="index.html" style="color:#58a6ff">← All releases</a>
       </div>
     </div>
-    <span class="version">v${PKG_VERSION}</span>
+    <span class="version-badge">v${PKG_VERSION}</span>
   </header>
 
   <main>
@@ -162,7 +174,7 @@ const html = `<!DOCTYPE html>
       ${jiraHtml}
     </div>
 
-    <div class="section-title">📝 Commits since ${PREV_TAG?.slice(0, 7) ?? 'last release'}</div>
+    <div class="section-title">📝 Commits since ${prevShaShort}</div>
     <div class="card" style="padding:0;overflow:hidden">
       <table>
         <thead><tr><th>SHA</th><th>Message</th><th>Author</th><th>Date</th></tr></thead>
@@ -180,5 +192,79 @@ const html = `<!DOCTYPE html>
 </html>`
 
 mkdirSync('_site', { recursive: true })
-writeFileSync('_site/index.html', html)
-console.log(`Release notes written to _site/index.html (v${PKG_VERSION})`)
+writeFileSync(`_site/v${PKG_VERSION}.html`, releaseHtml)
+console.log(`Written _site/v${PKG_VERSION}.html`)
+
+// Rebuild index.html from all versioned pages in _site/
+const versionPages = readdirSync('_site')
+  .filter((f) => /^v[\d.]+\.html$/.test(f))
+  .sort((a, b) => {
+    const parse = (f) =>
+      f
+        .replace(/^v|\.html$/g, '')
+        .split('.')
+        .map(Number)
+    const [aMaj, aMin, aPat] = parse(a)
+    const [bMaj, bMin, bPat] = parse(b)
+    return bMaj - aMaj || bMin - aMin || bPat - aPat
+  })
+
+const indexRows = versionPages.map((file) => {
+  const content = readFileSync(`_site/${file}`, 'utf8')
+  const sha =
+    content.match(/meta name="release-sha" content="([^"]+)"/)?.[1] ?? ''
+  const date = content.match(/Built on ([^&<]+)/)?.[1]?.trim() ?? ''
+  const version = file.replace(/^v|\.html$/g, '')
+  const jiras = [...content.matchAll(/browse\/(DPT-\d+)/g)].map((m) => m[1])
+  const jiraBadges = [...new Set(jiras)]
+    .map(
+      (t) =>
+        `<a href="https://govukverify.atlassian.net/browse/${t}" target="_blank" class="badge badge-jira">${t}</a>`
+    )
+    .join(' ')
+
+  return `
+    <tr>
+      <td><a href="${file}" class="metric-val">v${version}</a></td>
+      <td>${date}</td>
+      <td><code><a href="https://github.com/${REPO}/commit/${sha}" target="_blank">${sha.slice(0, 7)}</a></code></td>
+      <td>${jiraBadges || '<span class="na">—</span>'}</td>
+    </tr>`
+})
+
+const indexHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Release Notes - TxMA Audit</title>
+  <style>${CSS}</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>TxMA Audit — All Releases</h1>
+      <div style="margin-top:6px;font-size:.85rem;color:#aaa;">
+        <a href="https://github.com/${REPO}" style="color:#58a6ff" target="_blank">GitHub ↗</a>
+      </div>
+    </div>
+    <span class="version-badge">${versionPages.length} release${versionPages.length !== 1 ? 's' : ''}</span>
+  </header>
+
+  <main>
+    <div class="card" style="padding:0;overflow:hidden;margin-top:8px">
+      <table>
+        <thead><tr><th>Version</th><th>Released</th><th>Commit</th><th>JIRA Tickets</th></tr></thead>
+        <tbody>${indexRows.join('')}</tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>
+    TxMA Audit &nbsp;·&nbsp; Generated by GitHub Actions
+  </footer>
+</body>
+</html>`
+
+writeFileSync('_site/index.html', indexHtml)
+console.log(`Rebuilt index.html with ${versionPages.length} release(s)`)
