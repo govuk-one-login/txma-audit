@@ -1,0 +1,113 @@
+name: Release Notes
+
+on:
+  workflow_run:
+    workflows: ['Build, Test and Package']
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate release notes
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install node packages
+        run: npm ci
+
+      - name: Generate coverage report
+        run: npm run test:cov
+
+      - name: Run Checkov security scan
+        id: checkov
+        continue-on-error: true
+        uses: bridgecrewio/checkov-action@0ce65fae06c148e349f955c3c35ad049c11e838c # v12.3092.0
+        with:
+          directory: '.'
+          framework: cloudformation
+          quiet: true
+          skip_check: CKV_AWS_116
+
+      - name: Fetch SonarCloud metrics
+        id: sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          METRICS=$(curl -sf \
+            -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/measures/component?component=govuk-one-login_txma-audit&metricKeys=coverage,bugs,vulnerabilities,code_smells,security_hotspots,duplicated_lines_density,reliability_rating,security_rating,sqale_rating" \
+            || echo '{"component":{"measures":[]}}')
+          echo "metrics<<EOF" >> $GITHUB_OUTPUT
+          echo "$METRICS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Collect commit and JIRA info
+        id: commits
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          echo "prev_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
+
+          JIRA_TICKETS=$(git log ${PREV_TAG}..HEAD --pretty=format:'%s' \
+            | grep -oE 'DPT-[0-9]+' | sort -u | tr '\n' ',' | sed 's/,$//')
+          echo "jira_tickets=${JIRA_TICKETS}" >> $GITHUB_OUTPUT
+
+          git log ${PREV_TAG}..HEAD --pretty=format:'%H|%s|%an|%ad' --date=short \
+            | node -e "
+              import { readFileSync, writeFileSync } from 'fs';
+              const lines = readFileSync('/dev/stdin','utf8').trim().split('\n').filter(Boolean);
+              const out = lines.map(l => {
+                const [hash, subject, author, date] = l.split('|');
+                return { hash: hash.slice(0,7), subject, author, date };
+              });
+              writeFileSync('commits.json', JSON.stringify(out));
+            " || echo '[]' > commits.json
+
+      - name: Build release notes page
+        env:
+          VERSION: ${{ github.event.workflow_run.head_sha }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          REPO: ${{ github.repository }}
+          SONAR_METRICS: ${{ steps.sonar.outputs.metrics }}
+          JIRA_TICKETS: ${{ steps.commits.outputs.jira_tickets }}
+          PREV_TAG: ${{ steps.commits.outputs.prev_tag }}
+          CHECKOV_OUTCOME: ${{ steps.checkov.outcome }}
+        run: node scripts/release-notes/generate.mjs
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: generate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
