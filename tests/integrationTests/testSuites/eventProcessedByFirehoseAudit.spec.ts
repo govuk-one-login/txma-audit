@@ -51,6 +51,7 @@ describe('events processed by firehose', () => {
   })
 
   test('Audit event with successful enrichment txma meta data successfully processed and found in Temp Audit S3 Bucket', async () => {
+    // Component Test
     const eventBodyFromFraudBucket = await getAuditEvent(
       getEnv('AUDIT_BUILD_MESSAGE_BATCH_NAME'),
       eventId1
@@ -59,6 +60,7 @@ describe('events processed by firehose', () => {
   })
 
   test('Audit event with failed enrichment txma meta data successfully processed and found in Temp Audit S3 Bucket', async () => {
+    // Component Test
     const eventBodyFromFraudBucket = await getAuditEvent(
       getEnv('AUDIT_BUILD_MESSAGE_BATCH_NAME'),
       eventId2
