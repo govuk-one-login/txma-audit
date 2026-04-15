@@ -33,6 +33,7 @@ describe('events processed by firehose e2e', () => {
   })
 
   test('Audit event successfully processed and found in Temp Audit S3 Bucket', async () => {
+    // End-to-end Test
     const eventBodyFromFraudBucket = await getAuditEvent(
       getEnv('AUDIT_BUILD_MESSAGE_BATCH_NAME'),
       eventId
