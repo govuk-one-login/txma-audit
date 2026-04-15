@@ -26,6 +26,7 @@ vi.mock('node:zlib', () => ({
 
 describe('getAuditEventsFromS3Object', () => {
   it('returns the audit events from the S3 object', async () => {
+    // Unit Test
     const bucketName = 'bucketName'
     const key = 'key'
     const auditEvents: AuditEvent[] = [

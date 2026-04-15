@@ -37,6 +37,7 @@ describe('encryptS3Object', () => {
     vi.clearAllMocks()
   })
   it('returns a buffer of encrypted data', async () => {
+    // Unit Test
     mockGetEnv.getEnv.mockImplementation((key: string) => {
       if (key === 'GENERATOR_KEY_ID') return TEST_GENERATOR_KEY_ID
       if (key === 'BACKUP_KEY_ID') return TEST_ADDITIONAL_KEY_ID

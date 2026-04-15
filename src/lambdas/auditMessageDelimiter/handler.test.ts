@@ -13,6 +13,7 @@ describe('Unit test for app eventProcessorHandler', function () {
   const expectedData = Buffer.from(exampleMessage + '\n').toString('base64')
 
   it('accepts a payload and stringifies', async () => {
+    // Unit Test
     const expectedResult: FirehoseTransformationResult = {
       records: [
         {
@@ -31,6 +32,7 @@ describe('Unit test for app eventProcessorHandler', function () {
   })
 
   it('accepts a payload with multiple messages and stringifies', async () => {
+    // Unit Test
     const expectedResult: FirehoseTransformationResult = {
       records: []
     }

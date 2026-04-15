@@ -33,6 +33,7 @@ describe('getAuditEvents', () => {
   ]
 
   it('returns the audit events from the provided s3 objects', async () => {
+    // Unit Test
     vi.mocked(getAuditEventsFromS3Object).mockResolvedValue(auditEvents)
 
     const expectedResult = {
@@ -59,6 +60,7 @@ describe('getAuditEvents', () => {
   })
 
   it('returns the failed ids when the audit events cannot be retrieved', async () => {
+    // Unit Test
     vi.mocked(getAuditEventsFromS3Object).mockRejectedValue(
       new Error('mockError')
     )

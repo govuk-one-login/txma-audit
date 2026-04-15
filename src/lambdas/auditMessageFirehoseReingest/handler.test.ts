@@ -50,6 +50,7 @@ describe('handler', () => {
   })
 
   it('successfully receives an SQS event, and returns an SQS Batch response', async () => {
+    // Unit Test
     vi.mocked(getAuditEvents).mockResolvedValue({
       successfulResults: [
         {
@@ -106,6 +107,7 @@ describe('handler', () => {
   })
 
   it('handles partial failures', async () => {
+    // Unit Test
     vi.mocked(getAuditEvents).mockResolvedValue({
       successfulResults: [
         {
@@ -142,6 +144,7 @@ describe('handler', () => {
   })
 
   it('ignores s3 test events', async () => {
+    // Unit Test
     vi.mocked(getAuditEvents).mockResolvedValue({
       successfulResults: [],
       failedIds: []
@@ -155,6 +158,7 @@ describe('handler', () => {
   })
 
   it('ignores events from objects without failures/ prefix', async () => {
+    // Unit Test
     const sqsEvent: SQSEvent = {
       Records: [
         {
@@ -190,6 +194,7 @@ describe('handler', () => {
   })
 
   it('ignores events without s3 object key', async () => {
+    // Unit Test
     const sqsEvent: SQSEvent = {
       Records: [
         {
@@ -222,6 +227,7 @@ describe('handler', () => {
   })
 
   it('ignores events without s3 bucket name', async () => {
+    // Unit Test
     const sqsEvent: SQSEvent = {
       Records: [
         {

@@ -31,6 +31,7 @@ describe('test parseFirehoseResponse() function', () => {
   })
 
   it('all audit events were published to firehose successfully', () => {
+    // Unit Test
     const allSuccessFirehoseResponse: PutRecordBatchCommandOutput = {
       ...baseFirehoseResponse
     }
@@ -44,6 +45,7 @@ describe('test parseFirehoseResponse() function', () => {
   })
 
   it('not all audit events succesfully published to firehose', () => {
+    // Unit Test
     const partialSuccessFirehoseResponse: PutRecordBatchCommandOutput = {
       ...baseFirehoseResponse,
       FailedPutCount: 1,

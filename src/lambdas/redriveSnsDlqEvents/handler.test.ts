@@ -58,6 +58,7 @@ describe('testing handler', () => {
   })
 
   it('No errors processing events', async () => {
+    // Unit Test
     vi.mocked(SQSBatchItemFailureFromProcessingResultArray).mockReturnValue([])
 
     const result = await handler(baseSQSEvent, mockLambdaContext)
@@ -75,6 +76,7 @@ describe('testing handler', () => {
   })
 
   it('Some events failed - parsing json error', async () => {
+    // Unit Test
     vi.mocked(SQSBatchItemFailureFromProcessingResultArray)
       .mockReturnValueOnce(parseFailureResults)
       .mockReturnValueOnce([])
@@ -94,6 +96,7 @@ describe('testing handler', () => {
   })
 
   it('Some events failed - sending to firehose error', async () => {
+    // Unit Test
     vi.mocked(SQSBatchItemFailureFromProcessingResultArray)
       .mockReturnValueOnce([])
       .mockReturnValueOnce(firehoseFailureResults)
@@ -103,6 +106,7 @@ describe('testing handler', () => {
   })
 
   it('Some events failed - sending to firehose error and json parsing error', async () => {
+    // Unit Test
     vi.mocked(SQSBatchItemFailureFromProcessingResultArray)
       .mockReturnValueOnce(parseFailureResults)
       .mockReturnValueOnce(firehoseFailureResults)

@@ -18,6 +18,7 @@ vi.mock('./handler', () => ({
 
 describe('testing helper functions', () => {
   it('test SQSBatchItemFailureFromProcessingResultArray() to support partial failure response', () => {
+    // Unit Test
     const result = SQSBatchItemFailureFromProcessingResultArray(
       baseProcessingResults
     )
@@ -32,6 +33,7 @@ describe('testing helper functions', () => {
   })
 
   it('test generateLogMessageFromProcessingResult()', () => {
+    // Unit Test
     const testInput: ProcessingResult[][] = [
       baseProcessingResults.slice(),
       baseProcessingResults.map((element) => {
@@ -55,6 +57,7 @@ describe('testing helper functions', () => {
   })
 
   it('test parseSQSEvent(). All records successfully parsed', () => {
+    // Unit Test
     const result = parseSQSEvent(baseSQSEvent)
     const expectedResult = {
       successfullyParsedRecords: baseProcessingResults.slice(),
@@ -64,6 +67,7 @@ describe('testing helper functions', () => {
   })
 
   it('test parseSQSEvent(). partial records successfully parsed', () => {
+    // Unit Test
     const partialyInvalidSQSEvent = {
       Records: baseProcessingResults.map((result, index) => {
         if (index === 0) {

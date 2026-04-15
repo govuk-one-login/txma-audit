@@ -20,6 +20,7 @@ describe('deleteOrUpdateS3Objects', () => {
   const bucket = 'mockBucket'
 
   it('should delete s3 objects that have no failed events', async () => {
+    // Unit Test
     vi.mocked(deleteS3Object).mockResolvedValue()
 
     const results: S3ObjectDetails[] = [
@@ -47,6 +48,7 @@ describe('deleteOrUpdateS3Objects', () => {
   })
 
   it('should update s3 objects that have failed events', async () => {
+    // Unit Test
     vi.mocked(putS3Object).mockResolvedValue()
 
     const results: S3ObjectDetails[] = [

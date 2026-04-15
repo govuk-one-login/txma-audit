@@ -20,6 +20,7 @@ const putObjectCommandInput: DeleteObjectCommandInput = {
 
 describe('deleteS3Object', () => {
   it('deletes an object', async () => {
+    // Unit Test
     await deleteS3Object(TEST_TEMPORARY_BUCKET_NAME, TEST_S3_OBJECT_KEY)
 
     const calls = s3Mock.commandCalls(DeleteObjectCommand)
