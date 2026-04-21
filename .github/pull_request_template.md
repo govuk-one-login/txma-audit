@@ -1,4 +1,9 @@
 - **Ticket Number**: :ticket:: https://govukverify.atlassian.net/browse/DPT-
+- **Semantic Version**: <!-- Add [major], [minor], or [patch] to your commit message title. Default is [patch] if omitted. -->
+  - `[major]` — breaking change
+  - `[minor]` — new non-breaking feature
+  - `[patch]` — bug fix or small change (default)
+  - Example: `DPT-123: [minor] Implement data validation`
 - **Documentation Link(s)**: [:books: Does this relate to an ADR/RFC/Spike ticket?]
 
 ## :bulb: Description
