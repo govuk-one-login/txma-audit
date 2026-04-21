@@ -10,6 +10,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read
 
 concurrency:
   group: pages
@@ -35,6 +36,33 @@ jobs:
 
       - name: Install node packages
         run: npm ci
+
+      - name: Restore previous site from last Pages deployment
+        id: restore
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p _site
+
+          # Find the most recent successful pages-build-and-deployment run
+          ARTIFACT_ID=$(gh api \
+            "repos/${{ github.repository }}/actions/artifacts?name=github-pages&per_page=1" \
+            --jq '.artifacts[0].id // empty')
+
+          if [ -n "$ARTIFACT_ID" ]; then
+            gh api "repos/${{ github.repository }}/actions/artifacts/${ARTIFACT_ID}/zip" > pages.zip
+            # GitHub Pages artifact is a tar inside the zip
+            unzip -p pages.zip artifact.tar | tar -x -C _site/ 2>/dev/null || true
+            echo "Restored previous site (artifact ${ARTIFACT_ID})"
+
+            # Extract the SHA from the most recent versioned release page
+            PREV_SHA=$(grep -h 'meta name="release-sha"' _site/v*.html 2>/dev/null \
+              | grep -oP 'content="\K[^"]+' | tail -1 || echo "")
+            echo "prev_sha=${PREV_SHA}" >> $GITHUB_OUTPUT
+          else
+            echo "No previous deployment found — first run"
+            echo "prev_sha=" >> $GITHUB_OUTPUT
+          fi
 
       - name: Generate coverage report
         run: npm run test:cov
@@ -62,22 +90,30 @@ jobs:
           echo "$METRICS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Collect commit and JIRA info
+      - name: Collect commits since last deployment
         id: commits
+        env:
+          PREV_SHA: ${{ steps.restore.outputs.prev_sha }}
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)
-          echo "prev_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
+          if [ -n "$PREV_SHA" ] && git cat-file -e "${PREV_SHA}^{commit}" 2>/dev/null; then
+            FROM="${PREV_SHA}"
+          else
+            # First run — show commits from the beginning
+            FROM=$(git rev-list --max-parents=0 HEAD)
+          fi
+          echo "from_sha=${FROM}" >> $GITHUB_OUTPUT
 
-          JIRA_TICKETS=$(git log ${PREV_TAG}..HEAD --pretty=format:'%s' \
+          JIRA_TICKETS=$(git log ${FROM}..HEAD --pretty=format:'%s' \
             | grep -oE 'DPT-[0-9]+' | sort -u | tr '\n' ',' | sed 's/,$//')
           echo "jira_tickets=${JIRA_TICKETS}" >> $GITHUB_OUTPUT
 
-          git log ${PREV_TAG}..HEAD --pretty=format:'%H|%s|%an|%ad' --date=short \
+          git log ${FROM}..HEAD --pretty=format:'%H|%s|%an|%ad' --date=short \
             | node -e "
               import { readFileSync, writeFileSync } from 'fs';
               const lines = readFileSync('/dev/stdin','utf8').trim().split('\n').filter(Boolean);
               const out = lines.map(l => {
-                const [hash, subject, author, date] = l.split('|');
+                const [hash, ...rest] = l.split('|');
+                const [subject, author, date] = rest.join('|').split('|');
                 return { hash: hash.slice(0,7), subject, author, date };
               });
               writeFileSync('commits.json', JSON.stringify(out));
@@ -91,7 +127,7 @@ jobs:
           REPO: ${{ github.repository }}
           SONAR_METRICS: ${{ steps.sonar.outputs.metrics }}
           JIRA_TICKETS: ${{ steps.commits.outputs.jira_tickets }}
-          PREV_TAG: ${{ steps.commits.outputs.prev_tag }}
+          PREV_SHA: ${{ steps.restore.outputs.prev_sha }}
           CHECKOV_OUTCOME: ${{ steps.checkov.outcome }}
         run: node scripts/release-notes/generate.mjs
 
