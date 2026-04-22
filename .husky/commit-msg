@@ -1,0 +1,35 @@
+COMMIT_MSG=$(cat "$1")
+
+# Skip version bump for merge commits, fixups, and bot commits
+if echo "$COMMIT_MSG" | grep -qE '^(Merge|fixup!|squash!|chore: bump version)'; then
+  exit 0
+fi
+
+# Detect bump type from commit message, default to patch
+if echo "$COMMIT_MSG" | grep -qiE '\[major\]'; then
+  BUMP_TYPE="major"
+elif echo "$COMMIT_MSG" | grep -qiE '\[minor\]'; then
+  BUMP_TYPE="minor"
+else
+  BUMP_TYPE="patch"
+fi
+
+# Get the current version on origin/main as the baseline to avoid stacking
+# bumps across multiple commits on the same branch
+MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | node -e "
+  let d='';
+  process.stdin.on('data', c => d+=c);
+  process.stdin.on('end', () => console.log(JSON.parse(d).version));
+" 2>/dev/null)
+
+if [ -n "$MAIN_VERSION" ]; then
+  npm pkg set version="$MAIN_VERSION" --silent
+fi
+
+NEW_VERSION=$(npm version "$BUMP_TYPE" --no-git-tag-version)
+NEW_VERSION="${NEW_VERSION#v}"
+
+# Stage the version bump so it's included in this commit
+git add package.json package-lock.json
+
+echo "Version bumped to $NEW_VERSION ($BUMP_TYPE)"
