@@ -1,6 +1,7 @@
 name: Release Notes
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ['Build, Test and Package']
     types: [completed]
@@ -19,7 +20,7 @@ concurrency:
 jobs:
   generate:
     name: Generate release notes
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -44,23 +45,26 @@ jobs:
         run: |
           mkdir -p _site
 
-          # Find the most recent successful pages-build-and-deployment run
-          ARTIFACT_ID=$(gh api \
-            "repos/${{ github.repository }}/actions/artifacts?name=github-pages&per_page=1" \
-            --jq '.artifacts[0].id // empty')
+          # Fetch the active Pages deployment URL
+          PAGES_URL=$(gh api "repos/${{ github.repository }}/pages" --jq '.html_url // empty' 2>/dev/null || echo "")
 
-          if [ -n "$ARTIFACT_ID" ]; then
-            gh api "repos/${{ github.repository }}/actions/artifacts/${ARTIFACT_ID}/zip" > pages.zip
-            # GitHub Pages artifact is a tar inside the zip
-            unzip -p pages.zip artifact.tar | tar -x -C _site/ 2>/dev/null || true
-            echo "Restored previous site (artifact ${ARTIFACT_ID})"
+          if [ -n "$PAGES_URL" ]; then
+            # Download all existing versioned release pages
+            INDEX_HTML=$(curl -sf "${PAGES_URL}index.html" || echo "")
+            if [ -n "$INDEX_HTML" ]; then
+              # Extract all versioned page hrefs from the index and download each
+              echo "$INDEX_HTML" | grep -oP 'href="\Kv[\d.]+\.html' | sort -u | while read -r page; do
+                curl -sf "${PAGES_URL}${page}" -o "_site/${page}" || true
+              done
+              echo "Restored previous site from ${PAGES_URL}"
+            fi
 
             # Extract the SHA from the most recent versioned release page
             PREV_SHA=$(grep -h 'meta name="release-sha"' _site/v*.html 2>/dev/null \
               | grep -oP 'content="\K[^"]+' | tail -1 || echo "")
             echo "prev_sha=${PREV_SHA}" >> $GITHUB_OUTPUT
           else
-            echo "No previous deployment found — first run"
+            echo "No previous Pages deployment found — first run"
             echo "prev_sha=" >> $GITHUB_OUTPUT
           fi
 
@@ -121,9 +125,9 @@ jobs:
 
       - name: Build release notes page
         env:
-          VERSION: ${{ github.event.workflow_run.head_sha }}
-          RUN_URL: ${{ github.event.workflow_run.html_url }}
-          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          VERSION: ${{ github.event.workflow_run.head_sha || github.sha }}
+          RUN_URL: ${{ github.event.workflow_run.html_url || github.server_url }}
+          BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
           REPO: ${{ github.repository }}
           SONAR_METRICS: ${{ steps.sonar.outputs.metrics }}
           JIRA_TICKETS: ${{ steps.commits.outputs.jira_tickets }}
