@@ -34,6 +34,7 @@ describe('test writeToFirehose() function', () => {
   })
 
   it('calls firehosePutRecordBatch() function.', async () => {
+    // Unit Test
     const mockDeliveryStreamName = 'mockDeliveryStreamName'
     vi.mocked(auditEventsToFirehoseRecords).mockReturnValue(mockFireHoseRecords)
     vi.mocked(firehosePutRecordBatch).mockResolvedValue(baseFirehoseResponse)
@@ -50,6 +51,7 @@ describe('test writeToFirehose() function', () => {
   })
 
   it('calls firehosePutRecordBatch() function. An error is raised', async () => {
+    // Unit Test
     const mockDeliveryStreamName = 'mockDeliveryStreamName'
     const error = new Error('mockError')
 

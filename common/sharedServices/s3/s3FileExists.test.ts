@@ -17,6 +17,7 @@ describe('s3FileExists', () => {
     s3Mock.reset()
   })
   it('should return false if a file not exists error is returned', async () => {
+    // Unit Test
     s3Mock.on(HeadObjectCommand).rejects({ name: 'NotFound' })
     expect(
       await s3FileExists(TEST_PERMANENT_BUCKET_NAME, TEST_S3_OBJECT_KEY)
@@ -31,6 +32,7 @@ describe('s3FileExists', () => {
   })
 
   it('should throw if some other error is returned', async () => {
+    // Unit Test
     const someError = 'some other error'
     s3Mock.on(HeadObjectCommand).rejects(someError)
     await expect(
@@ -46,6 +48,7 @@ describe('s3FileExists', () => {
   })
 
   it('should return true if the requested file is found', async () => {
+    // Unit Test
     s3Mock
       .on(HeadObjectCommand)
       .resolves({ ContentLength: 100 } as HeadObjectOutput)

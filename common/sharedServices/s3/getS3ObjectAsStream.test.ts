@@ -28,6 +28,7 @@ const givenDataAvailable = () => {
 
 describe('getS3Object -', () => {
   it('getS3ObjectAsStream returns a stream read from the file', async () => {
+    // Unit Test
     givenDataAvailable()
     const testDataStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
 

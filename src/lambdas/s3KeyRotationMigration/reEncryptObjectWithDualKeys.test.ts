@@ -83,6 +83,7 @@ describe('reEncryptObjectWithDualKeys', () => {
   })
 
   it('successfully re-encrypts an object with dual keys', async () => {
+    // Unit Test
     const encryptedStream = createDataStream('encrypted-content')
     const mockMessageHeader = {
       encryptedDataKeys: [
@@ -134,6 +135,7 @@ describe('reEncryptObjectWithDualKeys', () => {
   })
 
   it('throws error when GENERATOR_KEY_ID is not set', async () => {
+    // Unit Test
     delete process.env.GENERATOR_KEY_ID
 
     await expect(
@@ -144,6 +146,7 @@ describe('reEncryptObjectWithDualKeys', () => {
   })
 
   it('throws error when BACKUP_KEY_ID is not set', async () => {
+    // Unit Test
     delete process.env.BACKUP_KEY_ID
 
     await expect(
@@ -154,6 +157,7 @@ describe('reEncryptObjectWithDualKeys', () => {
   })
 
   it('propagates S3 retrieval errors', async () => {
+    // Unit Test
     mockGetS3ObjectAsStream.mockRejectedValue(new Error('S3 access denied'))
 
     await expect(
@@ -164,6 +168,7 @@ describe('reEncryptObjectWithDualKeys', () => {
   })
 
   it('propagates decryption errors', async () => {
+    // Unit Test
     const encryptedStream = createDataStream('encrypted-content')
     mockGetS3ObjectAsStream.mockResolvedValue(encryptedStream)
     mockDecrypt.mockRejectedValue(new Error('KMS decryption failed'))
@@ -176,6 +181,7 @@ describe('reEncryptObjectWithDualKeys', () => {
   })
 
   it('propagates encryption errors', async () => {
+    // Unit Test
     const encryptedStream = createDataStream('encrypted-content')
     const mockMessageHeader = {
       encryptedDataKeys: [{ providerId: 'aws-kms' }]
@@ -196,6 +202,7 @@ describe('reEncryptObjectWithDualKeys', () => {
   })
 
   it('propagates S3 write errors', async () => {
+    // Unit Test
     const encryptedStream = createDataStream('encrypted-content')
     const mockMessageHeader = {
       encryptedDataKeys: [{ providerId: 'aws-kms' }]
@@ -217,6 +224,7 @@ describe('reEncryptObjectWithDualKeys', () => {
   })
 
   it('handles objects with multiple encrypted data keys', async () => {
+    // Unit Test
     const encryptedStream = createDataStream('encrypted-content')
     const mockMessageHeader = {
       encryptedDataKeys: [

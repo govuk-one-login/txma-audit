@@ -10,6 +10,7 @@ const s3Mock = mockClient(S3Client)
 
 describe('s3ChangeStorageClass', () => {
   it('should make the correct AWS SDK call to change the storage class', async () => {
+    // Unit Test
     await s3ChangeStorageClass(
       TEST_PERMANENT_BUCKET_NAME,
       TEST_S3_OBJECT_KEY,

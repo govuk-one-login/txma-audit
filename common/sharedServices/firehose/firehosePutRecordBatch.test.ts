@@ -21,6 +21,7 @@ describe('firehosePutRecordBatch', () => {
     .resolves({ FailedPutCount: 0, RequestResponses: [] })
 
   it('should successfully put a batch onto a Firehose stream', async () => {
+    // Unit Test
     const result = await firehosePutRecordBatch(
       mockDeliveryStreamName,
       mockFirehoseRecords

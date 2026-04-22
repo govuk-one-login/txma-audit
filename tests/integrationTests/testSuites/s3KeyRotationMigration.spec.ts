@@ -168,6 +168,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
 
   describe('KMS Key Access Verification', () => {
     it('should have access to the Generator Key (WK1)', async () => {
+      // Component Test
       const response = await verifyKmsKeyAccess(generatorKeyId)
 
       expect(response.KeyMetadata).toBeDefined()
@@ -176,6 +177,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
     })
 
     it('should have access to the Backup Key (WK2)', () => {
+      // Component Test
       expect(backupKeyId).toBeDefined()
       expect(backupKeyId).toMatch(
         /^arn:aws:kms:[a-z0-9-]+:\d{12}:key\/(mrk-)?[0-9a-f-]+$/
@@ -185,6 +187,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
 
   describe('Happy Path - Successful Re-encryption', () => {
     it('should re-encrypt a single object with dual keys', async () => {
+      // Component Test
       // Arrange
       const testData = `audit-event-data-${randomUUID()}`
       const testKey = `${TEST_PREFIX}/${randomUUID()}.gz.enc`
@@ -226,6 +229,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
     })
 
     it('should re-encrypt multiple objects in a single batch', async () => {
+      // Component Test
       // Arrange
       const testObjects = Array.from({ length: 3 }, () => ({
         key: `${TEST_PREFIX}/${randomUUID()}.gz.enc`,
@@ -276,6 +280,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
     })
 
     it('should verify the bucket contains Data, WK1, and WK2 encrypted data keys after re-encryption', async () => {
+      // Component Test
       // Arrange
       const testData = `verify-dual-keys-${randomUUID()}`
       const testKey = `${TEST_PREFIX}/${randomUUID()}.gz.enc`
@@ -313,6 +318,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
     })
 
     it('should preserve original data integrity after re-encryption', async () => {
+      // Component Test
       // Arrange
       const originalData = JSON.stringify({
         event_name: 'AUTH_IPV_CAPACITY_REQUESTED',
@@ -355,6 +361,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
 
   describe('Unhappy Path - Missing or Invalid Keys', () => {
     it('should return PermanentFailure when the S3 object does not exist', async () => {
+      // Component Test
       // Arrange
       const nonExistentKey = `${TEST_PREFIX}/non-existent-${randomUUID()}.gz.enc`
       const event = createS3BatchEvent(bucketArn, [
@@ -374,6 +381,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
     })
 
     it('should return PermanentFailure when object is not encrypted (invalid WK1 decryption)', async () => {
+      // Component Test
       // Arrange - Upload a plain (unencrypted) object
       const testKey = `${TEST_PREFIX}/${randomUUID()}.gz.enc`
       testKeys.push(testKey)
@@ -404,6 +412,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
     })
 
     it('should handle a mix of valid and invalid tasks in a single batch', async () => {
+      // Component Test
       // Arrange
       const validData = `valid-data-${randomUUID()}`
       const validKey = `${TEST_PREFIX}/${randomUUID()}.gz.enc`
@@ -441,6 +450,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
     })
 
     it('should return PermanentFailure for an invalid bucket ARN', async () => {
+      // Component Test
       // Arrange
       const testKey = `${TEST_PREFIX}/${randomUUID()}.gz.enc`
       const invalidBucketArn = 'arn:aws:s3:::non-existent-bucket-12345'
@@ -464,6 +474,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
 
   describe('DLQ / Error Handling Behaviour', () => {
     it('should set treatMissingKeysAs to PermanentFailure in the response', async () => {
+      // Component Test
       // Arrange
       const testData = `dlq-test-${randomUUID()}`
       const testKey = `${TEST_PREFIX}/${randomUUID()}.gz.enc`
@@ -491,6 +502,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
     })
 
     it('should include the invocation schema version in the response', async () => {
+      // Component Test
       // Arrange
       const testKey = `${TEST_PREFIX}/non-existent-${randomUUID()}.gz.enc`
 
@@ -510,6 +522,7 @@ describe.todo('S3 Key Rotation Migration - Integration Tests', () => {
     })
 
     it('should return all task results even when multiple tasks fail', async () => {
+      // Component Test
       // Arrange
       const failingTasks = Array.from({ length: 3 }, (_, i) => ({
         key: `${TEST_PREFIX}/non-existent-${randomUUID()}.gz.enc`,

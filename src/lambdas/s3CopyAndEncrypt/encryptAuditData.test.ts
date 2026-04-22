@@ -34,6 +34,7 @@ describe('encryptAuditData', () => {
   it.each([TEST_TEMPORARY_BUCKET_NAME, TEST_AUDIT_BUCKET_NAME])(
     'retrieves and copies an S3 object from the bucket %p',
     async (bucketName: string) => {
+      // Unit Test
       const s3ObjectStream = createDataStream(TEST_S3_OBJECT_DATA_STRING)
       vi.mocked(getS3ObjectAsStream).mockResolvedValue(s3ObjectStream)
       vi.mocked(encryptS3Object).mockResolvedValue(
@@ -56,6 +57,7 @@ describe('encryptAuditData', () => {
   )
 
   it('throws an error if the source bucket is invalid', async () => {
+    // Unit Test
     await expect(
       encryptAuditData(TEST_WRONG_S3_BUCKET, TEST_S3_OBJECT_KEY)
     ).rejects.toThrow(`Incorrect source bucket - ${TEST_WRONG_S3_BUCKET}`)

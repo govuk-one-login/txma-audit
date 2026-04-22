@@ -22,6 +22,7 @@ describe('putS3Object', () => {
   }
 
   it('uploads an object', async () => {
+    // Unit Test
     await putS3Object(
       TEST_PERMANENT_BUCKET_NAME,
       TEST_S3_OBJECT_KEY,

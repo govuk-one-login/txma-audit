@@ -41,6 +41,7 @@ describe('S3 Key Rotation Handler', () => {
   })
 
   it('successfully processes a single task', async () => {
+    // Unit Test
     const event = createS3BatchEvent(1, 'audit-bucket')
     mockReEncryptObjectWithDualKeys.mockResolvedValue(undefined)
 
@@ -67,6 +68,7 @@ describe('S3 Key Rotation Handler', () => {
   })
 
   it('successfully processes multiple tasks in parallel', async () => {
+    // Unit Test
     const event = createS3BatchEvent(3, 'audit-bucket')
     mockReEncryptObjectWithDualKeys.mockResolvedValue(undefined)
 
@@ -90,6 +92,7 @@ describe('S3 Key Rotation Handler', () => {
   })
 
   it('handles task failures gracefully', async () => {
+    // Unit Test
     const event = createS3BatchEvent(2, 'audit-bucket')
 
     mockReEncryptObjectWithDualKeys
@@ -112,6 +115,7 @@ describe('S3 Key Rotation Handler', () => {
   })
 
   it('continues processing remaining tasks when one fails', async () => {
+    // Unit Test
     const event = createS3BatchEvent(3, 'audit-bucket')
 
     mockReEncryptObjectWithDualKeys
@@ -128,6 +132,7 @@ describe('S3 Key Rotation Handler', () => {
   })
 
   it('extracts bucket name correctly from S3 ARN', async () => {
+    // Unit Test
     const event = createS3BatchEvent(1, 'my-special-bucket-name')
     mockReEncryptObjectWithDualKeys.mockResolvedValue(undefined)
 
@@ -140,6 +145,7 @@ describe('S3 Key Rotation Handler', () => {
   })
 
   it('handles empty task list', async () => {
+    // Unit Test
     const event: S3BatchEvent = {
       invocationSchemaVersion: '1.0',
       invocationId: 'test-invocation-id',
@@ -156,6 +162,7 @@ describe('S3 Key Rotation Handler', () => {
   })
 
   it('includes invocation details in response', async () => {
+    // Unit Test
     const event = createS3BatchEvent(1)
     mockReEncryptObjectWithDualKeys.mockResolvedValue(undefined)
 

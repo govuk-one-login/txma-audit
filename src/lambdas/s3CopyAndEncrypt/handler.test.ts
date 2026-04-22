@@ -17,12 +17,14 @@ describe('InitiateCopyAndEncrypt', function () {
   })
 
   it('handles s3 testEvents emitted when a new notification link is established', async () => {
+    // Unit Test
     await handler(testS3TestEvent, mockLambdaContext)
 
     expect(encryptAuditData).not.toHaveBeenCalled()
   })
 
   it('calls encryptAuditData to encrypt the relevant data', async () => {
+    // Unit Test
     const bucketName = 'myBucketName'
     const objectKey = 'myObjectKey'
     await handler(testS3SqsEvent(bucketName, objectKey), mockLambdaContext)
@@ -30,6 +32,7 @@ describe('InitiateCopyAndEncrypt', function () {
   })
 
   it('throws an error if there is no data in the SQS Event', async () => {
+    // Unit Test
     await expect(handler({ Records: [] }, mockLambdaContext)).rejects.toThrow(
       'No data in event'
     )
