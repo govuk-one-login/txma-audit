@@ -154,7 +154,7 @@ const releaseHtml = `<!DOCTYPE html>
         <div class="metric-row"><span>Security</span><span class="metric-val ${ratingClass(sonar['security_rating'])}">${ratingLabel(sonar['security_rating'])}</span></div>
         <div class="metric-row"><span>Maintainability</span><span class="metric-val ${ratingClass(sonar['sqale_rating'])}">${ratingLabel(sonar['sqale_rating'])}</span></div>
         <div class="metric-row" style="margin-top:12px"><span>Full report</span>
-          <a href="https://sonarcloud.io/project/overview?id=govuk-one-login_txma-audit" target="_blank" class="badge badge-info">SonarCloud ↗</a>
+          <a href="https://sonarcloud.io/project/overview?id=txma-audit" target="_blank" class="badge badge-info">SonarCloud ↗</a>
         </div>
       </div>
 
