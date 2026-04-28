@@ -13,6 +13,8 @@ const {
   SONAR_METRICS,
   JIRA_TICKETS,
   CHECKOV_OUTCOME,
+  CHECKOV_RESULTS_FILE,
+  NPM_AUDIT_FILE,
   VERSION,
   RUN_URL,
   BRANCH,
@@ -23,12 +25,67 @@ const {
 const SHORT_SHA = VERSION?.slice(0, 7) ?? 'unknown'
 const BUILD_DATE = new Date().toUTCString().replace(/:\d\d GMT/, ' UTC')
 
+// --- Sonar ---
 let sonar = {}
 try {
   const data = JSON.parse(SONAR_METRICS ?? '{}')
   ;(data.component?.measures ?? []).forEach((m) => {
     sonar[m.metric] = m.value
   })
+} catch {}
+
+// --- npm audit ---
+let auditVulns = []
+try {
+  const audit = JSON.parse(readFileSync(NPM_AUDIT_FILE, 'utf8'))
+  // npm audit --json v2 schema: vulnerabilities is a map keyed by package name
+  auditVulns = Object.values(audit.vulnerabilities ?? {})
+    .filter(
+      (v) => v.isDirect || v.severity === 'critical' || v.severity === 'high'
+    )
+    .map((v) => ({
+      name: v.name,
+      severity: v.severity,
+      via: [v.via ?? []]
+        .flat()
+        .filter((x) => typeof x === 'object')
+        .map((x) => x.title ?? x.url ?? '')
+        .filter(Boolean)
+        .join(', '),
+      cves: [v.via ?? []]
+        .flat()
+        .filter((x) => typeof x === 'object')
+        .flatMap((x) => x.cves ?? [])
+        .join(', '),
+      fixAvailable:
+        v.fixAvailable === true
+          ? '✓ Fix available'
+          : v.fixAvailable?.name
+            ? `Update to ${v.fixAvailable.name}@${v.fixAvailable.version}`
+            : '✗ No fix',
+      range: v.range ?? ''
+    }))
+} catch {}
+
+// --- Checkov ---
+let checkovFailures = []
+try {
+  const raw = readFileSync(CHECKOV_RESULTS_FILE, 'utf8')
+  // Checkov JSON can be an array (one entry per framework) or a single object
+  const results = JSON.parse(raw)
+  const checks = [results].flat().flatMap((r) => r.results?.failed_checks ?? [])
+  checkovFailures = checks.map((c) => ({
+    checkId: c.check_id,
+    checkName: c.check_id
+      ? `<a href="https://docs.bridgecrew.io/docs/${c.check_id.toLowerCase()}" target="_blank">${c.check_id}</a>`
+      : '',
+    resource: c.resource ?? '',
+    file: c.repo_file_path ?? c.file_path ?? '',
+    line: c.file_line_range
+      ? `L${c.file_line_range[0]}–${c.file_line_range[1]}`
+      : '',
+    guideline: c.guideline ?? ''
+  }))
 } catch {}
 
 const commits = JSON.parse(readFileSync('commits.json', 'utf8'))
@@ -47,6 +104,14 @@ const ratingClass = (r) =>
   })[r] ?? ''
 const metricVal = (k, suffix = '') =>
   sonar[k] != null ? sonar[k] + suffix : 'N/A'
+
+const severityClass = (s) =>
+  ({
+    critical: 'sev-critical',
+    high: 'sev-high',
+    moderate: 'sev-moderate',
+    low: 'sev-low'
+  })[s] ?? ''
 
 const CSS = `
   :root { --green:#2ea44f; --red:#d73a49; --orange:#e36209; --blue:#0366d6; --grey:#6a737d; }
@@ -69,6 +134,10 @@ const CSS = `
   .badge-pass { background:#e6f4ea; color:var(--green); border:1px solid var(--green); }
   .badge-fail { background:#ffeef0; color:var(--red); border:1px solid var(--red); }
   .badge-info { background:#f1f8ff; color:var(--blue); border:1px solid #c8e1ff; }
+  .sev-critical { background:#6e0000; color:#fff; padding:2px 8px; border-radius:4px; font-size:.75rem; font-weight:700; }
+  .sev-high { background:#d73a49; color:#fff; padding:2px 8px; border-radius:4px; font-size:.75rem; font-weight:700; }
+  .sev-moderate { background:#e36209; color:#fff; padding:2px 8px; border-radius:4px; font-size:.75rem; font-weight:700; }
+  .sev-low { background:#6a737d; color:#fff; padding:2px 8px; border-radius:4px; font-size:.75rem; font-weight:700; }
   table { width:100%; border-collapse:collapse; font-size:.875rem; }
   th { background:#f6f8fa; text-align:left; padding:8px 12px; border-bottom:2px solid #e1e4e8; font-size:.8rem; text-transform:uppercase; color:var(--grey); }
   td { padding:8px 12px; border-bottom:1px solid #f0f0f0; vertical-align:top; }
@@ -101,6 +170,34 @@ const commitsHtml = commits.length
       )
       .join('')
   : '<tr><td colspan="4">No commits found</td></tr>'
+
+const auditHtml = auditVulns.length
+  ? auditVulns
+      .map(
+        (v) => `
+      <tr>
+        <td><strong>${v.name}</strong>${v.range ? `<br><span style="color:var(--grey);font-size:.8rem">${v.range}</span>` : ''}</td>
+        <td><span class="${severityClass(v.severity)}">${v.severity}</span></td>
+        <td>${v.cves || '<span class="na">—</span>'}</td>
+        <td>${v.via || '<span class="na">—</span>'}</td>
+        <td style="font-size:.8rem">${v.fixAvailable}</td>
+      </tr>`
+      )
+      .join('')
+  : '<tr><td colspan="5"><span class="na">No vulnerabilities found</span></td></tr>'
+
+const checkovHtml = checkovFailures.length
+  ? checkovFailures
+      .map(
+        (c) => `
+      <tr>
+        <td>${c.checkName}</td>
+        <td>${c.resource}</td>
+        <td style="font-size:.8rem">${c.file}${c.line ? ` <span style="color:var(--grey)">${c.line}</span>` : ''}</td>
+      </tr>`
+      )
+      .join('')
+  : '<tr><td colspan="3"><span class="na">No failed checks</span></td></tr>'
 
 const prevShaShort = PREV_SHA?.slice(0, 7) ?? 'initial'
 
@@ -164,7 +261,7 @@ const releaseHtml = `<!DOCTYPE html>
           <span>CloudFormation scan</span>
           <span>${checkovPassed ? '<span class="badge badge-pass">✓ Passed</span>' : '<span class="badge badge-fail">✗ Issues found</span>'}</span>
         </div>
-        <div class="metric-row"><span>Framework</span><span class="metric-val">CloudFormation</span></div>
+        <div class="metric-row"><span>Failed checks</span><span class="metric-val">${checkovFailures.length}</span></div>
         <div class="metric-row"><span>Skipped checks</span><span class="metric-val">CKV_AWS_116</span></div>
       </div>
     </div>
@@ -172,6 +269,22 @@ const releaseHtml = `<!DOCTYPE html>
     <div class="section-title">🎫 JIRA Tickets</div>
     <div class="card" style="margin-bottom:28px;padding:16px 20px">
       ${jiraHtml}
+    </div>
+
+    <div class="section-title">🔒 Dependency CVEs (npm audit — critical &amp; high)</div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:28px">
+      <table>
+        <thead><tr><th>Package</th><th>Severity</th><th>CVE</th><th>Advisory</th><th>Fix</th></tr></thead>
+        <tbody>${auditHtml}</tbody>
+      </table>
+    </div>
+
+    <div class="section-title">🛡️ Checkov Failed Checks</div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:28px">
+      <table>
+        <thead><tr><th>Check</th><th>Resource</th><th>Location</th></tr></thead>
+        <tbody>${checkovHtml}</tbody>
+      </table>
     </div>
 
     <div class="section-title">📝 Commits since ${prevShaShort}</div>

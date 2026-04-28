@@ -71,6 +71,11 @@ jobs:
       - name: Generate coverage report
         run: npm run test:cov
 
+      - name: Run npm audit
+        id: npm_audit
+        continue-on-error: true
+        run: npm audit --json > npm-audit.json 2>/dev/null || true
+
       - name: Run Checkov security scan
         id: checkov
         continue-on-error: true
@@ -80,6 +85,8 @@ jobs:
           framework: cloudformation
           quiet: true
           skip_check: CKV_AWS_116
+          output_format: json
+          output_file_path: checkov-results.json
 
       - name: Fetch SonarCloud metrics
         id: sonar
@@ -133,6 +140,8 @@ jobs:
           JIRA_TICKETS: ${{ steps.commits.outputs.jira_tickets }}
           PREV_SHA: ${{ steps.restore.outputs.prev_sha }}
           CHECKOV_OUTCOME: ${{ steps.checkov.outcome }}
+          NPM_AUDIT_FILE: npm-audit.json
+          CHECKOV_RESULTS_FILE: checkov-results.json
         run: node scripts/release-notes/generate.mjs
 
       - name: Upload Pages artifact
