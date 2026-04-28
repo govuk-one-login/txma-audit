@@ -1,4 +1,7 @@
-COMMIT_MSG=$(cat "$1")
+# Skip if we're already inside a version-bump amend to avoid infinite loop
+[ "$TXMA_BUMPING" = "1" ] && exit 0
+
+COMMIT_MSG=$(git log -1 --pretty=%B)
 
 # Skip version bump for merge commits, fixups, and bot commits
 if echo "$COMMIT_MSG" | grep -qE '^(Merge|fixup!|squash!|chore: bump version)'; then
@@ -29,7 +32,9 @@ fi
 NEW_VERSION=$(npm version "$BUMP_TYPE" --no-git-tag-version)
 NEW_VERSION="${NEW_VERSION#v}"
 
-# Stage the version bump so it's included in this commit
+# Amend the commit to include the version bump
 git add package.json package-lock.json
+TXMA_BUMPING=1 git commit --amend --no-edit --no-verify
 
 echo "Version bumped to $NEW_VERSION ($BUMP_TYPE)"
+
