@@ -3,11 +3,15 @@ import {
   writeFileSync,
   mkdirSync,
   readdirSync,
-  existsSync
+  existsSync,
+  unlinkSync
 } from 'fs'
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
 const PKG_VERSION = pkg.version
+
+// --- Retention Config (days) ---
+const RETENTION_DAYS = 30
 
 const {
   SONAR_METRICS,
@@ -322,7 +326,25 @@ const versionPages = readdirSync('_site')
     return bMaj - aMaj || bMin - aMin || bPat - aPat
   })
 
-const indexRows = versionPages.map((file) => {
+// --- Prune release pages older than RETENTION_DAYS ---
+const now = Date.now()
+const retentionMs = RETENTION_DAYS * 24 * 60 * 60 * 1000
+
+const activeVersionPages = versionPages.filter((file) => {
+  const content = readFileSync(`_site/${file}`, 'utf8')
+  const dateStr = content.match(/Built on ([^&<]+)/)?.[1]?.trim()
+  if (!dateStr) return true
+  const pageDate = new Date(dateStr).getTime()
+  if (isNaN(pageDate)) return true
+  if (now - pageDate > retentionMs) {
+    console.log(`Pruning old release page: ${file} (built ${dateStr})`)
+    unlinkSync(`_site/${file}`)
+    return false
+  }
+  return true
+})
+
+const indexRows = activeVersionPages.map((file) => {
   const content = readFileSync(`_site/${file}`, 'utf8')
   const sha =
     content.match(/meta name="release-sha" content="([^"]+)"/)?.[1] ?? ''
@@ -361,7 +383,7 @@ const indexHtml = `<!DOCTYPE html>
         <a href="https://github.com/${REPO}" style="color:#58a6ff" target="_blank">GitHub ↗</a>
       </div>
     </div>
-    <span class="version-badge">${versionPages.length} release${versionPages.length !== 1 ? 's' : ''}</span>
+    <span class="version-badge">${activeVersionPages.length} release${activeVersionPages.length !== 1 ? 's' : ''}</span>
   </header>
 
   <main>
@@ -380,4 +402,4 @@ const indexHtml = `<!DOCTYPE html>
 </html>`
 
 writeFileSync('_site/index.html', indexHtml)
-console.log(`Rebuilt index.html with ${versionPages.length} release(s)`)
+console.log(`Rebuilt index.html with ${activeVersionPages.length} release(s)`)
