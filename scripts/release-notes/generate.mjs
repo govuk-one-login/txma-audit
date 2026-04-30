@@ -308,22 +308,27 @@ const releaseHtml = `<!DOCTYPE html>
 </body>
 </html>`
 
+const PAGE_FILE = `v${PKG_VERSION}-${SHORT_SHA}.html`
+
 mkdirSync('_site', { recursive: true })
-writeFileSync(`_site/v${PKG_VERSION}.html`, releaseHtml)
-console.log(`Written _site/v${PKG_VERSION}.html`)
+writeFileSync(`_site/${PAGE_FILE}`, releaseHtml)
+console.log(`Written _site/${PAGE_FILE}`)
 
 // Rebuild index.html from all versioned pages in _site/
 const versionPages = readdirSync('_site')
-  .filter((f) => /^v[\d.]+\.html$/.test(f))
+  .filter((f) => /^v[\d.]+-[a-f0-9]{7}\.html$/.test(f))
   .sort((a, b) => {
-    const parse = (f) =>
-      f
-        .replace(/^v|\.html$/g, '')
-        .split('.')
-        .map(Number)
+    const parse = (f) => {
+      const [ver] = f
+        .replace(/^v/, '')
+        .replace(/\.html$/, '')
+        .split('-')
+      return ver.split('.').map(Number)
+    }
     const [aMaj, aMin, aPat] = parse(a)
     const [bMaj, bMin, bPat] = parse(b)
-    return bMaj - aMaj || bMin - aMin || bPat - aPat
+    // Sort by version descending, then by filename descending (latest SHA last = most recent)
+    return bMaj - aMaj || bMin - aMin || bPat - aPat || b.localeCompare(a)
   })
 
 // --- Prune release pages older than RETENTION_DAYS ---
@@ -349,7 +354,8 @@ const indexRows = activeVersionPages.map((file) => {
   const sha =
     content.match(/meta name="release-sha" content="([^"]+)"/)?.[1] ?? ''
   const date = content.match(/Built on ([^&<]+)/)?.[1]?.trim() ?? ''
-  const version = file.replace(/^v|\.html$/g, '')
+  const version = file.replace(/^v|\.html$/g, '').replace(/-([a-f0-9]{7})$/, '')
+  const shortSha = file.match(/-([a-f0-9]{7})\.html$/)?.[1] ?? ''
   const jiras = [...content.matchAll(/browse\/(DPT-\d+)/g)].map((m) => m[1])
   const jiraBadges = [...new Set(jiras)]
     .map(
@@ -362,7 +368,7 @@ const indexRows = activeVersionPages.map((file) => {
     <tr>
       <td><a href="${file}" class="metric-val">v${version}</a></td>
       <td>${date}</td>
-      <td><code><a href="https://github.com/${REPO}/commit/${sha}" target="_blank">${sha.slice(0, 7)}</a></code></td>
+      <td><code><a href="https://github.com/${REPO}/commit/${sha}" target="_blank">${shortSha || sha.slice(0, 7)}</a></code></td>
       <td>${jiraBadges || '<span class="na">—</span>'}</td>
     </tr>`
 })

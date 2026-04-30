@@ -53,15 +53,19 @@ jobs:
             INDEX_HTML=$(curl -sf "${PAGES_URL}index.html" || echo "")
             if [ -n "$INDEX_HTML" ]; then
               # Extract all versioned page hrefs from the index and download each
-              echo "$INDEX_HTML" | grep -oP 'href="\Kv[\d.]+\.html' | sort -u | while read -r page; do
+              echo "$INDEX_HTML" | grep -oP 'href="\Kv[\d.]+-[a-f0-9]{7}\.html' | sort -u | while read -r page; do
                 curl -sf "${PAGES_URL}${page}" -o "_site/${page}" || true
               done
               echo "Restored previous site from ${PAGES_URL}"
             fi
 
-            # Extract the SHA from the most recent versioned release page
-            PREV_SHA=$(grep -h 'meta name="release-sha"' _site/v*.html 2>/dev/null \
-              | grep -oP 'content="\K[^"]+' | tail -1 || echo "")
+            # Extract the SHA from the most recent versioned release page (by build date)
+            PREV_SHA=$(for f in _site/v*-*.html; do
+              [ -f "$f" ] || continue
+              DATE=$(grep -oP 'Built on \K[^&<]+' "$f" | head -1)
+              SHA=$(grep -oP 'meta name="release-sha" content="\K[^"]+' "$f" | head -1)
+              [ -n "$DATE" ] && [ -n "$SHA" ] && echo "$DATE|$SHA"
+            done | sort -t'|' -k1 | tail -1 | cut -d'|' -f2 || echo "")
             echo "prev_sha=${PREV_SHA}" >> $GITHUB_OUTPUT
           else
             echo "No previous Pages deployment found — first run"
