@@ -161,6 +161,42 @@ This project has been migrated from Jest to Vitest and from CommonJS to ESM (Feb
   vi.spyOn() // instead of jest.spyOn()
   ```
 
+## Release Notes
+
+Automated release notes are generated and published to **GitHub Pages** after every successful merge to `main`.
+
+### How it works
+
+1. The **Release Notes** workflow (`.github/workflows/release-notes.yaml`) triggers automatically after the _Build, Test and Package_ workflow completes on `main`, or can be run manually via `workflow_dispatch`.
+2. It restores all previously published release pages from the live GitHub Pages site, then generates a **new page** for the current deployment containing only the **delta** (commits since the last deployment).
+3. Each page is named `v<version>-<short-sha>.html` (e.g. `v1.0.5-abc1234.html`) so that pages are **never overwritten** — every deployment produces its own unique page.
+4. An `index.html` listing all releases is rebuilt on each run.
+
+### What each page includes
+
+| Section                                         | Source                                   |
+| ----------------------------------------------- | ---------------------------------------- |
+| Package version, commit SHA, branch, build date | `package.json` + Git/CI metadata         |
+| SonarCloud quality metrics & ratings            | SonarCloud API                           |
+| IaC security scan (Checkov)                     | Checkov CloudFormation scan              |
+| JIRA tickets                                    | Extracted from commit messages (`DPT-*`) |
+| Dependency CVEs                                 | `npm audit --json` (critical & high)     |
+| Commits since last deployment                   | Git log delta                            |
+
+### Retention
+
+Release pages older than **30 days** are automatically pruned during each workflow run. The retention period is configured via the `RETENTION_DAYS` constant in `scripts/release-notes/generate.mjs`.
+
+### Running locally
+
+The generation script can be run locally for testing, but requires the environment variables normally set by the CI workflow (see the _Build release notes page_ step in the workflow file for the full list):
+
+```bash
+node scripts/release-notes/generate.mjs
+```
+
+Output is written to the `_site/` directory.
+
 ## Cleanup
 
 To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
