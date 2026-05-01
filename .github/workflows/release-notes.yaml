@@ -134,6 +134,66 @@ jobs:
               writeFileSync('commits.json', JSON.stringify(out));
             " || echo '[]' > commits.json
 
+      - name: Update JIRA Fix Version
+        if: steps.commits.outputs.jira_tickets != ''
+        env:
+          JIRA_BASE_URL: https://govukverify.atlassian.net
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT_KEY: DPT
+          JIRA_TICKETS: ${{ steps.commits.outputs.jira_tickets }}
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          FIX_VERSION="v${PKG_VERSION}"
+          AUTH=$(echo -n "${JIRA_USER}:${JIRA_API_TOKEN}" | base64)
+
+          echo "==> Ensuring Fix Version '${FIX_VERSION}' exists in project ${JIRA_PROJECT_KEY}"
+          # Get project versions and check if ours exists
+          EXISTING=$(curl -sf \
+            -H "Authorization: Basic ${AUTH}" \
+            -H "Content-Type: application/json" \
+            "${JIRA_BASE_URL}/rest/api/3/project/${JIRA_PROJECT_KEY}/versions" \
+            | node -e "
+              import {readFileSync} from 'fs';
+              const vs = JSON.parse(readFileSync('/dev/stdin','utf8'));
+              const found = vs.find(v => v.name === '${FIX_VERSION}');
+              process.stdout.write(found ? found.id : '');
+            " || echo "")
+
+          if [ -z "$EXISTING" ]; then
+            echo "    Creating Fix Version '${FIX_VERSION}'"
+            VERSION_ID=$(curl -sf -X POST \
+              -H "Authorization: Basic ${AUTH}" \
+              -H "Content-Type: application/json" \
+              -d "{\"name\":\"${FIX_VERSION}\",\"project\":\"${JIRA_PROJECT_KEY}\",\"released\":true,\"releaseDate\":\"$(date -u +%Y-%m-%d)\"}" \
+              "${JIRA_BASE_URL}/rest/api/3/version" \
+              | node -e "import {readFileSync} from 'fs'; const d=JSON.parse(readFileSync('/dev/stdin','utf8')); process.stdout.write(d.id ?? '');" || echo "")
+          else
+            VERSION_ID="$EXISTING"
+            echo "    Fix Version '${FIX_VERSION}' already exists (id: ${VERSION_ID})"
+          fi
+
+          if [ -z "$VERSION_ID" ]; then
+            echo "::warning::Could not create or find JIRA Fix Version '${FIX_VERSION}' — skipping ticket updates"
+            exit 0
+          fi
+
+          echo "==> Updating Fix Version on tickets: ${JIRA_TICKETS}"
+          IFS=',' read -ra TICKETS <<< "${JIRA_TICKETS}"
+          for TICKET in "${TICKETS[@]}"; do
+            echo "    Updating ${TICKET}"
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+              -H "Authorization: Basic ${AUTH}" \
+              -H "Content-Type: application/json" \
+              -d "{\"update\":{\"fixVersions\":[{\"add\":{\"name\":\"${FIX_VERSION}\"}}]}}" \
+              "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}")
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              echo "      ✓ ${TICKET} updated (HTTP ${HTTP_CODE})"
+            else
+              echo "::warning::Failed to update ${TICKET} — HTTP ${HTTP_CODE}"
+            fi
+          done
+
       - name: Build release notes page
         env:
           VERSION: ${{ github.event.workflow_run.head_sha || github.sha }}
