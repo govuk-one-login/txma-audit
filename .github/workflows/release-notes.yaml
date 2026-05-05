@@ -145,35 +145,65 @@ jobs:
         run: |
           PKG_VERSION=$(node -p "require('./package.json').version")
           FIX_VERSION="v${PKG_VERSION}"
-          AUTH=$(echo -n "${JIRA_USER}:${JIRA_API_TOKEN}" | base64)
+          if [ -z "${JIRA_USER}" ] || [ -z "${JIRA_API_TOKEN}" ]; then
+            echo "::warning::JIRA credentials are not configured (JIRA_USER/JIRA_API_TOKEN) — skipping ticket updates"
+            exit 0
+          fi
 
           echo "==> Ensuring Fix Version '${FIX_VERSION}' exists in project ${JIRA_PROJECT_KEY}"
           # Get project versions and check if ours exists
-          EXISTING=$(curl -sf \
-            -H "Authorization: Basic ${AUTH}" \
+          VERSIONS_JSON=$(curl -sS \
+            -u "${JIRA_USER}:${JIRA_API_TOKEN}" \
             -H "Content-Type: application/json" \
-            "${JIRA_BASE_URL}/rest/api/3/project/${JIRA_PROJECT_KEY}/versions" \
-            | node -e "
-              import {readFileSync} from 'fs';
-              const vs = JSON.parse(readFileSync('/dev/stdin','utf8'));
-              const found = vs.find(v => v.name === '${FIX_VERSION}');
-              process.stdout.write(found ? found.id : '');
-            " || echo "")
+            "${JIRA_BASE_URL}/rest/api/3/project/${JIRA_PROJECT_KEY}/versions" || true)
+
+          EXISTING=$(printf '%s' "${VERSIONS_JSON}" | node -e "
+            import { readFileSync } from 'fs';
+            const raw = readFileSync('/dev/stdin', 'utf8').trim();
+            if (!raw) {
+              process.stdout.write('');
+              process.exit(0);
+            }
+            try {
+              const vs = JSON.parse(raw);
+              const found = Array.isArray(vs) ? vs.find(v => v?.name === '${FIX_VERSION}') : null;
+              process.stdout.write(found?.id ? String(found.id) : '');
+            } catch {
+              process.stdout.write('');
+            }
+          ")
 
           if [ -z "$EXISTING" ]; then
             echo "    Creating Fix Version '${FIX_VERSION}'"
-            VERSION_ID=$(curl -sf -X POST \
-              -H "Authorization: Basic ${AUTH}" \
+            CREATE_JSON=$(curl -sS -X POST \
+              -u "${JIRA_USER}:${JIRA_API_TOKEN}" \
               -H "Content-Type: application/json" \
               -d "{\"name\":\"${FIX_VERSION}\",\"project\":\"${JIRA_PROJECT_KEY}\",\"released\":true,\"releaseDate\":\"$(date -u +%Y-%m-%d)\"}" \
-              "${JIRA_BASE_URL}/rest/api/3/version" \
-              | node -e "import {readFileSync} from 'fs'; const d=JSON.parse(readFileSync('/dev/stdin','utf8')); process.stdout.write(d.id ?? '');" || echo "")
+              "${JIRA_BASE_URL}/rest/api/3/version" || true)
+
+            VERSION_ID=$(printf '%s' "${CREATE_JSON}" | node -e "
+              import { readFileSync } from 'fs';
+              const raw = readFileSync('/dev/stdin', 'utf8').trim();
+              if (!raw) {
+                process.stdout.write('');
+                process.exit(0);
+              }
+              try {
+                const d = JSON.parse(raw);
+                process.stdout.write(d?.id ? String(d.id) : '');
+              } catch {
+                process.stdout.write('');
+              }
+            ")
           else
             VERSION_ID="$EXISTING"
             echo "    Fix Version '${FIX_VERSION}' already exists (id: ${VERSION_ID})"
           fi
 
           if [ -z "$VERSION_ID" ]; then
+            # Print a small response snippet to help diagnose auth/permission problems
+            SNIPPET=$(printf '%s' "${CREATE_JSON:-${VERSIONS_JSON}}" | head -c 300 | tr '\n' ' ')
+            [ -n "$SNIPPET" ] && echo "::notice::JIRA API response snippet: ${SNIPPET}"
             echo "::warning::Could not create or find JIRA Fix Version '${FIX_VERSION}' — skipping ticket updates"
             exit 0
           fi
@@ -183,7 +213,7 @@ jobs:
           for TICKET in "${TICKETS[@]}"; do
             echo "    Updating ${TICKET}"
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
-              -H "Authorization: Basic ${AUTH}" \
+              -u "${JIRA_USER}:${JIRA_API_TOKEN}" \
               -H "Content-Type: application/json" \
               -d "{\"update\":{\"fixVersions\":[{\"add\":{\"name\":\"${FIX_VERSION}\"}}]}}" \
               "${JIRA_BASE_URL}/rest/api/3/issue/${TICKET}")
