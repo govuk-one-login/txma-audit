@@ -1,6 +1,6 @@
 {
   "name": "txma-audit",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "type": "module",
   "description": "TxMA Audit",
   "repository": {
