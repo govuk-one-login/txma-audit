@@ -204,27 +204,11 @@ Resources:
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch/
       LifecycleConfiguration:
         Rules:
-          - Id: AuditGlacierRule
+          - Id: ExpireObjectsAfter90Days
             Status: Enabled
-            Transitions:
-              - TransitionInDays: 90
-                StorageClass: GLACIER_IR
-          - !If
-            - IsProduction
-            - Id: ProductionExpirationRule
-              Status: Enabled
-              ExpirationInDays: 2557
-              NoncurrentVersionExpiration:
-                NoncurrentDays: 31
-            - !Ref AWS::NoValue
-          - !If
-            - IsTestableEnv
-            - Id: NonProductionExpirationRule
-              Status: Enabled
-              ExpirationInDays: 120
-              NoncurrentVersionExpiration:
-                NoncurrentDays: 31
-            - !Ref AWS::NoValue
+            ExpirationInDays: 90
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 7
           - Id: DeleteExpiredObjectMarkers
             Status: Enabled
             ExpiredObjectDeleteMarker: true
@@ -251,9 +235,6 @@ Resources:
         - Id: EntireBucket
         - Id: Failures
           Prefix: failures/
-      Tags:
-        - Key: BackupFrequency
-          Value: Bihourly
 
   MessageBatchBucketPolicy:
     Type: AWS::S3::BucketPolicy
