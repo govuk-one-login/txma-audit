@@ -2,8 +2,7 @@ import {
   FirehoseRecordTransformationStatus,
   FirehoseTransformationEvent,
   FirehoseTransformationEventRecord,
-  FirehoseTransformationResult,
-  FirehoseTransformationResultRecord
+  FirehoseTransformationResult
 } from 'aws-lambda'
 
 import { logger } from '../../../common/sharedServices/logger'
@@ -27,7 +26,7 @@ export const handler = async (
         recordId: record.recordId,
         result: transformationResult,
         data: payload
-      } as FirehoseTransformationResultRecord
+      }
     }
   )
 

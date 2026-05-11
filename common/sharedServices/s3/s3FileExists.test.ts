@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import {
-  S3Client,
-  HeadObjectCommand,
-  HeadObjectOutput
-} from '@aws-sdk/client-s3'
+import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { mockClient } from 'aws-sdk-client-mock'
 import {
   TEST_PERMANENT_BUCKET_NAME,
@@ -49,9 +45,7 @@ describe('s3FileExists', () => {
 
   it('should return true if the requested file is found', async () => {
     // Unit Test
-    s3Mock
-      .on(HeadObjectCommand)
-      .resolves({ ContentLength: 100 } as HeadObjectOutput)
+    s3Mock.on(HeadObjectCommand).resolves({ ContentLength: 100 })
     expect(
       await s3FileExists(TEST_PERMANENT_BUCKET_NAME, TEST_S3_OBJECT_KEY)
     ).toEqual(true)

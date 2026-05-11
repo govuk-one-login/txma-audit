@@ -57,7 +57,7 @@ describe('encryptS3Object', () => {
           keyIds: config.keyIds
         })
       }
-    } as never)
+    })
 
     mockEncrypt.mockResolvedValue({
       result: TEST_ENCRYPTED_S3_OBJECT_DATA_BUFFER,
