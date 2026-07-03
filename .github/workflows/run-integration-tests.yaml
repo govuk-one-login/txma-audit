@@ -1,0 +1,22 @@
+name: 'Run Integration tests'
+description: 'Run the integration tests against a deployed feature branch in the dev account'
+
+on:
+  push:
+    branches:
+      - feature/*
+  pull_request:
+    types: [opened, synchronize, reopened]
+env:
+  TEST_ENVIRONMENT: 'build'
+inputs:
+  stack_name:
+    description: 'Name of stack to run the tests against'
+    required: true
+    default: 'audit'
+outputs:
+  test-result: # id of output
+    description: 'A pass or failed indicator'
+runs:
+  using: 'docker'
+  image: 'tests/Dockerfile'

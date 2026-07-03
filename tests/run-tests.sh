@@ -10,7 +10,10 @@
 # in the Dockerfile.
 cd /test-app || exit 1
 
-if [ "$TEST_ENVIRONMENT" == "build" ]; then
+if [ "$TEST_ENVIRONMENT" == "dev" ]; then
+  npm run test:integration
+  TESTS_EXIT_CODE=$?
+elif  [ "$TEST_ENVIRONMENT" == "build" ]; then
   npm run test:integration
   TESTS_EXIT_CODE=$?
 elif [ "$TEST_ENVIRONMENT" == "staging" ]; then
