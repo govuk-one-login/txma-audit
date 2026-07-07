@@ -1837,9 +1837,9 @@ Resources:
 
   TestRoleKmsAccessPolicy:
     Condition: TestRoleResources
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Properties:
-      PolicyName: !Sub ${AWS::StackName}-test-role-kms-access
+      ManagedPolicyName: !Sub ${AWS::StackName}-test-role-kms-access
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
