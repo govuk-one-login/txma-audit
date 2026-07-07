@@ -1869,6 +1869,7 @@ Resources:
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
+
   IntegrationTestRunnerTaskDefinition:
     Condition: DevEnvironment
     Type: AWS::ECS::TaskDefinition
@@ -1897,6 +1898,7 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
+
   IntegrationTestRunnerTaskRole:
     Condition: DevEnvironment
     Type: AWS::IAM::Role
@@ -2050,6 +2052,7 @@ Resources:
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
+
   IntegrationTestRunnerTaskExecutionRole:
     Condition: DevEnvironment
     Type: AWS::IAM::Role
@@ -2074,11 +2077,69 @@ Resources:
                 Action:
                   - logs:CreateLogGroup
                 Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+        - PolicyName: PullFromEcr
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: !GetAtt EcrEncryptionKey.Arn
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
 
+  IntegrationTestsRepository:
+    Condition: DevEnvironment
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${AWS::StackName}-integration-test-repository'
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: IMMUTABLE
+      EncryptionConfiguration:
+        EncryptionType: KMS
+        KmsKey: !GetAtt EcrEncryptionKey.Arn
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only the last 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+  EcrEncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS key for ECR repository encryption
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowRootAccountFullAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: '*'
+
+  EcrEncryptionKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/ecr-integration-tests
+      TargetKeyId: !Ref EcrEncryptionKey
   ##############################
   # End: Development resources #
   ##############################
