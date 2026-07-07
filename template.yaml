@@ -1859,8 +1859,6 @@ Resources:
               - kms:Encrypt
               - kms:Decrypt
             Resource: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
-      Roles:
-        - !Select [1, !Split ['/', !Select [5, !Split [':', !Ref TestRoleArn]]]]
 
   ##############################
   # End: Development resources #
@@ -1909,3 +1907,8 @@ Outputs:
   # Firehose Message Batch
   AuditMessageDeliveryStreamName:
     Value: !Ref AuditMessageDeliveryStream
+
+  # Test Role KMS Access Policy (must be attached to TestRole by pipeline stack)
+  TestRoleKmsAccessPolicyArn:
+    Condition: TestRoleResources
+    Value: !Ref TestRoleKmsAccessPolicy
