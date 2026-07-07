@@ -63,7 +63,7 @@ jobs:
 
       - name: Build, tag, and push testing image to Amazon ECR
         env:
-          CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
+          CONTAINER_SIGN_KMS_KEY: ${{ secrets.DEV_CONTAINER_SIGN_KMS_KEY }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ steps.derive-stack-name.outputs.stack_name }}-integration-test-repository
           IMAGE_TAG: latest
