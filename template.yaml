@@ -2121,6 +2121,7 @@ Resources:
           }
 
   EcrEncryptionKey:
+    Condition: DevEnvironment
     Type: AWS::KMS::Key
     Properties:
       Description: KMS key for ECR repository encryption
@@ -2136,10 +2137,35 @@ Resources:
             Resource: '*'
 
   EcrEncryptionKeyAlias:
+    Condition: DevEnvironment
     Type: AWS::KMS::Alias
     Properties:
       AliasName: alias/ecr-integration-tests
       TargetKeyId: !Ref EcrEncryptionKey
+
+  DevContainerSigningKey:
+    Condition: DevEnvironment
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Asymmetric key for container image signing (Cosign)
+      KeyUsage: SIGN_VERIFY
+      KeySpec: ECC_NIST_P256
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowRootAccountFullAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: '*'
+
+  ContainerSigningKeyAlias:
+    Condition: DevEnvironment
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/dev-container-signing
+      TargetKeyId: !Ref DevContainerSigningKey
   ##############################
   # End: Development resources #
   ##############################
