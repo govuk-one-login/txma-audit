@@ -94,16 +94,15 @@ jobs:
           TEST_ENVIRONMENT: dev
           ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_NAME }}
           ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION_ARN }}
-          SUBNET_IDS: ${{ secrets.SUBNET_IDS }}
-          SECURITY_GROUP_IDS: ${{ secrets.SECURITY_GROUP_IDS }}
         run: |
           echo "Running integration tests against stack: $STACK_NAME"
+          SUBNET_IDS=$(aws cloudformation describe-stacks --stack-name vpc --output json | jq '.Stacks[].Outputs[] | select(.OutputKey == "PrivateSubnetIdA") | .OutputValue' | xargs)
 
           TASK_ARN=$(aws ecs run-task \
             --cluster "$ECS_CLUSTER" \
             --task-definition "$ECS_TASK_DEFINITION" \
             --launch-type FARGATE \
-            --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$SECURITY_GROUP_IDS],assignPublicIp=DISABLED}" \
+            --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],assignPublicIp=DISABLED}" \
             --overrides '{
               "containerOverrides": [{
                 "name": "integration-tests",

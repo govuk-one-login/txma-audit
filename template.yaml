@@ -1861,6 +1861,224 @@ Resources:
               - kms:Decrypt
             Resource: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
 
+  IntegrationTestRunnerFargateCluster:
+    Condition: DevEnvironment
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub '${AWS::StackName}-integration-test-runner'
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+  IntegrationTestRunnerTaskDefinition:
+    Condition: DevEnvironment
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Name: !Sub '${AWS::StackName}-integration-test-runner'
+          Image: CONTAINER-IMAGE-PLACEHOLDER
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub '/ecs/${AWS::StackName}-integration-test-runner'
+              awslogs-region: !Sub '${AWS::Region}'
+              awslogs-create-group: 'true'
+              awslogs-stream-prefix: 'ecs'
+          Environment:
+            - Name: AWS_REGION
+              Value: !Sub '${AWS::Region}'
+            - Name: $TEST_ENVIRONMENT
+              Value: 'dev'
+      Cpu: 1024
+      Memory: 2048
+      TaskRoleArn: !GetAtt IntegrationTestRunnerTaskRole.Arn
+      ExecutionRoleArn: !GetAtt IntegrationTestRunnerTaskExecutionRole.Arn
+      Family: !Sub '${AWS::StackName}-integration-test-runner'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+  IntegrationTestRunnerTaskRole:
+    Condition: DevEnvironment
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-integration-test-runner-task-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+      Policies:
+        # Copied from PL-*-build-pipeline-TestRole defined in secure pipelines.
+        # The point is that if a change is needed here to run the integration tests then a request needs to be made to
+        # the Platform team to add the same changes to the pipeline's TestRole
+        - PolicyName: IntegrationTestRunner
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - cloudformation:DescribeStacks
+                Resource:
+                  - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/audit/*'
+                Effect: Allow
+              - Action:
+                  - ssm:GetParameter*
+                Resource:
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/tests/*'
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/acceptance-tests/*'
+                Effect: Allow
+              - Action:
+                  - secretsmanager:CancelRotateSecret
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:RotateSecret
+                  - secretsmanager:TagResource
+                  - secretsmanager:UntagResource
+                Resource:
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
+                Effect: Allow
+              - Action:
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                  - dynamodb:DeleteItem
+                Resource:
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:*'
+                Effect: Allow
+              - Action: execute-api:Invoke
+                Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*'
+                Effect: Allow
+              - Action: apigateway:GET
+                Resource:
+                  - arn:aws:apigateway:eu-west-2::/apikeys
+                  - arn:aws:apigateway:eu-west-2::/apikeys/*
+                Effect: Allow
+              - Action:
+                  - kms:DescribeKey
+                  - kms:GetPublicKey
+                  - kms:Decrypt
+                  - kms:Verify
+                  - kms:GenerateDataKey
+                Resource:
+                  - arn:aws:kms:eu-west-2:216552277552:key/4bc58ab5-c9bb-4702-a2c3-5d339604a8fe
+                Effect: Allow
+                Sid: CustomKMSKeySigning
+              - Action:
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:DescribeMetricFilters
+                  - logs:FilterLogEvents
+                  - logs:GetLogEvents
+                  - logs:StartQuery
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:*'
+                Effect: Allow
+              - Action:
+                  - logs:DescribeQueries
+                  - logs:DescribeQueryDefinitions
+                  - logs:GetLogDelivery
+                  - logs:GetLogRecord
+                  - logs:GetQueryResults
+                  - logs:ListLogDeliveries
+                  - logs:StopQuery
+                  - logs:TestMetricFilter
+                Resource:
+                  - '*'
+                Effect: Allow
+              - Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource:
+                  - arn:aws:s3:::audit-build-pipeline-githubartifactsourcebucket-1xzsrxnqe241c
+                  - arn:aws:s3:::audit-build-pipeline-githubartifactsourcebucket-1xzsrxnqe241c/*
+                Effect: Allow
+                Sid: AccessSourceArtifacts
+              - Action:
+                  - sns:Publish
+                Resource:
+                  - !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*'
+                Effect: Allow
+              - Action:
+                  - sqs:SendMessage
+                  - sqs:PurgeQueue
+                  - sqs:ReceiveMessage
+                Resource:
+                  - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*'
+                Effect: Allow
+              - Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetObjectTagging
+                  - s3:ListBucket
+                Resource:
+                  - arn:aws:s3:::template-storage-templatebucket-1upzyw6v9cs42
+                  - arn:aws:s3:::template-storage-templatebucket-1upzyw6v9cs42/*
+                Effect: Allow
+                Sid: TemplateBucketAccess
+              - Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:ListSecrets
+                Resource:
+                  - arn:aws:secretsmanager:eu-west-2:216552277552:secret:*
+                Effect: Allow
+                Sid: ObservabilitySecretsManager
+              - Action:
+                  - kms:DescribeKey
+                  - kms:GetPublicKey
+                  - kms:Decrypt
+                  - kms:Verify
+                Resource:
+                  - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
+                Effect: Allow
+                Sid: ObservabilityKMS
+              - Action:
+                  - acm-pca:DescribeCertificateAuthority
+                  - acm-pca:GetCertificateAuthorityCertificate
+                  - acm-pca:IssueCertificate
+                  - acm-pca:GetCertificate
+                  - acm-pca:RevokeCertificate
+                Resource:
+                  - !Sub 'arn:aws:acm-pca:${AWS::Region}:${AWS::AccountId}:certificate-authority/*'
+                Effect: Allow
+                Sid: ManageCertificateAuthority
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+  IntegrationTestRunnerTaskExecutionRole:
+    Condition: DevEnvironment
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-integration-test-runner-task-execution-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+      Policies:
+        - PolicyName: CreateLogGroup
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
   ##############################
   # End: Development resources #
   ##############################
