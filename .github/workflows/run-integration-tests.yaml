@@ -105,11 +105,11 @@ jobs:
           echo "Running integration tests against stack: $STACK_NAME"
           SUBNET_IDS=$(aws cloudformation describe-stacks --stack-name vpc --output json | jq '.Stacks[].Outputs[] | select(.OutputKey == "PrivateSubnetIdA") | .OutputValue' | xargs)
           IMAGE_ANR="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          echo "$IMAGE_ANR"
+          TASK_WITH_STACK="${ECS_TASK_DEFINITION/STACK_NAME/"$STACK_NAME"}"
 
           TASK_ARN=$(aws ecs run-task \
             --cluster "$ECS_CLUSTER" \
-            --task-definition "$ECS_TASK_DEFINITION" \
+            --task-definition "TASK_WITH_STACK" \
             --launch-type FARGATE \
             --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],assignPublicIp=DISABLED}" \
             --overrides '{
