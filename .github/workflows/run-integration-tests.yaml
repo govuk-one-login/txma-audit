@@ -106,6 +106,7 @@ jobs:
           SUBNET_IDS=$(aws cloudformation describe-stacks --stack-name vpc --output json | jq '.Stacks[].Outputs[] | select(.OutputKey == "PrivateSubnetIdA") | .OutputValue' | xargs)
           IMAGE_ANR="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           TASK_WITH_STACK="${ECS_TASK_DEFINITION/STACK_NAME/"$STACK_NAME"}"
+          echo "$TASK_WITH_STACK"
 
           TASK_ARN=$(aws ecs run-task \
             --cluster "$ECS_CLUSTER" \
