@@ -115,7 +115,6 @@ jobs:
             --overrides '{
               "containerOverrides": [{
                 "name": "integration-tests",
-                "image": "'"$IMAGE_ANR"'",
                 "environment": [
                   {"name": "STACK_NAME", "value": "'"$STACK_NAME"'"},
                   {"name": "TEST_ENVIRONMENT", "value": "'"$TEST_ENVIRONMENT"'"}
