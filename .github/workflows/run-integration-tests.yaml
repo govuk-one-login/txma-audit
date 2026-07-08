@@ -100,6 +100,8 @@ jobs:
         run: |
           echo "Running integration tests against stack: $STACK_NAME"
           SUBNET_IDS=$(aws cloudformation describe-stacks --stack-name vpc --output json | jq '.Stacks[].Outputs[] | select(.OutputKey == "PrivateSubnetIdA") | .OutputValue' | xargs)
+          IMAGE_ANR="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "$IMAGE_ANR"
 
           TASK_ARN=$(aws ecs run-task \
             --cluster "$ECS_CLUSTER" \
@@ -109,7 +111,7 @@ jobs:
             --overrides '{
               "containerOverrides": [{
                 "name": "integration-tests",
-                "image": "'"$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"'",
+                "image": "'"$IMAGE_ANR"'",
                 "environment": [
                   {"name": "STACK_NAME", "value": "'"$STACK_NAME"'"},
                   {"name": "TEST_ENVIRONMENT", "value": "'"$TEST_ENVIRONMENT"'"}
