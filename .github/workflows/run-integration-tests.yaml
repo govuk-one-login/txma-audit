@@ -24,6 +24,7 @@ jobs:
     timeout-minutes: 15
     outputs:
       stack-name: ${{ steps.derive-stack-name.outputs.stack_name }}
+      registry: ${{ steps.login-ecr.outputs.registry }}
     steps:
       - name: Check out repository code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
