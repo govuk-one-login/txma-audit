@@ -96,15 +96,16 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ needs.upload-testing-image.outputs.stack-name }}-integration-test-repository
-          ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION_ARN }}
           IMAGE_TAG: ${{ github.sha }}
+          STACK_NAME: ${{ needs.upload-testing-image.outputs.stack-name }}
         run: |
           IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          echo "Updating task definition with image: $IMAGE_URI"
+          TASK_DEFINITION_FAMILY="${STACK_NAME}-integration-tests"
+          echo "Updating task definition: $TASK_DEFINITION_FAMILY with image: $IMAGE_URI"
 
           # Get the current task definition
           TASK_DEF=$(aws ecs describe-task-definition \
-            --task-definition "$ECS_TASK_DEFINITION" \
+            --task-definition "$TASK_DEFINITION_FAMILY" \
             --query 'taskDefinition' \
             --output json)
 
