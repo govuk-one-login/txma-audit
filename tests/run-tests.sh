@@ -11,7 +11,7 @@
 cd /test-app || exit 1
 
 if [ "$TEST_ENVIRONMENT" == "dev" ]; then
-  npm run test:integration
+  npm run test:integration -- --reporter=minimal --no-color
   TESTS_EXIT_CODE=$?
 elif  [ "$TEST_ENVIRONMENT" == "build" ]; then
   npm run test:integration
