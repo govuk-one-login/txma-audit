@@ -127,11 +127,11 @@ jobs:
       - name: Run ECS task
         id: run-task
         env:
-          ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_NAME }}
+          ECS_CLUSTER: ${{ needs.upload-testing-image.outputs.stack-name }}-integration-test-runner
           STACK_NAME: ${{ needs.upload-testing-image.outputs.stack-name }}
           TEST_ENVIRONMENT: dev
         run: |
-          echo "Running integration tests against stack: $STACK_NAME"
+          echo "Running integration tests against cluster: $ECS_CLUSTER"
 
           SUBNET_IDS=$(aws cloudformation describe-stacks \
             --stack-name vpc \
@@ -144,7 +144,7 @@ jobs:
             --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],assignPublicIp=DISABLED}" \
             --overrides '{
               "containerOverrides": [{
-                "name": "integration-tests",
+                "name": "'"$ECS_CLUSTER"'",
                 "environment": [
                   {"name": "STACK_NAME", "value": "'"$STACK_NAME"'"},
                   {"name": "TEST_ENVIRONMENT", "value": "'"$TEST_ENVIRONMENT"'"}
