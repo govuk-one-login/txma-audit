@@ -159,7 +159,7 @@ jobs:
 
       - name: Wait for ECS task to complete
         env:
-          ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_NAME }}
+          ECS_CLUSTER: ${{ needs.upload-testing-image.outputs.stack-name }}-integration-test-runner
         run: |
           echo "Waiting for task to finish..."
           aws ecs wait tasks-stopped \
