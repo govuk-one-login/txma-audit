@@ -1899,6 +1899,13 @@ Resources:
       RequiresCompatibilities:
         - FARGATE
 
+  IntegrationTestRunnerLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
+      LogGroupName: !Sub /ecs/${AWS::StackName}-integration-test-runner
+      RetentionInDays: 30
+
   IntegrationTestRunnerTaskRole:
     Condition: DevEnvironment
     Type: AWS::IAM::Role
