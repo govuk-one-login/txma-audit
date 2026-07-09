@@ -100,7 +100,7 @@ jobs:
           STACK_NAME: ${{ needs.upload-testing-image.outputs.stack-name }}
         run: |
           IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          TASK_DEFINITION_FAMILY="${STACK_NAME}-integration-tests"
+          TASK_DEFINITION_FAMILY="${STACK_NAME}-integration-test-runner"
           echo "Updating task definition: $TASK_DEFINITION_FAMILY with image: $IMAGE_URI"
 
           # Get the current task definition
