@@ -91,26 +91,54 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64 # v2.1.6
 
+      - name: Register new task definition revision with image
+        id: register-task-def
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ needs.upload-testing-image.outputs.stack-name }}-integration-test-repository
+          ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION_ARN }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "Updating task definition with image: $IMAGE_URI"
+
+          # Get the current task definition
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition "$ECS_TASK_DEFINITION" \
+            --query 'taskDefinition' \
+            --output json)
+
+          # Update the image and remove read-only fields
+          NEW_TASK_DEF=$(echo "$TASK_DEF" | jq \
+            --arg IMAGE "$IMAGE_URI" \
+            '.containerDefinitions[0].image = $IMAGE |
+             del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+
+          # Register the new revision
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json "$NEW_TASK_DEF" \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          echo "Registered new task definition: $NEW_TASK_DEF_ARN"
+          echo "TASK_DEF_ARN=$NEW_TASK_DEF_ARN" >> "$GITHUB_ENV"
+
       - name: Run ECS task
         id: run-task
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ steps.derive-stack-name.outputs.stack_name }}-integration-test-repository
           ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_NAME }}
-          ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION_ARN }}
-          IMAGE_TAG: ${{ github.sha }}
           STACK_NAME: ${{ needs.upload-testing-image.outputs.stack-name }}
           TEST_ENVIRONMENT: dev
         run: |
           echo "Running integration tests against stack: $STACK_NAME"
-          SUBNET_IDS=$(aws cloudformation describe-stacks --stack-name vpc --output json | jq '.Stacks[].Outputs[] | select(.OutputKey == "PrivateSubnetIdA") | .OutputValue' | xargs)
-          IMAGE_ANR="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          TASK_WITH_STACK="${ECS_TASK_DEFINITION/STACK_NAME/"$STACK_NAME"}"
-          echo "$TASK_WITH_STACK"
+
+          SUBNET_IDS=$(aws cloudformation describe-stacks \
+            --stack-name vpc \
+            --output json | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PrivateSubnetIdA") | .OutputValue')
 
           TASK_ARN=$(aws ecs run-task \
             --cluster "$ECS_CLUSTER" \
-            --task-definition "TASK_WITH_STACK" \
+            --task-definition "$TASK_DEF_ARN" \
             --launch-type FARGATE \
             --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],assignPublicIp=DISABLED}" \
             --overrides '{
