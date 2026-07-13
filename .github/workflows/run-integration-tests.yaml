@@ -146,6 +146,7 @@ jobs:
               "containerOverrides": [{
                 "name": "'"$ECS_CLUSTER"'",
                 "environment": [
+                  {"name": "AWS_REGION", "value": "eu-west-2"},
                   {"name": "STACK_NAME", "value": "'"$STACK_NAME"'"},
                   {"name": "TEST_ENVIRONMENT", "value": "'"$TEST_ENVIRONMENT"'"}
                 ]
