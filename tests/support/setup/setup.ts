@@ -1,3 +1,4 @@
+import { logger } from '../logger'
 import { retrieveSsmParameterValue } from './retrieveSsmParameterValue'
 import { getOutputValue, retrieveStackOutputs } from './retrieveStackOutputs'
 
@@ -8,6 +9,8 @@ const setupFunction = async () => {
   try {
     process.env['AWS_REGION'] = region
     process.env['STACK_NAME'] = stack
+
+    logger.info('Starting test setup', { stackName: stack })
 
     const stackOutputMappings = {
       AUDIT_MESSAGE_DELIMITER_FUNCTION_NAME:
@@ -27,7 +30,7 @@ const setupFunction = async () => {
     await setEnvVarsFromStackOutputs(stack, stackOutputMappings)
     await setEnvVarsFromSsm(ssmMappings)
   } catch (error) {
-    console.error('Setup error:', error)
+    logger.error('Setup error', error as Error)
     throw error
   }
 }

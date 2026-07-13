@@ -9,6 +9,7 @@
 .nvmrc
 .pnp.*
 .prettierignore
+.venv
 CODEOWNERS
 coverage/
 dist/
