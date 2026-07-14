@@ -7,7 +7,10 @@ on:
         description: 'Override stack name (leave empty to derive from branch name)'
         required: false
         default: ''
-  push:
+  workflow_run:
+    workflows: ['Build, Test and Package']
+    types:
+      - completed
     branches:
       - 'feature/**'
 
@@ -17,6 +20,9 @@ env:
 jobs:
   upload-testing-image:
     name: Upload testing image to ECR
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success')
     permissions:
       id-token: write
       contents: read
@@ -35,7 +41,7 @@ jobs:
           if [ -n "${{ inputs.stack-name }}" ]; then
             stack_name="${{ inputs.stack-name }}"
           else
-            FEATURE_BRANCH_NAME="${{ github.ref_name }}"
+            FEATURE_BRANCH_NAME="${{ github.event.workflow_run.head_branch || github.ref_name }}"
             stack_name=$(
               echo ${FEATURE_BRANCH_NAME##*/} | \
               tr -cd '[a-zA-Z0-9-]' | \
