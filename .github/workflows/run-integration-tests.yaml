@@ -13,6 +13,9 @@ on:
       - completed
     branches:
       - 'feature/**'
+  push:
+    branches:
+      - 'feature/**'
 
 env:
   AWS_REGION: eu-west-2
