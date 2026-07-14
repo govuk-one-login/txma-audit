@@ -1973,7 +1973,7 @@ Resources:
                   - kms:Verify
                   - kms:GenerateDataKey
                 Resource:
-                  - arn:aws:kms:eu-west-2:216552277552:key/4bc58ab5-c9bb-4702-a2c3-5d339604a8fe
+                  - arn:aws:kms:eu-west-2:216552277552:key/*
                 Effect: Allow
                 Sid: CustomKMSKeySigning
               - Action:
