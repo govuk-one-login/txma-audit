@@ -135,7 +135,7 @@ jobs:
 
           SUBNET_IDS=$(aws cloudformation describe-stacks \
             --stack-name vpc \
-            --output json | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "PrivateSubnetIdA") | .OutputValue')
+            --output json | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "ProtectedSubnetIdA") | .OutputValue')
 
           TASK_ARN=$(aws ecs run-task \
             --cluster "$ECS_CLUSTER" \
