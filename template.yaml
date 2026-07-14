@@ -2040,6 +2040,7 @@ Resources:
                   - kms:DescribeKey
                   - kms:GetPublicKey
                   - kms:Decrypt
+                  - kms:GenerateDataKey
                   - kms:Verify
                 Resource:
                   - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
@@ -2055,6 +2056,17 @@ Resources:
                   - !Sub 'arn:aws:acm-pca:${AWS::Region}:${AWS::AccountId}:certificate-authority/*'
                 Effect: Allow
                 Sid: ManageCertificateAuthority
+              - Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                  - s3:ListBucket
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-*'
+                  - !Sub 'arn:aws:s3:::${AWS::StackName}-*/*'
+                Effect: Allow
+                Sid: IntegrationTestS3Access
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
