@@ -1890,8 +1890,8 @@ Resources:
               Value: !Sub '${AWS::Region}'
             - Name: $TEST_ENVIRONMENT
               Value: 'dev'
-      Cpu: 1024
-      Memory: 2048
+      Cpu: 4096 # 4 CPUs
+      Memory: 8192
       TaskRoleArn: !GetAtt IntegrationTestRunnerTaskRole.Arn
       ExecutionRoleArn: !GetAtt IntegrationTestRunnerTaskExecutionRole.Arn
       Family: !Sub '${AWS::StackName}-integration-test-runner'
