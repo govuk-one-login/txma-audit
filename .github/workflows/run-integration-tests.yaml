@@ -7,12 +7,6 @@ on:
         description: 'Override stack name (leave empty to derive from branch name)'
         required: false
         default: ''
-  workflow_run:
-    workflows: ['Build, Test and Package']
-    types:
-      - completed
-    branches:
-      - 'feature/**'
   push:
     branches:
       - 'feature/**'
@@ -23,9 +17,6 @@ env:
 jobs:
   upload-testing-image:
     name: Upload testing image to ECR
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success')
     permissions:
       id-token: write
       contents: read
