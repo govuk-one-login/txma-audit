@@ -200,7 +200,7 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
       LoggingConfiguration:
-        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        DestinationBucketName: !Sub di-s3-access-logs-${AWS::AccountId}-${AWS::Region}
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch/
       LifecycleConfiguration:
         Rules:
@@ -298,7 +298,7 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
       LoggingConfiguration:
-        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        DestinationBucketName: !Sub di-s3-access-logs-${AWS::AccountId}-${AWS::Region}
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-temporary-message-batch/
       LifecycleConfiguration:
         Rules:
@@ -354,7 +354,7 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
       LoggingConfiguration:
-        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        DestinationBucketName: !Sub di-s3-access-logs-${AWS::AccountId}-${AWS::Region}
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-permanent-message-batch/
       LifecycleConfiguration:
         Rules:
@@ -432,7 +432,7 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
       LoggingConfiguration:
-        DestinationBucketName: '{{resolve:ssm:S3LogsBucketName}}'
+        DestinationBucketName: !Sub di-s3-access-logs-${AWS::AccountId}-${AWS::Region}
         LogFilePrefix: !Sub ${AWS::StackName}-${Environment}-message-batch-txma2/
       LifecycleConfiguration:
         Rules:
