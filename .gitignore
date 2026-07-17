@@ -10,6 +10,7 @@ coverage/
 
 # Miscellaneous
 .DS_Store
+.venv
 
 # NPM
 node_modules/
