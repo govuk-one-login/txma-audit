@@ -2,6 +2,12 @@ import { getEnv } from '../../../../../common/utils/helpers/getEnv'
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
 import { TextEncoder, TextDecoder } from 'node:util'
 
+interface LambdaResult {
+  errorType?: string
+  errorMessage?: string
+  trace?: string[]
+}
+
 export const invokeLambdaFunction = async (
   functionName: string,
   payload: unknown
@@ -11,11 +17,12 @@ export const invokeLambdaFunction = async (
     FunctionName: functionName,
     Payload: jsonToUint8Array(payload)
   }
-  try {
-    const result = await client.send(new InvokeCommand(input))
-    return uint8ArrayToJson(result.Payload)
-  } catch (error) {
-    console.log('error', error)
+  const result = await client.send(new InvokeCommand(input))
+  const resultPayload = uint8ArrayToJson(result.Payload) as LambdaResult
+  if (resultPayload?.errorType) {
+    throw new Error(
+      `Lambda Error in function ${functionName}: ${resultPayload.errorType} - ${resultPayload.errorMessage}`
+    )
   }
 }
 
