@@ -10,19 +10,22 @@
 # in the Dockerfile.
 cd /test-app || exit 1
 
-if [ "$TEST_ENVIRONMENT" == "dev" ]; then
-  npm run test:integration -- --reporter=minimal --no-color
-  TESTS_EXIT_CODE=$?
-elif  [ "$TEST_ENVIRONMENT" == "build" ]; then
-  npm run test:integration
-  TESTS_EXIT_CODE=$?
-elif [ "$TEST_ENVIRONMENT" == "staging" ]; then
-  npm run test:e2e
-  TESTS_EXIT_CODE=$?
-else
-  echo "No Test Environment Set"
-  exit 1
-fi
+export CI=true
+
+case "$TEST_ENVIRONMENT" in
+  dev|build)
+    npm run test:integration -- --no-color
+    TESTS_EXIT_CODE=$?
+    ;;
+  staging)
+    npm run test:e2e
+    TESTS_EXIT_CODE=$?
+    ;;
+  *)
+    echo "No Test Environment Set"
+    exit 1
+    ;;
+esac
 
 cp tests/integration-tests/reports/junit.xml $TEST_REPORT_ABSOLUTE_DIR/junit.xml
 exit $TESTS_EXIT_CODE
