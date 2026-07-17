@@ -24,6 +24,7 @@ export const invokeLambdaFunction = async (
       `Lambda Error in function ${functionName}: ${resultPayload.errorType} - ${resultPayload.errorMessage}`
     )
   }
+  return resultPayload
 }
 
 const jsonToUint8Array = (json: unknown): Uint8Array => {
