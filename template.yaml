@@ -2040,6 +2040,7 @@ Resources:
                   - kms:DescribeKey
                   - kms:GetPublicKey
                   - kms:Decrypt
+                  - kms:Encrypt
                   - kms:GenerateDataKey
                   - kms:Verify
                 Resource:
