@@ -16,6 +16,7 @@
     "build": "tsc --noEmit && tsx ./esbuild.config.ts",
     "deploy:dev": "npm run build && sam deploy --resolve-s3",
     "lint": "prettier . --check || exit 1 ; eslint . --max-warnings=0",
+    "lint:sam": "sam validate --lint",
     "lint:fix": "prettier . --write ; eslint . --fix",
     "postinstall": "husky",
     "test": "vitest run",
