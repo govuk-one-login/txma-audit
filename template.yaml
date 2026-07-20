@@ -1342,7 +1342,7 @@ Resources:
               - '{{resolve:ssm:SqsKmsKeyArn}}'
 
   ############################
-  # End: SNS DLQ Resouces   #
+  # End: SNS DLQ Resources   #
   ############################
 
   AuditMessageDeliveryStreamPolicy:
@@ -1376,6 +1376,16 @@ Resources:
               - logs:CreateLogStream
             Resource:
               - !GetAtt AuditMessageDeliveryStreamLogs.Arn
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey
+              - kms:CreateGrant
+            Resource:
+              - '{{resolve:ssm:FirehoseKmsKeyArn}}'
+            Condition:
+              Bool:
+                kms:GrantIsForAWSResource: true
 
   AuditMessageDeliveryStreamRole:
     Type: AWS::IAM::Role
