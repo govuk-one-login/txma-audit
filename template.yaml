@@ -1184,6 +1184,9 @@ Resources:
                   ParameterValue: !GetAtt AuditMessageDeliveryStreamRole.Arn
         RoleARN: !GetAtt AuditMessageDeliveryStreamRole.Arn
         S3BackupMode: Disabled
+      Tags:
+        - Key: 'Test'
+          Value: 'true'
 
   AuditMessageDeliveryStreamSubscription:
     Type: AWS::SNS::Subscription
