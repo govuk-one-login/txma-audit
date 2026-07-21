@@ -2160,7 +2160,7 @@ Resources:
     Condition: DevEnvironment
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: alias/ecr-integration-tests
+      AliasName: !Sub alias/${AWS::StackName}-ecr-integration-tests
       TargetKeyId: !Ref EcrEncryptionKey
 
   DevContainerSigningKey:
@@ -2184,7 +2184,7 @@ Resources:
     Condition: DevEnvironment
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: alias/dev-container-signing
+      AliasName: !Sub alias/${AWS::StackName}-dev-container-signing
       TargetKeyId: !Ref DevContainerSigningKey
   ##############################
   # End: Development resources #
