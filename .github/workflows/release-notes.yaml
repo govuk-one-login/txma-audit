@@ -12,6 +12,7 @@ permissions:
   pages: write
   id-token: write
   actions: read
+  packages: read
 
 concurrency:
   group: pages
@@ -34,9 +35,13 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@govuk-one-login'
 
       - name: Install node packages
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore previous site from last Pages deployment
         id: restore
