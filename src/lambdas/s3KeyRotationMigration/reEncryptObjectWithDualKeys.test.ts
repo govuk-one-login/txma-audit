@@ -64,12 +64,12 @@ describe('reEncryptObjectWithDualKeys', () => {
     process.env.BACKUP_KEY_ID = TEST_BACKUP_KEY
 
     // KmsKeyringNode is used with `new` so mock as a constructor that stores config
-    mockKmsKeyringNode.mockImplementation(
-       
-      function (this: unknown, config: unknown) {
-        return config
-      }
-    )
+    mockKmsKeyringNode.mockImplementation(function (
+      this: unknown,
+      config: unknown
+    ) {
+      return config
+    })
 
     mockDecrypt = vi.fn()
     mockEncrypt = vi.fn()
