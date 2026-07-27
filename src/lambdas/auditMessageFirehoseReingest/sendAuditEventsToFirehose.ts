@@ -23,8 +23,16 @@ const sendAuditEventToFirehose = async (s3ObjectDetails: S3ObjectDetails) => {
     )
 
     return handleFirehosePutRecordBatchResult(result, s3ObjectDetails)
-  } catch (error) {
-    logger.error('Error sending audit events to Firehose', { error })
+  } catch (err) {
+    logger.error('Failed to send audit events to Firehose', {
+      bucket: s3ObjectDetails.bucket,
+      key: s3ObjectDetails.key,
+      error: {
+        message: err instanceof Error ? err.message : String(err),
+        name: err instanceof Error ? err.name : undefined,
+        stack: err instanceof Error ? err.stack : undefined
+      }
+    })
 
     return {
       ...s3ObjectDetails,
@@ -40,7 +48,11 @@ const handleFirehosePutRecordBatchResult = (
   const auditEvents = s3ObjectDetails.auditEvents as AuditEvent[]
 
   if (result.FailedPutCount && result.FailedPutCount > 0) {
-    logger.warn('Some audit events failed to reingest')
+    logger.warn('Some audit events failed to reingest', {
+      bucket: s3ObjectDetails.bucket,
+      key: s3ObjectDetails.key,
+      failedCount: result.FailedPutCount
+    })
 
     return {
       ...s3ObjectDetails,
@@ -50,7 +62,11 @@ const handleFirehosePutRecordBatchResult = (
       )
     }
   } else {
-    logger.info('All audit events reingested successfully')
+    logger.info('All audit events reingested successfully', {
+      bucket: s3ObjectDetails.bucket,
+      key: s3ObjectDetails.key,
+      count: auditEvents.length
+    })
 
     return {
       ...s3ObjectDetails,

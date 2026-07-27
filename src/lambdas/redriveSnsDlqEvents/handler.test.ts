@@ -65,13 +65,15 @@ describe('testing handler', () => {
     expect(result).toStrictEqual({ batchItemFailures: [] })
 
     expect(logger.info).toHaveBeenCalledWith(
-      'processed the following event ids',
-      {
-        event_id: generateEventIdLogMessageFromProcessingResult([
+      'Redrive SNS DLQ events completed',
+      expect.objectContaining({
+        outcome: 'success',
+        failedCount: 0,
+        eventIds: generateEventIdLogMessageFromProcessingResult([
           allSuccessFirehoseResponseExpectedResult.failedProcessingResults,
           allSuccessFirehoseResponseExpectedResult.successfullProcessingResults
         ])
-      }
+      })
     )
   })
 
@@ -85,13 +87,15 @@ describe('testing handler', () => {
     expect(result).toStrictEqual({ batchItemFailures: parseFailureResults })
 
     expect(logger.info).toHaveBeenCalledWith(
-      'processed the following event ids',
-      {
-        event_id: generateEventIdLogMessageFromProcessingResult([
+      'Redrive SNS DLQ events completed',
+      expect.objectContaining({
+        outcome: 'partial',
+        failedCount: parseFailureResults.length,
+        eventIds: generateEventIdLogMessageFromProcessingResult([
           allSuccessFirehoseResponseExpectedResult.failedProcessingResults,
           allSuccessFirehoseResponseExpectedResult.successfullProcessingResults
         ])
-      }
+      })
     )
   })
 
@@ -117,13 +121,15 @@ describe('testing handler', () => {
     })
 
     expect(logger.info).toHaveBeenCalledWith(
-      'processed the following event ids',
-      {
-        event_id: generateEventIdLogMessageFromProcessingResult([
+      'Redrive SNS DLQ events completed',
+      expect.objectContaining({
+        outcome: 'partial',
+        failedCount: parseFailureResults.length + firehoseFailureResults.length,
+        eventIds: generateEventIdLogMessageFromProcessingResult([
           allSuccessFirehoseResponseExpectedResult.failedProcessingResults,
           allSuccessFirehoseResponseExpectedResult.successfullProcessingResults
         ])
-      }
+      })
     )
   })
 })

@@ -20,6 +20,13 @@ export const handler = async (
   context: Context
 ): Promise<SQSBatchResponse> => {
   initialiseLogger(context)
+  const startTime = Date.now()
+  const correlationId = event.Records[0]?.messageId
+
+  logger.info('Redrive SNS DLQ events started', {
+    correlationId,
+    recordCount: event.Records.length
+  })
 
   const { successfullyParsedRecords, unsuccessfullyParsedRecords } =
     parseSQSEvent(event)
@@ -38,12 +45,18 @@ export const handler = async (
     unsucessfullySentToFirehoseSQSMessageId
   )
 
-  logger.info('processed the following event ids', {
-    event_id: generateEventIdLogMessageFromProcessingResult([
+  logger.info('Redrive SNS DLQ events completed', {
+    correlationId,
+    outcome: batchItemFailure.length === 0 ? 'success' : 'partial',
+    duration: Date.now() - startTime,
+    processedCount: event.Records.length,
+    failedCount: batchItemFailure.length,
+    eventIds: generateEventIdLogMessageFromProcessingResult([
       firehoseResponse.failedProcessingResults,
       firehoseResponse.successfullProcessingResults
     ])
   })
+
   return {
     batchItemFailures: batchItemFailure
   }

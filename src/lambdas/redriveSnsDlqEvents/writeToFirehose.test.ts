@@ -70,8 +70,15 @@ describe('test writeToFirehose() function', () => {
     )
     expect(result).toStrictEqual(expectedResult)
     expect(logger.error).toHaveBeenCalledWith(
-      'failed to publish to firehose',
-      error
+      'Failed to publish to Firehose',
+      expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.objectContaining({
+          message: 'mockError',
+          name: 'Error'
+        }),
+        recordCount: baseProcessingResults.length
+      })
     )
   })
 })

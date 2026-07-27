@@ -33,8 +33,13 @@ export const handler = async (
   context: Context
 ): Promise<SQSBatchResponse> => {
   initialiseLogger(context)
+  const startTime = Date.now()
+  const correlationId = event.Records[0]?.messageId
 
-  logger.info(`Received ${event.Records.length} records for processing`)
+  logger.info('Firehose reingestion started', {
+    correlationId,
+    recordCount: event.Records.length
+  })
 
   const batchItemFailures: SQSBatchItemFailure[] = []
   const s3ObjectDetailsArray: S3ObjectDetails[] = getDetailsOfS3Objects(
@@ -49,12 +54,14 @@ export const handler = async (
   )
 
   if (batchItemFailures.length > 0) {
-    logger.warn(
-      'Finished retrieving Audit Events from S3. There were some failures.',
-      { batchItemFailures }
-    )
+    logger.warn('Finished retrieving Audit Events from S3 with failures', {
+      correlationId,
+      batchItemFailures
+    })
   } else {
-    logger.info('Successfully retrieved Audit Events from S3')
+    logger.info('Successfully retrieved Audit Events from S3', {
+      correlationId
+    })
   }
 
   // Send the audit events to Firehose, and collect any that Firehose failed
@@ -68,6 +75,14 @@ export const handler = async (
   // it with the events that failed to reingest
   await deleteOrUpdateS3Objects(sendAuditEventsToFirehoseResults)
 
+  logger.info('Firehose reingestion completed', {
+    correlationId,
+    outcome: batchItemFailures.length === 0 ? 'success' : 'partial',
+    duration: Date.now() - startTime,
+    processedCount: s3ObjectDetailsArray.length,
+    failedCount: batchItemFailures.length
+  })
+
   return {
     batchItemFailures
   }
@@ -79,7 +94,8 @@ const getDetailsOfS3Objects = (records: SQSRecord[]): S3ObjectDetails[] => {
     .filter(hasFailuresPrefix)
     .map(getS3ObjectDetails)
 
-  logger.info(`Found ${s3ObjectDetailsArray.length} S3 objects to process`, {
+  logger.info('S3 objects identified for processing', {
+    objectCount: s3ObjectDetailsArray.length,
     s3ObjectDetails: s3ObjectDetailsArray.map(({ bucket, key }) => ({
       bucket,
       key

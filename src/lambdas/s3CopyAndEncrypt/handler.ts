@@ -2,11 +2,19 @@ import { SQSEvent, Context } from 'aws-lambda'
 import { tryParseJSON } from '../../../common/utils/helpers/tryParseJson'
 import { initialiseLogger, logger } from '../../../common/sharedServices/logger'
 import { encryptAuditData } from './encryptAuditData'
+
 export const handler = async (
   event: SQSEvent,
   context: Context
 ): Promise<void> => {
   initialiseLogger(context)
+  const startTime = Date.now()
+  const correlationId = event.Records[0]?.messageId
+
+  logger.info('S3 copy and encrypt started', {
+    correlationId,
+    recordCount: event.Records.length
+  })
 
   if (event.Records.length === 0) {
     throw new Error('No data in event.')
@@ -20,7 +28,7 @@ export const handler = async (
   }
 
   if (eventData.Event === 's3:TestEvent') {
-    logger.info('Event is of type s3:TestEvent and will not be encrypted')
+    logger.info('Event is of type s3:TestEvent, ignoring', { correlationId })
     return
   }
 
@@ -33,4 +41,10 @@ export const handler = async (
   const eventKey = eventS3data.object?.key ?? ''
 
   await encryptAuditData(eventBucket, eventKey)
+
+  logger.info('S3 copy and encrypt completed', {
+    correlationId,
+    outcome: 'success',
+    duration: Date.now() - startTime
+  })
 }

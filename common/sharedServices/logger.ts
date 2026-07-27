@@ -1,14 +1,3 @@
-import { Logger } from '@aws-lambda-powertools/logger'
-import { LogLevel } from '@aws-lambda-powertools/logger/types'
-import { Context } from 'aws-lambda'
+import { logger, initialiseLogger } from '@govuk-one-login/dpt-logging'
 
-const loggerInstance = new Logger({
-  serviceName: process.env.AWS_LAMBDA_FUNCTION_NAME,
-  logLevel: (process.env.LOG_LEVEL as LogLevel) || 'DEBUG'
-})
-
-export const initialiseLogger = (context: Context) => {
-  loggerInstance.addContext(context)
-}
-
-export const logger = loggerInstance
+export { logger, initialiseLogger }
