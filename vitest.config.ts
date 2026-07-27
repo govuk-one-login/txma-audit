@@ -11,8 +11,6 @@ export default defineConfig({
       '**/sharedServices/firehose/*.test.ts',
       '**/sharedServices/kms/*.test.ts',
       '**/s3CopyAndEncrypt/*.test.ts',
-      '**/s3KeyRotationMigration/handler.test.ts',
-      '**/s3KeyRotationMigration/reEncryptObjectWithDualKeys.test.ts',
       '**/redriveSnsDlqEvents/*.test.ts',
       '**/auditMessageFirehoseReingest/*.test.ts'
     ],
