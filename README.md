@@ -39,12 +39,12 @@ The package is hosted on **GitHub Packages** (not the public npm registry). To i
 2. Export it in your shell:
 
 ```bash
-export GITHUB_TOKEN=ghp_your_token_here
+export NODE_AUTH_TOKEN=ghp_your_token_here
 ```
 
 3. Run `npm install` as normal — the `.npmrc` in this repo handles registry resolution for the `@govuk-one-login` scope.
 
-> **Note:** Do not hardcode your token in `.npmrc`. The file references `${GITHUB_TOKEN}` which is resolved from your environment. In CI, the built-in `GITHUB_TOKEN` secret provides access automatically.
+> **Note:** Do not hardcode your token in `.npmrc`. The file references `${NODE_AUTH_TOKEN}` which is resolved from your environment. In CI, the `setup-node` action configures this automatically via the built-in `GITHUB_TOKEN` secret.
 
 ## Audit
 
