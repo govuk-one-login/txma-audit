@@ -1957,6 +1957,11 @@ Resources:
                   - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/acceptance-tests/*'
                 Effect: Allow
               - Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*'
+                Effect: Allow
+              - Action:
                   - secretsmanager:CancelRotateSecret
                   - secretsmanager:GetSecretValue
                   - secretsmanager:RotateSecret
