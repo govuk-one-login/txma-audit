@@ -42,4 +42,15 @@ describe('getS3Object -', () => {
     expect(calls[0].args[0].input).toEqual(getObjectCommandInput)
     expect(returnedData).toEqual(testDataStream)
   })
+
+  it('throws an error when Body is not a Readable stream', async () => {
+    // Unit Test
+    s3Mock.on(GetObjectCommand).resolves({
+      Body: undefined
+    })
+
+    await expect(
+      getS3ObjectAsStream(TEST_TEMPORARY_BUCKET_NAME, TEST_S3_OBJECT_KEY)
+    ).rejects.toThrow('Get S3 Object command did not return stream')
+  })
 })
