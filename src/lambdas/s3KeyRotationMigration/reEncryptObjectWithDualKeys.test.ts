@@ -65,10 +65,10 @@ describe('reEncryptObjectWithDualKeys', () => {
 
     // KmsKeyringNode is mocked to just return the config object for testing
     mockKmsKeyringNode.mockImplementation(function (
-      this: Record<string, unknown>,
-      config: Record<string, unknown>
+      this: KmsKeyringNode,
+      config?: Partial<Record<string, unknown>>
     ) {
-      Object.assign(this, config)
+      if (config) Object.assign(this, config)
     })
 
     mockDecrypt = vi.fn()
