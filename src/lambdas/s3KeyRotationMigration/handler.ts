@@ -7,6 +7,7 @@ export const handler = async (
   context: Context
 ): Promise<S3BatchResult> => {
   initialiseLogger(context)
+  const startTime = Date.now()
 
   logger.info('S3 Batch Key Rotation started', {
     invocationId: event.invocationId,
@@ -31,28 +32,37 @@ export const handler = async (
           resultString: 'Object re-encrypted successfully'
         }
       } else {
+        const error: unknown = result.reason
         logger.error('Task failed', {
+          errorCode: 'TAUD007',
           taskId: task.taskId,
           s3Key: task.s3Key,
-          error: result.reason
+          error: {
+            message: error instanceof Error ? error.message : String(error),
+            name: error instanceof Error ? error.name : undefined,
+            stack: error instanceof Error ? error.stack : undefined
+          }
         })
         return {
           taskId: task.taskId,
           resultCode: 'PermanentFailure',
           resultString: `Failed: ${
-            result.reason instanceof Error
-              ? result.reason.message
-              : 'Unknown error'
+            error instanceof Error ? error.message : 'Unknown error'
           }`
         }
       }
     })
   }
 
+  const succeeded = results.filter((r) => r.status === 'fulfilled').length
+  const failed = results.filter((r) => r.status === 'rejected').length
+
   logger.info('S3 Batch Key Rotation completed', {
     invocationId: event.invocationId,
-    succeeded: results.filter((r) => r.status === 'fulfilled').length,
-    failed: results.filter((r) => r.status === 'rejected').length
+    outcome: failed === 0 ? 'success' : 'partial',
+    duration: Date.now() - startTime,
+    succeeded,
+    failed
   })
 
   return response

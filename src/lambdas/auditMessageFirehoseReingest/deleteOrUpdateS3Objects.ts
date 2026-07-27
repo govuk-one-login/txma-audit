@@ -46,17 +46,22 @@ const updateFailedProcessingS3Object = async (
 
     await putS3Object(bucket, key, fileContents)
 
-    logger.info('Updated s3 object with events that failed to reingest', {
-      bucket: bucket,
-      key: key
+    logger.info('Updated S3 object with events that failed to reingest', {
+      bucket,
+      key
     })
-  } catch (error) {
+  } catch (err) {
     logger.error(
-      'Error updating s3 object, some events still require reingest',
+      'Failed to update S3 object, some events still require reingest',
       {
-        bucket: bucket,
-        key: key,
-        error,
+        errorCode: 'TAUD005',
+        bucket,
+        key,
+        error: {
+          message: err instanceof Error ? err.message : String(err),
+          name: err instanceof Error ? err.name : undefined,
+          stack: err instanceof Error ? err.stack : undefined
+        },
         failedEventIds: events.map((event) => event.event_id)
       }
     )
@@ -67,15 +72,20 @@ const deleteFailedProcessingS3Object = async (bucket: string, key: string) => {
   try {
     await deleteS3Object(bucket, key)
 
-    logger.info('Deleted s3 object successfully', {
-      bucket: bucket,
-      key: key
+    logger.info('Deleted S3 object successfully', {
+      bucket,
+      key
     })
-  } catch (error) {
-    logger.error('Error deleting s3 object', {
-      bucket: bucket,
-      key: key,
-      error
+  } catch (err) {
+    logger.error('Failed to delete S3 object', {
+      errorCode: 'TAUD006',
+      bucket,
+      key,
+      error: {
+        message: err instanceof Error ? err.message : String(err),
+        name: err instanceof Error ? err.name : undefined,
+        stack: err instanceof Error ? err.stack : undefined
+      }
     })
   }
 }

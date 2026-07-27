@@ -11,7 +11,11 @@ import { logger } from '../../../common/sharedServices/logger'
 export const handler = async (
   event: FirehoseTransformationEvent
 ): Promise<FirehoseTransformationResult> => {
-  logger.info(`Received ${event.records.length} records for processing`)
+  const startTime = Date.now()
+
+  logger.info('Event processing started', {
+    recordCount: event.records.length
+  })
 
   /* Process the list of records and transform them */
   const transformationResult: FirehoseRecordTransformationStatus = 'Ok'
@@ -29,6 +33,12 @@ export const handler = async (
       }
     }
   )
+
+  logger.info('Event processing completed', {
+    outcome: 'success',
+    duration: Date.now() - startTime,
+    processedCount: output.length
+  })
 
   return { records: output }
 }

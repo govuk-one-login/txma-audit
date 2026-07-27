@@ -29,6 +29,23 @@ chmod ug+x .husky/*
 chmod ug+x .git/hooks/*
 ```
 
+## Logging
+
+This project uses [`@govuk-one-login/dpt-logging`](https://github.com/govuk-one-login/dpt-platform-logging) — a shared logging library that provides a pre-configured AWS Lambda Powertools logger with a standardised JSON output format across all GOV.UK One Login services.
+
+The package is hosted on **GitHub Packages** (not the public npm registry). To install it locally you need a GitHub Personal Access Token with `read:packages` scope:
+
+1. Generate a token at https://github.com/settings/tokens with the `read:packages` scope
+2. Export it in your shell:
+
+```bash
+export NODE_AUTH_TOKEN=ghp_your_token_here
+```
+
+3. Run `npm install` as normal — the `.npmrc` in this repo handles registry resolution for the `@govuk-one-login` scope.
+
+> **Note:** Do not hardcode your token in `.npmrc`. The file references `${NODE_AUTH_TOKEN}` which is resolved from your environment. In CI, the `setup-node` action configures this automatically via the built-in `GITHUB_TOKEN` secret.
+
 ## Audit
 
 The Audit account uses a Kinesis Firehose resource to subscribe to the SNS topic hosted in the Event Processing account. This will batch and store the RAW event messages in an S3 bucket.

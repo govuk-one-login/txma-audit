@@ -26,8 +26,16 @@ export const writeToFirehose = async (
       firehoseRecords
     )
     return parseFirehoseResponse(result, successfullyParsedRecords)
-  } catch (error) {
-    logger.error('failed to publish to firehose', error as Error)
+  } catch (err) {
+    logger.error('Failed to publish to Firehose', {
+      errorCode: 'TAUD001',
+      error: {
+        message: err instanceof Error ? err.message : String(err),
+        name: err instanceof Error ? err.name : undefined,
+        stack: err instanceof Error ? err.stack : undefined
+      },
+      recordCount: successfullyParsedRecords.length
+    })
     const errorOutput: FirehoseProcessingResult = {
       successfullProcessingResults: [],
       failedProcessingResults: successfullyParsedRecords
