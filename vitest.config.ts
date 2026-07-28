@@ -11,8 +11,11 @@ export default defineConfig({
       '**/sharedServices/firehose/*.test.ts',
       '**/sharedServices/kms/*.test.ts',
       '**/s3CopyAndEncrypt/*.test.ts',
+      '**/s3KeyRotationMigration/*.test.ts',
       '**/redriveSnsDlqEvents/*.test.ts',
-      '**/auditMessageFirehoseReingest/*.test.ts'
+      '**/auditMessageFirehoseReingest/*.test.ts',
+      '**/utils/helpers/**/*.test.ts',
+      '**/utils/awsSdkClients.test.ts'
     ],
     exclude: ['**/node_modules/**', '**/dist/**'],
     setupFiles: ['./common/utils/tests/setup/testEnvVars.ts'],

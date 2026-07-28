@@ -161,6 +161,21 @@ describe('S3 Key Rotation Handler', () => {
     expect(mockReEncryptObjectWithDualKeys).not.toHaveBeenCalled()
   })
 
+  it('handles non-Error rejection reasons with Unknown error message', async () => {
+    // Unit Test
+    const event = createS3BatchEvent(1, 'audit-bucket')
+
+    mockReEncryptObjectWithDualKeys.mockRejectedValueOnce('string error reason')
+
+    const result = await handler(event, mockContext)
+
+    expect(result.results[0]).toEqual({
+      taskId: 'task-0',
+      resultCode: 'PermanentFailure',
+      resultString: 'Failed: Unknown error'
+    })
+  })
+
   it('includes invocation details in response', async () => {
     // Unit Test
     const event = createS3BatchEvent(1)
