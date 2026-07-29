@@ -38,7 +38,7 @@ export const getAuditEvent = async (
   } else {
     retryCount++
     if (retryCount > maxRetries) {
-      throw new Error('Could not find event in s3 bucket')
+      throw new Error(`Could not find event in s3 bucket ${bucket}`)
     } else {
       console.log(`Waiting for event data in bucket... ${retryCount} attempts`)
       await pause(exponentialBackoff(retryCount, 2))
