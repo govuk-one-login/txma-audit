@@ -1,16 +1,19 @@
 import {
+  Context,
   FirehoseRecordTransformationStatus,
   FirehoseTransformationEvent,
   FirehoseTransformationEventRecord,
   FirehoseTransformationResult
 } from 'aws-lambda'
 
-import { logger } from '../../../common/sharedServices/logger'
+import { initialiseLogger, logger } from '../../../common/sharedServices/logger'
 
 /* eslint-disable @typescript-eslint/require-await */
 export const handler = async (
-  event: FirehoseTransformationEvent
+  event: FirehoseTransformationEvent,
+  context: Context
 ): Promise<FirehoseTransformationResult> => {
+  initialiseLogger(context)
   const startTime = Date.now()
 
   logger.info('Event processing started', {

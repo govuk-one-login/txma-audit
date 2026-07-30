@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mockLambdaContext } from '../../../common/utils/tests/mockLambdaContext'
+import { logger } from '../../../common/sharedServices/logger'
 import { encryptAuditData } from './encryptAuditData'
 import {
   testS3TestEvent,
@@ -14,6 +15,7 @@ vi.mock('./encryptAuditData.ts', () => ({
 describe('InitiateCopyAndEncrypt', function () {
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.spyOn(logger, 'error')
   })
 
   it('handles s3 testEvents emitted when a new notification link is established', async () => {
@@ -124,5 +126,31 @@ describe('InitiateCopyAndEncrypt', function () {
 
     await handler(eventWithNoKey, mockLambdaContext)
     expect(encryptAuditData).toHaveBeenCalledWith('myBucket', '')
+  })
+
+  it('logs error with TAUD011 when encryptAuditData throws', async () => {
+    // Unit Test
+    const error = new Error('Encryption failed')
+    vi.mocked(encryptAuditData).mockRejectedValue(error)
+
+    const bucketName = 'myBucketName'
+    const objectKey = 'myObjectKey'
+
+    await expect(
+      handler(testS3SqsEvent(bucketName, objectKey), mockLambdaContext)
+    ).rejects.toThrow('Encryption failed')
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'S3 copy and encrypt failed',
+      expect.objectContaining({
+        errorCode: 'TAUD011',
+        outcome: 'failure',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.objectContaining({
+          message: 'Encryption failed',
+          name: 'Error'
+        })
+      })
+    )
   })
 })

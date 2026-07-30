@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { handler } from './handler'
+import { mockLambdaContext } from '../../../common/utils/tests/mockLambdaContext'
 import { TestHelper } from '../../../common/utils/tests/test-helpers/test-helper'
 import { FirehoseTransformationResult } from 'aws-lambda'
 
@@ -26,7 +27,7 @@ describe('Unit test for app eventProcessorHandler', function () {
     const firehoseEvent =
       TestHelper.createFirehoseEventWithEncodedMessage(exampleMessage)
 
-    const result = await handler(firehoseEvent)
+    const result = await handler(firehoseEvent, mockLambdaContext)
 
     expect(result).toEqual(expectedResult)
   })
@@ -48,7 +49,7 @@ describe('Unit test for app eventProcessorHandler', function () {
       5
     )
 
-    const result = await handler(firehoseEvent)
+    const result = await handler(firehoseEvent, mockLambdaContext)
 
     expect(result).toEqual(expectedResult)
   })
