@@ -89,7 +89,8 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.GH_ACTIONS_DEV_DEPLOY_ROLE_ARN }}
-      - name: Deploy to feature stack in the dev account
+      - name: Derive stack name
+        id: stack-name
         env:
           FEATURE_BRANCH_NAME: ${{ github.event.ref }}
         run: |
@@ -99,11 +100,67 @@ jobs:
             tr '[:upper:]' '[:lower:]' | \
             cut -c -32
           )
-
+          echo "stack_name=${stack_name}" >> "$GITHUB_OUTPUT"
+      - name: Deploy to feature stack in the dev account
+        env:
+          STACK_NAME: ${{ steps.stack-name.outputs.stack_name }}
+        run: |
           sam deploy \
-            --stack-name ${stack_name} \
+            --stack-name ${STACK_NAME} \
             --no-fail-on-empty-changeset \
             --resolve-s3
+      - name: Diagnose deployment failure
+        if: failure()
+        env:
+          STACK_NAME: ${{ steps.stack-name.outputs.stack_name }}
+        run: |
+          echo "::group::Checking for orphaned resources that may block deployment"
+
+          echo "## Checking S3 buckets"
+          BUCKETS=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, '${STACK_NAME}-')].Name" --output text)
+          if [ -n "$BUCKETS" ]; then
+            echo "::warning::Found orphaned S3 buckets that may need deleting:"
+            echo "$BUCKETS" | tr '\t' '\n' | while read -r bucket; do echo "  - $bucket"; done
+          else
+            echo "No orphaned S3 buckets found"
+          fi
+
+          echo ""
+          echo "## Checking ECR repositories"
+          REPOS=$(aws ecr describe-repositories --query "repositories[?starts_with(repositoryName, '${STACK_NAME}-')].repositoryName" --output text 2>/dev/null)
+          if [ -n "$REPOS" ]; then
+            echo "::warning::Found orphaned ECR repositories that may need deleting:"
+            echo "$REPOS" | tr '\t' '\n' | while read -r repo; do echo "  - $repo"; done
+          else
+            echo "No orphaned ECR repositories found"
+          fi
+
+          echo ""
+          echo "## Checking CloudFormation stack status"
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+          echo "Stack status: $STACK_STATUS"
+          if [ "$STACK_STATUS" = "REVIEW_IN_PROGRESS" ]; then
+            echo "::warning::Stack is stuck in REVIEW_IN_PROGRESS. The changeset likely failed validation."
+            echo "Changeset details:"
+            aws cloudformation list-change-sets --stack-name "$STACK_NAME" --query "Summaries[0].{Status:Status,Reason:StatusReason}" --output json 2>/dev/null
+          fi
+
+          echo ""
+          echo "## Checking KMS aliases"
+          ALIASES=$(aws kms list-aliases --query "Aliases[?starts_with(AliasName, 'alias/${STACK_NAME}-')].AliasName" --output text 2>/dev/null)
+          if [ -n "$ALIASES" ]; then
+            echo "::warning::Found orphaned KMS aliases:"
+            echo "$ALIASES" | tr '\t' '\n' | while read -r alias; do echo "  - $alias"; done
+          else
+            echo "No orphaned KMS aliases found"
+          fi
+
+          echo "::endgroup::"
+
+          echo ""
+          echo "---"
+          echo "If orphaned resources were found, delete them and re-run the workflow."
+          echo "Orphaned resources are typically caused by previous failed deployments of stacks with retained resources (S3 buckets with DeletionPolicy: Retain)."
 
   upload-testing-image:
     name: Upload testing image
