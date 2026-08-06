@@ -88,7 +88,10 @@ describe('test parseFirehoseResponse() function', () => {
     )
     expect(result).toStrictEqual(expectedResult)
     expect(logger.warn).toHaveBeenCalledWith(
-      'Some audit events failed to reingest'
+      'Some audit events failed to reingest',
+      expect.objectContaining({
+        errorCode: 'TAUD002'
+      })
     )
   })
 })

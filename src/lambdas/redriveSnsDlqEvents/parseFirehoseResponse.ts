@@ -10,7 +10,10 @@ export const parseFirehoseResponse = (
   const successMessage = 'SucceededToWriteToFirehose'
 
   if (firehoseResponse.FailedPutCount && firehoseResponse.FailedPutCount > 0) {
-    logger.warn('Some audit events failed to reingest')
+    logger.warn('Some audit events failed to reingest', {
+      errorCode: 'TAUD002',
+      failedCount: firehoseResponse.FailedPutCount
+    })
     const successfullProcessingResults: ProcessingResult[] = []
     const failedProcessingResults: ProcessingResult[] = []
 

@@ -1,17 +1,24 @@
 import {
+  Context,
   FirehoseRecordTransformationStatus,
   FirehoseTransformationEvent,
   FirehoseTransformationEventRecord,
   FirehoseTransformationResult
 } from 'aws-lambda'
 
-import { logger } from '../../../common/sharedServices/logger'
+import { initialiseLogger, logger } from '../../../common/sharedServices/logger'
 
 /* eslint-disable @typescript-eslint/require-await */
 export const handler = async (
-  event: FirehoseTransformationEvent
+  event: FirehoseTransformationEvent,
+  context: Context
 ): Promise<FirehoseTransformationResult> => {
-  logger.info(`Received ${event.records.length} records for processing`)
+  initialiseLogger(context)
+  const startTime = Date.now()
+
+  logger.info('Event processing started', {
+    recordCount: event.records.length
+  })
 
   /* Process the list of records and transform them */
   const transformationResult: FirehoseRecordTransformationStatus = 'Ok'
@@ -29,6 +36,12 @@ export const handler = async (
       }
     }
   )
+
+  logger.info('Event processing completed', {
+    outcome: 'success',
+    duration: Date.now() - startTime,
+    processedCount: output.length
+  })
 
   return { records: output }
 }

@@ -27,11 +27,17 @@ export const getAuditEvents = async (
     if (result.status === 'fulfilled') {
       successfulResults.push(result.value)
     } else {
-      logger.error('Error getting audit events from S3', {
+      const err: unknown = result.reason
+      logger.error('Failed to get audit events from S3', {
+        errorCode: 'TAUD003',
         bucket: s3ObjectDetails[index].bucket,
         s3Key: s3ObjectDetails[index].key,
         sqsRecordMessageId: s3ObjectDetails[index].sqsRecordMessageId,
-        error: result.reason
+        error: {
+          message: err instanceof Error ? err.message : String(err),
+          name: err instanceof Error ? err.name : undefined,
+          stack: err instanceof Error ? err.stack : undefined
+        }
       })
 
       failedIds.push(s3ObjectDetails[index].sqsRecordMessageId)

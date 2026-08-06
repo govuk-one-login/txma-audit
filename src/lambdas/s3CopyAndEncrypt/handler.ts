@@ -2,35 +2,64 @@ import { SQSEvent, Context } from 'aws-lambda'
 import { tryParseJSON } from '../../../common/utils/helpers/tryParseJson'
 import { initialiseLogger, logger } from '../../../common/sharedServices/logger'
 import { encryptAuditData } from './encryptAuditData'
+
 export const handler = async (
   event: SQSEvent,
   context: Context
 ): Promise<void> => {
   initialiseLogger(context)
+  const startTime = Date.now()
+  const correlationId = event.Records[0]?.messageId
 
-  if (event.Records.length === 0) {
-    throw new Error('No data in event.')
+  logger.info('S3 copy and encrypt started', {
+    correlationId,
+    recordCount: event.Records.length
+  })
+
+  try {
+    if (event.Records.length === 0) {
+      throw new Error('No data in event.')
+    }
+
+    const eventData = tryParseJSON(event.Records[0].body) as {
+      Event?: string
+      Records?: {
+        s3?: { object?: { key?: string }; bucket?: { name?: string } }
+      }[]
+    }
+
+    if (eventData.Event === 's3:TestEvent') {
+      logger.info('Event is of type s3:TestEvent, ignoring', { correlationId })
+      return
+    }
+
+    if (!eventData.Records?.[0]?.s3) {
+      throw new Error('No s3 data in event')
+    }
+
+    const eventS3data = eventData.Records[0].s3
+    const eventBucket = eventS3data.bucket?.name ?? ''
+    const eventKey = eventS3data.object?.key ?? ''
+
+    await encryptAuditData(eventBucket, eventKey)
+
+    logger.info('S3 copy and encrypt completed', {
+      correlationId,
+      outcome: 'success',
+      duration: Date.now() - startTime
+    })
+  } catch (err) {
+    logger.error('S3 copy and encrypt failed', {
+      errorCode: 'TAUD011',
+      correlationId,
+      outcome: 'failure',
+      duration: Date.now() - startTime,
+      error: {
+        message: err instanceof Error ? err.message : String(err),
+        name: err instanceof Error ? err.name : undefined,
+        stack: err instanceof Error ? err.stack : undefined
+      }
+    })
+    throw err
   }
-
-  const eventData = tryParseJSON(event.Records[0].body) as {
-    Event?: string
-    Records?: {
-      s3?: { object?: { key?: string }; bucket?: { name?: string } }
-    }[]
-  }
-
-  if (eventData.Event === 's3:TestEvent') {
-    logger.info('Event is of type s3:TestEvent and will not be encrypted')
-    return
-  }
-
-  if (!eventData.Records?.[0]?.s3) {
-    throw new Error('No s3 data in event')
-  }
-
-  const eventS3data = eventData.Records[0].s3
-  const eventBucket = eventS3data.bucket?.name ?? ''
-  const eventKey = eventS3data.object?.key ?? ''
-
-  await encryptAuditData(eventBucket, eventKey)
 }
