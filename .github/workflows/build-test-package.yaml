@@ -117,6 +117,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      packages: read
     secrets: inherit
     uses: ./.github/workflows/upload-testing-image-to-ecr.yaml
 
