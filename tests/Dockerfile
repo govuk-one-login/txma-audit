@@ -13,7 +13,8 @@ RUN apk update && \
 
 WORKDIR /test-app
 
-COPY package.json package-lock.json tsconfig.json .pnp* ./
+ARG NODE_AUTH_TOKEN
+COPY .npmrc package.json package-lock.json tsconfig.json .pnp* ./
 COPY tests ./tests
 COPY tests/run-tests.sh /
 COPY common ./common
@@ -21,6 +22,8 @@ COPY common ./common
 RUN chmod +x /run-tests.sh
 
 RUN npm install
+
+RUN rm -f .npmrc
 
 WORKDIR /test-app/tests
 

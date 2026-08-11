@@ -13,6 +13,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      packages: read
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -36,9 +37,10 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: latest
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # add commit hash to image as a label. You can pull the image from ECR and run the following command to see what commit was used to build the container
           # docker inspect CONTAINER_NAME | jq '.[].Config.Labels'`
-          docker build -f tests/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --build-arg GIT_COMMIT=$(git log -1 --format=%h) .
+          docker build -f tests/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --build-arg GIT_COMMIT=$(git log -1 --format=%h) --build-arg NODE_AUTH_TOKEN=$NODE_AUTH_TOKEN .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           cosign sign --key awskms:///${CONTAINER_SIGN_KMS_KEY} $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
