@@ -1836,6 +1836,100 @@ Resources:
       Type: String
       Value: '{{resolve:ssm:/tests/AddFirehoseRecordFunctionName}}'
 
+  # Integration test discovery parameters. These publish the values the
+  # integration tests need under /tests/${AWS::StackName}/ so the test runner can
+  # read them via ssm:GetParametersByPath instead of cloudformation:DescribeStacks
+  # (the shared dev-tools task role's permissions boundary does not allow
+  # DescribeStacks). Keep these in sync with the mappings in
+  # tests/support/setup/setup.ts.
+  IntegrationTestsAuditMessageDelimiterFunctionNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/AuditMessageDelimiterFunctionName
+      Type: String
+      Value: !Ref AuditMessageDelimiterFunction
+
+  IntegrationTestsAuditMessageDelimiterLogsNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/AuditMessageDelimiterLogsName
+      Type: String
+      Value: !Ref AuditMessageDelimiterLogs
+
+  IntegrationTestsS3CopyAndEncryptFunctionNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/S3CopyAndEncryptFunctionName
+      Type: String
+      Value: !Ref S3CopyAndEncryptFunction
+
+  IntegrationTestsS3CopyAndEncryptLogsNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/S3CopyAndEncryptLogsName
+      Type: String
+      Value: !Ref S3CopyAndEncryptLogs
+
+  IntegrationTestsS3KeyRotationFunctionNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/S3KeyRotationFunctionName
+      Type: String
+      Value: !Ref S3KeyRotationFunction
+
+  IntegrationTestsS3KeyRotationLogsNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/S3KeyRotationLogsName
+      Type: String
+      Value: !Ref S3KeyRotationLogs
+
+  IntegrationTestsPermanentMessageBatchBucketNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/PermanentMessageBatchBucketName
+      Type: String
+      Value: !Ref PermanentMessageBatchBucket
+
+  IntegrationTestsAuditMessageBatchBucketNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/AuditMessageBatchBucketName
+      Type: String
+      Value: !Ref MessageBatchBucket
+
+  IntegrationTestsAuditMessageDeliveryStreamNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/AuditMessageDeliveryStreamName
+      Type: String
+      Value: !Ref AuditMessageDeliveryStream
+
+  IntegrationTestsGeneratorKeyIdParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/GeneratorKeyId
+      Type: String
+      Value: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+
+  IntegrationTestsBackupKeyIdParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/BackupKeyId
+      Type: String
+      Value: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
+
   AddRecordToFirehoseLambdaPolicy:
     Condition: TestRoleResources
     Type: AWS::Lambda::Permission
