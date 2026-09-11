@@ -1836,6 +1836,100 @@ Resources:
       Type: String
       Value: '{{resolve:ssm:/tests/AddFirehoseRecordFunctionName}}'
 
+  # Integration test discovery parameters. These publish the values the
+  # integration tests need under /tests/${AWS::StackName}/ so the test runner can
+  # read them via ssm:GetParametersByPath instead of cloudformation:DescribeStacks
+  # (the shared dev-tools task role's permissions boundary does not allow
+  # DescribeStacks). Keep these in sync with the mappings in
+  # tests/support/setup/setup.ts.
+  IntegrationTestsAuditMessageDelimiterFunctionNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/AuditMessageDelimiterFunctionName
+      Type: String
+      Value: !Ref AuditMessageDelimiterFunction
+
+  IntegrationTestsAuditMessageDelimiterLogsNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/AuditMessageDelimiterLogsName
+      Type: String
+      Value: !Ref AuditMessageDelimiterLogs
+
+  IntegrationTestsS3CopyAndEncryptFunctionNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/S3CopyAndEncryptFunctionName
+      Type: String
+      Value: !Ref S3CopyAndEncryptFunction
+
+  IntegrationTestsS3CopyAndEncryptLogsNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/S3CopyAndEncryptLogsName
+      Type: String
+      Value: !Ref S3CopyAndEncryptLogs
+
+  IntegrationTestsS3KeyRotationFunctionNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/S3KeyRotationFunctionName
+      Type: String
+      Value: !Ref S3KeyRotationFunction
+
+  IntegrationTestsS3KeyRotationLogsNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/S3KeyRotationLogsName
+      Type: String
+      Value: !Ref S3KeyRotationLogs
+
+  IntegrationTestsPermanentMessageBatchBucketNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/PermanentMessageBatchBucketName
+      Type: String
+      Value: !Ref PermanentMessageBatchBucket
+
+  IntegrationTestsAuditMessageBatchBucketNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/AuditMessageBatchBucketName
+      Type: String
+      Value: !Ref MessageBatchBucket
+
+  IntegrationTestsAuditMessageDeliveryStreamNameParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/AuditMessageDeliveryStreamName
+      Type: String
+      Value: !Ref AuditMessageDeliveryStream
+
+  IntegrationTestsGeneratorKeyIdParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/GeneratorKeyId
+      Type: String
+      Value: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
+
+  IntegrationTestsBackupKeyIdParameter:
+    Condition: TestEnvironment
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /tests/${AWS::StackName}/BackupKeyId
+      Type: String
+      Value: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
+
   AddRecordToFirehoseLambdaPolicy:
     Condition: TestRoleResources
     Type: AWS::Lambda::Permission
@@ -1877,336 +1971,6 @@ Resources:
               - kms:Decrypt
             Resource: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArnBck}}'
 
-  IntegrationTestRunnerFargateCluster:
-    Condition: DevEnvironment
-    Type: AWS::ECS::Cluster
-    Properties:
-      ClusterName: !Sub '${AWS::StackName}-integration-test-runner'
-      ClusterSettings:
-        - Name: containerInsights
-          Value: enabled
-
-  IntegrationTestRunnerTaskDefinition:
-    Condition: DevEnvironment
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      ContainerDefinitions:
-        - Name: !Sub '${AWS::StackName}-integration-test-runner'
-          Image: CONTAINER-IMAGE-PLACEHOLDER
-          Essential: true
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Sub '/ecs/${AWS::StackName}-integration-test-runner'
-              awslogs-region: !Sub '${AWS::Region}'
-              awslogs-create-group: 'true'
-              awslogs-stream-prefix: 'ecs'
-          Environment:
-            - Name: AWS_REGION
-              Value: !Sub '${AWS::Region}'
-            - Name: $TEST_ENVIRONMENT
-              Value: 'dev'
-      Cpu: 4096 # 4 CPUs
-      Memory: 8192
-      TaskRoleArn: !GetAtt IntegrationTestRunnerTaskRole.Arn
-      ExecutionRoleArn: !GetAtt IntegrationTestRunnerTaskExecutionRole.Arn
-      Family: !Sub '${AWS::StackName}-integration-test-runner'
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-
-  IntegrationTestRunnerLogs:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      KmsKeyId: '{{resolve:ssm:LogsKmsKeyArn}}'
-      LogGroupName: !Sub /ecs/${AWS::StackName}-integration-test-runner
-      RetentionInDays: 30
-
-  IntegrationTestRunnerTaskRole:
-    Condition: DevEnvironment
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub '${AWS::StackName}-integration-test-runner-task-role'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
-      Policies:
-        # Copied from PL-*-build-pipeline-TestRole defined in secure pipelines.
-        # The point is that if a change is needed here to run the integration tests then a request needs to be made to
-        # the Platform team to add the same changes to the pipeline's TestRole
-        - PolicyName: IntegrationTestRunner
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Action:
-                  - cloudformation:DescribeStacks
-                Resource:
-                  - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*'
-                Effect: Allow
-              - Action:
-                  - ssm:GetParameter*
-                Resource:
-                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/tests/*'
-                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/acceptance-tests/*'
-                Effect: Allow
-              - Action:
-                  - lambda:InvokeFunction
-                Resource:
-                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*'
-                Effect: Allow
-              - Action:
-                  - secretsmanager:CancelRotateSecret
-                  - secretsmanager:GetSecretValue
-                  - secretsmanager:RotateSecret
-                  - secretsmanager:TagResource
-                  - secretsmanager:UntagResource
-                Resource:
-                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
-                Effect: Allow
-              - Action:
-                  - dynamodb:GetItem
-                  - dynamodb:UpdateItem
-                  - dynamodb:PutItem
-                  - dynamodb:Query
-                  - dynamodb:DeleteItem
-                Resource:
-                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:*'
-                Effect: Allow
-              - Action: execute-api:Invoke
-                Resource: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*'
-                Effect: Allow
-              - Action: apigateway:GET
-                Resource:
-                  - arn:aws:apigateway:eu-west-2::/apikeys
-                  - arn:aws:apigateway:eu-west-2::/apikeys/*
-                Effect: Allow
-              - Action:
-                  - kms:DescribeKey
-                  - kms:GetPublicKey
-                  - kms:Decrypt
-                  - kms:Verify
-                  - kms:GenerateDataKey
-                Resource:
-                  - arn:aws:kms:eu-west-2:216552277552:key/*
-                Effect: Allow
-                Sid: CustomKMSKeySigning
-              - Action:
-                  - logs:DescribeLogGroups
-                  - logs:DescribeLogStreams
-                  - logs:DescribeMetricFilters
-                  - logs:FilterLogEvents
-                  - logs:GetLogEvents
-                  - logs:StartQuery
-                Resource:
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:*'
-                Effect: Allow
-              - Action:
-                  - logs:DescribeQueries
-                  - logs:DescribeQueryDefinitions
-                  - logs:GetLogDelivery
-                  - logs:GetLogRecord
-                  - logs:GetQueryResults
-                  - logs:ListLogDeliveries
-                  - logs:StopQuery
-                  - logs:TestMetricFilter
-                Resource:
-                  - '*'
-                Effect: Allow
-              - Action:
-                  - s3:GetObject
-                  - s3:GetObjectVersion
-                Resource:
-                  - arn:aws:s3:::audit-build-pipeline-githubartifactsourcebucket-1xzsrxnqe241c
-                  - arn:aws:s3:::audit-build-pipeline-githubartifactsourcebucket-1xzsrxnqe241c/*
-                Effect: Allow
-                Sid: AccessSourceArtifacts
-              - Action:
-                  - sns:Publish
-                Resource:
-                  - !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*'
-                Effect: Allow
-              - Action:
-                  - sqs:SendMessage
-                  - sqs:PurgeQueue
-                  - sqs:ReceiveMessage
-                Resource:
-                  - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*'
-                Effect: Allow
-              - Action:
-                  - s3:GetObject
-                  - s3:GetObjectVersion
-                  - s3:GetObjectTagging
-                  - s3:ListBucket
-                Resource:
-                  - arn:aws:s3:::template-storage-templatebucket-1upzyw6v9cs42
-                  - arn:aws:s3:::template-storage-templatebucket-1upzyw6v9cs42/*
-                Effect: Allow
-                Sid: TemplateBucketAccess
-              - Action:
-                  - secretsmanager:GetSecretValue
-                  - secretsmanager:ListSecrets
-                Resource:
-                  - arn:aws:secretsmanager:eu-west-2:216552277552:secret:*
-                Effect: Allow
-                Sid: ObservabilitySecretsManager
-              - Action:
-                  - kms:DescribeKey
-                  - kms:GetPublicKey
-                  - kms:Decrypt
-                  - kms:Encrypt
-                  - kms:GenerateDataKey
-                  - kms:Verify
-                Resource:
-                  - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
-                Effect: Allow
-                Sid: ObservabilityKMS
-              - Action:
-                  - acm-pca:DescribeCertificateAuthority
-                  - acm-pca:GetCertificateAuthorityCertificate
-                  - acm-pca:IssueCertificate
-                  - acm-pca:GetCertificate
-                  - acm-pca:RevokeCertificate
-                Resource:
-                  - !Sub 'arn:aws:acm-pca:${AWS::Region}:${AWS::AccountId}:certificate-authority/*'
-                Effect: Allow
-                Sid: ManageCertificateAuthority
-              - Action:
-                  - s3:GetObject
-                  - s3:GetObjectVersion
-                  - s3:PutObject
-                  - s3:ListBucket
-                  - s3:DeleteObject
-                Resource:
-                  - !Sub 'arn:aws:s3:::${AWS::StackName}-*'
-                  - !Sub 'arn:aws:s3:::${AWS::StackName}-*/*'
-                Effect: Allow
-                Sid: IntegrationTestS3Access
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-
-  IntegrationTestRunnerTaskExecutionRole:
-    Condition: DevEnvironment
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub '${AWS::StackName}-integration-test-runner-task-execution-role'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
-      Policies:
-        - PolicyName: CreateLogGroup
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
-        - PolicyName: PullFromEcr
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - kms:Decrypt
-                Resource: !GetAtt EcrEncryptionKey.Arn
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-
-  IntegrationTestsRepository:
-    Condition: DevEnvironment
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: !Sub '${AWS::StackName}-integration-test-repository'
-      ImageScanningConfiguration:
-        ScanOnPush: true
-      ImageTagMutability: IMMUTABLE
-      EncryptionConfiguration:
-        EncryptionType: KMS
-        KmsKey: !GetAtt EcrEncryptionKey.Arn
-      LifecyclePolicy:
-        LifecyclePolicyText: |
-          {
-            "rules": [
-              {
-                "rulePriority": 1,
-                "description": "Keep only the last 5 images",
-                "selection": {
-                  "tagStatus": "any",
-                  "countType": "imageCountMoreThan",
-                  "countNumber": 5
-                },
-                "action": {
-                  "type": "expire"
-                }
-              }
-            ]
-          }
-
-  EcrEncryptionKey:
-    Condition: DevEnvironment
-    Type: AWS::KMS::Key
-    Properties:
-      Description: KMS key for ECR repository encryption
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowRootAccountFullAccess
-            Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action: kms:*
-            Resource: '*'
-
-  EcrEncryptionKeyAlias:
-    Condition: DevEnvironment
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub alias/${AWS::StackName}-ecr-integration-tests
-      TargetKeyId: !Ref EcrEncryptionKey
-
-  DevContainerSigningKey:
-    Condition: DevEnvironment
-    Type: AWS::KMS::Key
-    Properties:
-      Description: Asymmetric key for container image signing (Cosign)
-      KeyUsage: SIGN_VERIFY
-      KeySpec: ECC_NIST_P256
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowRootAccountFullAccess
-            Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action: kms:*
-            Resource: '*'
-
-  ContainerSigningKeyAlias:
-    Condition: DevEnvironment
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub alias/${AWS::StackName}-dev-container-signing
-      TargetKeyId: !Ref DevContainerSigningKey
   ##############################
   # End: Development resources #
   ##############################
