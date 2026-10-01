@@ -1530,7 +1530,7 @@ Resources:
     Properties:
       # can't just do '%Error (deleting|updating) s3 object%' as AWS doesn't support parentheses in log filter regexes
       # see https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html#regex-expressions
-      FilterPattern: '?"Error deleting s3 object" ?"Error updating s3 object"'
+      FilterPattern: '?"Failed to delete S3 object" ?"Failed to update S3 object"'
       LogGroupName: !Ref AuditMessageFirehoseReingestLogs
       MetricTransformations:
         - MetricValue: '1'
@@ -1540,7 +1540,7 @@ Resources:
   RedriveSnsDlqEventsFunctionFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
-      FilterPattern: 'failed to publish to firehose'
+      FilterPattern: 'Failed to publish to Firehose'
       LogGroupName: !Ref RedriveSnsDlqEventsFunctionLogs
       MetricTransformations:
         - MetricValue: '1'
