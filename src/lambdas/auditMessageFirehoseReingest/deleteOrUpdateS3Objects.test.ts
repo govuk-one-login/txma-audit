@@ -123,6 +123,23 @@ describe('deleteOrUpdateS3Objects', () => {
     expect(deleteS3Object).toHaveBeenCalledWith(bucket, 'mockKey1')
   })
 
+  it('should handle non-Error throws when deleting s3 objects', async () => {
+    // Unit Test
+    vi.mocked(deleteS3Object).mockRejectedValue('string error')
+
+    const results: S3ObjectDetails[] = [
+      {
+        auditEventsFailedReingest: [],
+        auditEvents: [],
+        bucket,
+        key: 'mockKey1',
+        sqsRecordMessageId: 'mockMessageId1'
+      }
+    ]
+
+    await expect(deleteOrUpdateS3Objects(results)).resolves.not.toThrow()
+  })
+
   it('should handle errors when updating s3 objects', async () => {
     // Unit Test
     vi.mocked(putS3Object).mockRejectedValue(new Error('Put failed'))
@@ -150,5 +167,28 @@ describe('deleteOrUpdateS3Objects', () => {
       'mockKey1',
       expect.any(Buffer)
     )
+  })
+
+  it('should handle non-Error throws when updating s3 objects', async () => {
+    // Unit Test
+    vi.mocked(putS3Object).mockRejectedValue('string error')
+
+    const results: S3ObjectDetails[] = [
+      {
+        auditEvents: [],
+        auditEventsFailedReingest: [
+          {
+            event_id: 'mockEventId1',
+            event_name: 'mockEventName1',
+            timestamp: 12345678
+          }
+        ],
+        bucket,
+        key: 'mockKey1',
+        sqsRecordMessageId: 'mockMessageId1'
+      }
+    ]
+
+    await expect(deleteOrUpdateS3Objects(results)).resolves.not.toThrow()
   })
 })
