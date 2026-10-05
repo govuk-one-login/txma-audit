@@ -7,13 +7,17 @@
       "promotionType": "securePipelines",
       "automated": [
         {
-          "checkTypes": ["unit", "code style and linting", "new feature"],
+          "checkTypes": ["unit", "code style and linting", "new feature", "integration"],
           "phase": "pre-merge",
           "provider": "GitHub",
           "checks": [
             {
               "name": "unit",
               "purpose": ["new feature"]
+            },
+            {
+              "name": "integration",
+              "purpose": ["regression"]
             },
             {
               "name": "code style and linting"
