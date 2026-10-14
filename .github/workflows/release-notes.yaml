@@ -31,7 +31,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           cache: npm
@@ -88,7 +88,7 @@ jobs:
       - name: Run Checkov security scan
         id: checkov
         continue-on-error: true
-        uses: bridgecrewio/checkov-action@cc0e17d456ef1713bbfd963ebac19dc776775cb2 # v12.3128.0
+        uses: bridgecrewio/checkov-action@d0dd2e9434b4428060edba72d050c135273bd677 # v12.3132.0
         with:
           directory: '.'
           framework: cloudformation
