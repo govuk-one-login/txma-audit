@@ -63,6 +63,13 @@
           ],
           "file": ".github/workflows/build-test-package.yaml"
         }
+      ],
+      "notApplicable": [
+        {
+          "checks": [
+            {"name": "contract", "details": ["Not a Phase 1 API"]}
+          ]
+        }
       ]
     }
   ]
