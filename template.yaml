@@ -102,10 +102,6 @@ Globals:
   Function:
     Architectures:
       - arm64
-    CodeSigningConfigArn: !If
-      - UseCodeSigning
-      - !Ref CodeSigningConfigArn
-      - !Ref AWS::NoValue
     Environment:
       Variables:
         NODE_OPTIONS: !If
@@ -555,6 +551,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: dist/s3CopyAndEncrypt/
+      CodeSigningConfigArn: !If
+        - UseCodeSigning
+        - !Ref CodeSigningConfigArn
+        - !Ref AWS::NoValue
       Events:
         AuditFileReadyToEncryptEvent:
           Type: SQS
@@ -681,6 +681,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: dist/s3KeyRotationMigration/
+      CodeSigningConfigArn: !If
+        - UseCodeSigning
+        - !Ref CodeSigningConfigArn
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           GENERATOR_KEY_ID: '{{resolve:ssm:S3EncryptionGeneratorKmsKeyArn}}'
@@ -956,6 +960,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: dist/auditMessageDelimiter/
+      CodeSigningConfigArn: !If
+        - UseCodeSigning
+        - !Ref CodeSigningConfigArn
+        - !Ref AWS::NoValue
       FunctionName: !Sub ${AWS::StackName}-audit-message-delimiter
       Handler: handler.handler
       KmsKeyArn: '{{resolve:ssm:LambdaKmsKeyArn}}'
@@ -1061,6 +1069,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: dist/auditMessageFirehoseReingest/
+      CodeSigningConfigArn: !If
+        - UseCodeSigning
+        - !Ref CodeSigningConfigArn
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           FIREHOSE_DELIVERY_STREAM_NAME: !Ref AuditMessageDeliveryStream
@@ -1253,6 +1265,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: dist/redriveSnsDlqEvents/
+      CodeSigningConfigArn: !If
+        - UseCodeSigning
+        - !Ref CodeSigningConfigArn
+        - !Ref AWS::NoValue
       Environment:
         Variables:
           FIREHOSE_DELIVERY_STREAM_NAME: !Ref AuditMessageDeliveryStream
