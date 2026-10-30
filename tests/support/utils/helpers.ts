@@ -4,18 +4,26 @@ export const pause = (delay: number): Promise<unknown> => {
   return new Promise((r) => setTimeout(r, delay))
 }
 
-export const generateCurrentDateAndTimePrefix = (): string => {
-  const date = new Date()
-  const isoDate = date.toISOString().split('T')
-  const isoDateParts = isoDate[0].split('-')
-  const isoTimeParts = isoDate[1].split(':')
+// Firehose delivery can be delayed past an hour boundary, so returns the current
+// hour's prefix plus `hoursToLookBack` preceding hours (oldest last), using UTC
+// millisecond arithmetic so day/month/year rollover is handled automatically.
+export const generateCurrentDateAndTimePrefixes = (
+  hoursToLookBack = 1
+): string[] => {
+  const now = Date.now()
+  const prefixes: string[] = []
 
-  const year = isoDateParts[0]
-  const month = isoDateParts[1]
-  const day = isoDateParts[2]
-  const hour = isoTimeParts[0]
+  for (let hoursAgo = 0; hoursAgo <= hoursToLookBack; hoursAgo++) {
+    const date = new Date(now - hoursAgo * 60 * 60 * 1000)
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    const hour = String(date.getUTCHours()).padStart(2, '0')
 
-  return `firehose/${year}/${month}/${day}/${hour}`
+    prefixes.push(`firehose/${year}/${month}/${day}/${hour}`)
+  }
+
+  return prefixes
 }
 
 export const readableToString = async (readable: Readable) => {
