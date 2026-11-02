@@ -74,4 +74,18 @@ describe('getAuditEvents', () => {
 
     expect(result).toEqual(expectedResult)
   })
+
+  it('returns the failed ids when a non-Error is thrown', async () => {
+    // Unit Test
+    vi.mocked(getAuditEventsFromS3Object).mockRejectedValue('string error')
+
+    const expectedResult = {
+      successfulResults: [],
+      failedIds: [mockMessageId1, mockMessageId2]
+    }
+
+    const result = await getAuditEvents(s3ObjectDetails)
+
+    expect(result).toEqual(expectedResult)
+  })
 })

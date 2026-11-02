@@ -33,6 +33,7 @@ export default defineConfig({
         '**/types/**',
         '**/logger.ts',
         '**/tests/**',
+        '**/*.vitest.ts',
         '**/*.config.ts',
         '**/*.test.ts'
       ]

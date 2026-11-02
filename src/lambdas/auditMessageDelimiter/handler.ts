@@ -1,6 +1,5 @@
-import {
+import type {
   Context,
-  FirehoseRecordTransformationStatus,
   FirehoseTransformationEvent,
   FirehoseTransformationEventRecord,
   FirehoseTransformationResult
@@ -21,17 +20,14 @@ export const handler = async (
   })
 
   /* Process the list of records and transform them */
-  const transformationResult: FirehoseRecordTransformationStatus = 'Ok'
-
   const output = event.records.map(
     (record: FirehoseTransformationEventRecord) => {
       const recordData = Buffer.from(record.data, 'base64').toString('utf8')
-      const delimitedData = recordData + '\n'
-      const payload = Buffer.from(delimitedData, 'utf8').toString('base64')
+      const payload = Buffer.from(recordData + '\n', 'utf8').toString('base64')
 
       return {
         recordId: record.recordId,
-        result: transformationResult,
+        result: 'Ok' as const,
         data: payload
       }
     }
