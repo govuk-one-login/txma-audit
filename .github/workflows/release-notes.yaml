@@ -100,7 +100,7 @@ jobs:
       - name: Fetch SonarCloud metrics
         id: sonar
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_PROJECT_SCANNING_KEY }}
         run: |
           METRICS=$(curl -sf \
             -u "${SONAR_TOKEN}:" \
